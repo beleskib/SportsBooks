@@ -1,0 +1,92 @@
+# =========================
+# OS Files
+# =========================
+.DS_Store
+.DS_Store?
+Thumbs.db
+*.swp
+*~
+._*
+
+# =========================
+# IDE Files
+# =========================
+.idea/
+!.idea/runConfigurations/
+*.iml
+.vscode/
+*.xcuserdatad
+*.xcuserstate
+
+# =========================
+# Gradle / Android
+# =========================
+.gradle/
+build/
+local.properties
+*.apk
+*.aab
+*.ap_
+captures/
+.externalNativeBuild/
+.cxx/
+output-metadata.json
+
+# =========================
+# Node.js / Frontend
+# =========================
+node_modules/
+dist/
+.cache/
+*.tsbuildinfo
+
+# =========================
+# iOS / Xcode
+# =========================
+DerivedData/
+*.ipa
+*.dSYM.zip
+*.dSYM
+Pods/
+xcuserdata/
+*.xcworkspace
+!*.xcworkspace/contents.xcworkspacedata
+
+# =========================
+# Database
+# =========================
+*.dump
+*.backup
+*.sql.gz
+
+# =========================
+# Firebase
+# =========================
+google-services.json
+GoogleService-Info.plist
+firebase-service-account.json
+*firebase-adminsdk*
+
+# =========================
+# Environment & Secrets
+# =========================
+.env
+.env.*
+!.env.example
+*.key
+*.pem
+*.p12
+
+# =========================
+# Claude Code
+# =========================
+.claude/
+
+# =========================
+# Build Artifacts & Logs
+# =========================
+*.log
+*.tmp
+*.temp
+coverage/
+.nyc_output/
