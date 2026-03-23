@@ -32,23 +32,18 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.example.sportsbook.ui.common.toDisplayDate
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun BookingConfirmationScreen(
     timeSlotId: Long,
-    onBookingConfirmed: () -> Unit,
+    onProceedToPayment: (Long, String) -> Unit,
     onBack: () -> Unit,
     viewModel: BookingViewModel = hiltViewModel()
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
     val snackbarHostState = remember { SnackbarHostState() }
-
-    LaunchedEffect(uiState.bookingSuccess) {
-        if (uiState.bookingSuccess) {
-            onBookingConfirmed()
-        }
-    }
 
     LaunchedEffect(uiState.error) {
         uiState.error?.let { errorMessage ->
@@ -97,7 +92,7 @@ fun BookingConfirmationScreen(
                             color = MaterialTheme.colorScheme.onSurfaceVariant
                         )
                         Text(
-                            text = slot.slotDate,
+                            text = slot.slotDate.toDisplayDate(),
                             style = MaterialTheme.typography.bodyLarge
                         )
 
@@ -150,11 +145,10 @@ fun BookingConfirmationScreen(
                     CircularProgressIndicator()
                 } else {
                     Button(
-                        onClick = { viewModel.confirmBooking() },
-                        modifier = Modifier.fillMaxWidth(),
-                        enabled = !uiState.isBookingLoading
+                        onClick = { onProceedToPayment(timeSlotId, uiState.notes) },
+                        modifier = Modifier.fillMaxWidth()
                     ) {
-                        Text("Confirm Booking")
+                        Text("Proceed to Payment")
                     }
                 }
             }
@@ -168,7 +162,7 @@ private fun BookingConfirmationScreenPreview() {
     MaterialTheme {
         BookingConfirmationScreen(
             timeSlotId = 1L,
-            onBookingConfirmed = {},
+            onProceedToPayment = { _, _ -> },
             onBack = {}
         )
     }

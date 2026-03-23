@@ -16,6 +16,7 @@ sealed interface SplashUiState {
     data object Loading : SplashUiState
     data object NavigateToLogin : SplashUiState
     data object NavigateToRoleSelection : SplashUiState
+    data object NavigateToPlayerOnboarding : SplashUiState
     data object NavigateToPlayerHome : SplashUiState
     data object NavigateToPartnerDashboard : SplashUiState
 }
@@ -38,7 +39,13 @@ class SplashViewModel @Inject constructor(
                         is AuthState.NeedsRoleSelection -> SplashUiState.NavigateToRoleSelection
                         is AuthState.NeedsProfileSetup -> SplashUiState.NavigateToRoleSelection
                         is AuthState.Authenticated -> when (authState.user.role) {
-                            UserRole.PLAYER -> SplashUiState.NavigateToPlayerHome
+                            UserRole.PLAYER -> {
+                                if (authState.user.onboardingCompleted) {
+                                    SplashUiState.NavigateToPlayerHome
+                                } else {
+                                    SplashUiState.NavigateToPlayerOnboarding
+                                }
+                            }
                             UserRole.PARTNER -> SplashUiState.NavigateToPartnerDashboard
                             UserRole.ADMIN -> SplashUiState.NavigateToPlayerHome
                         }

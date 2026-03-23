@@ -142,6 +142,73 @@ function assembleCoaches(rows: any[], relations: Awaited<ReturnType<typeof loadC
   }));
 }
 
+export async function findAll(): Promise<CoachRow[]> {
+  const result = await query(
+    `SELECT id, user_id, name, bio, sport_type, specialization, experience_years,
+            price_per_hour, address, city, country, latitude, longitude,
+            phone_number, email, avg_rating, total_reviews, is_active, created_at, updated_at
+     FROM coaches ORDER BY created_at DESC`
+  );
+  const ids = result.rows.map((r: any) => r.id);
+  const relations = await loadCoachRelations(ids);
+  return assembleCoaches(result.rows, relations);
+}
+
+export async function update(
+  id: number,
+  data: {
+    name?: string;
+    bio?: string;
+    specialization?: string;
+    experienceYears?: number;
+    pricePerHour?: number;
+    address?: string;
+    city?: string;
+    country?: string;
+    latitude?: number;
+    longitude?: number;
+    phoneNumber?: string;
+    email?: string;
+    isActive?: boolean;
+  }
+): Promise<CoachRow | null> {
+  const result = await query(
+    `UPDATE coaches SET
+       name = COALESCE($2, name),
+       bio = COALESCE($3, bio),
+       specialization = COALESCE($4, specialization),
+       experience_years = COALESCE($5, experience_years),
+       price_per_hour = COALESCE($6, price_per_hour),
+       address = COALESCE($7, address),
+       city = COALESCE($8, city),
+       country = COALESCE($9, country),
+       latitude = COALESCE($10, latitude),
+       longitude = COALESCE($11, longitude),
+       phone_number = COALESCE($12, phone_number),
+       email = COALESCE($13, email),
+       is_active = COALESCE($14, is_active)
+     WHERE id = $1
+     RETURNING id, user_id, name, bio, sport_type, specialization, experience_years,
+               price_per_hour, address, city, country, latitude, longitude,
+               phone_number, email, avg_rating, total_reviews, is_active, created_at, updated_at`,
+    [
+      id, data.name, data.bio, data.specialization, data.experienceYears,
+      data.pricePerHour, data.address, data.city, data.country,
+      data.latitude, data.longitude, data.phoneNumber, data.email, data.isActive,
+    ]
+  );
+  if (result.rows.length === 0) return null;
+  const relations = await loadCoachRelations([id]);
+  return assembleCoaches(result.rows, relations)[0];
+}
+
+export async function softDelete(id: number): Promise<void> {
+  await query(
+    `UPDATE coaches SET is_active = false, updated_at = NOW() WHERE id = $1`,
+    [id]
+  );
+}
+
 export async function findBySport(sportType: string): Promise<CoachRow[]> {
   const result = await query(
     `SELECT id, user_id, name, bio, sport_type, specialization, experience_years,
@@ -243,4 +310,40 @@ export async function create(data: {
     ]
   );
   return { ...mapCoachRow(result.rows[0]), images: [], certifications: [], activeDiscount: null };
+}
+
+// ---- Coach Image Management ----
+
+export async function createCoachImage(data: {
+  coachId: number;
+  imageUrl: string;
+  isPrimary?: boolean;
+  displayOrder?: number;
+}): Promise<CoachImageRow> {
+  if (data.isPrimary) {
+    await query(`UPDATE coach_images SET is_primary = false WHERE coach_id = $1`, [data.coachId]);
+  }
+  const result = await query(
+    `INSERT INTO coach_images (coach_id, image_url, is_primary, display_order)
+     VALUES ($1, $2, $3, $4)
+     RETURNING id, coach_id, image_url, is_primary, display_order`,
+    [data.coachId, data.imageUrl, data.isPrimary ?? false, data.displayOrder ?? 0]
+  );
+  const row = result.rows[0];
+  return {
+    id: row.id,
+    coachId: row.coach_id,
+    imageUrl: row.image_url,
+    isPrimary: row.is_primary,
+    displayOrder: row.display_order,
+  };
+}
+
+export async function deleteCoachImage(imageId: number): Promise<void> {
+  await query(`DELETE FROM coach_images WHERE id = $1`, [imageId]);
+}
+
+export async function setCoachPrimaryImage(coachId: number, imageId: number): Promise<void> {
+  await query(`UPDATE coach_images SET is_primary = false WHERE coach_id = $1`, [coachId]);
+  await query(`UPDATE coach_images SET is_primary = true WHERE id = $1 AND coach_id = $2`, [imageId, coachId]);
 }

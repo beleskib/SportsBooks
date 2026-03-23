@@ -42,6 +42,52 @@ function mapRow(row: any): BookingRow {
   };
 }
 
+export interface BookingCountRow {
+  entityId: number;
+  entityType: 'venue' | 'coach';
+  totalBookings: number;
+  confirmedBookings: number;
+  completedBookings: number;
+}
+
+export async function getVenueBookingCounts(): Promise<BookingCountRow[]> {
+  const result = await query(
+    `SELECT venue_id AS entity_id,
+            COUNT(*) AS total_bookings,
+            COUNT(*) FILTER (WHERE status = 'confirmed') AS confirmed_bookings,
+            COUNT(*) FILTER (WHERE status = 'completed') AS completed_bookings
+     FROM bookings
+     WHERE venue_id IS NOT NULL
+     GROUP BY venue_id`
+  );
+  return result.rows.map((r: any) => ({
+    entityId: r.entity_id,
+    entityType: 'venue' as const,
+    totalBookings: Number(r.total_bookings),
+    confirmedBookings: Number(r.confirmed_bookings),
+    completedBookings: Number(r.completed_bookings),
+  }));
+}
+
+export async function getCoachBookingCounts(): Promise<BookingCountRow[]> {
+  const result = await query(
+    `SELECT coach_id AS entity_id,
+            COUNT(*) AS total_bookings,
+            COUNT(*) FILTER (WHERE status = 'confirmed') AS confirmed_bookings,
+            COUNT(*) FILTER (WHERE status = 'completed') AS completed_bookings
+     FROM bookings
+     WHERE coach_id IS NOT NULL
+     GROUP BY coach_id`
+  );
+  return result.rows.map((r: any) => ({
+    entityId: r.entity_id,
+    entityType: 'coach' as const,
+    totalBookings: Number(r.total_bookings),
+    confirmedBookings: Number(r.confirmed_bookings),
+    completedBookings: Number(r.completed_bookings),
+  }));
+}
+
 export async function create(playerId: number, timeSlotId: number, notes?: string): Promise<BookingRow> {
   const result = await query(
     `SELECT * FROM create_booking($1, $2, $3)`,

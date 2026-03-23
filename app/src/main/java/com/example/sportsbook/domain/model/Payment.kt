@@ -12,6 +12,13 @@ data class Payment(
     val paymentMethod: String? = null,
     val externalPaymentId: String? = null,
     val paidAt: String? = null,
+    val venueName: String? = null,
+    val coachName: String? = null,
+    val venueId: Long? = null,
+    val coachId: Long? = null,
+    val slotDate: String? = null,
+    val startTime: String? = null,
+    val endTime: String? = null,
     val createdAt: String? = null,
-    val updatedAt: String? = null
+    val updatedAt: String? = null,
 )

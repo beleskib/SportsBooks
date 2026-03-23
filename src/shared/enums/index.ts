@@ -51,6 +51,22 @@ export enum SportType {
   CRICKET = 'cricket',
 }
 
+export enum SkillLevel {
+  NEWBIE = 'newbie',
+  BEGINNER = 'beginner',
+  INTERMEDIATE = 'intermediate',
+  SEMI_PRO = 'semi_pro',
+  PRO = 'pro',
+}
+
+export enum ExperienceDuration {
+  LESS_THAN_1_YEAR = 'less_than_1_year',
+  ONE_TO_3_YEARS = '1_to_3_years',
+  THREE_TO_5_YEARS = '3_to_5_years',
+  FIVE_TO_10_YEARS = '5_to_10_years',
+  TEN_PLUS_YEARS = '10_plus_years',
+}
+
 export enum DayOfWeek {
   MONDAY = 'monday',
   TUESDAY = 'tuesday',
@@ -59,4 +75,47 @@ export enum DayOfWeek {
   FRIDAY = 'friday',
   SATURDAY = 'saturday',
   SUNDAY = 'sunday',
+}
+
+export enum MatchStatus {
+  DRAFT = 'draft',
+  OPEN = 'open',
+  FULL = 'full',
+  IN_PROGRESS = 'in_progress',
+  COMPLETED = 'completed',
+  CANCELLED = 'cancelled',
+}
+
+export enum MatchType {
+  VENUE_LINKED = 'venue_linked',
+  STANDALONE = 'standalone',
+}
+
+export enum MatchVisibility {
+  PUBLIC = 'public',
+  PRIVATE = 'private',
+}
+
+export enum ParticipantStatus {
+  PENDING = 'pending',
+  APPROVED = 'approved',
+  DECLINED = 'declined',
+  LEFT = 'left',
+}
+
+export enum ParticipantRole {
+  HOST = 'host',
+  PLAYER = 'player',
+}
+
+export enum RecurrenceFrequency {
+  WEEKLY = 'weekly',
+  BIWEEKLY = 'biweekly',
+  MONTHLY = 'monthly',
+}
+
+export enum StripeOnboardingStatus {
+  NOT_STARTED = 'not_started',
+  PENDING = 'pending',
+  COMPLETE = 'complete',
 }

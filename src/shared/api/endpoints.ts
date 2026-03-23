@@ -91,3 +91,52 @@ export const ADMIN_ENDPOINTS = {
   VENUES: `${API_PREFIX}/admin/venues`,
   COACHES: `${API_PREFIX}/admin/coaches`,
 } as const;
+
+export const NOTIFICATION_ENDPOINTS = {
+  LIST: `${API_PREFIX}/notifications`,
+  UNREAD_COUNT: `${API_PREFIX}/notifications/unread-count`,
+  MARK_READ: `${API_PREFIX}/notifications/mark-read`,
+  DEVICE_TOKEN: `${API_PREFIX}/notifications/device-token`,
+} as const;
+
+export const SEARCH_ENDPOINTS = {
+  GLOBAL: `${API_PREFIX}/search`,
+} as const;
+
+export const FAVORITE_ENDPOINTS = {
+  LIST: `${API_PREFIX}/favorites`,
+  TOGGLE: `${API_PREFIX}/favorites/toggle`,
+  CHECK: `${API_PREFIX}/favorites/check`,
+} as const;
+
+export const FRIEND_ENDPOINTS = {
+  LIST: `${API_PREFIX}/friends`,
+  REQUESTS: `${API_PREFIX}/friends/requests`,
+  SEND_REQUEST: `${API_PREFIX}/friends/request`,
+  RESPOND: (id: number) => `${API_PREFIX}/friends/request/${id}/respond`,
+  REMOVE: (friendId: number) => `${API_PREFIX}/friends/${friendId}`,
+  SEARCH_USERS: `${API_PREFIX}/friends/search-users`,
+} as const;
+
+export const STRIPE_CONNECT_ENDPOINTS = {
+  ONBOARD: `${API_PREFIX}/stripe-connect/onboard`,
+  STATUS: `${API_PREFIX}/stripe-connect/status`,
+  DASHBOARD_LINK: `${API_PREFIX}/stripe-connect/dashboard-link`,
+} as const;
+
+export const PARTY_ENDPOINTS = {
+  CREATE: `${API_PREFIX}/parties`,
+  MY_ACTIVE: `${API_PREFIX}/parties/active`,
+  BY_ID: (id: number) => `${API_PREFIX}/parties/${id}`,
+  INVITE: (id: number) => `${API_PREFIX}/parties/${id}/invite`,
+  RESPOND: (id: number) => `${API_PREFIX}/parties/${id}/respond`,
+  DISBAND: (id: number) => `${API_PREFIX}/parties/${id}/disband`,
+} as const;
+
+export const AVAILABLE_PLAYER_ENDPOINTS = {
+  LIST: `${API_PREFIX}/available-players`,
+  ME: `${API_PREFIX}/available-players/me`,
+  REGISTER: `${API_PREFIX}/available-players`,
+  UNREGISTER: (sportType: string) => `${API_PREFIX}/available-players/${sportType}`,
+  INVITE_TO_MATCH: (matchId: number) => `${API_PREFIX}/matches/${matchId}/invite`,
+} as const;

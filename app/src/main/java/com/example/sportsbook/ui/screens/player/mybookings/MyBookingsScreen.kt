@@ -13,6 +13,8 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.material3.Card
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.pulltorefresh.PullToRefreshBox
+import androidx.compose.material3.pulltorefresh.rememberPullToRefreshState
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Tab
 import androidx.compose.material3.TabRow
@@ -33,7 +35,9 @@ import com.example.sportsbook.domain.model.Booking
 import com.example.sportsbook.ui.common.EmptyStateView
 import com.example.sportsbook.ui.common.ErrorView
 import com.example.sportsbook.ui.common.LoadingIndicator
+import com.example.sportsbook.ui.common.toDisplayDate
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun MyBookingsScreen(
     onBookingClick: (Long) -> Unit,
@@ -42,6 +46,7 @@ fun MyBookingsScreen(
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
     var selectedTabIndex by remember { mutableIntStateOf(0) }
     val tabs = listOf("Upcoming", "Past")
+    val pullToRefreshState = rememberPullToRefreshState()
 
     Column(
         modifier = Modifier
@@ -99,15 +104,22 @@ fun MyBookingsScreen(
                         modifier = Modifier.fillMaxWidth()
                     )
                 } else {
-                    LazyColumn(modifier = Modifier.fillMaxSize()) {
-                        items(bookingsToShow, key = { it.id }) { booking ->
-                            BookingCard(
-                                booking = booking,
-                                onClick = { onBookingClick(booking.id) },
-                                modifier = Modifier
-                                    .fillMaxWidth()
-                                    .padding(vertical = 4.dp)
-                            )
+                    PullToRefreshBox(
+                        isRefreshing = uiState.isRefreshing,
+                        onRefresh = { viewModel.refresh() },
+                        state = pullToRefreshState,
+                        modifier = Modifier.fillMaxSize()
+                    ) {
+                        LazyColumn(modifier = Modifier.fillMaxSize()) {
+                            items(bookingsToShow, key = { it.id }) { booking ->
+                                BookingCard(
+                                    booking = booking,
+                                    onClick = { onBookingClick(booking.id) },
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .padding(vertical = 4.dp)
+                                )
+                            }
                         }
                     }
                 }
@@ -144,7 +156,7 @@ private fun BookingCard(
 
             booking.timeSlot?.let { slot ->
                 Text(
-                    text = slot.slotDate,
+                    text = slot.slotDate.toDisplayDate(),
                     style = MaterialTheme.typography.bodyMedium,
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )

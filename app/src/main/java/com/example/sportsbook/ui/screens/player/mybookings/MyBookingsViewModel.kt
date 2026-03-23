@@ -17,6 +17,7 @@ data class MyBookingsUiState(
     val upcomingBookings: List<Booking> = emptyList(),
     val pastBookings: List<Booking> = emptyList(),
     val isLoading: Boolean = false,
+    val isRefreshing: Boolean = false,
     val error: String? = null
 )
 
@@ -30,6 +31,35 @@ class MyBookingsViewModel @Inject constructor(
 
     init {
         loadBookings()
+    }
+
+    fun refresh() {
+        viewModelScope.launch {
+            _uiState.update { it.copy(isRefreshing = true, error = null) }
+            bookingRepository.getMyBookings()
+                .onSuccess { bookings ->
+                    val upcoming = bookings.filter {
+                        it.status in listOf(BookingStatus.PENDING, BookingStatus.CONFIRMED)
+                    }
+                    val past = bookings.filter {
+                        it.status in listOf(
+                            BookingStatus.COMPLETED,
+                            BookingStatus.CANCELLED,
+                            BookingStatus.NO_SHOW
+                        )
+                    }
+                    _uiState.update {
+                        it.copy(
+                            upcomingBookings = upcoming,
+                            pastBookings = past,
+                            isRefreshing = false
+                        )
+                    }
+                }
+                .onFailure { e ->
+                    _uiState.update { it.copy(error = e.message, isRefreshing = false) }
+                }
+        }
     }
 
     fun loadBookings() {

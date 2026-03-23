@@ -40,6 +40,7 @@ import com.example.sportsbook.domain.model.Venue
 import com.example.sportsbook.domain.model.VenueEquipment
 import com.example.sportsbook.ui.common.DiscountBadge
 import com.example.sportsbook.ui.common.ErrorView
+import com.example.sportsbook.ui.common.ImageCarousel
 import com.example.sportsbook.ui.common.LoadingIndicator
 import com.example.sportsbook.ui.common.PriceTag
 import com.example.sportsbook.ui.common.RatingBar
@@ -119,13 +120,11 @@ private fun VenueDetailContent(
                 modifier = Modifier
                     .fillMaxWidth()
                     .height(200.dp)
-                    .background(MaterialTheme.colorScheme.primaryContainer),
-                contentAlignment = Alignment.Center
             ) {
-                Text(
-                    text = "Venue Images",
-                    style = MaterialTheme.typography.titleMedium,
-                    color = MaterialTheme.colorScheme.onPrimaryContainer
+                ImageCarousel(
+                    imageUrls = venue.images.map { it.imageUrl },
+                    contentDescription = venue.name,
+                    modifier = Modifier.fillMaxSize()
                 )
 
                 if (venue.activeDiscount != null) {

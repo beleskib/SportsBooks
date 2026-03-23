@@ -34,6 +34,7 @@ import com.example.sportsbook.domain.enums.BookingStatus
 import com.example.sportsbook.domain.model.Booking
 import com.example.sportsbook.ui.common.ErrorView
 import com.example.sportsbook.ui.common.LoadingIndicator
+import com.example.sportsbook.ui.common.toDisplayDate
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -155,7 +156,7 @@ fun BookingDetailScreen(
                             Spacer(modifier = Modifier.height(12.dp))
 
                             booking.timeSlot?.let { slot ->
-                                DetailRow(label = "Date", value = slot.slotDate)
+                                DetailRow(label = "Date", value = slot.slotDate.toDisplayDate())
                                 Spacer(modifier = Modifier.height(8.dp))
                                 DetailRow(label = "Time", value = slot.displayTime)
                                 Spacer(modifier = Modifier.height(8.dp))

@@ -24,4 +24,12 @@ export const getFirebaseAuth = (): admin.auth.Auth | null => {
   return firebaseApp ? admin.auth(firebaseApp) : null;
 };
 
+export const getFirestoreDb = (): admin.firestore.Firestore | null => {
+  return firebaseApp ? admin.firestore(firebaseApp) : null;
+};
+
+export const getFirebaseMessaging = (): admin.messaging.Messaging | null => {
+  return firebaseApp ? admin.messaging(firebaseApp) : null;
+};
+
 export { firebaseApp };

@@ -61,3 +61,45 @@ export async function findById(id: number): Promise<TimeSlotRow | null> {
   );
   return result.rows.length > 0 ? mapRow(result.rows[0]) : null;
 }
+
+export async function createBatch(slots: {
+  venueId?: number;
+  coachId?: number;
+  slotDate: string;
+  startTime: string;
+  endTime: string;
+}[]): Promise<TimeSlotRow[]> {
+  if (slots.length === 0) return [];
+
+  // Build a multi-row INSERT
+  const values: any[] = [];
+  const placeholders: string[] = [];
+  let idx = 1;
+
+  for (const slot of slots) {
+    placeholders.push(`($${idx}, $${idx + 1}, $${idx + 2}, $${idx + 3}, $${idx + 4})`);
+    values.push(
+      slot.venueId || null,
+      slot.coachId || null,
+      slot.slotDate,
+      slot.startTime,
+      slot.endTime
+    );
+    idx += 5;
+  }
+
+  const result = await query(
+    `INSERT INTO time_slots (venue_id, coach_id, slot_date, start_time, end_time)
+     VALUES ${placeholders.join(', ')}
+     ON CONFLICT DO NOTHING
+     RETURNING id, venue_id, coach_id, slot_date, start_time, end_time,
+               is_available, price_override, created_at, updated_at`,
+    values
+  );
+  return result.rows.map(mapRow);
+}
+
+export async function deleteById(id: number): Promise<boolean> {
+  const result = await query('DELETE FROM time_slots WHERE id = $1', [id]);
+  return (result.rowCount ?? 0) > 0;
+}

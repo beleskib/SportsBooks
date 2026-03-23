@@ -1,5 +1,7 @@
 package com.example.sportsbook.ui.navigation
 
+import android.content.Intent
+import android.net.Uri
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Scaffold
 import androidx.compose.runtime.Composable
@@ -8,6 +10,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
@@ -18,18 +21,48 @@ import com.example.sportsbook.ui.screens.auth.RegisterScreen
 import com.example.sportsbook.ui.screens.onboarding.PartnerTypeSelectionScreen
 import com.example.sportsbook.ui.screens.onboarding.RoleSelectionScreen
 import com.example.sportsbook.ui.screens.partner.dashboard.PartnerDashboardScreen
+import com.example.sportsbook.ui.screens.partner.images.ManageImagesScreen
 import com.example.sportsbook.ui.screens.partner.setup.PartnerSetupScreen
 import com.example.sportsbook.ui.screens.player.booking.BookingCalendarScreen
 import com.example.sportsbook.ui.screens.player.booking.BookingConfirmationScreen
 import com.example.sportsbook.ui.screens.player.coach.CoachDetailScreen
 import com.example.sportsbook.ui.screens.player.coach.CoachListScreen
 import com.example.sportsbook.ui.screens.player.home.PlayerHomeScreen
+import com.example.sportsbook.ui.screens.player.notifications.NotificationsScreen
+import com.example.sportsbook.ui.screens.player.onboarding.PlayerOnboardingScreen
+import com.example.sportsbook.ui.screens.player.profile.PlayerProfileScreen
+import com.example.sportsbook.ui.screens.player.settings.SettingsScreen
 import com.example.sportsbook.ui.screens.player.mybookings.BookingDetailScreen
 import com.example.sportsbook.ui.screens.player.mybookings.MyBookingsScreen
 import com.example.sportsbook.ui.screens.player.review.WriteReviewScreen
 import com.example.sportsbook.ui.screens.player.sport.SportDetailScreen
 import com.example.sportsbook.ui.screens.player.venue.VenueDetailScreen
+import com.example.sportsbook.ui.screens.player.payment.PaymentCheckoutScreen
+import com.example.sportsbook.ui.screens.player.payment.PaymentDetailScreen
+import com.example.sportsbook.ui.screens.player.payment.PaymentHistoryScreen
 import com.example.sportsbook.ui.screens.player.venue.VenueListScreen
+import com.example.sportsbook.ui.screens.player.match.MatchListScreen
+import com.example.sportsbook.ui.screens.player.match.MatchDetailScreen
+import com.example.sportsbook.ui.screens.player.match.CreateMatchScreen
+import com.example.sportsbook.ui.screens.player.match.MatchChatScreen
+import com.example.sportsbook.ui.screens.player.match.RatePlayersScreen
+import com.example.sportsbook.ui.screens.player.match.MatchMapScreen
+import com.example.sportsbook.ui.screens.player.match.AvailablePlayersScreen
+import com.example.sportsbook.ui.screens.player.venue.VenueMapScreen
+import com.example.sportsbook.ui.screens.player.profile.PublicPlayerProfileScreen
+import com.example.sportsbook.ui.screens.player.search.SearchScreen
+import com.example.sportsbook.ui.screens.player.favorites.FavoritesScreen
+import com.example.sportsbook.ui.screens.player.friends.FriendsListScreen
+import com.example.sportsbook.ui.screens.player.friends.FriendRequestsScreen
+import com.example.sportsbook.ui.screens.player.friends.AddFriendScreen
+import com.example.sportsbook.ui.screens.player.party.PartyCreateScreen
+import com.example.sportsbook.ui.screens.player.party.PartyDetailScreen
+import com.example.sportsbook.ui.screens.player.party.PartyInviteMembersScreen
+import com.example.sportsbook.ui.screens.partner.stripe.StripeConnectScreen
+import com.example.sportsbook.ui.screens.partner.timeslots.TimeSlotManagementScreen
+import com.example.sportsbook.ui.screens.player.gamification.PlayerXpLevelScreen
+import com.example.sportsbook.ui.screens.player.gamification.PlayerAchievementsScreen
+import com.example.sportsbook.ui.screens.player.gamification.PlayerStatsScreen
 import com.example.sportsbook.ui.screens.splash.SplashScreen
 
 @Composable
@@ -40,12 +73,15 @@ fun SportsBookNavHost() {
     val showBottomBar = remember(currentBackStackEntry) {
         when (currentBackStackEntry?.destination?.route) {
             Route.PlayerHome::class.qualifiedName,
-            Route.MyBookings::class.qualifiedName -> true
+            Route.MyBookings::class.qualifiedName,
+            Route.PaymentHistory::class.qualifiedName,
+            Route.PlayerProfile::class.qualifiedName -> true
             else -> false
         }
     }
 
     Scaffold(
+        containerColor = com.example.sportsbook.ui.theme.Navy900,
         bottomBar = {
             if (showBottomBar) {
                 BottomNavBar(
@@ -78,6 +114,11 @@ fun SportsBookNavHost() {
                             popUpTo(Route.Splash) { inclusive = true }
                         }
                     },
+                    onNavigateToPlayerOnboarding = {
+                        navController.navigate(Route.PlayerOnboarding) {
+                            popUpTo(Route.Splash) { inclusive = true }
+                        }
+                    },
                     onNavigateToPlayerHome = {
                         navController.navigate(Route.PlayerHome) {
                             popUpTo(Route.Splash) { inclusive = true }
@@ -95,7 +136,9 @@ fun SportsBookNavHost() {
                 LoginScreen(
                     onNavigateToRegister = { navController.navigate(Route.Register) },
                     onLoginSuccess = {
-                        navController.navigate(Route.RoleSelection) {
+                        // Route through Splash so it checks role/partner status
+                        // and skips role selection for existing partners/players
+                        navController.navigate(Route.Splash) {
                             popUpTo(Route.Login) { inclusive = true }
                         }
                     }
@@ -106,7 +149,7 @@ fun SportsBookNavHost() {
                 RegisterScreen(
                     onNavigateToLogin = { navController.popBackStack() },
                     onRegisterSuccess = {
-                        navController.navigate(Route.RoleSelection) {
+                        navController.navigate(Route.Splash) {
                             popUpTo(Route.Login) { inclusive = true }
                         }
                     }
@@ -117,7 +160,7 @@ fun SportsBookNavHost() {
             composable<Route.RoleSelection> {
                 RoleSelectionScreen(
                     onPlayerSelected = {
-                        navController.navigate(Route.PlayerHome) {
+                        navController.navigate(Route.PlayerOnboarding) {
                             popUpTo(Route.RoleSelection) { inclusive = true }
                         }
                     },
@@ -142,6 +185,16 @@ fun SportsBookNavHost() {
                 )
             }
 
+            composable<Route.PlayerOnboarding> {
+                PlayerOnboardingScreen(
+                    onComplete = {
+                        navController.navigate(Route.PlayerHome) {
+                            popUpTo(Route.PlayerOnboarding) { inclusive = true }
+                        }
+                    }
+                )
+            }
+
             // Player flow
             composable<Route.PlayerHome> {
                 PlayerHomeScreen(
@@ -153,6 +206,35 @@ fun SportsBookNavHost() {
                     },
                     onCoachClick = { coachId ->
                         navController.navigate(Route.CoachDetail(coachId))
+                    },
+                    onNavigateToProfile = {
+                        navController.navigate(Route.PlayerProfile) {
+                            popUpTo(Route.PlayerHome) { inclusive = false }
+                            launchSingleTop = true
+                        }
+                    },
+                    onNavigateToNotifications = {
+                        navController.navigate(Route.Notifications)
+                    },
+                    onNavigateToSettings = {
+                        navController.navigate(Route.Settings)
+                    },
+                    onSignOut = {
+                        navController.navigate(Route.Login) {
+                            popUpTo(0) { inclusive = true }
+                        }
+                    },
+                    onFindMatch = {
+                        navController.navigate(Route.MatchList)
+                    },
+                    onNavigateToSearch = {
+                        navController.navigate(Route.Search)
+                    },
+                    onNavigateToFavorites = {
+                        navController.navigate(Route.Favorites)
+                    },
+                    onNavigateToFriends = {
+                        navController.navigate(Route.FriendsList)
                     }
                 )
             }
@@ -172,7 +254,8 @@ fun SportsBookNavHost() {
                 VenueListScreen(
                     sportType = route.sportType,
                     onVenueClick = { venueId -> navController.navigate(Route.VenueDetail(venueId)) },
-                    onBack = { navController.popBackStack() }
+                    onBack = { navController.popBackStack() },
+                    onShowMap = { navController.navigate(Route.VenueMap) }
                 )
             }
 
@@ -219,7 +302,16 @@ fun SportsBookNavHost() {
                 val route = backStackEntry.toRoute<Route.BookingConfirmation>()
                 BookingConfirmationScreen(
                     timeSlotId = route.timeSlotId,
-                    onBookingConfirmed = {
+                    onProceedToPayment = { timeSlotId, notes ->
+                        navController.navigate(Route.PaymentCheckout(timeSlotId, notes))
+                    },
+                    onBack = { navController.popBackStack() }
+                )
+            }
+
+            composable<Route.PaymentCheckout> {
+                PaymentCheckoutScreen(
+                    onPaymentSuccess = {
                         navController.navigate(Route.MyBookings) {
                             popUpTo(Route.PlayerHome) { inclusive = false }
                         }
@@ -228,10 +320,53 @@ fun SportsBookNavHost() {
                 )
             }
 
+            composable<Route.PaymentHistory> {
+                PaymentHistoryScreen(
+                    onPaymentClick = { paymentId ->
+                        navController.navigate(Route.PaymentDetail(paymentId))
+                    }
+                )
+            }
+
+            composable<Route.PaymentDetail> { backStackEntry ->
+                val route = backStackEntry.toRoute<Route.PaymentDetail>()
+                PaymentDetailScreen(
+                    paymentId = route.paymentId,
+                    onBack = { navController.popBackStack() }
+                )
+            }
+
             composable<Route.MyBookings> {
                 MyBookingsScreen(
                     onBookingClick = { bookingId ->
                         navController.navigate(Route.BookingDetail(bookingId))
+                    }
+                )
+            }
+
+            composable<Route.PlayerProfile> {
+                PlayerProfileScreen(
+                    onSignOut = {
+                        navController.navigate(Route.Login) {
+                            popUpTo(0) { inclusive = true }
+                        }
+                    },
+                    onNavigateToDashboard = {
+                        navController.navigate(Route.PartnerDashboard) {
+                            launchSingleTop = true
+                        }
+                    },
+                    onManageTimeSlots = {
+                        navController.navigate(Route.TimeSlotManagement)
+                    },
+                    onNavigateToXpLevel = {
+                        navController.navigate(Route.PlayerXpLevel)
+                    },
+                    onNavigateToAchievements = {
+                        navController.navigate(Route.PlayerAchievements)
+                    },
+                    onNavigateToStats = {
+                        navController.navigate(Route.PlayerStatsScreen)
                     }
                 )
             }
@@ -252,6 +387,18 @@ fun SportsBookNavHost() {
                 WriteReviewScreen(
                     bookingId = route.bookingId,
                     onReviewSubmitted = { navController.popBackStack() },
+                    onBack = { navController.popBackStack() }
+                )
+            }
+
+            composable<Route.Notifications> {
+                NotificationsScreen(
+                    onBack = { navController.popBackStack() }
+                )
+            }
+
+            composable<Route.Settings> {
+                SettingsScreen(
                     onBack = { navController.popBackStack() }
                 )
             }
@@ -282,12 +429,252 @@ fun SportsBookNavHost() {
             }
 
             composable<Route.PartnerDashboard> {
+                val context = LocalContext.current
                 PartnerDashboardScreen(
                     onSignOut = {
                         navController.navigate(Route.Login) {
                             popUpTo(0) { inclusive = true }
                         }
+                    },
+                    onManageImages = { entityType, entityId ->
+                        navController.navigate(Route.ManageImages(entityType, entityId))
+                    },
+                    onOpenWebDashboard = {
+                        val intent = Intent(Intent.ACTION_VIEW, Uri.parse("http://10.0.2.2:5173"))
+                        context.startActivity(intent)
+                    },
+                    onBrowseAsPlayer = {
+                        navController.navigate(Route.PlayerHome) {
+                            launchSingleTop = true
+                        }
+                    },
+                    onPaymentSetup = {
+                        navController.navigate(Route.StripeConnect)
+                    },
+                    onManageTimeSlots = {
+                        navController.navigate(Route.TimeSlotManagement)
                     }
+                )
+            }
+
+            composable<Route.TimeSlotManagement> {
+                TimeSlotManagementScreen(
+                    onBack = { navController.popBackStack() }
+                )
+            }
+
+            composable<Route.ManageImages> { backStackEntry ->
+                val route = backStackEntry.toRoute<Route.ManageImages>()
+                ManageImagesScreen(
+                    entityType = route.entityType,
+                    entityId = route.entityId,
+                    onBack = { navController.popBackStack() }
+                )
+            }
+
+            composable<Route.StripeConnect> {
+                StripeConnectScreen(
+                    onNavigateBack = { navController.popBackStack() }
+                )
+            }
+
+            // Matchmaking flow
+            composable<Route.MatchList> {
+                MatchListScreen(
+                    onMatchClick = { matchId ->
+                        navController.navigate(Route.MatchDetail(matchId))
+                    },
+                    onCreateMatch = {
+                        navController.navigate(Route.CreateMatch)
+                    },
+                    onCreateParty = {
+                        navController.navigate(Route.CreateParty)
+                    },
+                    onShowMap = {
+                        navController.navigate(Route.MatchMap)
+                    },
+                    onBrowseAvailablePlayers = {
+                        navController.navigate(Route.AvailablePlayers())
+                    }
+                )
+            }
+
+            composable<Route.MatchDetail> { backStackEntry ->
+                val route = backStackEntry.toRoute<Route.MatchDetail>()
+                MatchDetailScreen(
+                    onBack = { navController.popBackStack() },
+                    onOpenChat = { matchId ->
+                        navController.navigate(Route.MatchChat(matchId))
+                    },
+                    onRatePlayers = { matchId ->
+                        navController.navigate(Route.RatePlayers(matchId))
+                    },
+                    onJoinWithParty = { matchId ->
+                        navController.navigate(Route.MatchDetail(matchId))
+                    },
+                    onBrowseAvailablePlayers = { matchId, sportType, minSkill, maxSkill ->
+                        navController.navigate(Route.AvailablePlayers(
+                            matchId = matchId,
+                            sportType = sportType,
+                            minSkillLevel = minSkill,
+                            maxSkillLevel = maxSkill
+                        ))
+                    }
+                )
+            }
+
+            composable<Route.CreateMatch> {
+                CreateMatchScreen(
+                    onMatchCreated = { matchId ->
+                        navController.navigate(Route.MatchDetail(matchId)) {
+                            popUpTo(Route.CreateMatch) { inclusive = true }
+                        }
+                    },
+                    onBack = { navController.popBackStack() }
+                )
+            }
+
+            composable<Route.MatchChat> {
+                MatchChatScreen(
+                    onBack = { navController.popBackStack() }
+                )
+            }
+
+            composable<Route.RatePlayers> {
+                RatePlayersScreen(
+                    onBack = { navController.popBackStack() },
+                    onSubmitted = { navController.popBackStack() }
+                )
+            }
+
+            composable<Route.AvailablePlayers> { backStackEntry ->
+                val route = backStackEntry.toRoute<Route.AvailablePlayers>()
+                AvailablePlayersScreen(
+                    matchId = route.matchId,
+                    matchSportType = route.sportType,
+                    matchMinSkill = route.minSkillLevel,
+                    matchMaxSkill = route.maxSkillLevel,
+                    onBack = { navController.popBackStack() }
+                )
+            }
+
+            // Maps
+            composable<Route.VenueMap> {
+                VenueMapScreen(
+                    onVenueClick = { venueId ->
+                        navController.navigate(Route.VenueDetail(venueId))
+                    },
+                    onBack = { navController.popBackStack() }
+                )
+            }
+
+            composable<Route.MatchMap> {
+                MatchMapScreen(
+                    onMatchClick = { matchId ->
+                        navController.navigate(Route.MatchDetail(matchId))
+                    },
+                    onBack = { navController.popBackStack() }
+                )
+            }
+
+            // Public Profile
+            composable<Route.PlayerPublicProfile> {
+                PublicPlayerProfileScreen(
+                    onBack = { navController.popBackStack() }
+                )
+            }
+
+            // Search
+            composable<Route.Search> {
+                SearchScreen(
+                    onVenueClick = { venueId ->
+                        navController.navigate(Route.VenueDetail(venueId))
+                    },
+                    onCoachClick = { coachId ->
+                        navController.navigate(Route.CoachDetail(coachId))
+                    },
+                    onMatchClick = { matchId ->
+                        navController.navigate(Route.MatchDetail(matchId))
+                    },
+                    onBack = { navController.popBackStack() }
+                )
+            }
+
+            // Favorites
+            composable<Route.Favorites> {
+                FavoritesScreen(
+                    onBack = { navController.popBackStack() }
+                )
+            }
+
+            // Party
+            composable<Route.CreateParty> {
+                PartyCreateScreen(
+                    onPartyCreated = { partyId ->
+                        navController.navigate(Route.PartyDetail(partyId)) {
+                            popUpTo(Route.CreateParty) { inclusive = true }
+                        }
+                    },
+                    onBack = { navController.popBackStack() }
+                )
+            }
+
+            composable<Route.PartyDetail> {
+                PartyDetailScreen(
+                    onInviteFriends = { partyId ->
+                        navController.navigate(Route.PartyInviteMembers(partyId))
+                    },
+                    onFindMatch = {
+                        navController.navigate(Route.MatchList)
+                    },
+                    onBack = { navController.popBackStack() }
+                )
+            }
+
+            composable<Route.PartyInviteMembers> {
+                PartyInviteMembersScreen(
+                    onInvitesSent = { navController.popBackStack() },
+                    onBack = { navController.popBackStack() }
+                )
+            }
+
+            // Friends
+            composable<Route.FriendsList> {
+                FriendsListScreen(
+                    onBack = { navController.popBackStack() },
+                    onAddFriend = { navController.navigate(Route.AddFriend) },
+                    onViewRequests = { navController.navigate(Route.FriendRequests) }
+                )
+            }
+
+            composable<Route.FriendRequests> {
+                FriendRequestsScreen(
+                    onBack = { navController.popBackStack() }
+                )
+            }
+
+            composable<Route.AddFriend> {
+                AddFriendScreen(
+                    onBack = { navController.popBackStack() }
+                )
+            }
+
+            // Gamification
+            composable<Route.PlayerXpLevel> {
+                PlayerXpLevelScreen(
+                    onBack = { navController.popBackStack() }
+                )
+            }
+
+            composable<Route.PlayerAchievements> {
+                PlayerAchievementsScreen(
+                    onBack = { navController.popBackStack() }
+                )
+            }
+
+            composable<Route.PlayerStatsScreen> {
+                PlayerStatsScreen(
+                    onBack = { navController.popBackStack() }
                 )
             }
         }

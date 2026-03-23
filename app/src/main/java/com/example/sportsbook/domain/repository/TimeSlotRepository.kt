@@ -11,4 +11,16 @@ interface TimeSlotRepository {
     ): Result<List<TimeSlot>>
 
     suspend fun getSlotById(id: Long): Result<TimeSlot>
+
+    suspend fun generateSlots(
+        venueId: Long? = null,
+        coachId: Long? = null,
+        dateFrom: String,
+        dateTo: String,
+        startHour: Int? = null,
+        endHour: Int? = null,
+        daysOfWeek: List<Int>? = null
+    ): Result<List<TimeSlot>>
+
+    suspend fun deleteSlot(id: Long): Result<Unit>
 }

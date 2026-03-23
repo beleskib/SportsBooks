@@ -21,9 +21,31 @@ class AuthRepositoryImpl @Inject constructor(
         if (firebaseUser != null) {
             try {
                 val response = apiService.getProfile()
-                AuthState.Authenticated(response.data.toDomain())
+                val user = response.data.toDomain()
+                AuthState.Authenticated(user)
             } catch (e: Exception) {
-                AuthState.NeedsRoleSelection
+                // User exists in Firebase but not in backend — auto-register
+                try {
+                    apiService.registerUser(
+                        CreateUserRequestDto(
+                            firebaseUid = firebaseUser.uid,
+                            email = firebaseUser.email ?: "",
+                            displayName = firebaseUser.displayName,
+                            photoUrl = firebaseUser.photoUrl?.toString()
+                        )
+                    )
+                    // Newly registered user — needs role selection
+                    AuthState.NeedsRoleSelection
+                } catch (regError: Exception) {
+                    // 409 means user already exists — retry getProfile
+                    try {
+                        val retryResponse = apiService.getProfile()
+                        val user = retryResponse.data.toDomain()
+                        AuthState.Authenticated(user)
+                    } catch (retryError: Exception) {
+                        AuthState.NeedsRoleSelection
+                    }
+                }
             }
         } else {
             AuthState.Unauthenticated
@@ -32,9 +54,27 @@ class AuthRepositoryImpl @Inject constructor(
 
     override suspend fun signInWithEmail(email: String, password: String): Result<User> {
         return try {
-            firebaseAuthService.signInWithEmail(email, password)
-            val response = apiService.getProfile()
-            Result.success(response.data.toDomain())
+            val firebaseUser = firebaseAuthService.signInWithEmail(email, password)
+            // Try to get existing profile; if not found, register
+            val user = try {
+                apiService.getProfile().data.toDomain()
+            } catch (e: Exception) {
+                // User exists in Firebase but not in backend — register them
+                try {
+                    apiService.registerUser(
+                        CreateUserRequestDto(
+                            firebaseUid = firebaseUser.uid,
+                            email = firebaseUser.email ?: email,
+                            displayName = firebaseUser.displayName,
+                            photoUrl = firebaseUser.photoUrl?.toString()
+                        )
+                    ).data.toDomain()
+                } catch (regError: Exception) {
+                    // 409 means user already exists — retry getProfile
+                    apiService.getProfile().data.toDomain()
+                }
+            }
+            Result.success(user)
         } catch (e: Exception) {
             Result.failure(e)
         }

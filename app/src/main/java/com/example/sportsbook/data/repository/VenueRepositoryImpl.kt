@@ -1,6 +1,7 @@
 package com.example.sportsbook.data.repository
 
 import com.example.sportsbook.data.remote.api.ApiService
+import com.example.sportsbook.data.remote.dto.CreateVenueRequestDto
 import com.example.sportsbook.domain.enums.SportType
 import com.example.sportsbook.domain.model.Venue
 import com.example.sportsbook.domain.repository.VenueRepository
@@ -11,6 +12,10 @@ import javax.inject.Singleton
 class VenueRepositoryImpl @Inject constructor(
     private val apiService: ApiService
 ) : VenueRepository {
+
+    override suspend fun getAllVenues(): Result<List<Venue>> = runCatching {
+        apiService.getAllVenues().data.map { it.toDomain() }
+    }
 
     override suspend fun getVenuesBySport(sportType: SportType): Result<List<Venue>> = runCatching {
         apiService.getVenuesBySport(sportType.name.lowercase()).data.map { it.toDomain() }
@@ -28,9 +33,19 @@ class VenueRepositoryImpl @Inject constructor(
         apiService.searchVenues(query).data.map { it.toDomain() }
     }
 
-    override suspend fun createVenue(venue: Venue): Result<Venue> {
-        // TODO: Implement venue creation with multipart form for images
-        return Result.failure(NotImplementedError("Venue creation not yet implemented"))
+    override suspend fun createVenue(venue: Venue): Result<Venue> = runCatching {
+        val request = CreateVenueRequestDto(
+            name = venue.name,
+            description = venue.description,
+            sportType = venue.sportType.name.lowercase(),
+            pricePerHour = venue.pricePerHour,
+            address = venue.address,
+            city = venue.city,
+            country = venue.country,
+            phoneNumber = venue.phoneNumber,
+            email = venue.email
+        )
+        apiService.createVenue(request).data.toDomain()
     }
 
     override suspend fun updateVenue(venue: Venue): Result<Venue> {

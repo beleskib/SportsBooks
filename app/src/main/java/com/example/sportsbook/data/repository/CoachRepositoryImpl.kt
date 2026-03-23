@@ -1,6 +1,7 @@
 package com.example.sportsbook.data.repository
 
 import com.example.sportsbook.data.remote.api.ApiService
+import com.example.sportsbook.data.remote.dto.CreateCoachRequestDto
 import com.example.sportsbook.domain.enums.SportType
 import com.example.sportsbook.domain.model.Coach
 import com.example.sportsbook.domain.repository.CoachRepository
@@ -11,6 +12,10 @@ import javax.inject.Singleton
 class CoachRepositoryImpl @Inject constructor(
     private val apiService: ApiService
 ) : CoachRepository {
+
+    override suspend fun getAllCoaches(): Result<List<Coach>> = runCatching {
+        apiService.getAllCoaches().data.map { it.toDomain() }
+    }
 
     override suspend fun getCoachesBySport(sportType: SportType): Result<List<Coach>> = runCatching {
         apiService.getCoachesBySport(sportType.name.lowercase()).data.map { it.toDomain() }
@@ -28,9 +33,21 @@ class CoachRepositoryImpl @Inject constructor(
         apiService.searchCoaches(query).data.map { it.toDomain() }
     }
 
-    override suspend fun createCoach(coach: Coach): Result<Coach> {
-        // TODO: Implement coach creation
-        return Result.failure(NotImplementedError("Coach creation not yet implemented"))
+    override suspend fun createCoach(coach: Coach): Result<Coach> = runCatching {
+        val request = CreateCoachRequestDto(
+            name = coach.name,
+            bio = coach.bio,
+            sportType = coach.sportType.name.lowercase(),
+            specialization = coach.specialization,
+            experienceYears = coach.experienceYears,
+            pricePerHour = coach.pricePerHour,
+            address = coach.address,
+            city = coach.city,
+            country = coach.country,
+            phoneNumber = coach.phoneNumber,
+            email = coach.email
+        )
+        apiService.createCoach(request).data.toDomain()
     }
 
     override suspend fun updateCoach(coach: Coach): Result<Coach> {

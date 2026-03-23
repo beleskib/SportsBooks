@@ -4,6 +4,7 @@ import com.example.sportsbook.domain.enums.SportType
 import com.example.sportsbook.domain.model.Venue
 
 interface VenueRepository {
+    suspend fun getAllVenues(): Result<List<Venue>>
     suspend fun getVenuesBySport(sportType: SportType): Result<List<Venue>>
     suspend fun getVenueById(id: Long): Result<Venue>
     suspend fun getTopDeals(): Result<List<Venue>>

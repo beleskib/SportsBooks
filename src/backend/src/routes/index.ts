@@ -8,6 +8,16 @@ import timeSlotRoutes from './timeSlot.routes';
 import bookingRoutes from './booking.routes';
 import reviewRoutes from './review.routes';
 import discountRoutes from './discount.routes';
+import paymentRoutes from './payment.routes';
+import matchRoutes from './match.routes';
+import notificationRoutes from './notification.routes';
+import searchRoutes from './search.routes';
+import favoriteRoutes from './favorite.routes';
+import friendshipRoutes from './friendship.routes';
+import partyRoutes from './party.routes';
+import stripeConnectRoutes from './stripeConnect.routes';
+import availablePlayerRoutes from './availablePlayer.routes';
+import gamificationRoutes from './gamification.routes';
 
 const router = Router();
 
@@ -20,5 +30,15 @@ router.use('/', timeSlotRoutes);
 router.use('/bookings', bookingRoutes);
 router.use('/reviews', reviewRoutes);
 router.use('/discounts', discountRoutes);
+router.use('/payments', paymentRoutes);
+router.use('/matches', matchRoutes);
+router.use('/notifications', notificationRoutes);
+router.use('/search', searchRoutes);
+router.use('/favorites', favoriteRoutes);
+router.use('/friends', friendshipRoutes);
+router.use('/parties', partyRoutes);
+router.use('/stripe-connect', stripeConnectRoutes);
+router.use('/available-players', availablePlayerRoutes);
+router.use('/gamification', gamificationRoutes);
 
 export default router;

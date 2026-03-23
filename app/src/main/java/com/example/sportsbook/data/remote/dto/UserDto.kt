@@ -1,6 +1,7 @@
 package com.example.sportsbook.data.remote.dto
 
 import com.example.sportsbook.domain.enums.PartnerType
+import com.example.sportsbook.domain.enums.SportType
 import com.example.sportsbook.domain.enums.UserRole
 import com.example.sportsbook.domain.model.User
 import kotlinx.serialization.Serializable
@@ -13,9 +14,19 @@ data class UserDto(
     val displayName: String? = null,
     val photoUrl: String? = null,
     val phoneNumber: String? = null,
+    val bio: String? = null,
+    val dateOfBirth: String? = null,
+    val onboardingCompleted: Boolean = false,
     val role: UserRole,
     val partnerType: PartnerType? = null,
+    val interestedSports: List<SportType> = emptyList(),
+    val sportExpertise: List<SportExpertiseDto> = emptyList(),
     val isActive: Boolean,
+    val avgPlayerSkillRating: Double = 0.0,
+    val avgPlayerSportsmanshipRating: Double = 0.0,
+    val avgPlayerPunctualityRating: Double = 0.0,
+    val totalPlayerRatings: Int = 0,
+    val totalMatchesPlayed: Int = 0,
     val createdAt: String? = null,
     val updatedAt: String? = null
 ) {
@@ -26,9 +37,19 @@ data class UserDto(
         displayName = displayName,
         photoUrl = photoUrl,
         phoneNumber = phoneNumber,
+        bio = bio,
+        dateOfBirth = dateOfBirth,
+        onboardingCompleted = onboardingCompleted,
         role = role,
         partnerType = partnerType,
+        interestedSports = interestedSports,
+        sportExpertise = sportExpertise.map { it.toDomain() },
         isActive = isActive,
+        avgPlayerSkillRating = avgPlayerSkillRating,
+        avgPlayerSportsmanshipRating = avgPlayerSportsmanshipRating,
+        avgPlayerPunctualityRating = avgPlayerPunctualityRating,
+        totalPlayerRatings = totalPlayerRatings,
+        totalMatchesPlayed = totalMatchesPlayed,
         createdAt = createdAt,
         updatedAt = updatedAt
     )
@@ -46,11 +67,23 @@ data class CreateUserRequestDto(
 data class UpdateUserRequestDto(
     val displayName: String? = null,
     val photoUrl: String? = null,
-    val phoneNumber: String? = null
+    val phoneNumber: String? = null,
+    val bio: String? = null,
+    val dateOfBirth: String? = null
 )
 
 @Serializable
 data class SetRoleRequestDto(
     val role: UserRole,
     val partnerType: PartnerType? = null
+)
+
+@Serializable
+data class UpdateInterestedSportsRequestDto(
+    val sportTypes: List<SportType>
+)
+
+@Serializable
+data class InterestedSportsResponseDto(
+    val interestedSports: List<SportType>
 )

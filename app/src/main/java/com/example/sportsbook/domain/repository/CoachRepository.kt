@@ -4,6 +4,7 @@ import com.example.sportsbook.domain.enums.SportType
 import com.example.sportsbook.domain.model.Coach
 
 interface CoachRepository {
+    suspend fun getAllCoaches(): Result<List<Coach>>
     suspend fun getCoachesBySport(sportType: SportType): Result<List<Coach>>
     suspend fun getCoachById(id: Long): Result<Coach>
     suspend fun getTopDeals(): Result<List<Coach>>

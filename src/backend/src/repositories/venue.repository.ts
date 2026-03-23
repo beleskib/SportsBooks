@@ -172,6 +172,69 @@ function assembleVenues(
   }));
 }
 
+export async function findAll(): Promise<VenueRow[]> {
+  const result = await query(
+    `SELECT id, owner_id, name, description, sport_type, price_per_hour, address,
+            city, country, latitude, longitude, phone_number, email,
+            avg_rating, total_reviews, is_active, created_at, updated_at
+     FROM venues ORDER BY created_at DESC`
+  );
+  const ids = result.rows.map((r: any) => r.id);
+  const relations = await loadVenueRelations(ids);
+  return assembleVenues(result.rows, relations);
+}
+
+export async function update(
+  id: number,
+  data: {
+    name?: string;
+    description?: string;
+    pricePerHour?: number;
+    address?: string;
+    city?: string;
+    country?: string;
+    latitude?: number;
+    longitude?: number;
+    phoneNumber?: string;
+    email?: string;
+    isActive?: boolean;
+  }
+): Promise<VenueRow | null> {
+  const result = await query(
+    `UPDATE venues SET
+       name = COALESCE($2, name),
+       description = COALESCE($3, description),
+       price_per_hour = COALESCE($4, price_per_hour),
+       address = COALESCE($5, address),
+       city = COALESCE($6, city),
+       country = COALESCE($7, country),
+       latitude = COALESCE($8, latitude),
+       longitude = COALESCE($9, longitude),
+       phone_number = COALESCE($10, phone_number),
+       email = COALESCE($11, email),
+       is_active = COALESCE($12, is_active)
+     WHERE id = $1
+     RETURNING id, owner_id, name, description, sport_type, price_per_hour, address,
+               city, country, latitude, longitude, phone_number, email,
+               avg_rating, total_reviews, is_active, created_at, updated_at`,
+    [
+      id, data.name, data.description, data.pricePerHour, data.address,
+      data.city, data.country, data.latitude, data.longitude,
+      data.phoneNumber, data.email, data.isActive,
+    ]
+  );
+  if (result.rows.length === 0) return null;
+  const relations = await loadVenueRelations([id]);
+  return assembleVenues(result.rows, relations)[0];
+}
+
+export async function softDelete(id: number): Promise<void> {
+  await query(
+    `UPDATE venues SET is_active = false, updated_at = NOW() WHERE id = $1`,
+    [id]
+  );
+}
+
 export async function findBySport(sportType: string): Promise<VenueRow[]> {
   const result = await query(
     `SELECT id, owner_id, name, description, sport_type, price_per_hour, address,
@@ -274,4 +337,40 @@ export async function create(data: {
     ]
   );
   return { ...mapVenueRow(result.rows[0]), images: [], equipment: [], activeDiscount: null };
+}
+
+// ---- Venue Image Management ----
+
+export async function createVenueImage(data: {
+  venueId: number;
+  imageUrl: string;
+  isPrimary?: boolean;
+  displayOrder?: number;
+}): Promise<VenueImageRow> {
+  if (data.isPrimary) {
+    await query(`UPDATE venue_images SET is_primary = false WHERE venue_id = $1`, [data.venueId]);
+  }
+  const result = await query(
+    `INSERT INTO venue_images (venue_id, image_url, is_primary, display_order)
+     VALUES ($1, $2, $3, $4)
+     RETURNING id, venue_id, image_url, is_primary, display_order`,
+    [data.venueId, data.imageUrl, data.isPrimary ?? false, data.displayOrder ?? 0]
+  );
+  const row = result.rows[0];
+  return {
+    id: row.id,
+    venueId: row.venue_id,
+    imageUrl: row.image_url,
+    isPrimary: row.is_primary,
+    displayOrder: row.display_order,
+  };
+}
+
+export async function deleteVenueImage(imageId: number): Promise<void> {
+  await query(`DELETE FROM venue_images WHERE id = $1`, [imageId]);
+}
+
+export async function setVenuePrimaryImage(venueId: number, imageId: number): Promise<void> {
+  await query(`UPDATE venue_images SET is_primary = false WHERE venue_id = $1`, [venueId]);
+  await query(`UPDATE venue_images SET is_primary = true WHERE id = $1 AND venue_id = $2`, [imageId, venueId]);
 }

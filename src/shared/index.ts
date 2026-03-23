@@ -11,6 +11,15 @@ export {
   PaymentStatus,
   SportType,
   DayOfWeek,
+  SkillLevel,
+  ExperienceDuration,
+  MatchStatus,
+  MatchType,
+  MatchVisibility,
+  ParticipantStatus,
+  ParticipantRole,
+  RecurrenceFrequency,
+  StripeOnboardingStatus,
 } from './enums';
 
 // Common types
@@ -25,9 +34,14 @@ export type {
 // User types
 export type {
   UserProfile,
+  UserSportExpertise,
   CreateUserRequest,
   UpdateUserRequest,
   SetRoleRequest,
+  CompleteOnboardingRequest,
+  SetSportExpertiseRequest,
+  PublicPlayerProfile,
+  PublicMatchSummary,
 } from './types/user';
 
 // Venue types
@@ -71,6 +85,8 @@ export type {
 export type {
   Payment,
   CreatePaymentRequest,
+  StripeConnectOnboardingResponse,
+  StripeAccountStatusResponse,
 } from './types/payment';
 
 // Review types
@@ -86,6 +102,23 @@ export type {
   UpdateDiscountRequest,
 } from './types/discount';
 
+// Match types
+export type {
+  Match,
+  MatchParticipant,
+  MatchChatMessage,
+  PlayerRating,
+  MatchRecurrenceRule,
+  CreateMatchRequest,
+  UpdateMatchRequest,
+  MatchFilters,
+  JoinMatchRequest,
+  RespondToJoinRequest,
+  SendChatMessageRequest,
+  CreatePlayerRatingRequest,
+  CreateRecurrenceRuleRequest,
+} from './types/match';
+
 // Dashboard types
 export type {
   PartnerDashboardStats,
@@ -94,6 +127,56 @@ export type {
   AdminDashboardStats,
   SportPopularity,
 } from './types/dashboard';
+
+// Notification types
+export type {
+  Notification,
+  NotificationType,
+  RegisterDeviceTokenRequest,
+  MarkNotificationsReadRequest,
+} from './types/notification';
+
+// Search types
+export type {
+  GlobalSearchResults,
+} from './types/search';
+
+// Favorite types
+export type {
+  Favorite,
+  FavoriteEntityType,
+  ToggleFavoriteRequest,
+  CheckFavoritesRequest,
+  CheckFavoritesResponse,
+} from './types/favorite';
+
+// Friendship types
+export type {
+  Friendship,
+  FriendshipStatus,
+  SendFriendRequestRequest,
+  RespondToFriendRequestRequest,
+  UserSearchResult,
+} from './types/friendship';
+
+// Party types
+export type {
+  Party,
+  PartyMember,
+  PartyStatus,
+  PartyMemberStatus,
+  CreatePartyRequest,
+  InviteToPartyRequest,
+  RespondToPartyInviteRequest,
+  JoinMatchWithPartyRequest,
+} from './types/party';
+
+// Available Player types
+export type {
+  AvailablePlayer,
+  RegisterAvailableRequest,
+  InviteToMatchRequest,
+} from './types/availablePlayer';
 
 // API Endpoints
 export {
@@ -109,4 +192,11 @@ export {
   DISCOUNT_ENDPOINTS,
   DASHBOARD_ENDPOINTS,
   ADMIN_ENDPOINTS,
+  NOTIFICATION_ENDPOINTS,
+  SEARCH_ENDPOINTS,
+  FAVORITE_ENDPOINTS,
+  FRIEND_ENDPOINTS,
+  STRIPE_CONNECT_ENDPOINTS,
+  PARTY_ENDPOINTS,
+  AVAILABLE_PLAYER_ENDPOINTS,
 } from './api/endpoints';
