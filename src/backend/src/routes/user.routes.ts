@@ -10,4 +10,5 @@ router.put('/me/interested-sports', authenticate, userController.updateIntereste
 router.post('/me/complete-onboarding', authenticate, userController.completeOnboarding);
 router.get('/me/sport-expertise', authenticate, userController.getSportExpertise);
 router.put('/me/sport-expertise', authenticate, userController.setSportExpertise);
+router.get('/me/follow-counts', authenticate, userController.getFollowCounts);
 export default router;

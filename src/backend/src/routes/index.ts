@@ -18,6 +18,9 @@ import partyRoutes from './party.routes';
 import stripeConnectRoutes from './stripeConnect.routes';
 import availablePlayerRoutes from './availablePlayer.routes';
 import gamificationRoutes from './gamification.routes';
+import dashboardRoutes from './dashboard.routes';
+import bookingChatRoutes from './bookingChat.routes';
+import feedRoutes from './feed.routes';
 
 const router = Router();
 
@@ -40,5 +43,8 @@ router.use('/parties', partyRoutes);
 router.use('/stripe-connect', stripeConnectRoutes);
 router.use('/available-players', availablePlayerRoutes);
 router.use('/gamification', gamificationRoutes);
+router.use('/dashboard', dashboardRoutes);
+router.use('/bookings', bookingChatRoutes);
+router.use('/feed', feedRoutes);
 
 export default router;

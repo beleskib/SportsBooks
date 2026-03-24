@@ -166,15 +166,64 @@ fun BookingCalendarScreen(
     }
 }
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Preview(showBackground = true)
 @Composable
 private fun BookingCalendarScreenPreview() {
+    val today = LocalDate.now()
+    val nextSevenDays = (0..6).map { today.plusDays(it.toLong()) }
+    val dayOfWeekFormatter = DateTimeFormatter.ofPattern("EEE")
+    val dateFormatter = DateTimeFormatter.ofPattern("MMM d")
+
     MaterialTheme {
-        BookingCalendarScreen(
-            venueId = 1L,
-            coachId = null,
-            onSlotSelected = {},
-            onBack = {}
-        )
+        Scaffold(
+            topBar = {
+                TopAppBar(
+                    title = { Text("Select Time Slot") },
+                    navigationIcon = {
+                        IconButton(onClick = {}) {
+                            Icon(
+                                imageVector = Icons.AutoMirrored.Filled.ArrowBack,
+                                contentDescription = "Back"
+                            )
+                        }
+                    }
+                )
+            }
+        ) { paddingValues ->
+            Column(
+                modifier = Modifier
+                    .padding(paddingValues)
+                    .padding(horizontal = 16.dp)
+                    .verticalScroll(rememberScrollState())
+            ) {
+                Spacer(modifier = Modifier.height(8.dp))
+                Text(text = "Select Date", style = MaterialTheme.typography.labelLarge)
+                Spacer(modifier = Modifier.height(8.dp))
+                Row {
+                    nextSevenDays.forEach { date ->
+                        FilterChip(
+                            selected = date == today,
+                            onClick = {},
+                            label = {
+                                Column {
+                                    Text(
+                                        text = date.format(dayOfWeekFormatter),
+                                        style = MaterialTheme.typography.labelSmall
+                                    )
+                                    Text(
+                                        text = date.format(dateFormatter),
+                                        style = MaterialTheme.typography.bodySmall
+                                    )
+                                }
+                            },
+                            modifier = Modifier.padding(end = 4.dp)
+                        )
+                    }
+                }
+                Spacer(modifier = Modifier.height(16.dp))
+                Text(text = "Available Slots", style = MaterialTheme.typography.labelLarge)
+            }
+        }
     }
 }

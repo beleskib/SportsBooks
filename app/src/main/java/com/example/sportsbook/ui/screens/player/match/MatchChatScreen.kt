@@ -187,8 +187,67 @@ private fun ChatBubble(message: MatchChatMessage, isMe: Boolean) {
     }
 }
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Preview(showBackground = true)
 @Composable
 private fun MatchChatScreenPreview() {
-    MatchChatScreen(onBack = {})
+    val sampleMessages = listOf(
+        MatchChatMessage(id = 1L, matchId = 42L, senderId = 10L, senderName = "Alex Rivera", content = "Hey, still on for Sunday?", createdAt = "2026-03-20T17:00:00Z"),
+        MatchChatMessage(id = 2L, matchId = 42L, senderId = 99L, senderName = "Me", content = "Yes! I'll be there at 18:00.", createdAt = "2026-03-20T17:02:00Z"),
+        MatchChatMessage(id = 3L, matchId = 42L, senderId = 10L, senderName = "Alex Rivera", content = "Great, see you then!", createdAt = "2026-03-20T17:03:00Z")
+    )
+    val currentUserId = 99L
+    Scaffold(
+        topBar = {
+            TopAppBar(
+                title = { Text("Match Chat") },
+                navigationIcon = {
+                    IconButton(onClick = {}) {
+                        Icon(Icons.AutoMirrored.Filled.ArrowBack, "Back")
+                    }
+                }
+            )
+        }
+    ) { padding ->
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(padding)
+        ) {
+            LazyColumn(
+                modifier = Modifier
+                    .weight(1f)
+                    .fillMaxWidth()
+                    .padding(horizontal = 16.dp),
+                verticalArrangement = Arrangement.spacedBy(8.dp)
+            ) {
+                items(sampleMessages, key = { it.id }) { message ->
+                    ChatBubble(message = message, isMe = message.senderId == currentUserId)
+                }
+            }
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(8.dp),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                OutlinedTextField(
+                    value = "",
+                    onValueChange = {},
+                    modifier = Modifier.weight(1f),
+                    placeholder = { Text("Type a message...") },
+                    maxLines = 3,
+                    shape = RoundedCornerShape(24.dp)
+                )
+                Spacer(modifier = Modifier.width(8.dp))
+                IconButton(onClick = {}, enabled = false) {
+                    Icon(
+                        Icons.AutoMirrored.Filled.Send,
+                        contentDescription = "Send",
+                        tint = MaterialTheme.colorScheme.primary
+                    )
+                }
+            }
+        }
+    }
 }

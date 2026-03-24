@@ -1,6 +1,8 @@
 import { Request, Response, NextFunction } from 'express';
 import { success } from '../utils/apiResponse';
+import { ValidationError, NotFoundError } from '../utils/errors';
 import * as gamificationRepo from '../repositories/gamification.repository';
+import * as bookingRepo from '../repositories/booking.repository';
 
 export async function getMyLevel(req: Request, res: Response, next: NextFunction) {
   try {
@@ -89,6 +91,69 @@ export async function checkAndAwardAchievements(req: Request, res: Response, nex
       newlyEarned,
       totalNewAchievements: newlyEarned.length,
       level,
+    });
+  } catch (e) { next(e); }
+}
+
+// ── XP Redemption ───────────────────────────────────────────────────
+
+export async function redeemXp(req: Request, res: Response, next: NextFunction) {
+  try {
+    const userId = req.user!.id;
+    const { bookingId, xpAmount } = req.body;
+
+    if (!bookingId || !xpAmount || xpAmount <= 0) {
+      throw new ValidationError('bookingId and a positive xpAmount are required');
+    }
+
+    // 1. Validate booking exists, belongs to player, is in approved status
+    const booking = await bookingRepo.findById(bookingId);
+    if (!booking) throw new NotFoundError('Booking');
+    if (booking.playerId !== userId) {
+      throw new ValidationError('You can only redeem XP for your own bookings');
+    }
+    if (booking.status !== 'approved') {
+      throw new ValidationError('Booking must be in approved status to redeem XP');
+    }
+
+    // 2. Validate player has enough XP
+    const playerLevel = await gamificationRepo.getOrCreatePlayerLevel(userId);
+    if (playerLevel.totalXp < xpAmount) {
+      throw new ValidationError(
+        `Insufficient XP. You have ${playerLevel.totalXp} XP but tried to redeem ${xpAmount}`
+      );
+    }
+
+    // 3. Calculate discount: 100 XP = 1 MKD
+    const rawDiscount = xpAmount / 100;
+
+    // 4. Cap discount at booking total price (never go negative)
+    const existingDiscount = await gamificationRepo.getXpRedemptionDiscount(bookingId);
+    const maxAdditionalDiscount = booking.totalPrice - existingDiscount;
+    const discountAmount = Math.min(rawDiscount, maxAdditionalDiscount);
+    const actualXpSpent = Math.round(discountAmount * 100);
+
+    if (actualXpSpent <= 0) {
+      throw new ValidationError('This booking already has the maximum XP discount applied');
+    }
+
+    // 5. Create XP transaction with negative amount
+    await gamificationRepo.addXpTransaction(
+      userId,
+      -actualXpSpent,
+      'xp_redemption',
+      bookingId,
+      `Redeemed ${actualXpSpent} XP for ${discountAmount.toFixed(2)} MKD discount on booking #${bookingId}`
+    );
+
+    // 6. Update player level (recalculate from sum of all transactions)
+    const updatedLevel = await gamificationRepo.updatePlayerLevel(userId);
+
+    success(res, {
+      xpSpent: actualXpSpent,
+      discountAmount,
+      remainingXp: updatedLevel.totalXp,
+      newLevel: updatedLevel.currentLevel,
     });
   } catch (e) { next(e); }
 }

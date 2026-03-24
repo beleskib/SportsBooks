@@ -97,6 +97,7 @@ class BookingDetailViewModel @Inject constructor(
 fun BookingDetailScreen(
     bookingId: Long,
     onWriteReview: (Long) -> Unit,
+    onOpenChat: (Long) -> Unit = {},
     onBack: () -> Unit,
     viewModel: BookingDetailViewModel = hiltViewModel()
 ) {
@@ -168,7 +169,7 @@ fun BookingDetailScreen(
 
                             DetailRow(
                                 label = "Total Price",
-                                value = "$${"%.2f".format(booking.totalPrice)}"
+                                value = "${"%.0f".format(booking.totalPrice)} ден"
                             )
 
                             if (!booking.notes.isNullOrBlank()) {
@@ -199,6 +200,20 @@ fun BookingDetailScreen(
                         }
                         else -> Unit
                     }
+
+                    // Chat button available for approved, confirmed, and completed bookings
+                    if (booking.status == BookingStatus.APPROVED ||
+                        booking.status == BookingStatus.CONFIRMED ||
+                        booking.status == BookingStatus.COMPLETED
+                    ) {
+                        Spacer(modifier = Modifier.height(8.dp))
+                        OutlinedButton(
+                            onClick = { onOpenChat(bookingId) },
+                            modifier = Modifier.fillMaxWidth()
+                        ) {
+                            Text("Chat with Partner")
+                        }
+                    }
                 }
             }
         }
@@ -224,14 +239,57 @@ private fun DetailRow(
     }
 }
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Preview(showBackground = true)
 @Composable
 private fun BookingDetailScreenPreview() {
     MaterialTheme {
-        BookingDetailScreen(
-            bookingId = 1L,
-            onWriteReview = {},
-            onBack = {}
-        )
+        Scaffold(
+            topBar = {
+                TopAppBar(
+                    title = { Text("Booking Details") },
+                    navigationIcon = {
+                        IconButton(onClick = {}) {
+                            Icon(
+                                imageVector = Icons.AutoMirrored.Filled.ArrowBack,
+                                contentDescription = "Back"
+                            )
+                        }
+                    }
+                )
+            }
+        ) { paddingValues ->
+            Column(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(paddingValues)
+                    .padding(horizontal = 16.dp)
+            ) {
+                Spacer(modifier = Modifier.height(16.dp))
+                Card(modifier = Modifier.fillMaxWidth()) {
+                    Column(modifier = Modifier.padding(16.dp)) {
+                        Text(
+                            text = "City Tennis Center",
+                            style = MaterialTheme.typography.titleLarge
+                        )
+                        Spacer(modifier = Modifier.height(12.dp))
+                        DetailRow(label = "Date", value = "Mar 25, 2026")
+                        Spacer(modifier = Modifier.height(8.dp))
+                        DetailRow(label = "Time", value = "10:00 - 11:00")
+                        Spacer(modifier = Modifier.height(8.dp))
+                        DetailRow(label = "Status", value = "CONFIRMED")
+                        Spacer(modifier = Modifier.height(8.dp))
+                        DetailRow(label = "Total Price", value = "1500 ден")
+                    }
+                }
+                Spacer(modifier = Modifier.height(24.dp))
+                OutlinedButton(
+                    onClick = {},
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    Text("Cancel Booking")
+                }
+            }
+        }
     }
 }

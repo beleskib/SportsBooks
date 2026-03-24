@@ -28,6 +28,11 @@ import com.example.sportsbook.data.remote.dto.SportExpertiseResponseDto
 import com.example.sportsbook.data.remote.dto.UpdateInterestedSportsRequestDto
 import com.example.sportsbook.data.remote.dto.UpdateUserRequestDto
 import com.example.sportsbook.data.remote.dto.UserDto
+import com.example.sportsbook.data.remote.dto.FollowCountsDto
+import com.example.sportsbook.data.remote.dto.FeedPostDto
+import com.example.sportsbook.data.remote.dto.FeedCommentDto
+import com.example.sportsbook.data.remote.dto.CreateFeedPostRequestDto
+import com.example.sportsbook.data.remote.dto.AddCommentRequestDto
 import com.example.sportsbook.data.remote.dto.VenueDto
 import com.example.sportsbook.data.remote.dto.VenueImageDto
 import com.example.sportsbook.data.remote.dto.MatchDto
@@ -72,6 +77,12 @@ import com.example.sportsbook.data.remote.dto.AchievementDto
 import com.example.sportsbook.data.remote.dto.PlayerAchievementDto
 import com.example.sportsbook.data.remote.dto.PlayerStatsDto
 import com.example.sportsbook.data.remote.dto.CheckAchievementsResponseDto
+import com.example.sportsbook.data.remote.dto.RedeemXpRequestDto
+import com.example.sportsbook.data.remote.dto.RedeemXpResponseDto
+import com.example.sportsbook.data.remote.dto.BookingMessageDto
+import com.example.sportsbook.data.remote.dto.SendMessageRequestDto
+import com.example.sportsbook.data.remote.dto.BookingContactDto
+import com.example.sportsbook.data.remote.dto.PartnerDashboardStatsDto
 import retrofit2.http.Body
 import retrofit2.http.DELETE
 import retrofit2.http.GET
@@ -102,6 +113,9 @@ interface ApiService {
 
     @POST("api/users/me/complete-onboarding")
     suspend fun completeOnboarding(@Body request: CompleteOnboardingRequestDto): ApiResponseDto<UserDto>
+
+    @GET("api/users/me/follow-counts")
+    suspend fun getFollowCounts(): ApiResponseDto<FollowCountsDto>
 
     @GET("api/users/me/sport-expertise")
     suspend fun getSportExpertise(): ApiResponseDto<SportExpertiseResponseDto>
@@ -137,6 +151,9 @@ interface ApiService {
 
     @POST("api/venues")
     suspend fun createVenue(@Body request: CreateVenueRequestDto): ApiResponseDto<VenueDto>
+
+    @PUT("api/venues/{id}")
+    suspend fun updateVenue(@Path("id") id: Long, @Body request: CreateVenueRequestDto): ApiResponseDto<VenueDto>
 
     // Venue Images
     @POST("api/venues/{venueId}/images")
@@ -178,6 +195,9 @@ interface ApiService {
 
     @POST("api/coaches")
     suspend fun createCoach(@Body request: CreateCoachRequestDto): ApiResponseDto<CoachDto>
+
+    @PUT("api/coaches/{id}")
+    suspend fun updateCoach(@Path("id") id: Long, @Body request: CreateCoachRequestDto): ApiResponseDto<CoachDto>
 
     // Coach Images
     @POST("api/coaches/{coachId}/images")
@@ -240,6 +260,12 @@ interface ApiService {
 
     @GET("api/bookings/partner")
     suspend fun getPartnerBookings(@Query("status") status: String? = null): ApiResponseDto<List<BookingDto>>
+
+    @PUT("api/bookings/{id}/approve")
+    suspend fun approveBooking(@Path("id") id: Long): ApiResponseDto<BookingDto>
+
+    @PUT("api/bookings/{id}/decline")
+    suspend fun declineBooking(@Path("id") id: Long): ApiResponseDto<BookingDto>
 
     // Reviews
     @GET("api/reviews/venue/{venueId}")
@@ -500,4 +526,43 @@ interface ApiService {
 
     @POST("api/gamification/me/check-achievements")
     suspend fun checkAndAwardAchievements(): ApiResponseDto<CheckAchievementsResponseDto>
+
+    @POST("api/gamification/me/redeem-xp")
+    suspend fun redeemXp(@Body request: RedeemXpRequestDto): ApiResponseDto<RedeemXpResponseDto>
+
+    // ── Booking Chat ───────────────────────────────────────────────────────
+    @GET("api/bookings/{id}/messages")
+    suspend fun getBookingMessages(@Path("id") bookingId: Long): ApiResponseDto<List<BookingMessageDto>>
+
+    @POST("api/bookings/{id}/messages")
+    suspend fun sendBookingMessage(
+        @Path("id") bookingId: Long,
+        @Body request: SendMessageRequestDto
+    ): ApiResponseDto<BookingMessageDto>
+
+    @GET("api/bookings/{id}/contact")
+    suspend fun getBookingContact(@Path("id") bookingId: Long): ApiResponseDto<BookingContactDto>
+
+    // ── Partner Analytics ─────────────────────────────────────────────────
+    @GET("api/dashboard/partner/stats")
+    suspend fun getPartnerDashboardStats(): ApiResponseDto<PartnerDashboardStatsDto>
+
+    // Feed
+    @GET("api/feed")
+    suspend fun getFeed(
+        @Query("limit") limit: Int = 20,
+        @Query("offset") offset: Int = 0
+    ): ApiResponseDto<List<FeedPostDto>>
+
+    @POST("api/feed")
+    suspend fun createPost(@Body request: CreateFeedPostRequestDto): ApiResponseDto<FeedPostDto>
+
+    @POST("api/feed/{id}/like")
+    suspend fun toggleLike(@Path("id") postId: Long): ApiResponseDto<FeedPostDto>
+
+    @GET("api/feed/{id}/comments")
+    suspend fun getPostComments(@Path("id") postId: Long): ApiResponseDto<List<FeedCommentDto>>
+
+    @POST("api/feed/{id}/comments")
+    suspend fun addComment(@Path("id") postId: Long, @Body request: AddCommentRequestDto): ApiResponseDto<FeedCommentDto>
 }

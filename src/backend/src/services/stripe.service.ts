@@ -1,6 +1,7 @@
 import { getStripe } from '../config/stripe';
 import * as bookingRepo from '../repositories/booking.repository';
 import * as paymentRepo from '../repositories/payment.repository';
+import * as gamificationRepo from '../repositories/gamification.repository';
 import { query } from '../config/database';
 import { NotFoundError, ValidationError } from '../utils/errors';
 import { resolvePartnerStripeAccountId } from './stripeConnect.service';
@@ -17,28 +18,62 @@ export interface PaymentIntentResult {
 
 export async function createPaymentIntent(
   playerId: number,
-  timeSlotId: number,
-  notes?: string
+  bookingId: number
 ): Promise<PaymentIntentResult> {
-  // 1. Create booking (pending) using existing stored procedure
-  const booking = await bookingRepo.create(playerId, timeSlotId, notes);
+  // 1. Fetch existing booking and validate
+  const booking = await bookingRepo.findById(bookingId);
+  if (!booking) throw new NotFoundError('Booking');
+  if (booking.status !== 'approved') {
+    throw new ValidationError('Booking must be in approved status before payment');
+  }
+  if (booking.playerId !== playerId) {
+    throw new ValidationError('You can only pay for your own bookings');
+  }
 
-  // 2. Resolve partner's Stripe Connect account for destination charges
+  // 2. Check if the booking has any XP redemption discount
+  const xpDiscount = await gamificationRepo.getXpRedemptionDiscount(bookingId);
+  const effectivePrice = Math.max(booking.totalPrice - xpDiscount, 0);
+
+  // 3. If the XP discount covers 100% of the price, skip Stripe entirely
+  if (effectivePrice === 0) {
+    // Create a payment record marked as completed (no Stripe needed)
+    const payment = await paymentRepo.create(
+      booking.id,
+      playerId,
+      0,
+      'MKD',
+      'xp_full_coverage',
+      0
+    );
+    await paymentRepo.updateStatus(payment.id, 'completed', new Date().toISOString());
+    await bookingRepo.updateStatus(booking.id, 'confirmed');
+
+    return {
+      clientSecret: '',
+      bookingId: booking.id,
+      paymentId: payment.id,
+      amount: 0,
+      currency: 'MKD',
+    };
+  }
+
+  // 4. Resolve partner's Stripe Connect account for destination charges
   const stripe = getStripe();
-  const amountInCents = Math.round(booking.totalPrice * 100);
+  const amountInCents = Math.round(effectivePrice * 100);
   const partnerStripeAccountId = await resolvePartnerStripeAccountId(
     booking.venueId ?? null,
     booking.coachId ?? null
   );
 
-  // 3. Create Stripe PaymentIntent (with destination charge if partner is onboarded)
+  // 5. Create Stripe PaymentIntent (with destination charge if partner is onboarded)
   let platformFeeAmount: number | undefined;
   const paymentIntentParams: Record<string, any> = {
     amount: amountInCents,
-    currency: 'usd',
+    currency: 'mkd',
     metadata: {
       bookingId: String(booking.id),
       playerId: String(playerId),
+      xpDiscount: String(xpDiscount),
     },
     automatic_payment_methods: { enabled: true },
   };
@@ -47,17 +82,17 @@ export async function createPaymentIntent(
     const feeInCents = Math.round(amountInCents * PLATFORM_FEE_PERCENT);
     paymentIntentParams.application_fee_amount = feeInCents;
     paymentIntentParams.transfer_data = { destination: partnerStripeAccountId };
-    platformFeeAmount = feeInCents / 100; // store in dollars
+    platformFeeAmount = feeInCents / 100; // store in denar
   }
 
   const paymentIntent = await stripe.paymentIntents.create(paymentIntentParams);
 
-  // 4. Create payment record (pending)
+  // 6. Create payment record (pending)
   const payment = await paymentRepo.create(
     booking.id,
     playerId,
-    booking.totalPrice,
-    'USD',
+    effectivePrice,
+    'MKD',
     paymentIntent.id,
     platformFeeAmount
   );
@@ -66,8 +101,8 @@ export async function createPaymentIntent(
     clientSecret: paymentIntent.client_secret!,
     bookingId: booking.id,
     paymentId: payment.id,
-    amount: booking.totalPrice,
-    currency: 'USD',
+    amount: effectivePrice,
+    currency: 'MKD',
   };
 }
 

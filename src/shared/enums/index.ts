@@ -16,6 +16,7 @@ export enum PartnerType {
 
 export enum BookingStatus {
   PENDING = 'pending',
+  APPROVED = 'approved',
   CONFIRMED = 'confirmed',
   CANCELLED = 'cancelled',
   COMPLETED = 'completed',

@@ -20,6 +20,8 @@ import javax.inject.Inject
 data class PlayerProfileUiState(
     val user: User? = null,
     val sports: List<Sport> = emptyList(),
+    val followers: Int = 0,
+    val following: Int = 0,
     val isLoading: Boolean = false,
     val isSaving: Boolean = false,
     val error: String? = null,
@@ -51,15 +53,20 @@ class PlayerProfileViewModel @Inject constructor(
 
             val userDeferred = async { userRepository.getProfile() }
             val sportsDeferred = async { sportRepository.getSports() }
+            val followDeferred = async { userRepository.getFollowCounts() }
 
             val userResult = userDeferred.await()
             val sportsResult = sportsDeferred.await()
+            val followResult = followDeferred.await()
+            val followCounts = followResult.getOrNull()
 
             _uiState.update { current ->
                 val user = userResult.getOrNull()
                 current.copy(
                     user = user ?: current.user,
                     sports = sportsResult.getOrElse { current.sports },
+                    followers = followCounts?.first ?: current.followers,
+                    following = followCounts?.second ?: current.following,
                     selectedSports = user?.interestedSports ?: current.selectedSports,
                     editDisplayName = user?.displayName ?: "",
                     editPhoneNumber = user?.phoneNumber ?: "",

@@ -6,6 +6,8 @@ import androidx.lifecycle.viewModelScope
 import com.example.sportsbook.domain.model.Match
 import com.example.sportsbook.domain.model.MatchParticipant
 import com.example.sportsbook.domain.model.Party
+import com.example.sportsbook.data.remote.api.ApiService
+import com.example.sportsbook.data.remote.dto.CreateFeedPostRequestDto
 import com.example.sportsbook.domain.repository.AuthRepository
 import com.example.sportsbook.domain.repository.MatchRepository
 import com.example.sportsbook.domain.repository.PartyRepository
@@ -23,9 +25,11 @@ data class MatchDetailUiState(
     val activeParty: Party? = null,
     val isLoading: Boolean = false,
     val isJoining: Boolean = false,
+    val isSharing: Boolean = false,
     val error: String? = null,
     val joinSuccess: Boolean = false,
-    val leaveSuccess: Boolean = false
+    val leaveSuccess: Boolean = false,
+    val shareSuccess: Boolean = false
 ) {
     val isHost: Boolean get() = match?.hostId == currentUserId
     val isParticipant: Boolean
@@ -43,6 +47,7 @@ class MatchDetailViewModel @Inject constructor(
     private val matchRepository: MatchRepository,
     private val authRepository: AuthRepository,
     private val partyRepository: PartyRepository,
+    private val apiService: ApiService,
     savedStateHandle: SavedStateHandle
 ) : ViewModel() {
 
@@ -142,5 +147,42 @@ class MatchDetailViewModel @Inject constructor(
                 .onSuccess { loadMatch() }
                 .onFailure { e -> _uiState.update { it.copy(error = e.message) } }
         }
+    }
+
+    fun shareMatchToFeed(caption: String?) {
+        val match = _uiState.value.match ?: return
+        viewModelScope.launch {
+            _uiState.update { it.copy(isSharing = true) }
+            try {
+                val metadata = mutableMapOf(
+                    "matchId" to match.id.toString(),
+                    "matchTitle" to match.title,
+                    "sport" to match.sportType.displayName,
+                    "date" to match.matchDate,
+                    "time" to match.displayTime,
+                    "location" to match.displayLocation,
+                    "players" to "${match.currentPlayers}/${match.maxPlayers}",
+                    "status" to match.status.name
+                )
+                match.hostName?.let { metadata["hostName"] = it }
+
+                val content = caption?.takeIf { it.isNotBlank() }
+                    ?: "Come join us for ${match.sportType.displayName} at ${match.displayLocation}!"
+
+                val request = CreateFeedPostRequestDto(
+                    postType = "match_share",
+                    content = content,
+                    metadata = metadata
+                )
+                apiService.createPost(request)
+                _uiState.update { it.copy(isSharing = false, shareSuccess = true) }
+            } catch (e: Exception) {
+                _uiState.update { it.copy(isSharing = false, error = e.message) }
+            }
+        }
+    }
+
+    fun clearShareSuccess() {
+        _uiState.update { it.copy(shareSuccess = false) }
     }
 }

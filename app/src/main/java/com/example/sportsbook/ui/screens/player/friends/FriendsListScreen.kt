@@ -225,14 +225,66 @@ internal fun FriendAvatar(
 }
 
 @Preview(showBackground = true)
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 private fun FriendsListScreenPreview() {
     MaterialTheme {
-        FriendsListScreen(
-            onBack = {},
-            onAddFriend = {},
-            onViewRequests = {}
-        )
+        Scaffold(
+            topBar = {
+                TopAppBar(
+                    title = { Text("Friends") },
+                    navigationIcon = {
+                        IconButton(onClick = {}) {
+                            Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back")
+                        }
+                    },
+                    actions = {
+                        IconButton(onClick = {}) {
+                            Icon(Icons.Default.MailOutline, contentDescription = "Friend Requests")
+                        }
+                        IconButton(onClick = {}) {
+                            Icon(Icons.Default.PersonAdd, contentDescription = "Add Friend")
+                        }
+                    }
+                )
+            }
+        ) { padding ->
+            LazyColumn(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(padding)
+                    .padding(horizontal = 16.dp),
+                verticalArrangement = Arrangement.spacedBy(8.dp)
+            ) {
+                item { Spacer(modifier = Modifier.height(8.dp)) }
+                item {
+                    FriendCard(
+                        friend = Friendship(
+                            id = 1,
+                            friendId = 42,
+                            friendName = "Alex Johnson",
+                            friendPhotoUrl = null,
+                            status = "accepted",
+                            createdAt = "2026-02-14T08:00:00Z"
+                        ),
+                        onRemove = {}
+                    )
+                }
+                item {
+                    FriendCard(
+                        friend = Friendship(
+                            id = 2,
+                            friendId = 55,
+                            friendName = "Maria Garcia",
+                            friendPhotoUrl = null,
+                            status = "accepted",
+                            createdAt = "2026-03-01T10:00:00Z"
+                        ),
+                        onRemove = {}
+                    )
+                }
+            }
+        }
     }
 }
 

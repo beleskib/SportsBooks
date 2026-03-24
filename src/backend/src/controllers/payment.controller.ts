@@ -18,13 +18,13 @@ async function resolveUserId(req: Request): Promise<number> {
 export async function createPaymentIntent(req: Request, res: Response, next: NextFunction) {
   try {
     const userId = await resolveUserId(req);
-    const { timeSlotId, notes } = req.body;
+    const { bookingId } = req.body;
 
-    if (!timeSlotId) {
-      throw new ValidationError('timeSlotId is required');
+    if (!bookingId) {
+      throw new ValidationError('bookingId is required');
     }
 
-    const result = await stripeService.createPaymentIntent(userId, timeSlotId, notes);
+    const result = await stripeService.createPaymentIntent(userId, bookingId);
     created(res, result, 'Payment intent created');
   } catch (e) {
     next(e);

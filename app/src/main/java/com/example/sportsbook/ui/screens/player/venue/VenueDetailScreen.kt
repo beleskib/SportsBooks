@@ -357,14 +357,56 @@ private fun ReviewItem(
     }
 }
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Preview(showBackground = true)
 @Composable
 private fun VenueDetailScreenPreview() {
-    MaterialTheme {
-        VenueDetailScreen(
-            venueId = 1L,
-            onBookClick = {},
-            onBack = {}
+    val sampleVenue = Venue(
+        id = 1L,
+        name = "City Basketball Court",
+        description = "A premium indoor basketball court with professional-grade flooring and equipment.",
+        sportType = com.example.sportsbook.domain.enums.SportType.BASKETBALL,
+        pricePerHour = 35.0,
+        address = "123 Main Street, Skopje",
+        avgRating = 4.6,
+        totalReviews = 28,
+        equipment = listOf(
+            VenueEquipment(id = 1L, venueId = 1L, name = "Basketballs", isIncluded = true),
+            VenueEquipment(id = 2L, venueId = 1L, name = "Lockers", isIncluded = true),
+            VenueEquipment(id = 3L, venueId = 1L, name = "Parking", isIncluded = false)
         )
+    )
+    val sampleReviews = listOf(
+        Review(id = 1L, playerId = 10L, venueId = 1L, rating = 5, comment = "Great court, very clean.", playerName = "Jordan M.", createdAt = "2026-02-20")
+    )
+    MaterialTheme {
+        Scaffold(
+            topBar = {
+                TopAppBar(
+                    title = { Text(sampleVenue.name) },
+                    navigationIcon = {
+                        IconButton(onClick = {}) {
+                            Icon(
+                                imageVector = Icons.AutoMirrored.Filled.ArrowBack,
+                                contentDescription = "Back"
+                            )
+                        }
+                    }
+                )
+            },
+            floatingActionButton = {
+                ExtendedFloatingActionButton(
+                    text = { Text("Book Now") },
+                    icon = {},
+                    onClick = {}
+                )
+            }
+        ) { innerPadding ->
+            VenueDetailContent(
+                venue = sampleVenue,
+                reviews = sampleReviews,
+                modifier = Modifier.padding(innerPadding)
+            )
+        }
     }
 }

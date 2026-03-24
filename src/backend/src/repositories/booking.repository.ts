@@ -1,4 +1,5 @@
 import { query } from '../config/database';
+import { NotFoundError } from '../utils/errors';
 
 export interface BookingRow {
   id: number;
@@ -9,6 +10,7 @@ export interface BookingRow {
   status: string;
   totalPrice: number;
   notes: string | null;
+  expiresAt: string | null;
   playerName?: string;
   playerEmail?: string;
   venueName?: string;
@@ -30,6 +32,7 @@ function mapRow(row: any): BookingRow {
     status: row.status,
     totalPrice: Number(row.total_price),
     notes: row.notes,
+    expiresAt: row.expires_at?.toISOString?.() ?? row.expires_at ?? null,
     playerName: row.player_name ?? row.display_name,
     playerEmail: row.player_email ?? row.email,
     venueName: row.venue_name,
@@ -99,7 +102,7 @@ export async function create(playerId: number, timeSlotId: number, notes?: strin
 export async function findByPlayerId(playerId: number, status?: string): Promise<BookingRow[]> {
   let sql = `
     SELECT b.id, b.player_id, b.time_slot_id, b.venue_id, b.coach_id,
-           b.status, b.total_price, b.notes, b.created_at, b.updated_at,
+           b.status, b.total_price, b.notes, b.expires_at, b.created_at, b.updated_at,
            v.name AS venue_name, c.name AS coach_name,
            ts.slot_date, ts.start_time, ts.end_time
     FROM bookings b
@@ -122,7 +125,7 @@ export async function findByPlayerId(playerId: number, status?: string): Promise
 export async function findById(id: number): Promise<BookingRow | null> {
   const result = await query(
     `SELECT b.id, b.player_id, b.time_slot_id, b.venue_id, b.coach_id,
-            b.status, b.total_price, b.notes, b.created_at, b.updated_at,
+            b.status, b.total_price, b.notes, b.expires_at, b.created_at, b.updated_at,
             u.display_name AS player_name, u.email AS player_email,
             v.name AS venue_name, c.name AS coach_name,
             ts.slot_date, ts.start_time, ts.end_time
@@ -150,7 +153,7 @@ export async function updateStatus(id: number, status: string): Promise<BookingR
 export async function findByPartner(userId: number, status?: string): Promise<BookingRow[]> {
   let sql = `
     SELECT b.id, b.player_id, b.time_slot_id, b.venue_id, b.coach_id,
-           b.status, b.total_price, b.notes, b.created_at, b.updated_at,
+           b.status, b.total_price, b.notes, b.expires_at, b.created_at, b.updated_at,
            u.display_name AS player_name, u.email AS player_email,
            v.name AS venue_name, c.name AS coach_name,
            ts.slot_date, ts.start_time, ts.end_time
@@ -170,4 +173,33 @@ export async function findByPartner(userId: number, status?: string): Promise<Bo
 
   const result = await query(sql, params);
   return result.rows.map(mapRow);
+}
+
+export async function approveBooking(id: number): Promise<BookingRow> {
+  const result = await query(
+    `UPDATE bookings SET status = 'approved', expires_at = NULL, updated_at = NOW()
+     WHERE id = $1 AND status = 'pending'
+     RETURNING *`,
+    [id]
+  );
+  if (result.rows.length === 0) throw new NotFoundError('Booking not found or not in pending status');
+  // Re-fetch with joins to get full data
+  const booking = await findById(id);
+  if (!booking) throw new NotFoundError('Booking');
+  return booking;
+}
+
+export async function declineBooking(id: number): Promise<BookingRow> {
+  const result = await query(
+    `UPDATE bookings SET status = 'cancelled', expires_at = NULL, updated_at = NOW()
+     WHERE id = $1 AND status = 'pending'
+     RETURNING time_slot_id`,
+    [id]
+  );
+  if (result.rows.length === 0) throw new NotFoundError('Booking not found or not in pending status');
+  // Reopen the time slot
+  await query('UPDATE time_slots SET is_available = true, updated_at = NOW() WHERE id = $1', [result.rows[0].time_slot_id]);
+  const booking = await findById(id);
+  if (!booking) throw new NotFoundError('Booking');
+  return booking;
 }

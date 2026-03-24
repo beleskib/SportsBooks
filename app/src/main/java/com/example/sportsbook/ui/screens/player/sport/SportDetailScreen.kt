@@ -241,15 +241,79 @@ fun SportDetailScreen(
     }
 }
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Preview(showBackground = true)
 @Composable
-fun SportDetailScreenPreview() {
+private fun SportDetailScreenPreview() {
+    val sampleVenues = listOf(
+        com.example.sportsbook.domain.model.Venue(id = 1L, name = "City Basketball Court", address = "123 Main St", pricePerHour = 30.0, avgRating = 4.5, totalReviews = 22),
+        com.example.sportsbook.domain.model.Venue(id = 2L, name = "Downtown Sports Hall", address = "456 Park Ave", pricePerHour = 40.0, avgRating = 4.2, totalReviews = 11)
+    )
     MaterialTheme {
-        SportDetailScreen(
-            sportType = "BASKETBALL",
-            onVenueClick = {},
-            onCoachClick = {},
-            onBack = {}
-        )
+        Scaffold(
+            topBar = {
+                TopAppBar(
+                    title = { Text("Basketball") },
+                    navigationIcon = {
+                        IconButton(onClick = {}) {
+                            Icon(
+                                imageVector = Icons.AutoMirrored.Filled.ArrowBack,
+                                contentDescription = "Back"
+                            )
+                        }
+                    }
+                )
+            }
+        ) { innerPadding ->
+            Column(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(innerPadding)
+            ) {
+                TabRow(selectedTabIndex = 0) {
+                    listOf("Venues", "Coaches").forEachIndexed { index, title ->
+                        Tab(
+                            selected = index == 0,
+                            onClick = {},
+                            text = { Text(title) }
+                        )
+                    }
+                }
+                LazyColumn(modifier = Modifier.fillMaxSize()) {
+                    items(sampleVenues) { venue ->
+                        Box(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(horizontal = 16.dp, vertical = 6.dp)
+                        ) {
+                            Card(modifier = Modifier.fillMaxWidth()) {
+                                Row(
+                                    modifier = Modifier.padding(12.dp),
+                                    verticalAlignment = Alignment.Top
+                                ) {
+                                    Box(
+                                        modifier = Modifier
+                                            .size(80.dp)
+                                            .clip(RoundedCornerShape(8.dp))
+                                            .background(MaterialTheme.colorScheme.primaryContainer)
+                                    )
+                                    Spacer(modifier = Modifier.width(12.dp))
+                                    Column(modifier = Modifier.weight(1f)) {
+                                        Text(text = venue.name, style = MaterialTheme.typography.titleMedium)
+                                        Text(
+                                            text = venue.address,
+                                            style = MaterialTheme.typography.bodySmall,
+                                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                                        )
+                                        Spacer(modifier = Modifier.height(4.dp))
+                                        PriceTag(price = venue.pricePerHour, discountedPrice = venue.discountedPrice)
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
     }
 }

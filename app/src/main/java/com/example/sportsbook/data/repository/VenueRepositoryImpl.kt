@@ -48,9 +48,21 @@ class VenueRepositoryImpl @Inject constructor(
         apiService.createVenue(request).data.toDomain()
     }
 
-    override suspend fun updateVenue(venue: Venue): Result<Venue> {
-        // TODO: Implement venue update
-        return Result.failure(NotImplementedError("Venue update not yet implemented"))
+    override suspend fun updateVenue(venue: Venue): Result<Venue> = runCatching {
+        apiService.updateVenue(
+            venue.id,
+            CreateVenueRequestDto(
+                name = venue.name,
+                description = venue.description,
+                sportType = venue.sportType.name.lowercase(),
+                pricePerHour = venue.pricePerHour,
+                address = venue.address,
+                city = venue.city,
+                country = venue.country,
+                phoneNumber = venue.phoneNumber,
+                email = venue.email
+            )
+        ).data.toDomain()
     }
 
     override suspend fun getMyVenues(): Result<List<Venue>> = runCatching {

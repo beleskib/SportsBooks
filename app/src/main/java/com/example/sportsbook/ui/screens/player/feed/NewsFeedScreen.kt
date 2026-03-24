@@ -1,0 +1,531 @@
+package com.example.sportsbook.ui.screens.player.feed
+
+import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.ChatBubbleOutline
+import androidx.compose.material.icons.filled.EmojiEvents
+import androidx.compose.material.icons.filled.Favorite
+import androidx.compose.material.icons.filled.FavoriteBorder
+import androidx.compose.material.icons.filled.LocationOn
+import androidx.compose.material.icons.filled.Person
+import androidx.compose.material.icons.filled.SportsScore
+import androidx.compose.material3.Card
+import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.FloatingActionButton
+import androidx.compose.material3.HorizontalDivider
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Text
+import androidx.compose.material3.TopAppBar
+import androidx.compose.material3.TopAppBarDefaults
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.unit.dp
+import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.lifecycle.ViewModel
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import androidx.lifecycle.viewModelScope
+import coil.compose.AsyncImage
+import com.example.sportsbook.data.remote.dto.FeedPostDto
+import com.example.sportsbook.ui.theme.Navy600
+import com.example.sportsbook.ui.theme.Navy700
+import com.example.sportsbook.ui.theme.Navy900
+import com.example.sportsbook.ui.theme.SportsBookTheme
+import com.example.sportsbook.ui.theme.USOpenGold
+import com.example.sportsbook.ui.theme.WarmWhite
+import dagger.hilt.android.lifecycle.HiltViewModel
+import com.example.sportsbook.data.remote.api.ApiService
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.update
+import kotlinx.coroutines.launch
+import javax.inject.Inject
+
+data class FeedUiState(
+    val posts: List<FeedPostDto> = emptyList(),
+    val isLoading: Boolean = false,
+    val error: String? = null
+)
+
+@HiltViewModel
+class NewsFeedViewModel @Inject constructor(
+    private val apiService: ApiService
+) : ViewModel() {
+
+    private val _uiState = MutableStateFlow(FeedUiState())
+    val uiState: StateFlow<FeedUiState> = _uiState.asStateFlow()
+
+    init {
+        loadFeed()
+    }
+
+    fun loadFeed() {
+        viewModelScope.launch {
+            _uiState.update { it.copy(isLoading = true, error = null) }
+            try {
+                val response = apiService.getFeed()
+                _uiState.update { it.copy(posts = response.data, isLoading = false) }
+            } catch (e: Exception) {
+                _uiState.update { it.copy(error = e.message, isLoading = false) }
+            }
+        }
+    }
+
+    fun toggleLike(postId: Long) {
+        viewModelScope.launch {
+            try {
+                val response = apiService.toggleLike(postId)
+                val updatedPost = response.data
+                _uiState.update { state ->
+                    state.copy(
+                        posts = state.posts.map {
+                            if (it.id == postId) updatedPost else it
+                        }
+                    )
+                }
+            } catch (_: Exception) { }
+        }
+    }
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun NewsFeedScreen(
+    onCreatePost: () -> Unit = {},
+    onUserClick: (Long) -> Unit = {},
+    viewModel: NewsFeedViewModel = hiltViewModel()
+) {
+    val uiState by viewModel.uiState.collectAsStateWithLifecycle()
+
+    Scaffold(
+        containerColor = Navy900,
+        topBar = {
+            TopAppBar(
+                title = {
+                    Text(
+                        "Feed",
+                        style = MaterialTheme.typography.headlineMedium.copy(fontWeight = FontWeight.Bold),
+                        color = WarmWhite
+                    )
+                },
+                colors = TopAppBarDefaults.topAppBarColors(containerColor = Navy900)
+            )
+        },
+        floatingActionButton = {
+            FloatingActionButton(
+                onClick = onCreatePost,
+                containerColor = USOpenGold,
+                contentColor = Navy900
+            ) {
+                Icon(Icons.Default.Add, contentDescription = "Create Post")
+            }
+        }
+    ) { paddingValues ->
+        when {
+            uiState.isLoading -> {
+                Box(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .padding(paddingValues),
+                    contentAlignment = Alignment.Center
+                ) {
+                    CircularProgressIndicator(color = USOpenGold)
+                }
+            }
+            uiState.posts.isEmpty() -> {
+                Box(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .padding(paddingValues),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                        Icon(
+                            Icons.Default.SportsScore,
+                            contentDescription = null,
+                            modifier = Modifier.size(64.dp),
+                            tint = WarmWhite.copy(alpha = 0.3f)
+                        )
+                        Spacer(modifier = Modifier.height(12.dp))
+                        Text(
+                            text = "No posts yet",
+                            style = MaterialTheme.typography.titleMedium,
+                            color = WarmWhite.copy(alpha = 0.5f)
+                        )
+                        Spacer(modifier = Modifier.height(4.dp))
+                        Text(
+                            text = "Follow players and partners to see their updates",
+                            style = MaterialTheme.typography.bodySmall,
+                            color = WarmWhite.copy(alpha = 0.3f)
+                        )
+                    }
+                }
+            }
+            else -> {
+                LazyColumn(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .padding(paddingValues),
+                    contentPadding = PaddingValues(vertical = 8.dp),
+                    verticalArrangement = Arrangement.spacedBy(2.dp)
+                ) {
+                    items(uiState.posts, key = { it.id }) { post ->
+                        FeedPostCard(
+                            post = post,
+                            onLike = { viewModel.toggleLike(post.id) },
+                            onUserClick = { onUserClick(post.userId) }
+                        )
+                    }
+                }
+            }
+        }
+    }
+}
+
+@Composable
+private fun FeedPostCard(
+    post: FeedPostDto,
+    onLike: () -> Unit,
+    onUserClick: () -> Unit
+) {
+    Card(
+        modifier = Modifier.fillMaxWidth(),
+        shape = RoundedCornerShape(0.dp),
+        colors = CardDefaults.cardColors(containerColor = Navy700.copy(alpha = 0.5f)),
+        elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)
+    ) {
+        Column(modifier = Modifier.padding(16.dp)) {
+            // Author row
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                modifier = Modifier.clickable(onClick = onUserClick)
+            ) {
+                if (post.authorPhotoUrl != null) {
+                    AsyncImage(
+                        model = post.authorPhotoUrl,
+                        contentDescription = null,
+                        modifier = Modifier
+                            .size(40.dp)
+                            .clip(CircleShape),
+                        contentScale = ContentScale.Crop
+                    )
+                } else {
+                    Box(
+                        modifier = Modifier
+                            .size(40.dp)
+                            .clip(CircleShape)
+                            .background(Navy600),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Icon(
+                            Icons.Default.Person,
+                            contentDescription = null,
+                            modifier = Modifier.size(20.dp),
+                            tint = USOpenGold
+                        )
+                    }
+                }
+
+                Spacer(modifier = Modifier.width(12.dp))
+
+                Column(modifier = Modifier.weight(1f)) {
+                    Text(
+                        text = post.authorName,
+                        style = MaterialTheme.typography.titleSmall.copy(fontWeight = FontWeight.Bold),
+                        color = WarmWhite
+                    )
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        PostTypeBadge(postType = post.postType)
+                        Spacer(modifier = Modifier.width(6.dp))
+                        Text(
+                            text = formatTimeAgo(post.createdAt),
+                            style = MaterialTheme.typography.bodySmall,
+                            color = WarmWhite.copy(alpha = 0.4f)
+                        )
+                    }
+                }
+            }
+
+            // Content
+            if (!post.content.isNullOrBlank()) {
+                Spacer(modifier = Modifier.height(10.dp))
+                Text(
+                    text = post.content,
+                    style = MaterialTheme.typography.bodyLarge,
+                    color = WarmWhite.copy(alpha = 0.9f)
+                )
+            }
+
+            // Image
+            if (post.imageUrl != null) {
+                Spacer(modifier = Modifier.height(10.dp))
+                AsyncImage(
+                    model = post.imageUrl,
+                    contentDescription = null,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(200.dp)
+                        .clip(RoundedCornerShape(8.dp)),
+                    contentScale = ContentScale.Crop
+                )
+            }
+
+            // Match share metadata card
+            if (post.postType == "match_share" && post.metadata["matchTitle"] != null) {
+                Spacer(modifier = Modifier.height(8.dp))
+                Card(
+                    modifier = Modifier.fillMaxWidth(),
+                    shape = RoundedCornerShape(8.dp),
+                    colors = CardDefaults.cardColors(containerColor = Navy600.copy(alpha = 0.5f))
+                ) {
+                    Column(modifier = Modifier.padding(12.dp), verticalArrangement = Arrangement.spacedBy(4.dp)) {
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            Icon(
+                                Icons.Default.SportsScore,
+                                contentDescription = null,
+                                modifier = Modifier.size(20.dp),
+                                tint = Color(0xFFFF9800)
+                            )
+                            Spacer(modifier = Modifier.width(8.dp))
+                            Text(
+                                text = post.metadata["matchTitle"] ?: "",
+                                style = MaterialTheme.typography.titleSmall.copy(fontWeight = FontWeight.Bold),
+                                color = WarmWhite
+                            )
+                        }
+                        post.metadata["sport"]?.let { sport ->
+                            Text(
+                                text = sport,
+                                style = MaterialTheme.typography.bodySmall,
+                                color = Color(0xFFFF9800)
+                            )
+                        }
+                        Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+                            post.metadata["date"]?.let { date ->
+                                Text(text = date, style = MaterialTheme.typography.bodySmall, color = WarmWhite.copy(alpha = 0.6f))
+                            }
+                            post.metadata["time"]?.let { time ->
+                                Text(text = time, style = MaterialTheme.typography.bodySmall, color = WarmWhite.copy(alpha = 0.6f))
+                            }
+                        }
+                        post.metadata["location"]?.let { location ->
+                            Row(verticalAlignment = Alignment.CenterVertically) {
+                                Icon(
+                                    Icons.Default.LocationOn,
+                                    contentDescription = null,
+                                    modifier = Modifier.size(14.dp),
+                                    tint = WarmWhite.copy(alpha = 0.5f)
+                                )
+                                Spacer(modifier = Modifier.width(4.dp))
+                                Text(
+                                    text = location,
+                                    style = MaterialTheme.typography.bodySmall,
+                                    color = WarmWhite.copy(alpha = 0.6f)
+                                )
+                            }
+                        }
+                        post.metadata["players"]?.let { players ->
+                            Text(
+                                text = "Players: $players",
+                                style = MaterialTheme.typography.bodySmall,
+                                color = WarmWhite.copy(alpha = 0.6f)
+                            )
+                        }
+                    }
+                }
+            }
+
+            // Achievement/milestone metadata
+            if (post.postType != "match_share") {
+                val metaTitle = post.metadata["achievementName"]
+                    ?: post.metadata["venueName"]
+                    ?: post.metadata["matchResult"]
+                if (metaTitle != null) {
+                    Spacer(modifier = Modifier.height(8.dp))
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .clip(RoundedCornerShape(8.dp))
+                            .background(USOpenGold.copy(alpha = 0.08f))
+                            .padding(10.dp),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Icon(
+                            Icons.Default.EmojiEvents,
+                            contentDescription = null,
+                            modifier = Modifier.size(20.dp),
+                            tint = USOpenGold
+                        )
+                        Spacer(modifier = Modifier.width(8.dp))
+                        Text(
+                            text = metaTitle,
+                            style = MaterialTheme.typography.bodyMedium.copy(fontWeight = FontWeight.SemiBold),
+                            color = USOpenGold
+                        )
+                    }
+                }
+            }
+
+            // Actions: Like & Comment count
+            Spacer(modifier = Modifier.height(10.dp))
+            HorizontalDivider(color = Navy600.copy(alpha = 0.3f))
+            Spacer(modifier = Modifier.height(6.dp))
+
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                IconButton(onClick = onLike, modifier = Modifier.size(36.dp)) {
+                    Icon(
+                        imageVector = if (post.isLikedByMe) Icons.Default.Favorite else Icons.Default.FavoriteBorder,
+                        contentDescription = "Like",
+                        tint = if (post.isLikedByMe) Color.Red else WarmWhite.copy(alpha = 0.6f),
+                        modifier = Modifier.size(20.dp)
+                    )
+                }
+                Text(
+                    text = "${post.likesCount}",
+                    style = MaterialTheme.typography.bodySmall,
+                    color = WarmWhite.copy(alpha = 0.6f)
+                )
+
+                Spacer(modifier = Modifier.width(16.dp))
+
+                Icon(
+                    Icons.Default.ChatBubbleOutline,
+                    contentDescription = "Comments",
+                    modifier = Modifier.size(18.dp),
+                    tint = WarmWhite.copy(alpha = 0.6f)
+                )
+                Spacer(modifier = Modifier.width(4.dp))
+                Text(
+                    text = "${post.commentsCount}",
+                    style = MaterialTheme.typography.bodySmall,
+                    color = WarmWhite.copy(alpha = 0.6f)
+                )
+            }
+        }
+    }
+}
+
+@Composable
+private fun PostTypeBadge(postType: String) {
+    val (label, color) = when (postType) {
+        "achievement" -> "Achievement" to USOpenGold
+        "milestone" -> "Milestone" to Color(0xFF4CAF50)
+        "booking_completed" -> "Booking" to Color(0xFF2196F3)
+        "match_result" -> "Match" to Color(0xFFFF9800)
+        "match_share" -> "Match" to Color(0xFFFF9800)
+        "photo" -> "Photo" to Color(0xFFE91E63)
+        else -> "Post" to WarmWhite.copy(alpha = 0.5f)
+    }
+    Text(
+        text = label,
+        style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Bold),
+        color = color
+    )
+}
+
+private fun formatTimeAgo(dateString: String): String {
+    return try {
+        val now = System.currentTimeMillis()
+        val dateMillis = java.text.SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss", java.util.Locale.US)
+            .apply { timeZone = java.util.TimeZone.getTimeZone("UTC") }
+            .parse(dateString)?.time ?: return dateString
+        val diff = now - dateMillis
+        val minutes = diff / 60000
+        val hours = minutes / 60
+        val days = hours / 24
+        when {
+            minutes < 1 -> "Just now"
+            minutes < 60 -> "${minutes}m ago"
+            hours < 24 -> "${hours}h ago"
+            days < 7 -> "${days}d ago"
+            else -> "${days / 7}w ago"
+        }
+    } catch (_: Exception) {
+        dateString
+    }
+}
+
+@Preview(showBackground = true, backgroundColor = 0xFF0A1628)
+@Composable
+private fun NewsFeedScreenPreview() {
+    val samplePosts = listOf(
+        FeedPostDto(
+            id = 1, userId = 1, authorName = "Alex Johnson",
+            postType = "achievement", content = "Just unlocked my first achievement!",
+            metadata = mapOf("achievementName" to "First Booking"),
+            likesCount = 12, commentsCount = 3, isLikedByMe = true,
+            createdAt = "2026-03-24T10:00:00"
+        ),
+        FeedPostDto(
+            id = 2, userId = 2, authorName = "City Sports Hall",
+            postType = "text", content = "New basketball courts now open! Book your slots today.",
+            likesCount = 45, commentsCount = 8,
+            createdAt = "2026-03-24T08:30:00"
+        ),
+        FeedPostDto(
+            id = 3, userId = 3, authorName = "Coach Mike",
+            postType = "milestone", content = "100 training sessions completed!",
+            metadata = mapOf("achievementName" to "100 Sessions Milestone"),
+            likesCount = 67, commentsCount = 15,
+            createdAt = "2026-03-23T18:00:00"
+        ),
+        FeedPostDto(
+            id = 4, userId = 4, authorName = "Jordan Lee",
+            postType = "match_share", content = "Come join us for Basketball at City Sports Center!",
+            metadata = mapOf(
+                "matchTitle" to "Sunday Pickup Basketball",
+                "sport" to "Basketball",
+                "date" to "2026-03-30",
+                "time" to "18:00 - 19:30",
+                "location" to "City Sports Center",
+                "players" to "4/12"
+            ),
+            likesCount = 8, commentsCount = 2,
+            createdAt = "2026-03-24T12:00:00"
+        )
+    )
+    SportsBookTheme {
+        LazyColumn(
+            modifier = Modifier
+                .fillMaxSize()
+                .background(Navy900),
+            contentPadding = PaddingValues(vertical = 8.dp),
+            verticalArrangement = Arrangement.spacedBy(2.dp)
+        ) {
+            items(samplePosts) { post ->
+                FeedPostCard(post = post, onLike = {}, onUserClick = {})
+            }
+        }
+    }
+}

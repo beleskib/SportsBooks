@@ -312,7 +312,7 @@ function PartnerDashboard() {
                     <div>
                       <p className="text-sm font-medium text-gray-900">{v.name}</p>
                       <p className="text-xs text-gray-500">
-                        {SPORT_TYPE_LABELS[v.sportType as SportType] || v.sportType} &middot; ${v.pricePerHour}/hr
+                        {SPORT_TYPE_LABELS[v.sportType as SportType] || v.sportType} &middot; {v.pricePerHour} ден/hr
                       </p>
                     </div>
                     <span className={`rounded-full px-2 py-0.5 text-xs font-medium ${v.isActive ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-600'}`}>
@@ -383,7 +383,7 @@ function PartnerDashboard() {
                   <p className="text-sm text-gray-500">
                     {SPORT_TYPE_LABELS[coach.sportType as SportType] || coach.sportType}
                     {coach.specialization && ` \u00b7 ${coach.specialization}`}
-                    {' \u00b7 '}${coach.pricePerHour}/hr
+                    {' \u00b7 '}{coach.pricePerHour} ден/hr
                   </p>
                 </div>
                 <span className={`rounded-full px-2 py-0.5 text-xs font-medium ${coach.isActive ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-600'}`}>

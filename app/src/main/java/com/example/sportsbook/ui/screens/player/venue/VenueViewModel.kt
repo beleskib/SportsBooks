@@ -40,7 +40,7 @@ class VenueViewModel @Inject constructor(
 
     fun loadVenuesBySport(sportType: String) {
         currentSportType = sportType
-        val parsedType = runCatching { SportType.valueOf(sportType) }.getOrNull()
+        val parsedType = runCatching { SportType.valueOf(sportType.uppercase()) }.getOrNull()
             ?: run {
                 _uiState.update { it.copy(error = "Unknown sport type: $sportType", isLoading = false) }
                 return

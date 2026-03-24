@@ -83,7 +83,7 @@ export function VenueList({ venues, onDelete, deleting, bookingCounts, showOwner
                   <td className="whitespace-nowrap px-4 py-3 text-sm text-gray-600">
                     {SPORT_TYPE_LABELS[venue.sportType as SportType] || venue.sportType}
                   </td>
-                  <td className="whitespace-nowrap px-4 py-3 text-sm text-gray-600">${venue.pricePerHour.toFixed(2)}</td>
+                  <td className="whitespace-nowrap px-4 py-3 text-sm text-gray-600">{venue.pricePerHour.toFixed(2)} ден</td>
                   <td className="whitespace-nowrap px-4 py-3 text-sm text-gray-600">{venue.city || '-'}</td>
                   <td className="whitespace-nowrap px-4 py-3 text-sm text-gray-600">
                     {venue.avgRating > 0 ? `${venue.avgRating.toFixed(1)} (${venue.totalReviews})` : '-'}

@@ -190,11 +190,71 @@ fun MatchListScreen(
     }
 }
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Preview(showBackground = true)
 @Composable
 private fun MatchListScreenPreview() {
-    MatchListScreen(
-        onMatchClick = {},
-        onCreateMatch = {}
-    )
+    Scaffold(
+        topBar = {
+            TopAppBar(
+                title = { Text("Find a Match") },
+                actions = {
+                    IconButton(onClick = {}) {
+                        Icon(Icons.Default.PersonSearch, contentDescription = "Available Players")
+                    }
+                    IconButton(onClick = {}) {
+                        Icon(Icons.Default.Groups, contentDescription = "Create Party")
+                    }
+                    IconButton(onClick = {}) {
+                        Icon(Icons.Default.Map, contentDescription = "Map view")
+                    }
+                }
+            )
+        },
+        floatingActionButton = {
+            FloatingActionButton(onClick = {}) {
+                Icon(Icons.Default.Add, contentDescription = "Create Match")
+            }
+        }
+    ) { padding ->
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(padding)
+        ) {
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 16.dp, vertical = 8.dp),
+                horizontalArrangement = Arrangement.spacedBy(8.dp)
+            ) {
+                FilterChip(selected = true, onClick = {}, label = { Text("Open Matches") })
+                FilterChip(selected = false, onClick = {}, label = { Text("My Matches") })
+            }
+            LazyRow(
+                contentPadding = PaddingValues(horizontal = 16.dp),
+                horizontalArrangement = Arrangement.spacedBy(8.dp)
+            ) {
+                item { FilterChip(selected = true, onClick = {}, label = { Text("All") }) }
+                items(SportType.entries.toList()) { sport ->
+                    FilterChip(selected = false, onClick = {}, label = { Text(sport.displayName) })
+                }
+            }
+            Spacer(modifier = Modifier.height(8.dp))
+            Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                    Text(
+                        text = "No matches found",
+                        style = MaterialTheme.typography.titleMedium
+                    )
+                    Spacer(modifier = Modifier.height(8.dp))
+                    Text(
+                        text = "Create one or change your filters!",
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                }
+            }
+        }
+    }
 }

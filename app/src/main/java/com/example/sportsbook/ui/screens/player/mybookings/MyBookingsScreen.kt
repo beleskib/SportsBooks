@@ -10,6 +10,7 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.MaterialTheme
@@ -41,6 +42,7 @@ import com.example.sportsbook.ui.common.toDisplayDate
 @Composable
 fun MyBookingsScreen(
     onBookingClick: (Long) -> Unit,
+    onPayNow: (Long) -> Unit = {},
     viewModel: MyBookingsViewModel = hiltViewModel()
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
@@ -115,6 +117,7 @@ fun MyBookingsScreen(
                                 BookingCard(
                                     booking = booking,
                                     onClick = { onBookingClick(booking.id) },
+                                    onPayNow = { onPayNow(booking.id) },
                                     modifier = Modifier
                                         .fillMaxWidth()
                                         .padding(vertical = 4.dp)
@@ -132,6 +135,7 @@ fun MyBookingsScreen(
 private fun BookingCard(
     booking: Booking,
     onClick: () -> Unit,
+    onPayNow: () -> Unit = {},
     modifier: Modifier = Modifier
 ) {
     val displayName = booking.venue?.name ?: booking.coach?.name ?: "Booking"
@@ -170,22 +174,57 @@ private fun BookingCard(
             Spacer(modifier = Modifier.height(8.dp))
 
             Text(
-                text = "$${"%.2f".format(booking.totalPrice)}",
+                text = "${"%.0f".format(booking.totalPrice)} ден",
                 style = MaterialTheme.typography.titleSmall,
                 color = MaterialTheme.colorScheme.primary
             )
+
+            if (booking.status == BookingStatus.APPROVED) {
+                Spacer(modifier = Modifier.height(8.dp))
+                Button(
+                    onClick = onPayNow,
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    Text("Pay Now")
+                }
+            }
         }
     }
 }
 
 @Composable
 private fun BookingStatusBadge(status: BookingStatus) {
-    val (containerColor, contentColor) = when (status) {
-        BookingStatus.PENDING -> MaterialTheme.colorScheme.secondaryContainer to MaterialTheme.colorScheme.onSecondaryContainer
-        BookingStatus.CONFIRMED -> MaterialTheme.colorScheme.primaryContainer to MaterialTheme.colorScheme.onPrimaryContainer
-        BookingStatus.COMPLETED -> MaterialTheme.colorScheme.tertiaryContainer to MaterialTheme.colorScheme.onTertiaryContainer
-        BookingStatus.CANCELLED -> MaterialTheme.colorScheme.errorContainer to MaterialTheme.colorScheme.onErrorContainer
-        BookingStatus.NO_SHOW -> MaterialTheme.colorScheme.surfaceVariant to MaterialTheme.colorScheme.onSurfaceVariant
+    val (containerColor, contentColor, label) = when (status) {
+        BookingStatus.PENDING -> Triple(
+            androidx.compose.ui.graphics.Color(0xFFFFF8E1),
+            androidx.compose.ui.graphics.Color(0xFFF57F17),
+            "Awaiting Approval"
+        )
+        BookingStatus.APPROVED -> Triple(
+            androidx.compose.ui.graphics.Color(0xFFE8F5E9),
+            androidx.compose.ui.graphics.Color(0xFF2E7D32),
+            "Approved - Pay Now"
+        )
+        BookingStatus.CONFIRMED -> Triple(
+            MaterialTheme.colorScheme.primaryContainer,
+            MaterialTheme.colorScheme.onPrimaryContainer,
+            "Confirmed"
+        )
+        BookingStatus.COMPLETED -> Triple(
+            MaterialTheme.colorScheme.tertiaryContainer,
+            MaterialTheme.colorScheme.onTertiaryContainer,
+            "Completed"
+        )
+        BookingStatus.CANCELLED -> Triple(
+            MaterialTheme.colorScheme.errorContainer,
+            MaterialTheme.colorScheme.onErrorContainer,
+            "Cancelled"
+        )
+        BookingStatus.NO_SHOW -> Triple(
+            MaterialTheme.colorScheme.surfaceVariant,
+            MaterialTheme.colorScheme.onSurfaceVariant,
+            "No Show"
+        )
     }
 
     Surface(
@@ -194,7 +233,7 @@ private fun BookingStatusBadge(status: BookingStatus) {
         shape = MaterialTheme.shapes.small
     ) {
         Text(
-            text = status.name,
+            text = label,
             style = MaterialTheme.typography.labelSmall,
             modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp)
         )
@@ -204,7 +243,61 @@ private fun BookingStatusBadge(status: BookingStatus) {
 @Preview(showBackground = true)
 @Composable
 private fun MyBookingsScreenPreview() {
+    val sampleBookings = listOf(
+        Booking(
+            id = 1L,
+            status = BookingStatus.CONFIRMED,
+            totalPrice = 25.00,
+            venue = com.example.sportsbook.domain.model.Venue(id = 1L, name = "City Tennis Center", address = ""),
+            timeSlot = com.example.sportsbook.domain.model.TimeSlot(
+                id = 1L,
+                slotDate = "2026-03-25",
+                startTime = "10:00",
+                endTime = "11:00"
+            )
+        ),
+        Booking(
+            id = 2L,
+            status = BookingStatus.PENDING,
+            totalPrice = 40.00,
+            venue = com.example.sportsbook.domain.model.Venue(id = 2L, name = "Downtown Basketball Court", address = ""),
+            timeSlot = com.example.sportsbook.domain.model.TimeSlot(
+                id = 2L,
+                slotDate = "2026-03-26",
+                startTime = "14:00",
+                endTime = "15:00"
+            )
+        )
+    )
     MaterialTheme {
-        MyBookingsScreen(onBookingClick = {})
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(horizontal = 16.dp)
+        ) {
+            Spacer(modifier = Modifier.height(16.dp))
+            Text(text = "My Bookings", style = MaterialTheme.typography.headlineMedium)
+            Spacer(modifier = Modifier.height(16.dp))
+            TabRow(selectedTabIndex = 0) {
+                listOf("Upcoming", "Past").forEachIndexed { index, title ->
+                    Tab(
+                        selected = index == 0,
+                        onClick = {},
+                        text = { Text(title) }
+                    )
+                }
+            }
+            Spacer(modifier = Modifier.height(8.dp))
+            sampleBookings.forEach { booking ->
+                BookingCard(
+                    booking = booking,
+                    onClick = {},
+                    onPayNow = {},
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(vertical = 4.dp)
+                )
+            }
+        }
     }
 }

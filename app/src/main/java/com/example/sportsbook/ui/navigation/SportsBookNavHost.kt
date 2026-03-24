@@ -27,6 +27,8 @@ import com.example.sportsbook.ui.screens.player.booking.BookingCalendarScreen
 import com.example.sportsbook.ui.screens.player.booking.BookingConfirmationScreen
 import com.example.sportsbook.ui.screens.player.coach.CoachDetailScreen
 import com.example.sportsbook.ui.screens.player.coach.CoachListScreen
+import com.example.sportsbook.ui.screens.player.feed.NewsFeedScreen
+import com.example.sportsbook.ui.screens.player.home.AllSportsScreen
 import com.example.sportsbook.ui.screens.player.home.PlayerHomeScreen
 import com.example.sportsbook.ui.screens.player.notifications.NotificationsScreen
 import com.example.sportsbook.ui.screens.player.onboarding.PlayerOnboardingScreen
@@ -58,11 +60,15 @@ import com.example.sportsbook.ui.screens.player.friends.AddFriendScreen
 import com.example.sportsbook.ui.screens.player.party.PartyCreateScreen
 import com.example.sportsbook.ui.screens.player.party.PartyDetailScreen
 import com.example.sportsbook.ui.screens.player.party.PartyInviteMembersScreen
+import com.example.sportsbook.ui.screens.partner.edit.EditCoachScreen
+import com.example.sportsbook.ui.screens.partner.edit.EditVenueScreen
+import com.example.sportsbook.ui.screens.partner.reservations.PendingReservationsScreen
 import com.example.sportsbook.ui.screens.partner.stripe.StripeConnectScreen
 import com.example.sportsbook.ui.screens.partner.timeslots.TimeSlotManagementScreen
 import com.example.sportsbook.ui.screens.player.gamification.PlayerXpLevelScreen
 import com.example.sportsbook.ui.screens.player.gamification.PlayerAchievementsScreen
 import com.example.sportsbook.ui.screens.player.gamification.PlayerStatsScreen
+import com.example.sportsbook.ui.screens.partner.analytics.PartnerAnalyticsScreen
 import com.example.sportsbook.ui.screens.splash.SplashScreen
 
 @Composable
@@ -70,12 +76,23 @@ fun SportsBookNavHost() {
     val navController = rememberNavController()
     val currentBackStackEntry by navController.currentBackStackEntryAsState()
 
-    val showBottomBar = remember(currentBackStackEntry) {
-        when (currentBackStackEntry?.destination?.route) {
+    val currentRoute = currentBackStackEntry?.destination?.route
+
+    val showPlayerBottomBar = remember(currentBackStackEntry) {
+        when (currentRoute) {
             Route.PlayerHome::class.qualifiedName,
+            Route.NewsFeed::class.qualifiedName,
             Route.MyBookings::class.qualifiedName,
-            Route.PaymentHistory::class.qualifiedName,
             Route.PlayerProfile::class.qualifiedName -> true
+            else -> false
+        }
+    }
+
+    val showPartnerBottomBar = remember(currentBackStackEntry) {
+        when (currentRoute) {
+            Route.PartnerDashboard::class.qualifiedName,
+            Route.PendingReservations::class.qualifiedName,
+            Route.PartnerAnalytics::class.qualifiedName -> true
             else -> false
         }
     }
@@ -83,12 +100,21 @@ fun SportsBookNavHost() {
     Scaffold(
         containerColor = com.example.sportsbook.ui.theme.Navy900,
         bottomBar = {
-            if (showBottomBar) {
-                BottomNavBar(
-                    currentRoute = currentBackStackEntry?.destination?.route,
+            when {
+                showPlayerBottomBar -> BottomNavBar(
+                    currentRoute = currentRoute,
                     onNavigate = { route ->
                         navController.navigate(route) {
                             popUpTo(Route.PlayerHome) { inclusive = false }
+                            launchSingleTop = true
+                        }
+                    }
+                )
+                showPartnerBottomBar -> PartnerBottomNavBar(
+                    currentRoute = currentRoute,
+                    onNavigate = { route ->
+                        navController.navigate(route) {
+                            popUpTo(Route.PartnerDashboard) { inclusive = false }
                             launchSingleTop = true
                         }
                     }
@@ -235,6 +261,26 @@ fun SportsBookNavHost() {
                     },
                     onNavigateToFriends = {
                         navController.navigate(Route.FriendsList)
+                    },
+                    onBrowseAllSports = {
+                        navController.navigate(Route.AllSports)
+                    }
+                )
+            }
+
+            composable<Route.NewsFeed> {
+                NewsFeedScreen(
+                    onUserClick = { userId ->
+                        navController.navigate(Route.PlayerPublicProfile(userId))
+                    }
+                )
+            }
+
+            composable<Route.AllSports> {
+                AllSportsScreen(
+                    onBack = { navController.popBackStack() },
+                    onSportClick = { sportType ->
+                        navController.navigate(Route.SportDetail(sportType))
                     }
                 )
             }
@@ -302,9 +348,7 @@ fun SportsBookNavHost() {
                 val route = backStackEntry.toRoute<Route.BookingConfirmation>()
                 BookingConfirmationScreen(
                     timeSlotId = route.timeSlotId,
-                    onProceedToPayment = { timeSlotId, notes ->
-                        navController.navigate(Route.PaymentCheckout(timeSlotId, notes))
-                    },
+                    onProceedToPayment = { _, _ -> },
                     onBack = { navController.popBackStack() }
                 )
             }
@@ -340,6 +384,9 @@ fun SportsBookNavHost() {
                 MyBookingsScreen(
                     onBookingClick = { bookingId ->
                         navController.navigate(Route.BookingDetail(bookingId))
+                    },
+                    onPayNow = { bookingId ->
+                        navController.navigate(Route.PaymentCheckout(bookingId))
                     }
                 )
             }
@@ -367,6 +414,12 @@ fun SportsBookNavHost() {
                     },
                     onNavigateToStats = {
                         navController.navigate(Route.PlayerStatsScreen)
+                    },
+                    onNavigateToPayments = {
+                        navController.navigate(Route.PaymentHistory)
+                    },
+                    onNavigateToFriends = {
+                        navController.navigate(Route.FriendsList)
                     }
                 )
             }
@@ -410,6 +463,7 @@ fun SportsBookNavHost() {
                     onSetupComplete = {
                         navController.navigate(Route.PartnerDashboard) {
                             popUpTo(Route.VenueSetup) { inclusive = true }
+                            launchSingleTop = true
                         }
                     },
                     onBack = { navController.popBackStack() }
@@ -422,6 +476,7 @@ fun SportsBookNavHost() {
                     onSetupComplete = {
                         navController.navigate(Route.PartnerDashboard) {
                             popUpTo(Route.CoachSetup) { inclusive = true }
+                            launchSingleTop = true
                         }
                     },
                     onBack = { navController.popBackStack() }
@@ -453,7 +508,31 @@ fun SportsBookNavHost() {
                     },
                     onManageTimeSlots = {
                         navController.navigate(Route.TimeSlotManagement)
+                    },
+                    onEditVenue = { venueId ->
+                        navController.navigate(Route.EditVenue(venueId))
+                    },
+                    onEditCoach = { coachId ->
+                        navController.navigate(Route.EditCoach(coachId))
+                    },
+                    onAddVenue = {
+                        navController.navigate(Route.VenueSetup)
+                    },
+                    onAddCoachProfile = {
+                        navController.navigate(Route.CoachSetup)
+                    },
+                    onViewPendingReservations = {
+                        navController.navigate(Route.PendingReservations)
+                    },
+                    onViewAnalytics = {
+                        navController.navigate(Route.PartnerAnalytics)
                     }
+                )
+            }
+
+            composable<Route.PendingReservations> {
+                PendingReservationsScreen(
+                    onBack = { navController.popBackStack() }
                 )
             }
 
@@ -475,6 +554,22 @@ fun SportsBookNavHost() {
             composable<Route.StripeConnect> {
                 StripeConnectScreen(
                     onNavigateBack = { navController.popBackStack() }
+                )
+            }
+
+            composable<Route.EditVenue> { backStackEntry ->
+                val route = backStackEntry.toRoute<Route.EditVenue>()
+                EditVenueScreen(
+                    onBack = { navController.popBackStack() },
+                    onSaved = { navController.popBackStack() }
+                )
+            }
+
+            composable<Route.EditCoach> { backStackEntry ->
+                val route = backStackEntry.toRoute<Route.EditCoach>()
+                EditCoachScreen(
+                    onBack = { navController.popBackStack() },
+                    onSaved = { navController.popBackStack() }
                 )
             }
 
@@ -674,6 +769,12 @@ fun SportsBookNavHost() {
 
             composable<Route.PlayerStatsScreen> {
                 PlayerStatsScreen(
+                    onBack = { navController.popBackStack() }
+                )
+            }
+
+            composable<Route.PartnerAnalytics> {
+                PartnerAnalyticsScreen(
                     onBack = { navController.popBackStack() }
                 )
             }

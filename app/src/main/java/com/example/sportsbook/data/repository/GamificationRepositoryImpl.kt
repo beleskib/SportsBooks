@@ -1,6 +1,7 @@
 package com.example.sportsbook.data.repository
 
 import com.example.sportsbook.data.remote.api.ApiService
+import com.example.sportsbook.data.remote.dto.RedeemXpRequestDto
 import com.example.sportsbook.domain.model.Achievement
 import com.example.sportsbook.domain.model.PlayerAchievement
 import com.example.sportsbook.domain.model.PlayerLevel
@@ -8,6 +9,7 @@ import com.example.sportsbook.domain.model.PlayerStats
 import com.example.sportsbook.domain.model.XpTransaction
 import com.example.sportsbook.domain.repository.CheckAchievementsResult
 import com.example.sportsbook.domain.repository.GamificationRepository
+import com.example.sportsbook.domain.repository.RedeemXpResponse
 import javax.inject.Inject
 import javax.inject.Singleton
 
@@ -38,5 +40,15 @@ class GamificationRepositoryImpl @Inject constructor(
 
     override suspend fun checkAndAwardAchievements(): Result<CheckAchievementsResult> = runCatching {
         apiService.checkAndAwardAchievements().data.toDomain()
+    }
+
+    override suspend fun redeemXp(bookingId: Long, xpAmount: Int): Result<RedeemXpResponse> = runCatching {
+        val response = apiService.redeemXp(RedeemXpRequestDto(bookingId = bookingId, xpAmount = xpAmount)).data
+        RedeemXpResponse(
+            xpSpent = response.xpSpent,
+            discountAmount = response.discountAmount,
+            remainingXp = response.remainingXp,
+            newLevel = response.newLevel
+        )
     }
 }

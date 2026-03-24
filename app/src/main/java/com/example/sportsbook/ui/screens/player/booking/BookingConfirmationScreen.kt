@@ -52,10 +52,16 @@ fun BookingConfirmationScreen(
         }
     }
 
+    LaunchedEffect(uiState.bookingSuccess) {
+        if (uiState.bookingSuccess) {
+            snackbarHostState.showSnackbar("Booking request sent! The venue partner will review your request.")
+        }
+    }
+
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text("Confirm Booking") },
+                title = { Text("Request Booking") },
                 navigationIcon = {
                     IconButton(onClick = onBack) {
                         Icon(
@@ -117,7 +123,7 @@ fun BookingConfirmationScreen(
                                 color = MaterialTheme.colorScheme.onSurfaceVariant
                             )
                             Text(
-                                text = "$${"%.2f".format(price)}",
+                                text = "${"%.0f".format(price)} ден",
                                 style = MaterialTheme.typography.bodyLarge
                             )
                         }
@@ -143,27 +149,106 @@ fun BookingConfirmationScreen(
             ) {
                 if (uiState.isBookingLoading) {
                     CircularProgressIndicator()
-                } else {
+                } else if (!uiState.bookingSuccess) {
                     Button(
-                        onClick = { onProceedToPayment(timeSlotId, uiState.notes) },
+                        onClick = { viewModel.confirmBooking() },
                         modifier = Modifier.fillMaxWidth()
                     ) {
-                        Text("Proceed to Payment")
+                        Text("Request Booking")
                     }
+                } else {
+                    Text(
+                        text = "Booking request sent! The venue partner will review your request.",
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = MaterialTheme.colorScheme.primary
+                    )
                 }
             }
         }
     }
 }
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Preview(showBackground = true)
 @Composable
 private fun BookingConfirmationScreenPreview() {
     MaterialTheme {
-        BookingConfirmationScreen(
-            timeSlotId = 1L,
-            onProceedToPayment = { _, _ -> },
-            onBack = {}
-        )
+        Scaffold(
+            topBar = {
+                TopAppBar(
+                    title = { Text("Request Booking") },
+                    navigationIcon = {
+                        IconButton(onClick = {}) {
+                            Icon(
+                                imageVector = Icons.AutoMirrored.Filled.ArrowBack,
+                                contentDescription = "Back"
+                            )
+                        }
+                    }
+                )
+            }
+        ) { paddingValues ->
+            Column(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(paddingValues)
+                    .padding(horizontal = 16.dp)
+            ) {
+                Spacer(modifier = Modifier.height(16.dp))
+                Card(modifier = Modifier.fillMaxWidth()) {
+                    Column(modifier = Modifier.padding(16.dp)) {
+                        Text(
+                            text = "Booking Summary",
+                            style = MaterialTheme.typography.titleMedium
+                        )
+                        Spacer(modifier = Modifier.height(12.dp))
+                        Text(
+                            text = "Date",
+                            style = MaterialTheme.typography.labelMedium,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                        Text(
+                            text = "March 25, 2026",
+                            style = MaterialTheme.typography.bodyLarge
+                        )
+                        Spacer(modifier = Modifier.height(8.dp))
+                        Text(
+                            text = "Time",
+                            style = MaterialTheme.typography.labelMedium,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                        Text(
+                            text = "10:00 - 11:00",
+                            style = MaterialTheme.typography.bodyLarge
+                        )
+                        Spacer(modifier = Modifier.height(8.dp))
+                        Text(
+                            text = "Price",
+                            style = MaterialTheme.typography.labelMedium,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                        Text(
+                            text = "1500 ден",
+                            style = MaterialTheme.typography.bodyLarge
+                        )
+                    }
+                }
+                Spacer(modifier = Modifier.height(16.dp))
+                OutlinedTextField(
+                    value = "",
+                    onValueChange = {},
+                    label = { Text("Notes (optional)") },
+                    modifier = Modifier.fillMaxWidth(),
+                    minLines = 3
+                )
+                Spacer(modifier = Modifier.height(24.dp))
+                Button(
+                    onClick = {},
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    Text("Request Booking")
+                }
+            }
+        }
     }
 }

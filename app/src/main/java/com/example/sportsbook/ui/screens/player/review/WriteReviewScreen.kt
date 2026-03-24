@@ -125,14 +125,67 @@ fun WriteReviewScreen(
     }
 }
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Preview(showBackground = true)
 @Composable
 private fun WriteReviewScreenPreview() {
     MaterialTheme {
-        WriteReviewScreen(
-            bookingId = 1L,
-            onReviewSubmitted = {},
-            onBack = {}
-        )
+        Scaffold(
+            topBar = {
+                TopAppBar(
+                    title = { Text("Write Review") },
+                    navigationIcon = {
+                        IconButton(onClick = {}) {
+                            Icon(
+                                imageVector = Icons.AutoMirrored.Filled.ArrowBack,
+                                contentDescription = "Back"
+                            )
+                        }
+                    }
+                )
+            }
+        ) { paddingValues ->
+            Column(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(paddingValues)
+                    .padding(horizontal = 16.dp)
+            ) {
+                Spacer(modifier = Modifier.height(16.dp))
+                Text(
+                    text = "Rate your experience",
+                    style = MaterialTheme.typography.titleMedium
+                )
+                Spacer(modifier = Modifier.height(12.dp))
+                Row {
+                    (1..5).forEach { starIndex ->
+                        val isFilled = starIndex <= 4
+                        Icon(
+                            imageVector = if (isFilled) Icons.Filled.Star else Icons.Outlined.Star,
+                            contentDescription = "Star $starIndex",
+                            tint = if (isFilled) Color(0xFFFFC107) else MaterialTheme.colorScheme.onSurfaceVariant,
+                            modifier = Modifier
+                                .size(40.dp)
+                                .padding(4.dp)
+                        )
+                    }
+                }
+                Spacer(modifier = Modifier.height(16.dp))
+                OutlinedTextField(
+                    value = "Great venue, very well maintained courts!",
+                    onValueChange = {},
+                    label = { Text("Share your experience...") },
+                    modifier = Modifier.fillMaxWidth(),
+                    minLines = 4
+                )
+                Spacer(modifier = Modifier.height(24.dp))
+                Button(
+                    onClick = {},
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    Text("Submit Review")
+                }
+            }
+        }
     }
 }

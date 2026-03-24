@@ -39,8 +39,7 @@ data class PaymentDto(
 
 @Serializable
 data class CreatePaymentIntentRequestDto(
-    val timeSlotId: Long,
-    val notes: String? = null,
+    val bookingId: Long,
 )
 
 @Serializable

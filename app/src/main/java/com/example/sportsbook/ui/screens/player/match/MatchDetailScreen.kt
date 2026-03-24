@@ -21,9 +21,10 @@ import androidx.compose.material.icons.filled.CalendarToday
 import androidx.compose.material.icons.filled.Groups
 import androidx.compose.material.icons.filled.LocationOn
 import androidx.compose.material.icons.filled.Schedule
-import androidx.compose.material.icons.filled.Groups
+import androidx.compose.material.icons.filled.Share
 import androidx.compose.material.icons.filled.PersonSearch
 import androidx.compose.material.icons.filled.Star
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.CircularProgressIndicator
@@ -33,20 +34,34 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
+import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.SnackbarHost
+import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
+import com.example.sportsbook.domain.enums.MatchStatus
+import com.example.sportsbook.domain.enums.MatchType
+import com.example.sportsbook.domain.enums.MatchVisibility
+import com.example.sportsbook.domain.enums.ParticipantRole
 import com.example.sportsbook.domain.enums.ParticipantStatus
+import com.example.sportsbook.domain.enums.SportType
+import com.example.sportsbook.domain.model.Match
+import com.example.sportsbook.domain.model.MatchParticipant
 import com.example.sportsbook.ui.common.toDisplayDate
 import com.example.sportsbook.ui.screens.player.match.components.MatchStatusBadge
 import com.example.sportsbook.ui.screens.player.match.components.ParticipantAvatar
@@ -63,6 +78,56 @@ fun MatchDetailScreen(
     viewModel: MatchDetailViewModel = hiltViewModel()
 ) {
     val uiState by viewModel.uiState.collectAsState()
+    var showShareDialog by remember { mutableStateOf(false) }
+    var shareCaption by remember { mutableStateOf("") }
+    val snackbarHostState = remember { SnackbarHostState() }
+
+    LaunchedEffect(uiState.shareSuccess) {
+        if (uiState.shareSuccess) {
+            snackbarHostState.showSnackbar("Match shared to your feed!")
+            viewModel.clearShareSuccess()
+        }
+    }
+
+    // Share dialog
+    if (showShareDialog) {
+        AlertDialog(
+            onDismissRequest = { showShareDialog = false; shareCaption = "" },
+            title = { Text("Share to Feed") },
+            text = {
+                Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                    Text(
+                        text = "Share this match with your followers",
+                        style = MaterialTheme.typography.bodyMedium
+                    )
+                    OutlinedTextField(
+                        value = shareCaption,
+                        onValueChange = { shareCaption = it },
+                        label = { Text("Add a caption (optional)") },
+                        modifier = Modifier.fillMaxWidth(),
+                        maxLines = 3
+                    )
+                }
+            },
+            confirmButton = {
+                Button(
+                    onClick = {
+                        viewModel.shareMatchToFeed(shareCaption.takeIf { it.isNotBlank() })
+                        showShareDialog = false
+                        shareCaption = ""
+                    },
+                    enabled = !uiState.isSharing
+                ) {
+                    Text(if (uiState.isSharing) "Sharing..." else "Share")
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { showShareDialog = false; shareCaption = "" }) {
+                    Text("Cancel")
+                }
+            }
+        )
+    }
 
     Scaffold(
         topBar = {
@@ -72,9 +137,17 @@ fun MatchDetailScreen(
                     IconButton(onClick = onBack) {
                         Icon(Icons.AutoMirrored.Filled.ArrowBack, "Back")
                     }
+                },
+                actions = {
+                    if (uiState.isParticipant || uiState.isHost) {
+                        IconButton(onClick = { showShareDialog = true }) {
+                            Icon(Icons.Default.Share, contentDescription = "Share to Feed")
+                        }
+                    }
                 }
             )
-        }
+        },
+        snackbarHost = { SnackbarHost(snackbarHostState) }
     ) { padding ->
         when {
             uiState.isLoading -> {
@@ -141,7 +214,7 @@ fun MatchDetailScreen(
                             DetailRow(Icons.Default.Groups, "Players", "${match.currentPlayers}/${match.maxPlayers}")
                             if (!match.isFree) {
                                 Text(
-                                    text = "Cost: $${String.format("%.2f", match.costPerPlayer)}/player",
+                                    text = "Cost: ${String.format("%.0f", match.costPerPlayer)} ден/player",
                                     style = MaterialTheme.typography.bodyMedium,
                                     fontWeight = FontWeight.Medium
                                 )
@@ -293,12 +366,97 @@ private fun DetailRow(icon: androidx.compose.ui.graphics.vector.ImageVector, lab
     }
 }
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Preview(showBackground = true)
 @Composable
 private fun MatchDetailScreenPreview() {
-    MatchDetailScreen(
-        onBack = {},
-        onOpenChat = {},
-        onRatePlayers = {}
+    val sampleMatch = Match(
+        id = 1L,
+        hostId = 10L,
+        hostName = "Jordan Lee",
+        sportType = SportType.BASKETBALL,
+        matchType = MatchType.STANDALONE,
+        status = MatchStatus.OPEN,
+        visibility = MatchVisibility.PUBLIC,
+        title = "Sunday Pickup Basketball",
+        description = "Casual game, all levels welcome. Bring water!",
+        matchDate = "2026-03-30",
+        startTime = "18:00",
+        endTime = "19:30",
+        minPlayers = 6,
+        maxPlayers = 12,
+        currentPlayers = 4,
+        minSkillLevel = 2,
+        maxSkillLevel = 4,
+        locationName = "City Sports Center",
+        address = "123 Main St",
+        isFree = true,
+        participants = listOf(
+            MatchParticipant(
+                id = 1L, matchId = 1L, userId = 10L,
+                userName = "Jordan Lee", status = ParticipantStatus.APPROVED,
+                role = ParticipantRole.HOST
+            )
+        )
     )
+    Scaffold(
+        topBar = {
+            TopAppBar(
+                title = { Text("Match Details") },
+                navigationIcon = {
+                    IconButton(onClick = {}) {
+                        Icon(Icons.AutoMirrored.Filled.ArrowBack, "Back")
+                    }
+                }
+            )
+        }
+    ) { padding ->
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(padding)
+                .verticalScroll(rememberScrollState())
+                .padding(16.dp),
+            verticalArrangement = Arrangement.spacedBy(16.dp)
+        ) {
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Text(
+                    text = sampleMatch.title,
+                    style = MaterialTheme.typography.headlineSmall,
+                    fontWeight = FontWeight.Bold,
+                    modifier = Modifier.weight(1f)
+                )
+                MatchStatusBadge(status = sampleMatch.status)
+            }
+            Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                Text(
+                    text = sampleMatch.sportType.displayName,
+                    style = MaterialTheme.typography.titleMedium,
+                    color = MaterialTheme.colorScheme.primary
+                )
+                SkillRangeBadge(2, 4)
+            }
+            Text(
+                text = sampleMatch.description ?: "",
+                style = MaterialTheme.typography.bodyMedium
+            )
+            Card(modifier = Modifier.fillMaxWidth()) {
+                Column(modifier = Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                    DetailRow(Icons.Default.CalendarToday, "Date", sampleMatch.matchDate.toDisplayDate())
+                    DetailRow(Icons.Default.Schedule, "Time", sampleMatch.displayTime)
+                    DetailRow(Icons.Default.LocationOn, "Location", sampleMatch.displayLocation)
+                    DetailRow(Icons.Default.Groups, "Players", "${sampleMatch.currentPlayers}/${sampleMatch.maxPlayers}")
+                    Text("Free to join!", color = MaterialTheme.colorScheme.tertiary, fontWeight = FontWeight.Medium)
+                }
+            }
+            Text("Hosted by ${sampleMatch.hostName}", style = MaterialTheme.typography.bodyMedium)
+            Button(onClick = {}, modifier = Modifier.fillMaxWidth()) {
+                Text("Join Match")
+            }
+        }
+    }
 }

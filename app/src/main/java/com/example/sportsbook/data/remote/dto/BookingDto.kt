@@ -18,7 +18,10 @@ data class BookingDto(
     val venue: VenueDto? = null,
     val coach: CoachDto? = null,
     val createdAt: String? = null,
-    val updatedAt: String? = null
+    val updatedAt: String? = null,
+    val expiresAt: String? = null,
+    val playerName: String? = null,
+    val playerEmail: String? = null
 ) {
     fun toDomain(): Booking = Booking(
         id = id, playerId = playerId, timeSlotId = timeSlotId,
@@ -27,7 +30,8 @@ data class BookingDto(
         timeSlot = timeSlot?.toDomain(),
         venue = venue?.toDomain(),
         coach = coach?.toDomain(),
-        createdAt = createdAt, updatedAt = updatedAt
+        createdAt = createdAt, updatedAt = updatedAt, expiresAt = expiresAt,
+        playerName = playerName, playerEmail = playerEmail
     )
 }
 

@@ -13,9 +13,17 @@ interface GamificationRepository {
     suspend fun getMyAchievements(): Result<List<PlayerAchievement>>
     suspend fun getMyStats(): Result<PlayerStats>
     suspend fun checkAndAwardAchievements(): Result<CheckAchievementsResult>
+    suspend fun redeemXp(bookingId: Long, xpAmount: Int): Result<RedeemXpResponse>
 }
 
 data class CheckAchievementsResult(
     val newlyEarned: List<PlayerAchievement> = emptyList(),
     val level: PlayerLevel = PlayerLevel()
+)
+
+data class RedeemXpResponse(
+    val xpSpent: Int = 0,
+    val discountAmount: Double = 0.0,
+    val remainingXp: Int = 0,
+    val newLevel: Int = 1
 )

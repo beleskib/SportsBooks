@@ -180,8 +180,81 @@ private fun RatingCard(
     }
 }
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Preview(showBackground = true)
 @Composable
 private fun RatePlayersScreenPreview() {
-    RatePlayersScreen(onBack = {}, onSubmitted = {})
+    val sampleRatings = listOf(
+        PlayerRatingInput(
+            userId = 10L,
+            userName = "Alex Rivera",
+            userPhotoUrl = null,
+            skillRating = 4,
+            sportsmanshipRating = 5,
+            punctualityRating = 3,
+            comment = "Great teammate!"
+        ),
+        PlayerRatingInput(
+            userId = 11L,
+            userName = "Sam Torres",
+            userPhotoUrl = null,
+            skillRating = 0,
+            sportsmanshipRating = 0,
+            punctualityRating = 0,
+            comment = ""
+        )
+    )
+    Scaffold(
+        topBar = {
+            TopAppBar(
+                title = { Text("Rate Players") },
+                navigationIcon = {
+                    IconButton(onClick = {}) {
+                        Icon(Icons.AutoMirrored.Filled.ArrowBack, "Back")
+                    }
+                }
+            )
+        }
+    ) { padding ->
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(padding)
+        ) {
+            LazyColumn(
+                modifier = Modifier
+                    .weight(1f)
+                    .padding(horizontal = 16.dp),
+                verticalArrangement = Arrangement.spacedBy(16.dp)
+            ) {
+                item {
+                    Spacer(modifier = Modifier.height(8.dp))
+                    Text(
+                        "Rate your teammates",
+                        style = MaterialTheme.typography.titleLarge,
+                        fontWeight = FontWeight.Bold
+                    )
+                    Spacer(modifier = Modifier.height(4.dp))
+                }
+                items(sampleRatings) { rating ->
+                    RatingCard(
+                        rating = rating,
+                        onSkillChange = {},
+                        onSportsmanshipChange = {},
+                        onPunctualityChange = {},
+                        onCommentChange = {}
+                    )
+                }
+            }
+            Button(
+                onClick = {},
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(16.dp),
+                enabled = false
+            ) {
+                Text("Submit Ratings")
+            }
+        }
+    }
 }

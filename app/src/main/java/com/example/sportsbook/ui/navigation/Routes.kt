@@ -29,8 +29,9 @@ sealed interface Route {
     @Serializable data object MyBookings : Route
     @Serializable data object PlayerProfile : Route
     @Serializable data class BookingDetail(val bookingId: Long) : Route
+    @Serializable data class BookingChat(val bookingId: Long) : Route
     @Serializable data class WriteReview(val bookingId: Long) : Route
-    @Serializable data class PaymentCheckout(val timeSlotId: Long, val notes: String = "") : Route
+    @Serializable data class PaymentCheckout(val bookingId: Long) : Route
     @Serializable data object PaymentHistory : Route
     @Serializable data class PaymentDetail(val paymentId: Long) : Route
     @Serializable data object Notifications : Route
@@ -56,6 +57,12 @@ sealed interface Route {
     // Public Profile
     @Serializable data class PlayerPublicProfile(val userId: Long) : Route
 
+    // All Sports
+    @Serializable data object AllSports : Route
+
+    // News Feed
+    @Serializable data object NewsFeed : Route
+
     // Search
     @Serializable data object Search : Route
 
@@ -77,6 +84,8 @@ sealed interface Route {
     @Serializable data object PlayerAchievements : Route
     @Serializable data object PlayerStatsScreen : Route
 
+    @Serializable data object PendingReservations : Route
+
     // Partner flow
     @Serializable data object VenueSetup : Route
     @Serializable data object CoachSetup : Route
@@ -84,4 +93,7 @@ sealed interface Route {
     @Serializable data class ManageImages(val entityType: String, val entityId: Long) : Route
     @Serializable data object StripeConnect : Route
     @Serializable data object TimeSlotManagement : Route
+    @Serializable data class EditVenue(val venueId: Long) : Route
+    @Serializable data class EditCoach(val coachId: Long) : Route
+    @Serializable data object PartnerAnalytics : Route
 }

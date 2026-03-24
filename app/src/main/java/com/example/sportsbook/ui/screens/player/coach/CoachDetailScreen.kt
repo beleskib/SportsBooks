@@ -355,14 +355,54 @@ private fun CoachReviewItem(
     }
 }
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Preview(showBackground = true)
 @Composable
 private fun CoachDetailScreenPreview() {
-    MaterialTheme {
-        CoachDetailScreen(
-            coachId = 1L,
-            onBookClick = {},
-            onBack = {}
+    val sampleCoach = Coach(
+        id = 1L,
+        name = "Alex Rivera",
+        bio = "Professional basketball coach with 8 years of experience training players at all skill levels.",
+        specialization = "Point Guard Trainer",
+        experienceYears = 8,
+        pricePerHour = 60.0,
+        avgRating = 4.7,
+        totalReviews = 34,
+        certifications = listOf(
+            CoachCertification(id = 1L, coachId = 1L, name = "FIBA Level 2 Coach", issuingBody = "FIBA", yearObtained = 2018)
         )
+    )
+    val sampleReviews = listOf(
+        Review(id = 1L, playerId = 10L, coachId = 1L, rating = 5, comment = "Excellent coach, very patient.", playerName = "Jordan M.", createdAt = "2026-02-14")
+    )
+    MaterialTheme {
+        Scaffold(
+            topBar = {
+                TopAppBar(
+                    title = { Text(text = sampleCoach.name) },
+                    navigationIcon = {
+                        IconButton(onClick = {}) {
+                            Icon(
+                                imageVector = Icons.AutoMirrored.Filled.ArrowBack,
+                                contentDescription = "Back"
+                            )
+                        }
+                    }
+                )
+            },
+            floatingActionButton = {
+                ExtendedFloatingActionButton(
+                    text = { Text("Book Session") },
+                    icon = {},
+                    onClick = {}
+                )
+            }
+        ) { innerPadding ->
+            CoachDetailContent(
+                coach = sampleCoach,
+                reviews = sampleReviews,
+                modifier = Modifier.padding(innerPadding)
+            )
+        }
     }
 }

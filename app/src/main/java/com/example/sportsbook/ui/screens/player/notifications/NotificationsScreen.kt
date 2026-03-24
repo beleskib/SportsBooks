@@ -205,6 +205,9 @@ private fun notificationIcon(type: NotificationType): ImageVector = when (type) 
     NotificationType.MATCH_CHAT_MESSAGE -> Icons.Default.Message
     NotificationType.MATCH_STARTING_SOON,
     NotificationType.MATCH_CANCELLED -> Icons.Default.SportsScore
+    NotificationType.BOOKING_REQUEST,
+    NotificationType.BOOKING_APPROVED,
+    NotificationType.BOOKING_DECLINED,
     NotificationType.BOOKING_CONFIRMED,
     NotificationType.BOOKING_CANCELLED,
     NotificationType.BOOKING_REMINDER -> Icons.Default.BookOnline
@@ -227,6 +230,9 @@ private fun notificationIconColor(type: NotificationType) = when (type) {
     NotificationType.MATCH_CHAT_MESSAGE -> MaterialTheme.colorScheme.tertiary
     NotificationType.MATCH_STARTING_SOON -> MaterialTheme.colorScheme.secondary
     NotificationType.MATCH_CANCELLED -> MaterialTheme.colorScheme.error
+    NotificationType.BOOKING_REQUEST -> MaterialTheme.colorScheme.secondary
+    NotificationType.BOOKING_APPROVED -> MaterialTheme.colorScheme.primary
+    NotificationType.BOOKING_DECLINED -> MaterialTheme.colorScheme.error
     NotificationType.BOOKING_CONFIRMED -> MaterialTheme.colorScheme.primary
     NotificationType.BOOKING_CANCELLED -> MaterialTheme.colorScheme.error
     NotificationType.BOOKING_REMINDER -> MaterialTheme.colorScheme.secondary
@@ -242,9 +248,63 @@ private fun notificationIconColor(type: NotificationType) = when (type) {
 }
 
 @Preview(showBackground = true)
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 private fun NotificationsScreenPreview() {
+    val sampleNotifications = listOf(
+        Notification(
+            id = 1,
+            type = NotificationType.BOOKING_CONFIRMED,
+            title = "Booking Confirmed",
+            body = "Your booking at Arena Sport on Mar 25 at 10:00 has been confirmed.",
+            isRead = false,
+            createdAt = "2026-03-23T09:00:00Z"
+        ),
+        Notification(
+            id = 2,
+            type = NotificationType.FRIEND_REQUEST,
+            title = "New Friend Request",
+            body = "Jordan Smith sent you a friend request.",
+            isRead = true,
+            createdAt = "2026-03-22T15:30:00Z"
+        ),
+        Notification(
+            id = 3,
+            type = NotificationType.MATCH_JOIN_APPROVED,
+            title = "Join Request Approved",
+            body = "Your request to join Friday Basketball has been approved.",
+            isRead = true,
+            createdAt = "2026-03-21T11:00:00Z"
+        )
+    )
     MaterialTheme {
-        NotificationsScreen(onBack = {})
+        Scaffold(
+            topBar = {
+                TopAppBar(
+                    title = { Text("Notifications") },
+                    navigationIcon = {
+                        IconButton(onClick = {}) {
+                            Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back")
+                        }
+                    },
+                    actions = {
+                        IconButton(onClick = {}) {
+                            Icon(Icons.Default.DoneAll, contentDescription = "Mark all as read")
+                        }
+                    }
+                )
+            }
+        ) { padding ->
+            LazyColumn(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(padding)
+            ) {
+                items(sampleNotifications, key = { it.id }) { notification ->
+                    NotificationItem(notification = notification, onClick = {})
+                    HorizontalDivider()
+                }
+            }
+        }
     }
 }

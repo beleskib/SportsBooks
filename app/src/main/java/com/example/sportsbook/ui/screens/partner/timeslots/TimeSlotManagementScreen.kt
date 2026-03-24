@@ -708,6 +708,121 @@ private fun formatDateShort(dateStr: String): String {
 @Composable
 private fun TimeSlotManagementScreenPreview() {
     MaterialTheme {
-        TimeSlotManagementScreen(onBack = {})
+        Scaffold(
+            containerColor = Navy900,
+            topBar = {
+                @OptIn(ExperimentalMaterial3Api::class)
+                TopAppBar(
+                    title = { Text("Time Slots", color = WarmWhite) },
+                    navigationIcon = {
+                        IconButton(onClick = {}) {
+                            Icon(Icons.AutoMirrored.Filled.ArrowBack, "Back", tint = WarmWhite)
+                        }
+                    },
+                    colors = TopAppBarDefaults.topAppBarColors(containerColor = Navy900)
+                )
+            }
+        ) { paddingValues ->
+            LazyColumn(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(paddingValues)
+                    .padding(horizontal = 16.dp),
+                verticalArrangement = Arrangement.spacedBy(12.dp)
+            ) {
+                item {
+                    Spacer(Modifier.height(4.dp))
+                    Text(
+                        "Select Venue or Coach",
+                        style = MaterialTheme.typography.labelLarge,
+                        color = WarmWhite.copy(alpha = 0.7f)
+                    )
+                    Spacer(Modifier.height(8.dp))
+                    Row(
+                        modifier = Modifier.horizontalScroll(rememberScrollState()),
+                        horizontalArrangement = Arrangement.spacedBy(8.dp)
+                    ) {
+                        FilterChip(
+                            selected = true,
+                            onClick = {},
+                            label = { Text("City Sports Hall") },
+                            colors = FilterChipDefaults.filterChipColors(
+                                selectedContainerColor = USOpenGold,
+                                selectedLabelColor = Navy900,
+                                containerColor = Navy700,
+                                labelColor = WarmWhite
+                            )
+                        )
+                        FilterChip(
+                            selected = false,
+                            onClick = {},
+                            label = { Text("Jane Doe") },
+                            colors = FilterChipDefaults.filterChipColors(
+                                selectedContainerColor = USOpenGold,
+                                selectedLabelColor = Navy900,
+                                containerColor = Navy700,
+                                labelColor = WarmWhite
+                            )
+                        )
+                    }
+                }
+
+                item {
+                    ElevatedCard(colors = CardDefaults.elevatedCardColors(containerColor = Navy700)) {
+                        Column(modifier = Modifier.padding(16.dp)) {
+                            Text("Date Range", style = MaterialTheme.typography.titleSmall, color = WarmWhite)
+                            Spacer(Modifier.height(8.dp))
+                            AssistChip(
+                                onClick = {},
+                                label = { Text("24-03 → 31-03", color = WarmWhite) },
+                                leadingIcon = {
+                                    Icon(Icons.Default.CalendarMonth, null, tint = USOpenGold, modifier = Modifier.size(18.dp))
+                                }
+                            )
+                        }
+                    }
+                }
+
+                item {
+                    Button(
+                        onClick = {},
+                        modifier = Modifier.fillMaxWidth(),
+                        colors = ButtonDefaults.buttonColors(containerColor = USOpenGold, contentColor = Navy900)
+                    ) {
+                        Icon(Icons.Default.Add, null, modifier = Modifier.size(18.dp))
+                        Spacer(Modifier.width(8.dp))
+                        Text("Generate Time Slots")
+                    }
+                }
+
+                item {
+                    Card(
+                        colors = CardDefaults.cardColors(containerColor = Navy700),
+                        modifier = Modifier.fillMaxWidth()
+                    ) {
+                        Column(
+                            modifier = Modifier.padding(32.dp),
+                            horizontalAlignment = Alignment.CenterHorizontally
+                        ) {
+                            Icon(Icons.Default.CalendarMonth, null, tint = WarmWhite.copy(alpha = 0.3f), modifier = Modifier.size(48.dp))
+                            Spacer(Modifier.height(12.dp))
+                            Text(
+                                "No time slots for this range",
+                                color = WarmWhite.copy(alpha = 0.5f),
+                                textAlign = TextAlign.Center
+                            )
+                            Text(
+                                "Generate slots to get started",
+                                style = MaterialTheme.typography.bodySmall,
+                                color = WarmWhite.copy(alpha = 0.3f),
+                                textAlign = TextAlign.Center
+                            )
+                        }
+                    }
+                }
+
+                item { Spacer(Modifier.height(24.dp)) }
+            }
+        }
     }
 }

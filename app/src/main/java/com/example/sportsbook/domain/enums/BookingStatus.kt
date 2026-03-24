@@ -6,6 +6,7 @@ import kotlinx.serialization.Serializable
 @Serializable
 enum class BookingStatus {
     @SerialName("pending") PENDING,
+    @SerialName("approved") APPROVED,
     @SerialName("confirmed") CONFIRMED,
     @SerialName("cancelled") CANCELLED,
     @SerialName("completed") COMPLETED,

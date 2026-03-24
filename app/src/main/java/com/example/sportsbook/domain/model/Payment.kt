@@ -7,7 +7,7 @@ data class Payment(
     val bookingId: Long = 0,
     val payerId: Long = 0,
     val amount: Double = 0.0,
-    val currency: String = "USD",
+    val currency: String = "MKD",
     val status: PaymentStatus = PaymentStatus.PENDING,
     val paymentMethod: String? = null,
     val externalPaymentId: String? = null,

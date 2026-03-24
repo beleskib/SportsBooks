@@ -149,7 +149,7 @@ private fun PaymentCard(
             Spacer(modifier = Modifier.height(4.dp))
 
             Text(
-                text = "$${"%.2f".format(payment.amount)} ${payment.currency}",
+                text = "${"%.0f".format(payment.amount)} ден",
                 style = MaterialTheme.typography.titleSmall,
                 color = MaterialTheme.colorScheme.primary
             )
@@ -178,10 +178,51 @@ private fun PaymentStatusBadge(status: PaymentStatus) {
     }
 }
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Preview(showBackground = true)
 @Composable
 private fun PaymentHistoryScreenPreview() {
+    val samplePayments = listOf(
+        Payment(
+            id = 1L,
+            bookingId = 10L,
+            amount = 1500.00,
+            currency = "MKD",
+            status = PaymentStatus.COMPLETED,
+            venueName = "City Tennis Center",
+            slotDate = "2026-03-25",
+            startTime = "10:00",
+            endTime = "11:00"
+        ),
+        Payment(
+            id = 2L,
+            bookingId = 11L,
+            amount = 2400.00,
+            currency = "MKD",
+            status = PaymentStatus.PENDING,
+            venueName = "Downtown Basketball Court",
+            slotDate = "2026-03-26",
+            startTime = "14:00",
+            endTime = "15:00"
+        )
+    )
     MaterialTheme {
-        PaymentHistoryScreen()
+        Scaffold(
+            topBar = { TopAppBar(title = { Text("Payments") }) }
+        ) { paddingValues ->
+            LazyColumn(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(paddingValues)
+                    .padding(horizontal = 16.dp),
+                verticalArrangement = Arrangement.spacedBy(12.dp)
+            ) {
+                item { Spacer(modifier = Modifier.height(4.dp)) }
+                items(samplePayments) { payment ->
+                    PaymentCard(payment = payment, onClick = {})
+                }
+                item { Spacer(modifier = Modifier.height(8.dp)) }
+            }
+        }
     }
 }

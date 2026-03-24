@@ -35,6 +35,22 @@ data class PlayerHomeUiState(
     val isLoading: Boolean = false,
     val error: String? = null
 ) {
+    /** Sports the user picked during onboarding */
+    val mySports: List<Sport>
+        get() {
+            val interested = user?.interestedSports ?: emptyList()
+            return if (interested.isEmpty()) sports // fallback: show all
+            else sports.filter { it.sportType in interested }
+        }
+
+    /** Remaining sports not in the user's selection */
+    val otherSports: List<Sport>
+        get() {
+            val interested = user?.interestedSports ?: emptyList()
+            return if (interested.isEmpty()) emptyList()
+            else sports.filter { it.sportType !in interested }
+        }
+
     val filteredVenues: List<Venue>
         get() {
             var list = allVenues

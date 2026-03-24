@@ -36,4 +36,12 @@ class BookingRepositoryImpl @Inject constructor(
     override suspend fun updateBookingStatus(id: Long, status: BookingStatus): Result<Booking> = runCatching {
         apiService.updateBookingStatus(id, mapOf("status" to status.name.lowercase())).data.toDomain()
     }
+
+    override suspend fun approveBooking(id: Long): Result<Booking> = runCatching {
+        apiService.approveBooking(id).data.toDomain()
+    }
+
+    override suspend fun declineBooking(id: Long): Result<Booking> = runCatching {
+        apiService.declineBooking(id).data.toDomain()
+    }
 }

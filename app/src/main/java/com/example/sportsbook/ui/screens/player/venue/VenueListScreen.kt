@@ -231,14 +231,47 @@ private fun VenueCard(
     }
 }
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Preview(showBackground = true)
 @Composable
 private fun VenueListScreenPreview() {
+    val sampleVenues = listOf(
+        com.example.sportsbook.domain.model.Venue(id = 1L, name = "City Basketball Court", address = "123 Main St, Skopje", pricePerHour = 35.0, avgRating = 4.6, totalReviews = 28),
+        com.example.sportsbook.domain.model.Venue(id = 2L, name = "Downtown Sports Hall", address = "456 Park Ave, Skopje", pricePerHour = 25.0, avgRating = 4.1, totalReviews = 14)
+    )
     MaterialTheme {
-        VenueListScreen(
-            sportType = "BASKETBALL",
-            onVenueClick = {},
-            onBack = {}
-        )
+        Scaffold(
+            topBar = {
+                TopAppBar(
+                    title = { Text("Venues") },
+                    navigationIcon = {
+                        IconButton(onClick = {}) {
+                            Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back")
+                        }
+                    },
+                    actions = {
+                        IconButton(onClick = {}) {
+                            Icon(Icons.Default.Map, contentDescription = "Map view")
+                        }
+                    }
+                )
+            }
+        ) { innerPadding ->
+            LazyColumn(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(innerPadding)
+            ) {
+                items(sampleVenues, key = { it.id }) { venue ->
+                    VenueCard(
+                        venue = venue,
+                        onClick = {},
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(horizontal = 16.dp, vertical = 6.dp)
+                    )
+                }
+            }
+        }
     }
 }

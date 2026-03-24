@@ -113,7 +113,7 @@ export function EarningsPage() {
           <div className="flex items-center justify-between">
             <div>
               <p className="text-sm font-medium text-gray-500">{isAdmin ? 'Total Platform Revenue' : 'Total Revenue'}</p>
-              <p className="mt-1 text-3xl font-bold text-gray-900">${totalRevenue.toFixed(2)}</p>
+              <p className="mt-1 text-3xl font-bold text-gray-900">{totalRevenue.toFixed(2)} ден</p>
             </div>
             <div className="rounded-lg bg-green-100 p-3">
               <DollarSign className="h-6 w-6 text-green-600" />
@@ -128,7 +128,7 @@ export function EarningsPage() {
           <div className="flex items-center justify-between">
             <div>
               <p className="text-sm font-medium text-gray-500">{isAdmin ? 'Platform Fees Collected (10%)' : 'Platform Fees (10%)'}</p>
-              <p className="mt-1 text-3xl font-bold text-red-600">-${totalPlatformFees.toFixed(2)}</p>
+              <p className="mt-1 text-3xl font-bold text-red-600">-{totalPlatformFees.toFixed(2)} ден</p>
             </div>
             <div className="rounded-lg bg-red-100 p-3">
               <ArrowDownRight className="h-6 w-6 text-red-600" />
@@ -141,7 +141,7 @@ export function EarningsPage() {
           <div className="flex items-center justify-between">
             <div>
               <p className="text-sm font-medium text-gray-500">{isAdmin ? 'Partner Payouts' : 'Your Payout'}</p>
-              <p className="mt-1 text-3xl font-bold text-blue-600">${totalPayout.toFixed(2)}</p>
+              <p className="mt-1 text-3xl font-bold text-blue-600">{totalPayout.toFixed(2)} ден</p>
             </div>
             <div className="rounded-lg bg-blue-100 p-3">
               <TrendingUp className="h-6 w-6 text-blue-600" />
@@ -175,10 +175,10 @@ export function EarningsPage() {
                     </div>
                   </td>
                   <td className="py-3 text-right text-sm text-gray-600">{data.count}</td>
-                  <td className="py-3 text-right text-sm text-gray-900">${data.revenue.toFixed(2)}</td>
-                  <td className="py-3 text-right text-sm text-red-600">-${data.fees.toFixed(2)}</td>
+                  <td className="py-3 text-right text-sm text-gray-900">{data.revenue.toFixed(2)} ден</td>
+                  <td className="py-3 text-right text-sm text-red-600">-{data.fees.toFixed(2)} ден</td>
                   <td className="py-3 text-right text-sm font-semibold text-green-600">
-                    ${(data.revenue - data.fees).toFixed(2)}
+                    {(data.revenue - data.fees).toFixed(2)} ден
                   </td>
                 </tr>
               ))}
@@ -229,7 +229,7 @@ export function EarningsPage() {
                   </div>
                 </div>
                 <div className="text-right">
-                  <p className="text-sm font-semibold text-gray-900">${payment.amount.toFixed(2)}</p>
+                  <p className="text-sm font-semibold text-gray-900">{payment.amount.toFixed(2)} ден</p>
                   <PaymentStatusBadge status={payment.status} />
                 </div>
               </div>

@@ -2,12 +2,40 @@ import { Request, Response, NextFunction } from 'express';
 import { success, created } from '../utils/apiResponse';
 import * as bookingRepo from '../repositories/booking.repository';
 import * as gamificationRepo from '../repositories/gamification.repository';
-import { NotFoundError } from '../utils/errors';
+import * as notificationRepo from '../repositories/notification.repository';
+import * as venueRepo from '../repositories/venue.repository';
+import * as coachRepo from '../repositories/coach.repository';
+import { NotFoundError, ForbiddenError } from '../utils/errors';
 
 export async function create(req: Request, res: Response, next: NextFunction) {
   try {
     const { timeSlotId, notes } = req.body;
     const booking = await bookingRepo.create(req.user!.id, timeSlotId, notes);
+
+    // Send notification to partner about new booking request
+    try {
+      let partnerId: number | null = null;
+      let entityName = '';
+      if (booking.venueId) {
+        const venue = await venueRepo.findById(booking.venueId);
+        if (venue) { partnerId = venue.ownerId; entityName = venue.name; }
+      } else if (booking.coachId) {
+        const coach = await coachRepo.findById(booking.coachId);
+        if (coach) { partnerId = coach.userId; entityName = coach.name; }
+      }
+      if (partnerId) {
+        await notificationRepo.createNotification(
+          partnerId,
+          'booking_request',
+          'New Booking Request',
+          `You have a new booking request for ${entityName}. Tap to review.`,
+          { bookingId: String(booking.id) }
+        );
+      }
+    } catch (e) {
+      console.error('Failed to send booking request notification:', e);
+    }
+
     created(res, booking, 'Booking created');
   } catch (e) { next(e); }
 }
@@ -67,3 +95,87 @@ export async function getPartnerBookings(req: Request, res: Response, next: Next
     success(res, bookings);
   } catch (e) { next(e); }
 }
+
+export const approveBooking = async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    const { id } = req.params;
+    const userId = req.user!.id;
+
+    // Verify the booking exists and belongs to this partner
+    const existing = await bookingRepo.findById(Number(id));
+    if (!existing) throw new NotFoundError('Booking');
+
+    // Verify partner ownership
+    let isOwner = false;
+    let entityName = '';
+    if (existing.venueId) {
+      const venue = await venueRepo.findById(existing.venueId);
+      if (venue && venue.ownerId === userId) { isOwner = true; entityName = venue.name; }
+    }
+    if (existing.coachId) {
+      const coach = await coachRepo.findById(existing.coachId);
+      if (coach && coach.userId === userId) { isOwner = true; entityName = coach.name; }
+    }
+    if (!isOwner) throw new ForbiddenError('You can only approve bookings for your own venues/coaches');
+
+    const booking = await bookingRepo.approveBooking(Number(id));
+
+    // Notify the player
+    try {
+      await notificationRepo.createNotification(
+        booking.playerId,
+        'booking_approved',
+        'Booking Approved!',
+        `Your booking at "${entityName}" has been approved. Proceed to payment.`,
+        { bookingId: String(booking.id) }
+      );
+    } catch (e) {
+      console.error('Failed to send booking approved notification:', e);
+    }
+
+    res.json({ data: booking });
+  } catch (error) {
+    next(error);
+  }
+};
+
+export const declineBooking = async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    const { id } = req.params;
+    const userId = req.user!.id;
+
+    const existing = await bookingRepo.findById(Number(id));
+    if (!existing) throw new NotFoundError('Booking');
+
+    let isOwner = false;
+    let entityName = '';
+    if (existing.venueId) {
+      const venue = await venueRepo.findById(existing.venueId);
+      if (venue && venue.ownerId === userId) { isOwner = true; entityName = venue.name; }
+    }
+    if (existing.coachId) {
+      const coach = await coachRepo.findById(existing.coachId);
+      if (coach && coach.userId === userId) { isOwner = true; entityName = coach.name; }
+    }
+    if (!isOwner) throw new ForbiddenError('You can only decline bookings for your own venues/coaches');
+
+    const booking = await bookingRepo.declineBooking(Number(id));
+
+    // Notify the player
+    try {
+      await notificationRepo.createNotification(
+        booking.playerId,
+        'booking_declined',
+        'Booking Declined',
+        `Your booking at "${entityName}" has been declined.`,
+        { bookingId: String(booking.id) }
+      );
+    } catch (e) {
+      console.error('Failed to send booking declined notification:', e);
+    }
+
+    res.json({ data: booking });
+  } catch (error) {
+    next(error);
+  }
+};

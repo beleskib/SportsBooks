@@ -86,7 +86,7 @@ export function CoachList({ coaches, onDelete, deleting, bookingCounts, showOwne
                     {SPORT_TYPE_LABELS[coach.sportType as SportType] || coach.sportType}
                   </td>
                   <td className="whitespace-nowrap px-4 py-3 text-sm text-gray-600">{coach.specialization || '-'}</td>
-                  <td className="whitespace-nowrap px-4 py-3 text-sm text-gray-600">${coach.pricePerHour.toFixed(2)}</td>
+                  <td className="whitespace-nowrap px-4 py-3 text-sm text-gray-600">{coach.pricePerHour.toFixed(2)} ден</td>
                   <td className="whitespace-nowrap px-4 py-3 text-sm text-gray-600">{coach.experienceYears || '-'}</td>
                   <td className="whitespace-nowrap px-4 py-3 text-sm text-gray-600">
                     {coach.avgRating > 0 ? `${coach.avgRating.toFixed(1)} (${coach.totalReviews})` : '-'}

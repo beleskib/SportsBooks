@@ -55,6 +55,7 @@ import coil.compose.AsyncImage
 import com.example.sportsbook.domain.enums.SportType
 import com.example.sportsbook.domain.model.Coach
 import com.example.sportsbook.domain.model.Sport
+import com.example.sportsbook.domain.model.User
 import com.example.sportsbook.domain.model.Venue
 import com.example.sportsbook.ui.common.DiscountBadge
 import com.example.sportsbook.ui.common.ErrorView
@@ -143,6 +144,7 @@ fun PlayerHomeScreen(
     onNavigateToSearch: () -> Unit = {},
     onNavigateToFavorites: () -> Unit = {},
     onNavigateToFriends: () -> Unit = {},
+    onBrowseAllSports: () -> Unit = {},
     viewModel: PlayerHomeViewModel = hiltViewModel()
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
@@ -164,7 +166,8 @@ fun PlayerHomeScreen(
             onNavigateToFavorites = onNavigateToFavorites,
             onNavigateToFriends = onNavigateToFriends,
             onFindMatch = onFindMatch,
-            onSelectSport = viewModel::selectSport
+            onSelectSport = viewModel::selectSport,
+            onBrowseAllSports = onBrowseAllSports
         )
     }
 }
@@ -181,7 +184,8 @@ private fun PlayerHomeContent(
     onNavigateToFavorites: () -> Unit,
     onNavigateToFriends: () -> Unit,
     onFindMatch: () -> Unit,
-    onSelectSport: (SportType?) -> Unit
+    onSelectSport: (SportType?) -> Unit,
+    onBrowseAllSports: () -> Unit = {}
 ) {
     Box(modifier = Modifier.fillMaxSize()) {
     LazyColumn(
@@ -202,39 +206,35 @@ private fun PlayerHomeContent(
             )
         }
 
-        // ── Filter Chips ──
-        item {
-            FilterChipsRow(
-                sports = uiState.sports,
-                selectedSportType = uiState.selectedSportType,
-                onSelectSport = onSelectSport
-            )
-        }
-
-        // ── Sport Category Grid (only when "All" selected) ──
-        if (uiState.selectedSportType == null && uiState.sports.isNotEmpty()) {
-            val gridSports = uiState.sports.filter { it.sportType !in hiddenFromGrid }
-            val rows = gridSports.chunked(2)
-            items(rows.size) { index ->
-                val pair = rows[index]
-                Row(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(horizontal = 16.dp),
+        // ── My Sports (LazyRow with same card style) ──
+        if (uiState.mySports.isNotEmpty()) {
+            item {
+                SectionHeader(title = "My Sports")
+            }
+            item {
+                LazyRow(
+                    contentPadding = PaddingValues(horizontal = 16.dp),
                     horizontalArrangement = Arrangement.spacedBy(10.dp)
                 ) {
-                    pair.forEach { sport ->
+                    items(uiState.mySports) { sport ->
                         SportCategoryCard(
                             sport = sport,
                             onClick = { onSportClick(sport.sportType.name.lowercase()) },
-                            modifier = Modifier.weight(1f)
+                            modifier = Modifier.width(170.dp)
                         )
                     }
-                    if (pair.size == 1) {
-                        Spacer(modifier = Modifier.weight(1f))
-                    }
                 }
-                Spacer(modifier = Modifier.height(10.dp))
+                Spacer(modifier = Modifier.height(8.dp))
+            }
+        }
+
+        // ── Other Sports button ──
+        if (uiState.otherSports.isNotEmpty()) {
+            item {
+                OtherSportsCard(
+                    otherSportsCount = uiState.otherSports.size,
+                    onClick = onBrowseAllSports
+                )
             }
         }
 
@@ -743,6 +743,68 @@ private fun FindMatchCard(onClick: () -> Unit) {
     }
 }
 
+// ── Other Sports Card ──
+
+@Composable
+private fun OtherSportsCard(
+    otherSportsCount: Int,
+    onClick: () -> Unit
+) {
+    Card(
+        onClick = onClick,
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(horizontal = 16.dp, vertical = 4.dp),
+        shape = RoundedCornerShape(12.dp),
+        colors = CardDefaults.cardColors(containerColor = Color.Transparent),
+        elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)
+    ) {
+        Box(
+            modifier = Modifier
+                .fillMaxWidth()
+                .background(
+                    Brush.horizontalGradient(
+                        colors = listOf(Navy700, Navy600)
+                    ),
+                    shape = RoundedCornerShape(12.dp)
+                )
+                .padding(horizontal = 20.dp, vertical = 16.dp)
+        ) {
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Text(
+                        text = "\uD83C\uDFC6",
+                        fontSize = 24.sp
+                    )
+                    Spacer(modifier = Modifier.width(12.dp))
+                    Column {
+                        Text(
+                            text = "Other Sports",
+                            style = MaterialTheme.typography.titleMedium,
+                            color = WarmWhite
+                        )
+                        Text(
+                            text = "$otherSportsCount more sports to explore",
+                            style = MaterialTheme.typography.bodySmall,
+                            color = WarmWhite.copy(alpha = 0.6f)
+                        )
+                    }
+                }
+                Icon(
+                    Icons.AutoMirrored.Filled.ArrowForward,
+                    contentDescription = "Browse",
+                    tint = USOpenGold,
+                    modifier = Modifier.size(24.dp)
+                )
+            }
+        }
+    }
+}
+
 // ── Generic Horizontal Card Row (for Venues / Coaches) ──
 
 @Composable
@@ -870,19 +932,49 @@ private fun ItemCard(
 @Preview(showBackground = true, backgroundColor = 0xFF0A1628)
 @Composable
 private fun PlayerHomeScreenPreview() {
+    val sampleSports = listOf(
+        Sport(id = 1, sportType = SportType.BASKETBALL, name = "Basketball"),
+        Sport(id = 2, sportType = SportType.FOOTBALL, name = "Football"),
+        Sport(id = 3, sportType = SportType.TENNIS, name = "Tennis"),
+        Sport(id = 4, sportType = SportType.PADDLE, name = "Paddle"),
+        Sport(id = 5, sportType = SportType.VOLLEYBALL, name = "Volleyball"),
+        Sport(id = 6, sportType = SportType.YOGA, name = "Yoga"),
+    )
+    val sampleVenues = listOf(
+        Venue(id = 1, name = "City Sports Hall", sportType = SportType.BASKETBALL, pricePerHour = 45.0, address = "123 Main St", city = "New York"),
+        Venue(id = 2, name = "Tennis Club", sportType = SportType.TENNIS, pricePerHour = 30.0, address = "456 Oak Ave", city = "Boston"),
+    )
+    val sampleCoaches = listOf(
+        Coach(id = 1, name = "Coach Mike", sportType = SportType.BASKETBALL, pricePerHour = 60.0, specialization = "Youth Training"),
+    )
+    val previewState = PlayerHomeUiState(
+        user = User(
+            id = 1,
+            displayName = "Alex",
+            email = "alex@test.com",
+            interestedSports = listOf(SportType.BASKETBALL, SportType.TENNIS, SportType.FOOTBALL)
+        ),
+        sports = sampleSports,
+        allVenues = sampleVenues,
+        allCoaches = sampleCoaches,
+        topDealVenues = emptyList(),
+        topDealCoaches = emptyList(),
+        isLoading = false
+    )
     SportsBookTheme {
-        PlayerHomeScreen(
+        PlayerHomeContent(
+            uiState = previewState,
             onSportClick = {},
             onVenueClick = {},
             onCoachClick = {},
             onNavigateToProfile = {},
             onNavigateToNotifications = {},
-            onNavigateToSettings = {},
-            onSignOut = {},
-            onFindMatch = {},
             onNavigateToSearch = {},
             onNavigateToFavorites = {},
-            onNavigateToFriends = {}
+            onNavigateToFriends = {},
+            onFindMatch = {},
+            onSelectSport = {},
+            onBrowseAllSports = {}
         )
     }
 }

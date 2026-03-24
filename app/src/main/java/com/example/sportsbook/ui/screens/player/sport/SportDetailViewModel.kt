@@ -39,7 +39,7 @@ class SportDetailViewModel @Inject constructor(
     init {
         val sportTypeStr: String? = savedStateHandle["sportType"]
         if (sportTypeStr != null) {
-            val parsedType = try { SportType.valueOf(sportTypeStr) } catch (_: Exception) { null }
+            val parsedType = try { SportType.valueOf(sportTypeStr.uppercase()) } catch (_: Exception) { null }
             if (parsedType != null) {
                 _uiState.update { it.copy(sportType = parsedType, sportDisplayName = parsedType.displayName) }
                 loadData()

@@ -15,10 +15,17 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
+import androidx.compose.foundation.clickable
 import androidx.compose.material.icons.filled.AccountBalance
+import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.Image
+import androidx.compose.material.icons.filled.Inbox
 import androidx.compose.material.icons.filled.OpenInBrowser
+import androidx.compose.material.icons.filled.Person
 import androidx.compose.material.icons.filled.SportsTennis
+import androidx.compose.material.icons.filled.Store
+import androidx.compose.material.icons.automirrored.filled.TrendingUp
 import androidx.compose.material3.Button
 import androidx.compose.material3.ElevatedCard
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -117,6 +124,12 @@ fun PartnerDashboardScreen(
     onBrowseAsPlayer: () -> Unit = {},
     onPaymentSetup: () -> Unit = {},
     onManageTimeSlots: () -> Unit = {},
+    onEditVenue: (Long) -> Unit = {},
+    onEditCoach: (Long) -> Unit = {},
+    onAddVenue: () -> Unit = {},
+    onAddCoachProfile: () -> Unit = {},
+    onViewPendingReservations: () -> Unit = {},
+    onViewAnalytics: () -> Unit = {},
     viewModel: PartnerDashboardViewModel = hiltViewModel()
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
@@ -161,39 +174,88 @@ fun PartnerDashboardScreen(
                         StatCard(
                             title = "Pending",
                             count = uiState.pendingBookings,
-                            modifier = Modifier.weight(1f)
+                            modifier = Modifier
+                                .weight(1f)
+                                .clickable { onViewPendingReservations() }
                         )
                     }
 
                     Spacer(modifier = Modifier.height(16.dp))
 
-                    // Venue image management
+                    // -- My Venues section --
+                    Text(
+                        text = "My Venues",
+                        style = MaterialTheme.typography.titleMedium,
+                        modifier = Modifier.padding(bottom = 8.dp)
+                    )
+
                     uiState.venues.forEach { venue ->
                         ListingCard(
                             title = venue.name,
                             subtitle = "Venue",
                             imageCount = venue.images.size,
-                            onManageImages = { onManageImages("venue", venue.id) }
+                            onManageImages = { onManageImages("venue", venue.id) },
+                            onEdit = { onEditVenue(venue.id) }
                         )
                         Spacer(modifier = Modifier.height(8.dp))
                     }
 
-                    // Coach image management
+                    // Add New Venue button
+                    OutlinedButton(
+                        onClick = onAddVenue,
+                        modifier = Modifier.fillMaxWidth()
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.Add,
+                            contentDescription = null,
+                            modifier = Modifier.size(18.dp)
+                        )
+                        Spacer(modifier = Modifier.width(8.dp))
+                        Text("Add New Venue")
+                    }
+
+                    Spacer(modifier = Modifier.height(16.dp))
+
+                    // -- Coach Profile section --
+                    Text(
+                        text = "Coach Profile",
+                        style = MaterialTheme.typography.titleMedium,
+                        modifier = Modifier.padding(bottom = 8.dp)
+                    )
+
                     uiState.coachProfile?.let { coach ->
                         ListingCard(
                             title = coach.name,
                             subtitle = "Coach",
                             imageCount = coach.images.size,
-                            onManageImages = { onManageImages("coach", coach.id) }
+                            onManageImages = { onManageImages("coach", coach.id) },
+                            onEdit = { onEditCoach(coach.id) }
                         )
                         Spacer(modifier = Modifier.height(8.dp))
                     }
 
+                    if (uiState.coachProfile == null) {
+                        // Add Coach Profile button
+                        OutlinedButton(
+                            onClick = onAddCoachProfile,
+                            modifier = Modifier.fillMaxWidth()
+                        ) {
+                            Icon(
+                                imageVector = Icons.Default.Person,
+                                contentDescription = null,
+                                modifier = Modifier.size(18.dp)
+                            )
+                            Spacer(modifier = Modifier.width(8.dp))
+                            Text("Create Coach Profile")
+                        }
+                    }
+
                     if (uiState.venues.isEmpty() && uiState.coachProfile == null) {
+                        Spacer(modifier = Modifier.height(8.dp))
                         OutlinedCard(modifier = Modifier.fillMaxWidth()) {
                             Column(modifier = Modifier.padding(16.dp)) {
                                 Text(
-                                    text = "No listings found. Create a venue or coach profile to get started.",
+                                    text = "No listings yet. Add a venue or create a coach profile to get started!",
                                     style = MaterialTheme.typography.bodyMedium,
                                     color = MaterialTheme.colorScheme.onSurfaceVariant
                                 )
@@ -211,6 +273,38 @@ fun PartnerDashboardScreen(
                 style = MaterialTheme.typography.titleMedium,
                 modifier = Modifier.padding(bottom = 12.dp)
             )
+
+            // Pending Reservations
+            Button(
+                onClick = onViewPendingReservations,
+                modifier = Modifier.fillMaxWidth()
+            ) {
+                Icon(
+                    imageVector = Icons.Default.Inbox,
+                    contentDescription = null,
+                    modifier = Modifier.size(18.dp)
+                )
+                Spacer(modifier = Modifier.width(8.dp))
+                Text("Pending Reservations")
+            }
+
+            Spacer(modifier = Modifier.height(8.dp))
+
+            // View Analytics
+            Button(
+                onClick = onViewAnalytics,
+                modifier = Modifier.fillMaxWidth()
+            ) {
+                Icon(
+                    imageVector = Icons.AutoMirrored.Filled.TrendingUp,
+                    contentDescription = null,
+                    modifier = Modifier.size(18.dp)
+                )
+                Spacer(modifier = Modifier.width(8.dp))
+                Text("View Analytics")
+            }
+
+            Spacer(modifier = Modifier.height(8.dp))
 
             // Manage Time Slots
             Button(
@@ -298,6 +392,7 @@ private fun ListingCard(
     subtitle: String,
     imageCount: Int,
     onManageImages: () -> Unit,
+    onEdit: () -> Unit = {},
     modifier: Modifier = Modifier
 ) {
     ElevatedCard(modifier = modifier.fillMaxWidth()) {
@@ -312,17 +407,34 @@ private fun ListingCard(
                 color = MaterialTheme.colorScheme.onSurfaceVariant
             )
             Spacer(modifier = Modifier.height(12.dp))
-            Button(
-                onClick = onManageImages,
-                modifier = Modifier.fillMaxWidth()
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(8.dp)
             ) {
-                Icon(
-                    imageVector = Icons.Default.Image,
-                    contentDescription = null,
-                    modifier = Modifier.size(18.dp)
-                )
-                Spacer(modifier = Modifier.width(8.dp))
-                Text("Manage Images")
+                Button(
+                    onClick = onEdit,
+                    modifier = Modifier.weight(1f)
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.Edit,
+                        contentDescription = null,
+                        modifier = Modifier.size(18.dp)
+                    )
+                    Spacer(modifier = Modifier.width(6.dp))
+                    Text("Edit")
+                }
+                FilledTonalButton(
+                    onClick = onManageImages,
+                    modifier = Modifier.weight(1f)
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.Image,
+                        contentDescription = null,
+                        modifier = Modifier.size(18.dp)
+                    )
+                    Spacer(modifier = Modifier.width(6.dp))
+                    Text("Images")
+                }
             }
         }
     }
@@ -354,6 +466,93 @@ private fun StatCard(
 @Composable
 private fun PartnerDashboardScreenPreview() {
     MaterialTheme {
-        PartnerDashboardScreen(onSignOut = {})
+        Scaffold(
+            topBar = {
+                @OptIn(ExperimentalMaterial3Api::class)
+                TopAppBar(title = { Text("Partner Dashboard") })
+            }
+        ) { paddingValues ->
+            Column(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(paddingValues)
+                    .padding(horizontal = 16.dp)
+                    .verticalScroll(rememberScrollState())
+            ) {
+                Spacer(modifier = Modifier.height(16.dp))
+
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(12.dp)
+                ) {
+                    StatCard(title = "Total Bookings", count = 12, modifier = Modifier.weight(1f))
+                    StatCard(title = "Pending", count = 3, modifier = Modifier.weight(1f))
+                }
+
+                Spacer(modifier = Modifier.height(16.dp))
+
+                Text(
+                    text = "My Venues",
+                    style = MaterialTheme.typography.titleMedium,
+                    modifier = Modifier.padding(bottom = 8.dp)
+                )
+
+                ListingCard(
+                    title = "City Sports Hall",
+                    subtitle = "Venue",
+                    imageCount = 4,
+                    onManageImages = {},
+                    onEdit = {}
+                )
+
+                Spacer(modifier = Modifier.height(8.dp))
+
+                OutlinedButton(onClick = {}, modifier = Modifier.fillMaxWidth()) {
+                    Icon(
+                        imageVector = Icons.Default.Add,
+                        contentDescription = null,
+                        modifier = Modifier.size(18.dp)
+                    )
+                    Spacer(modifier = Modifier.width(8.dp))
+                    Text("Add New Venue")
+                }
+
+                Spacer(modifier = Modifier.height(16.dp))
+
+                Text(
+                    text = "Coach Profile",
+                    style = MaterialTheme.typography.titleMedium,
+                    modifier = Modifier.padding(bottom = 8.dp)
+                )
+
+                ListingCard(
+                    title = "Jane Doe",
+                    subtitle = "Coach",
+                    imageCount = 2,
+                    onManageImages = {},
+                    onEdit = {}
+                )
+
+                Spacer(modifier = Modifier.height(20.dp))
+
+                Text(
+                    text = "Quick Actions",
+                    style = MaterialTheme.typography.titleMedium,
+                    modifier = Modifier.padding(bottom = 12.dp)
+                )
+
+                Button(onClick = {}, modifier = Modifier.fillMaxWidth()) {
+                    Icon(
+                        imageVector = Icons.Default.AccountBalance,
+                        contentDescription = null,
+                        modifier = Modifier.size(18.dp)
+                    )
+                    Spacer(modifier = Modifier.width(8.dp))
+                    Text("Manage Time Slots")
+                }
+
+                Spacer(modifier = Modifier.height(16.dp))
+            }
+        }
     }
 }

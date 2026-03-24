@@ -50,9 +50,23 @@ class CoachRepositoryImpl @Inject constructor(
         apiService.createCoach(request).data.toDomain()
     }
 
-    override suspend fun updateCoach(coach: Coach): Result<Coach> {
-        // TODO: Implement coach update
-        return Result.failure(NotImplementedError("Coach update not yet implemented"))
+    override suspend fun updateCoach(coach: Coach): Result<Coach> = runCatching {
+        apiService.updateCoach(
+            coach.id,
+            CreateCoachRequestDto(
+                name = coach.name,
+                bio = coach.bio,
+                sportType = coach.sportType.name.lowercase(),
+                specialization = coach.specialization,
+                experienceYears = coach.experienceYears,
+                pricePerHour = coach.pricePerHour,
+                address = coach.address,
+                city = coach.city,
+                country = coach.country,
+                phoneNumber = coach.phoneNumber,
+                email = coach.email
+            )
+        ).data.toDomain()
     }
 
     override suspend fun getMyCoachProfile(): Result<Coach?> = runCatching {

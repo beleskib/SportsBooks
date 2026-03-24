@@ -30,8 +30,7 @@ export interface CreatePaymentRequest {
 // ============================================================
 
 export interface CreatePaymentIntentRequest {
-  timeSlotId: number;
-  notes?: string;
+  bookingId: number;
 }
 
 export interface PaymentIntentResponse {

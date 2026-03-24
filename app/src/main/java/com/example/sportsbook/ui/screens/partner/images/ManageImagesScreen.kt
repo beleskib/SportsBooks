@@ -265,11 +265,63 @@ private fun ImageCard(
 @Preview(showBackground = true)
 @Composable
 private fun ManageImagesScreenPreview() {
+    val sampleImages = listOf(
+        DisplayImage(id = 1L, imageUrl = "", isPrimary = true, displayOrder = 0),
+        DisplayImage(id = 2L, imageUrl = "", isPrimary = false, displayOrder = 1),
+        DisplayImage(id = 3L, imageUrl = "", isPrimary = false, displayOrder = 2),
+    )
     MaterialTheme {
-        ManageImagesScreen(
-            entityType = "venue",
-            entityId = 1L,
-            onBack = {}
-        )
+        Scaffold(
+            topBar = {
+                @OptIn(ExperimentalMaterial3Api::class)
+                TopAppBar(
+                    title = { Text("Manage Images") },
+                    navigationIcon = {
+                        IconButton(onClick = {}) {
+                            Icon(
+                                imageVector = Icons.AutoMirrored.Filled.ArrowBack,
+                                contentDescription = "Back"
+                            )
+                        }
+                    }
+                )
+            },
+            floatingActionButton = {
+                ExtendedFloatingActionButton(
+                    text = { Text("Add Image") },
+                    icon = { Icon(Icons.Default.Add, contentDescription = "Add") },
+                    onClick = {},
+                    containerColor = MaterialTheme.colorScheme.primary,
+                    contentColor = MaterialTheme.colorScheme.onPrimary
+                )
+            }
+        ) { paddingValues ->
+            Column(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(paddingValues)
+                    .padding(horizontal = 16.dp)
+            ) {
+                Text(
+                    text = "City Sports Hall",
+                    style = MaterialTheme.typography.titleMedium,
+                    modifier = Modifier.padding(vertical = 8.dp)
+                )
+                LazyVerticalGrid(
+                    columns = GridCells.Fixed(2),
+                    horizontalArrangement = Arrangement.spacedBy(8.dp),
+                    verticalArrangement = Arrangement.spacedBy(8.dp),
+                    modifier = Modifier.fillMaxSize()
+                ) {
+                    items(sampleImages, key = { it.id }) { image ->
+                        ImageCard(
+                            image = image,
+                            onSetPrimary = {},
+                            onDelete = {}
+                        )
+                    }
+                }
+            }
+        }
     }
 }

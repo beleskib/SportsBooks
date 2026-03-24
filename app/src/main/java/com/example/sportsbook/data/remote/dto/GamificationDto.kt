@@ -146,3 +146,17 @@ data class CheckAchievementsResponseDto(
         level = level.toDomain()
     )
 }
+
+@Serializable
+data class RedeemXpRequestDto(
+    @SerialName("bookingId") val bookingId: Long,
+    @SerialName("xpAmount") val xpAmount: Int
+)
+
+@Serializable
+data class RedeemXpResponseDto(
+    @SerialName("xpSpent") val xpSpent: Int = 0,
+    @SerialName("discountAmount") val discountAmount: Double = 0.0,
+    @SerialName("remainingXp") val remainingXp: Int = 0,
+    @SerialName("newLevel") val newLevel: Int = 1
+)

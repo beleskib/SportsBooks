@@ -5,6 +5,7 @@ import { env } from './config/env';
 import { errorHandler } from './middleware/errorHandler';
 import routes from './routes';
 import webhookRoutes from './routes/webhook.routes';
+import { expirePendingBookings } from './services/bookingExpiry.service';
 
 const app = express();
 
@@ -32,5 +33,10 @@ app.listen(env.port, () => {
   console.log(`   Health check: http://localhost:${env.port}/health`);
   console.log(`   API base:     http://localhost:${env.port}/api`);
 });
+
+// Run booking expiry check every 15 minutes
+setInterval(expirePendingBookings, 15 * 60 * 1000);
+// Also run once on startup
+expirePendingBookings();
 
 export default app;

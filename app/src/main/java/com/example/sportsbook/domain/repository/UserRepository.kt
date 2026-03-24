@@ -28,4 +28,5 @@ interface UserRepository {
         expertise: List<Triple<SportType, SkillLevel, ExperienceDuration>>
     ): Result<List<UserSportExpertise>>
     suspend fun getPublicProfile(userId: Long): Result<PublicPlayerProfile>
+    suspend fun getFollowCounts(): Result<Pair<Int, Int>>
 }

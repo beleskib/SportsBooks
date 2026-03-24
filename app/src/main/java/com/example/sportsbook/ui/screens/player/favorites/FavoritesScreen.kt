@@ -205,11 +205,56 @@ private fun FavoriteItem(
     }
 }
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Preview(showBackground = true)
 @Composable
 private fun FavoritesScreenPreview() {
+    val sampleFavorites = listOf(
+        Favorite(id = 1L, userId = 10L, entityType = FavoriteEntityType.VENUE, entityId = 42L, createdAt = "2026-03-10T10:00:00Z"),
+        Favorite(id = 2L, userId = 10L, entityType = FavoriteEntityType.VENUE, entityId = 7L, createdAt = "2026-03-12T14:30:00Z")
+    )
     MaterialTheme {
-        FavoritesScreen(onBack = {})
+        Scaffold(
+            topBar = {
+                TopAppBar(
+                    title = { Text("Favorites") },
+                    navigationIcon = {
+                        IconButton(onClick = {}) {
+                            Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back")
+                        }
+                    }
+                )
+            }
+        ) { padding ->
+            Column(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(padding)
+            ) {
+                TabRow(selectedTabIndex = 0) {
+                    TABS.forEachIndexed { index, (title, _, icon) ->
+                        Tab(
+                            selected = index == 0,
+                            onClick = {},
+                            text = { Text(title) },
+                            icon = { Icon(icon, contentDescription = title, modifier = Modifier.size(16.dp)) }
+                        )
+                    }
+                }
+                LazyColumn(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .padding(horizontal = 16.dp),
+                    verticalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+                    item { Spacer(modifier = Modifier.height(8.dp)) }
+                    items(sampleFavorites, key = { it.id }) { favorite ->
+                        FavoriteItem(favorite = favorite, onRemove = {})
+                    }
+                    item { Spacer(modifier = Modifier.height(16.dp)) }
+                }
+            }
+        }
     }
 }
 

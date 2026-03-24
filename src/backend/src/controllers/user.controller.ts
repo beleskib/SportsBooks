@@ -1,6 +1,7 @@
 import { Request, Response, NextFunction } from 'express';
 import { success } from '../utils/apiResponse';
 import * as userRepo from '../repositories/user.repository';
+import * as feedRepo from '../repositories/feed.repository';
 import { NotFoundError } from '../utils/errors';
 
 export async function getMe(req: Request, res: Response, next: NextFunction) {
@@ -106,5 +107,16 @@ export async function setSportExpertise(req: Request, res: Response, next: NextF
     const { expertise } = req.body;
     const sportExpertise = await userRepo.setSportExpertise(userId, expertise || []);
     success(res, { sportExpertise });
+  } catch (e) { next(e); }
+}
+
+export async function getFollowCounts(req: Request, res: Response, next: NextFunction) {
+  try {
+    const userId = req.user!.id;
+    const [followers, following] = await Promise.all([
+      feedRepo.getFollowerCount(userId),
+      feedRepo.getFollowingCount(userId),
+    ]);
+    success(res, { followers, following });
   } catch (e) { next(e); }
 }

@@ -216,6 +216,25 @@ export async function updatePlayerLevel(userId: number): Promise<PlayerLevelRow>
   return mapPlayerLevelRow(result.rows[0]);
 }
 
+// ── XP Redemption ───────────────────────────────────────────────────
+
+/**
+ * Returns the total XP-based discount (in denar) applied to a booking.
+ * Sums all xp_redemption transactions for the given booking (source_id = bookingId).
+ * The amounts are negative, so we negate the sum to get a positive discount.
+ */
+export async function getXpRedemptionDiscount(bookingId: number): Promise<number> {
+  const result = await query(
+    `SELECT COALESCE(SUM(ABS(amount)), 0) AS total_xp_redeemed
+     FROM xp_transactions
+     WHERE source_type = 'xp_redemption' AND source_id = $1`,
+    [bookingId]
+  );
+  const totalXpRedeemed = Number(result.rows[0].total_xp_redeemed);
+  // 100 XP = 1 MKD discount
+  return totalXpRedeemed / 100;
+}
+
 // ── Achievements ────────────────────────────────────────────────────
 
 export async function getAllAchievements(): Promise<AchievementRow[]> {

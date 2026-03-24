@@ -15,5 +15,8 @@ data class Booking(
     val venue: Venue? = null,
     val coach: Coach? = null,
     val createdAt: String? = null,
-    val updatedAt: String? = null
+    val updatedAt: String? = null,
+    val expiresAt: String? = null,
+    val playerName: String? = null,
+    val playerEmail: String? = null
 )

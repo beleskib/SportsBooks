@@ -339,10 +339,41 @@ private fun RecentMatchItem(
 }
 
 @Preview(showBackground = true)
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 private fun PublicPlayerProfileScreenPreview() {
     MaterialTheme {
-        PublicPlayerProfileScreen(onBack = {})
+        Scaffold(
+            topBar = {
+                TopAppBar(
+                    title = { Text("Player Profile") },
+                    navigationIcon = {
+                        IconButton(onClick = {}) {
+                            Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back")
+                        }
+                    }
+                )
+            }
+        ) { padding ->
+            PublicPlayerProfileContent(
+                profile = PublicPlayerProfile(
+                    id = 1,
+                    displayName = "Alex Johnson",
+                    bio = "Passionate basketball and tennis player.",
+                    interestedSports = listOf(SportType.BASKETBALL, SportType.TENNIS),
+                    avgPlayerSkillRating = 4.2,
+                    avgPlayerSportsmanshipRating = 4.8,
+                    avgPlayerPunctualityRating = 3.9,
+                    totalPlayerRatings = 15,
+                    totalMatchesPlayed = 23,
+                    recentMatches = listOf(
+                        PublicMatchSummary(1, "Friday Basketball", SportType.BASKETBALL, "2026-03-10", "completed"),
+                        PublicMatchSummary(2, "Weekend Tennis", SportType.TENNIS, "2026-03-08", "completed")
+                    )
+                ),
+                modifier = Modifier.padding(padding)
+            )
+        }
     }
 }
 

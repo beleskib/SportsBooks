@@ -459,6 +459,79 @@ private fun StatusRow(label: String, value: String) {
 @Composable
 private fun StripeConnectScreenPreview() {
     MaterialTheme {
-        StripeConnectScreen()
+        Scaffold(
+            topBar = {
+                @OptIn(ExperimentalMaterial3Api::class)
+                TopAppBar(
+                    title = { Text("Payment Setup") },
+                    navigationIcon = {
+                        IconButton(onClick = {}) {
+                            Icon(
+                                imageVector = Icons.AutoMirrored.Filled.ArrowBack,
+                                contentDescription = "Back"
+                            )
+                        }
+                    }
+                )
+            }
+        ) { paddingValues ->
+            Column(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(paddingValues)
+                    .padding(horizontal = 16.dp)
+                    .verticalScroll(rememberScrollState())
+            ) {
+                Spacer(modifier = Modifier.height(8.dp))
+
+                ElevatedCard(modifier = Modifier.fillMaxWidth()) {
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .background(MaterialTheme.colorScheme.tertiaryContainer)
+                            .padding(12.dp),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.Warning,
+                            contentDescription = null,
+                            tint = MaterialTheme.colorScheme.onTertiaryContainer,
+                            modifier = Modifier.size(20.dp)
+                        )
+                        Spacer(modifier = Modifier.width(8.dp))
+                        Text(
+                            text = "Test Mode — no real money is involved",
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.onTertiaryContainer,
+                            fontWeight = FontWeight.Medium
+                        )
+                    }
+                }
+
+                Spacer(modifier = Modifier.height(16.dp))
+
+                ElevatedCard(modifier = Modifier.fillMaxWidth()) {
+                    Column(modifier = Modifier.padding(16.dp)) {
+                        Text(
+                            text = "How Payments Work",
+                            style = MaterialTheme.typography.titleMedium,
+                            fontWeight = FontWeight.Bold
+                        )
+                        Spacer(modifier = Modifier.height(12.dp))
+                        FlowStepRow(number = 1, text = "Player books your time slot and pays via Stripe")
+                        Spacer(modifier = Modifier.height(8.dp))
+                        FlowStepRow(number = 2, text = "SportsBooks holds the funds securely")
+                        Spacer(modifier = Modifier.height(8.dp))
+                        FlowStepRow(number = 3, text = "You receive 90% — we keep 10% platform fee")
+                    }
+                }
+
+                Spacer(modifier = Modifier.height(16.dp))
+
+                NotStartedCard(isOnboarding = false, onStartOnboarding = {})
+
+                Spacer(modifier = Modifier.height(24.dp))
+            }
+        }
     }
 }

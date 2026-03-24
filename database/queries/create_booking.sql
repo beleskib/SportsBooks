@@ -18,7 +18,8 @@ RETURNS TABLE (
     venue_id BIGINT,
     coach_id BIGINT,
     status TEXT,
-    total_price NUMERIC(10,2)
+    total_price NUMERIC(10,2),
+    expires_at TIMESTAMPTZ
 ) AS $$
 DECLARE
     v_slot RECORD;
@@ -98,9 +99,9 @@ BEGIN
     -- Use COALESCE in case no discount was found (v_price would be NULL from failed subquery)
     v_price := COALESCE(v_price, v_slot.effective_price);
 
-    -- Create the booking
-    INSERT INTO bookings (player_id, time_slot_id, venue_id, coach_id, status, total_price, notes)
-    VALUES (p_player_id, p_time_slot_id, v_slot.venue_id, v_slot.coach_id, 'pending', v_price, p_notes)
+    -- Create the booking with 24h expiry for partner approval
+    INSERT INTO bookings (player_id, time_slot_id, venue_id, coach_id, status, total_price, notes, expires_at)
+    VALUES (p_player_id, p_time_slot_id, v_slot.venue_id, v_slot.coach_id, 'pending', v_price, p_notes, NOW() + INTERVAL '24 hours')
     RETURNING bookings.id INTO v_booking_id;
 
     -- Mark slot as unavailable
@@ -114,6 +115,7 @@ BEGIN
         v_slot.venue_id,
         v_slot.coach_id,
         'pending'::TEXT,
-        v_price;
+        v_price,
+        (NOW() + INTERVAL '24 hours')::TIMESTAMPTZ;
 END;
 $$ LANGUAGE plpgsql;

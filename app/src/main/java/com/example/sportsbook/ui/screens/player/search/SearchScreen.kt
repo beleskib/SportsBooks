@@ -242,7 +242,7 @@ private fun VenueSearchResultItem(
                 color = MaterialTheme.colorScheme.onSurfaceVariant
             )
             Text(
-                text = "$${venue.pricePerHour}/hr",
+                text = "${venue.pricePerHour.toInt()} ден/hr",
                 style = MaterialTheme.typography.labelMedium,
                 color = MaterialTheme.colorScheme.primary
             )
@@ -274,7 +274,7 @@ private fun CoachSearchResultItem(
                 color = MaterialTheme.colorScheme.onSurfaceVariant
             )
             Text(
-                text = "$${coach.pricePerHour}/hr",
+                text = "${coach.pricePerHour.toInt()} ден/hr",
                 style = MaterialTheme.typography.labelMedium,
                 color = MaterialTheme.colorScheme.primary
             )
@@ -315,15 +315,60 @@ private fun MatchSearchResultItem(
     }
 }
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Preview(showBackground = true)
 @Composable
 private fun SearchScreenPreview() {
+    val sampleVenues = listOf(
+        Venue(id = 1L, name = "City Basketball Court", address = "123 Main St", pricePerHour = 35.0)
+    )
+    val sampleCoaches = listOf(
+        Coach(id = 1L, name = "Alex Rivera", specialization = "Point Guard Trainer", pricePerHour = 60.0)
+    )
+    val sampleMatches = listOf(
+        Match(id = 1L, title = "Weekend Basketball Pick-up", matchDate = "2026-03-29", startTime = "10:00", endTime = "12:00", maxPlayers = 10, currentPlayers = 7)
+    )
     MaterialTheme {
-        SearchScreen(
-            onVenueClick = {},
-            onCoachClick = {},
-            onMatchClick = {},
-            onBack = {}
-        )
+        Scaffold(
+            topBar = {
+                TopAppBar(
+                    title = { Text("Search") },
+                    navigationIcon = {
+                        IconButton(onClick = {}) {
+                            Icon(
+                                imageVector = Icons.AutoMirrored.Filled.ArrowBack,
+                                contentDescription = "Back"
+                            )
+                        }
+                    }
+                )
+            }
+        ) { padding ->
+            Column(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(padding)
+                    .padding(horizontal = 16.dp)
+            ) {
+                Spacer(modifier = Modifier.height(8.dp))
+                OutlinedTextField(
+                    value = "basketball",
+                    onValueChange = {},
+                    modifier = Modifier.fillMaxWidth(),
+                    placeholder = { Text("Search venues, coaches, matches...") },
+                    leadingIcon = { Icon(Icons.Default.Search, contentDescription = "Search") },
+                    singleLine = true
+                )
+                Spacer(modifier = Modifier.height(16.dp))
+                SearchResultsList(
+                    venues = sampleVenues,
+                    coaches = sampleCoaches,
+                    matches = sampleMatches,
+                    onVenueClick = {},
+                    onCoachClick = {},
+                    onMatchClick = {}
+                )
+            }
+        }
     }
 }

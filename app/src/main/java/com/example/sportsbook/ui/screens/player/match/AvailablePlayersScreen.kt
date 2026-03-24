@@ -885,13 +885,91 @@ private fun AvailablePlayerCard(
     }
 }
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Preview(showBackground = true, backgroundColor = 0xFF0A1628)
 @Composable
 private fun AvailablePlayersScreenPreview() {
-    AvailablePlayersScreen(
-        matchId = null,
-        onBack = {}
+    val previewState = AvailablePlayersUiState(
+        isLoading = false,
+        selectedSport = SportType.BASKETBALL,
+        availablePlayers = listOf(
+            AvailablePlayer(
+                id = 1L,
+                userId = 10L,
+                sportType = SportType.BASKETBALL,
+                skillLevel = 3,
+                note = "Looking for a pickup game",
+                latitude = null,
+                longitude = null,
+                availableUntil = null,
+                createdAt = "2026-03-20T10:00:00Z",
+                displayName = "Alex Rivera",
+                photoUrl = null
+            ),
+            AvailablePlayer(
+                id = 2L,
+                userId = 11L,
+                sportType = SportType.BASKETBALL,
+                skillLevel = 4,
+                note = null,
+                latitude = null,
+                longitude = null,
+                availableUntil = null,
+                createdAt = "2026-03-20T11:00:00Z",
+                displayName = "Sam Torres",
+                photoUrl = null
+            )
+        )
     )
+    Scaffold(
+        containerColor = Navy900,
+        topBar = {
+            TopAppBar(
+                title = {
+                    Text(
+                        text = "Available Players",
+                        color = WarmWhite,
+                        fontWeight = FontWeight.Bold
+                    )
+                },
+                navigationIcon = {
+                    IconButton(onClick = {}) {
+                        Icon(
+                            imageVector = Icons.AutoMirrored.Filled.ArrowBack,
+                            contentDescription = "Back",
+                            tint = WarmWhite
+                        )
+                    }
+                },
+                colors = TopAppBarDefaults.topAppBarColors(containerColor = Navy700)
+            )
+        }
+    ) { padding ->
+        LazyColumn(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(padding),
+            contentPadding = PaddingValues(16.dp),
+            verticalArrangement = Arrangement.spacedBy(16.dp)
+        ) {
+            item {
+                AvailabilityToggleCard(
+                    uiState = previewState,
+                    onRegister = {},
+                    onUnregister = {},
+                    onSkillLevelChange = {},
+                    onNoteChange = {}
+                )
+            }
+            items(previewState.availablePlayers, key = { it.id }) { player ->
+                AvailablePlayerCard(
+                    player = player,
+                    showInviteButton = false,
+                    onInvite = {}
+                )
+            }
+        }
+    }
 }
 
 @Preview(showBackground = true, backgroundColor = 0xFF132A44)

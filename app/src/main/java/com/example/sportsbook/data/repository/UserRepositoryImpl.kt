@@ -107,4 +107,9 @@ class UserRepositoryImpl @Inject constructor(
     override suspend fun getPublicProfile(userId: Long): Result<PublicPlayerProfile> = runCatching {
         apiService.getPublicProfile(userId).data.toDomain()
     }
+
+    override suspend fun getFollowCounts(): Result<Pair<Int, Int>> = runCatching {
+        val dto = apiService.getFollowCounts().data
+        Pair(dto.followers, dto.following)
+    }
 }

@@ -10,4 +10,6 @@ interface BookingRepository {
     suspend fun cancelBooking(id: Long): Result<Booking>
     suspend fun getPartnerBookings(status: BookingStatus? = null): Result<List<Booking>>
     suspend fun updateBookingStatus(id: Long, status: BookingStatus): Result<Booking>
+    suspend fun approveBooking(id: Long): Result<Booking>
+    suspend fun declineBooking(id: Long): Result<Booking>
 }

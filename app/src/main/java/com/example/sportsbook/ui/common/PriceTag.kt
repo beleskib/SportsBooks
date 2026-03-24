@@ -22,20 +22,20 @@ fun PriceTag(
     Row(modifier = modifier, verticalAlignment = Alignment.CenterVertically) {
         if (discountedPrice != null && discountedPrice < price) {
             Text(
-                text = "$${String.format("%.2f", price)}",
+                text = "${String.format("%.0f", price)} ден",
                 style = MaterialTheme.typography.bodyMedium,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
                 textDecoration = TextDecoration.LineThrough
             )
             Spacer(modifier = Modifier.width(6.dp))
             Text(
-                text = "$${String.format("%.2f", discountedPrice)}",
+                text = "${String.format("%.0f", discountedPrice)} ден",
                 style = MaterialTheme.typography.titleMedium,
                 color = MaterialTheme.colorScheme.primary
             )
         } else {
             Text(
-                text = "$${String.format("%.2f", price)}/hr",
+                text = "${String.format("%.0f", price)} ден/hr",
                 style = MaterialTheme.typography.titleMedium,
                 color = MaterialTheme.colorScheme.primary
             )

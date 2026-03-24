@@ -233,14 +233,42 @@ private fun CoachCard(
     }
 }
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Preview(showBackground = true)
 @Composable
 private fun CoachListScreenPreview() {
+    val sampleCoaches = listOf(
+        Coach(id = 1L, name = "Alex Rivera", specialization = "Point Guard Trainer", experienceYears = 8, pricePerHour = 60.0, avgRating = 4.7, totalReviews = 34),
+        Coach(id = 2L, name = "Maria Gonzalez", specialization = "Defensive Coach", experienceYears = 5, pricePerHour = 45.0, avgRating = 4.3, totalReviews = 18)
+    )
     MaterialTheme {
-        CoachListScreen(
-            sportType = "BASKETBALL",
-            onCoachClick = {},
-            onBack = {}
-        )
+        Scaffold(
+            topBar = {
+                TopAppBar(
+                    title = { Text("Coaches") },
+                    navigationIcon = {
+                        IconButton(onClick = {}) {
+                            Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back")
+                        }
+                    }
+                )
+            }
+        ) { innerPadding ->
+            LazyColumn(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(innerPadding)
+            ) {
+                items(sampleCoaches, key = { it.id }) { coach ->
+                    CoachCard(
+                        coach = coach,
+                        onClick = {},
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(horizontal = 16.dp, vertical = 6.dp)
+                    )
+                }
+            }
+        }
     }
 }

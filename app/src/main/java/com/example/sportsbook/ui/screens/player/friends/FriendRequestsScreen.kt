@@ -172,10 +172,60 @@ private fun FriendRequestCard(
 }
 
 @Preview(showBackground = true)
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 private fun FriendRequestsScreenPreview() {
     MaterialTheme {
-        FriendRequestsScreen(onBack = {})
+        Scaffold(
+            topBar = {
+                TopAppBar(
+                    title = { Text("Friend Requests") },
+                    navigationIcon = {
+                        IconButton(onClick = {}) {
+                            Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back")
+                        }
+                    }
+                )
+            }
+        ) { padding ->
+            LazyColumn(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(padding)
+                    .padding(horizontal = 16.dp),
+                verticalArrangement = Arrangement.spacedBy(8.dp)
+            ) {
+                item { Spacer(modifier = Modifier.height(8.dp)) }
+                item {
+                    FriendRequestCard(
+                        request = Friendship(
+                            id = 5,
+                            friendId = 99,
+                            friendName = "Jordan Smith",
+                            friendPhotoUrl = null,
+                            status = "pending",
+                            createdAt = "2026-03-10T12:00:00Z"
+                        ),
+                        onAccept = {},
+                        onDecline = {}
+                    )
+                }
+                item {
+                    FriendRequestCard(
+                        request = Friendship(
+                            id = 6,
+                            friendId = 100,
+                            friendName = "Taylor Brooks",
+                            friendPhotoUrl = null,
+                            status = "pending",
+                            createdAt = "2026-03-12T09:30:00Z"
+                        ),
+                        onAccept = {},
+                        onDecline = {}
+                    )
+                }
+            }
+        }
     }
 }
 

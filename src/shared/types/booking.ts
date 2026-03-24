@@ -21,6 +21,7 @@ export interface Booking {
   coach?: Coach;
   playerName?: string;
   playerEmail?: string;
+  expiresAt: string | null;
   createdAt: string;
   updatedAt: string;
 }

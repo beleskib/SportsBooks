@@ -9,4 +9,5 @@ router.get('/achievements', authenticate, gamificationController.getAchievements
 router.get('/me/achievements', authenticate, gamificationController.getMyAchievements);
 router.get('/me/stats', authenticate, gamificationController.getMyStats);
 router.post('/me/check-achievements', authenticate, gamificationController.checkAndAwardAchievements);
+router.post('/me/redeem-xp', authenticate, gamificationController.redeemXp);
 export default router;

@@ -521,8 +521,92 @@ private fun TimePickerDialog(
     }
 }
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Preview(showBackground = true)
 @Composable
 private fun CreateMatchScreenPreview() {
-    CreateMatchScreen(onMatchCreated = {}, onBack = {})
+    val previewState = CreateMatchUiState(
+        title = "Sunday Basketball",
+        description = "Casual pickup game, all skill levels welcome",
+        sportType = SportType.BASKETBALL,
+        matchType = MatchType.STANDALONE,
+        visibility = MatchVisibility.PUBLIC,
+        matchDate = "2026-03-30",
+        startTime = "18:00",
+        endTime = "19:30",
+        minPlayers = 6,
+        maxPlayers = 12,
+        minSkillLevel = 2,
+        maxSkillLevel = 4,
+        locationName = "City Sports Center",
+        address = "123 Main St",
+        isFree = true
+    )
+    Scaffold(
+        topBar = {
+            TopAppBar(
+                title = { Text("Create Match") },
+                navigationIcon = {
+                    IconButton(onClick = {}) {
+                        Icon(Icons.AutoMirrored.Filled.ArrowBack, "Back")
+                    }
+                }
+            )
+        }
+    ) { padding ->
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(padding)
+                .verticalScroll(rememberScrollState())
+                .padding(16.dp),
+            verticalArrangement = Arrangement.spacedBy(12.dp)
+        ) {
+            OutlinedTextField(
+                value = previewState.title,
+                onValueChange = {},
+                label = { Text("Match Title *") },
+                modifier = Modifier.fillMaxWidth(),
+                singleLine = true
+            )
+            OutlinedTextField(
+                value = previewState.description,
+                onValueChange = {},
+                label = { Text("Description") },
+                modifier = Modifier.fillMaxWidth(),
+                maxLines = 3
+            )
+            SportDropdown(selected = previewState.sportType, onSelected = {})
+            Text("Skill Level: ${skillLabel(previewState.minSkillLevel)} – ${skillLabel(previewState.maxSkillLevel)}")
+            RangeSlider(
+                min = previewState.minSkillLevel,
+                max = previewState.maxSkillLevel,
+                onMinChange = {},
+                onMaxChange = {}
+            )
+            OutlinedTextField(
+                value = previewState.locationName,
+                onValueChange = {},
+                label = { Text("Location Name") },
+                modifier = Modifier.fillMaxWidth(),
+                singleLine = true
+            )
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.SpaceBetween
+            ) {
+                Text("Free to join")
+                Switch(checked = previewState.isFree, onCheckedChange = {})
+            }
+            Spacer(modifier = Modifier.height(8.dp))
+            Button(
+                onClick = {},
+                modifier = Modifier.fillMaxWidth(),
+                enabled = false
+            ) {
+                Text("Create Match")
+            }
+        }
+    }
 }

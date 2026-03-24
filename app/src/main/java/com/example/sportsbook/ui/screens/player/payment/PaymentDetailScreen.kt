@@ -44,6 +44,7 @@ import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.example.sportsbook.domain.enums.PaymentStatus
+import com.example.sportsbook.domain.model.Payment
 import com.example.sportsbook.ui.common.toDisplayDate
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -127,7 +128,7 @@ fun PaymentDetailScreen(
                             horizontalAlignment = Alignment.CenterHorizontally
                         ) {
                             Text(
-                                text = "$${"%.2f".format(payment.amount)}",
+                                text = "${"%.0f".format(payment.amount)} ден",
                                 style = MaterialTheme.typography.headlineLarge,
                                 fontWeight = FontWeight.Bold,
                                 color = MaterialTheme.colorScheme.onPrimaryContainer
@@ -339,13 +340,114 @@ private fun PaymentDetailStatusBadge(status: PaymentStatus) {
     }
 }
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Preview(showBackground = true)
 @Composable
 private fun PaymentDetailScreenPreview() {
+    val samplePayment = Payment(
+        id = 1L,
+        bookingId = 42L,
+        payerId = 10L,
+        amount = 1500.00,
+        currency = "MKD",
+        status = PaymentStatus.COMPLETED,
+        paymentMethod = "card",
+        externalPaymentId = "pi_3NkAbcDefGhIjKl",
+        paidAt = "2026-03-25T10:15:00Z",
+        venueName = "City Tennis Center",
+        slotDate = "2026-03-25",
+        startTime = "10:00",
+        endTime = "11:00",
+        createdAt = "2026-03-25T09:00:00Z"
+    )
     MaterialTheme {
-        PaymentDetailScreen(
-            paymentId = 1L,
-            onBack = {}
-        )
+        Scaffold(
+            topBar = {
+                TopAppBar(
+                    title = { Text("Payment Details") },
+                    navigationIcon = {
+                        IconButton(onClick = {}) {
+                            Icon(
+                                imageVector = Icons.AutoMirrored.Filled.ArrowBack,
+                                contentDescription = "Back"
+                            )
+                        }
+                    }
+                )
+            }
+        ) { paddingValues ->
+            Column(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(paddingValues)
+                    .verticalScroll(rememberScrollState())
+                    .padding(horizontal = 16.dp)
+            ) {
+                Spacer(modifier = Modifier.height(16.dp))
+                Card(
+                    modifier = Modifier.fillMaxWidth(),
+                    colors = CardDefaults.cardColors(
+                        containerColor = MaterialTheme.colorScheme.primaryContainer
+                    )
+                ) {
+                    Column(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(24.dp),
+                        horizontalAlignment = Alignment.CenterHorizontally
+                    ) {
+                        Text(
+                            text = "${"%.0f".format(samplePayment.amount)} ден",
+                            style = MaterialTheme.typography.headlineLarge,
+                            fontWeight = FontWeight.Bold,
+                            color = MaterialTheme.colorScheme.onPrimaryContainer
+                        )
+                        Spacer(modifier = Modifier.height(4.dp))
+                        Text(
+                            text = samplePayment.currency.uppercase(),
+                            style = MaterialTheme.typography.bodyMedium,
+                            color = MaterialTheme.colorScheme.onPrimaryContainer.copy(alpha = 0.7f)
+                        )
+                        Spacer(modifier = Modifier.height(12.dp))
+                        PaymentDetailStatusBadge(status = samplePayment.status)
+                    }
+                }
+                Spacer(modifier = Modifier.height(20.dp))
+                Card(modifier = Modifier.fillMaxWidth()) {
+                    Column(modifier = Modifier.padding(16.dp)) {
+                        Text(
+                            text = "Booking Details",
+                            style = MaterialTheme.typography.titleMedium,
+                            fontWeight = FontWeight.SemiBold
+                        )
+                        Spacer(modifier = Modifier.height(16.dp))
+                        DetailRowWithIcon(
+                            icon = Icons.Default.LocationOn,
+                            label = "Venue",
+                            value = samplePayment.venueName ?: ""
+                        )
+                        Spacer(modifier = Modifier.height(12.dp))
+                        DetailRowWithIcon(
+                            icon = Icons.Default.CalendarToday,
+                            label = "Date",
+                            value = samplePayment.slotDate?.let { it } ?: ""
+                        )
+                        Spacer(modifier = Modifier.height(12.dp))
+                        DetailRowWithIcon(
+                            icon = Icons.Default.Schedule,
+                            label = "Time",
+                            value = "${samplePayment.startTime} - ${samplePayment.endTime}"
+                        )
+                        Spacer(modifier = Modifier.height(12.dp))
+                        DetailRowWithIcon(
+                            icon = Icons.Default.CreditCard,
+                            label = "Booking ID",
+                            value = "#${samplePayment.bookingId}"
+                        )
+                    }
+                }
+                Spacer(modifier = Modifier.height(24.dp))
+            }
+        }
     }
 }

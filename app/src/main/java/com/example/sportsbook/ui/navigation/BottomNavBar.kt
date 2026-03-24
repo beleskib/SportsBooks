@@ -1,9 +1,12 @@
 package com.example.sportsbook.ui.navigation
 
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.TrendingUp
 import androidx.compose.material.icons.filled.CalendarMonth
+import androidx.compose.material.icons.filled.Dashboard
+import androidx.compose.material.icons.filled.DynamicFeed
 import androidx.compose.material.icons.filled.Home
-import androidx.compose.material.icons.filled.Payment
+import androidx.compose.material.icons.filled.Inbox
 import androidx.compose.material.icons.filled.Person
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
@@ -28,12 +31,21 @@ data class BottomNavItem(
     val route: Route
 )
 
-val bottomNavItems = listOf(
+val playerNavItems = listOf(
     BottomNavItem("Home", Icons.Default.Home, Route.PlayerHome),
+    BottomNavItem("Feed", Icons.Default.DynamicFeed, Route.NewsFeed),
     BottomNavItem("Bookings", Icons.Default.CalendarMonth, Route.MyBookings),
-    BottomNavItem("Payments", Icons.Default.Payment, Route.PaymentHistory),
     BottomNavItem("Profile", Icons.Default.Person, Route.PlayerProfile)
 )
+
+val partnerNavItems = listOf(
+    BottomNavItem("Dashboard", Icons.Default.Dashboard, Route.PartnerDashboard),
+    BottomNavItem("Reservations", Icons.Default.Inbox, Route.PendingReservations),
+    BottomNavItem("Analytics", Icons.AutoMirrored.Filled.TrendingUp, Route.PartnerAnalytics),
+)
+
+// Keep backward compatibility
+val bottomNavItems = playerNavItems
 
 @Composable
 fun BottomNavBar(
@@ -72,12 +84,60 @@ fun BottomNavBar(
     }
 }
 
+@Composable
+fun PartnerBottomNavBar(
+    currentRoute: String?,
+    onNavigate: (Route) -> Unit
+) {
+    NavigationBar(
+        containerColor = Navy900,
+        contentColor = WarmWhite,
+        tonalElevation = 0.dp
+    ) {
+        partnerNavItems.forEach { item ->
+            val isSelected = currentRoute == item.route::class.qualifiedName
+            NavigationBarItem(
+                selected = isSelected,
+                onClick = { onNavigate(item.route) },
+                icon = {
+                    Icon(
+                        item.icon,
+                        contentDescription = item.label,
+                        tint = if (isSelected) USOpenGold else CoolGray
+                    )
+                },
+                label = {
+                    Text(
+                        item.label,
+                        color = if (isSelected) WarmWhite else CoolGray,
+                        style = MaterialTheme.typography.labelSmall
+                    )
+                },
+                colors = NavigationBarItemDefaults.colors(
+                    indicatorColor = Navy600
+                )
+            )
+        }
+    }
+}
+
 @Preview
 @Composable
 private fun BottomNavBarPreview() {
     SportsBookTheme {
         BottomNavBar(
             currentRoute = Route.PlayerHome::class.qualifiedName,
+            onNavigate = {}
+        )
+    }
+}
+
+@Preview
+@Composable
+private fun PartnerBottomNavBarPreview() {
+    SportsBookTheme {
+        PartnerBottomNavBar(
+            currentRoute = Route.PartnerDashboard::class.qualifiedName,
             onNavigate = {}
         )
     }

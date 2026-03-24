@@ -15,11 +15,10 @@ class PaymentRepositoryImpl @Inject constructor(
 ) : PaymentRepository {
 
     override suspend fun createPaymentIntent(
-        timeSlotId: Long,
-        notes: String?,
+        bookingId: Long,
     ): Result<PaymentIntentResponse> = runCatching {
         apiService.createPaymentIntent(
-            CreatePaymentIntentRequestDto(timeSlotId = timeSlotId, notes = notes)
+            CreatePaymentIntentRequestDto(bookingId = bookingId)
         ).data.toDomain()
     }
 
