@@ -133,7 +133,7 @@ export const approveBooking = async (req: Request, res: Response, next: NextFunc
       console.error('Failed to send booking approved notification:', e);
     }
 
-    res.json({ data: booking });
+    success(res, booking);
   } catch (error) {
     next(error);
   }
@@ -174,7 +174,7 @@ export const declineBooking = async (req: Request, res: Response, next: NextFunc
       console.error('Failed to send booking declined notification:', e);
     }
 
-    res.json({ data: booking });
+    success(res, booking);
   } catch (error) {
     next(error);
   }

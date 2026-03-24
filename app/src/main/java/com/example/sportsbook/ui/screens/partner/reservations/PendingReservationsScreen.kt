@@ -74,6 +74,17 @@ class PendingReservationsViewModel @Inject constructor(
 
     init {
         loadPendingBookings()
+        // Auto-refresh every 30 seconds to catch new incoming bookings
+        startAutoRefresh()
+    }
+
+    private fun startAutoRefresh() {
+        viewModelScope.launch {
+            while (true) {
+                kotlinx.coroutines.delay(30_000L)
+                loadPendingBookings()
+            }
+        }
     }
 
     fun loadPendingBookings() {
@@ -221,7 +232,7 @@ private fun PendingBookingCard(
     modifier: Modifier = Modifier
 ) {
     val venueName = booking.venue?.name ?: booking.coach?.name ?: "Service"
-    val playerLabel = "Player #${booking.playerId}"
+    val playerLabel = booking.playerName?.takeIf { it.isNotBlank() } ?: "Player #${booking.playerId}"
 
     Card(modifier = modifier) {
         Column(modifier = Modifier.padding(16.dp)) {

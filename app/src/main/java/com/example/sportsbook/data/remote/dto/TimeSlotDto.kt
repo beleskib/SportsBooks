@@ -5,12 +5,12 @@ import kotlinx.serialization.Serializable
 
 @Serializable
 data class TimeSlotDto(
-    val id: Long,
+    val id: Long = 0,
     val venueId: Long? = null,
     val coachId: Long? = null,
-    val slotDate: String,
-    val startTime: String,
-    val endTime: String,
+    val slotDate: String = "",
+    val startTime: String = "",
+    val endTime: String = "",
     val isAvailable: Boolean = true,
     val priceOverride: Double? = null,
     val createdAt: String? = null,

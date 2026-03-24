@@ -348,7 +348,11 @@ fun SportsBookNavHost() {
                 val route = backStackEntry.toRoute<Route.BookingConfirmation>()
                 BookingConfirmationScreen(
                     timeSlotId = route.timeSlotId,
-                    onProceedToPayment = { _, _ -> },
+                    onProceedToPayment = { bookingId, _ ->
+                        navController.navigate(Route.MyBookings) {
+                            popUpTo(Route.PlayerHome) { inclusive = false }
+                        }
+                    },
                     onBack = { navController.popBackStack() }
                 )
             }

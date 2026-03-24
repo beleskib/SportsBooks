@@ -30,15 +30,22 @@ export interface FeedCommentRow {
 // ── Row mappers ─────────────────────────────────────────────────────
 
 function mapFeedPostRow(row: any): FeedPostRow {
+  // Ensure all metadata values are strings for Android compatibility
+  const rawMeta = typeof row.metadata === 'string' ? JSON.parse(row.metadata) : (row.metadata ?? {});
+  const safeMeta: Record<string, any> = {};
+  for (const [key, value] of Object.entries(rawMeta)) {
+    safeMeta[key] = value != null ? String(value) : '';
+  }
+
   return {
     id: row.id,
     userId: row.user_id,
-    authorName: row.display_name ?? null,
+    authorName: row.display_name ?? '',
     authorPhotoUrl: row.photo_url ?? null,
     postType: row.post_type,
     content: row.content ?? null,
     imageUrl: row.image_url ?? null,
-    metadata: typeof row.metadata === 'string' ? JSON.parse(row.metadata) : (row.metadata ?? {}),
+    metadata: safeMeta,
     likesCount: Number(row.likes_count),
     commentsCount: Number(row.comments_count),
     isLikedByMe: Boolean(row.is_liked_by_me),

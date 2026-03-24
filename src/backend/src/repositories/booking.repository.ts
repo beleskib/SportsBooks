@@ -13,16 +13,27 @@ export interface BookingRow {
   expiresAt: string | null;
   playerName?: string;
   playerEmail?: string;
-  venueName?: string;
-  coachName?: string;
-  slotDate?: string;
-  startTime?: string;
-  endTime?: string;
+  timeSlot?: {
+    id: number;
+    slotDate: string;
+    startTime: string;
+    endTime: string;
+    venueId?: number | null;
+    coachId?: number | null;
+    isAvailable?: boolean;
+    priceOverride?: number | null;
+  } | null;
+  venue?: { id: number; name: string; sportType?: string; address?: string; pricePerHour?: number } | null;
+  coach?: { id: number; name: string; sportType?: string; pricePerHour?: number } | null;
   createdAt: string;
   updatedAt: string;
 }
 
 function mapRow(row: any): BookingRow {
+  const slotDate = row.slot_date instanceof Date
+    ? row.slot_date.toISOString().split('T')[0]
+    : row.slot_date;
+
   return {
     id: row.id ?? row.booking_id,
     playerId: row.player_id,
@@ -35,11 +46,29 @@ function mapRow(row: any): BookingRow {
     expiresAt: row.expires_at?.toISOString?.() ?? row.expires_at ?? null,
     playerName: row.player_name ?? row.display_name,
     playerEmail: row.player_email ?? row.email,
-    venueName: row.venue_name,
-    coachName: row.coach_name,
-    slotDate: row.slot_date instanceof Date ? row.slot_date.toISOString().split('T')[0] : row.slot_date,
-    startTime: row.start_time,
-    endTime: row.end_time,
+    timeSlot: (slotDate || row.start_time || row.end_time) ? {
+      id: row.time_slot_id,
+      slotDate: slotDate ?? '',
+      startTime: row.start_time ?? '',
+      endTime: row.end_time ?? '',
+      venueId: row.venue_id,
+      coachId: row.coach_id,
+      isAvailable: false,
+      priceOverride: null,
+    } : null,
+    venue: (row.venue_id && row.venue_name) ? {
+      id: row.venue_id,
+      name: row.venue_name,
+      sportType: row.venue_sport_type,
+      address: row.venue_address,
+      pricePerHour: row.venue_price_per_hour ? Number(row.venue_price_per_hour) : undefined,
+    } : null,
+    coach: (row.coach_id && row.coach_name) ? {
+      id: row.coach_id,
+      name: row.coach_name,
+      sportType: row.coach_sport_type,
+      pricePerHour: row.coach_price_per_hour ? Number(row.coach_price_per_hour) : undefined,
+    } : null,
     createdAt: row.created_at?.toISOString?.() ?? row.created_at,
     updatedAt: row.updated_at?.toISOString?.() ?? row.updated_at,
   };
@@ -96,14 +125,21 @@ export async function create(playerId: number, timeSlotId: number, notes?: strin
     `SELECT * FROM create_booking($1, $2, $3)`,
     [playerId, timeSlotId, notes || null]
   );
-  return mapRow(result.rows[0]);
+  const createdRow = result.rows[0];
+  // Re-fetch with full joins to get venue/coach/timeSlot nested data
+  const booking = await findById(createdRow.booking_id ?? createdRow.id);
+  if (!booking) throw new NotFoundError('Booking');
+  return booking;
 }
 
 export async function findByPlayerId(playerId: number, status?: string): Promise<BookingRow[]> {
   let sql = `
     SELECT b.id, b.player_id, b.time_slot_id, b.venue_id, b.coach_id,
            b.status, b.total_price, b.notes, b.expires_at, b.created_at, b.updated_at,
-           v.name AS venue_name, c.name AS coach_name,
+           v.name AS venue_name, v.sport_type AS venue_sport_type,
+           v.address AS venue_address, v.price_per_hour AS venue_price_per_hour,
+           c.name AS coach_name, c.sport_type AS coach_sport_type,
+           c.price_per_hour AS coach_price_per_hour,
            ts.slot_date, ts.start_time, ts.end_time
     FROM bookings b
     LEFT JOIN venues v ON v.id = b.venue_id
@@ -127,7 +163,10 @@ export async function findById(id: number): Promise<BookingRow | null> {
     `SELECT b.id, b.player_id, b.time_slot_id, b.venue_id, b.coach_id,
             b.status, b.total_price, b.notes, b.expires_at, b.created_at, b.updated_at,
             u.display_name AS player_name, u.email AS player_email,
-            v.name AS venue_name, c.name AS coach_name,
+            v.name AS venue_name, v.sport_type AS venue_sport_type,
+            v.address AS venue_address, v.price_per_hour AS venue_price_per_hour,
+            c.name AS coach_name, c.sport_type AS coach_sport_type,
+            c.price_per_hour AS coach_price_per_hour,
             ts.slot_date, ts.start_time, ts.end_time
      FROM bookings b
      LEFT JOIN users u ON u.id = b.player_id
@@ -141,13 +180,13 @@ export async function findById(id: number): Promise<BookingRow | null> {
 }
 
 export async function updateStatus(id: number, status: string): Promise<BookingRow> {
-  const result = await query(
-    `UPDATE bookings SET status = $2 WHERE id = $1
-     RETURNING id, player_id, time_slot_id, venue_id, coach_id,
-               status, total_price, notes, created_at, updated_at`,
+  await query(
+    `UPDATE bookings SET status = $2, updated_at = NOW() WHERE id = $1`,
     [id, status]
   );
-  return mapRow(result.rows[0]);
+  const booking = await findById(id);
+  if (!booking) throw new NotFoundError('Booking');
+  return booking;
 }
 
 export async function findByPartner(userId: number, status?: string): Promise<BookingRow[]> {
@@ -155,7 +194,10 @@ export async function findByPartner(userId: number, status?: string): Promise<Bo
     SELECT b.id, b.player_id, b.time_slot_id, b.venue_id, b.coach_id,
            b.status, b.total_price, b.notes, b.expires_at, b.created_at, b.updated_at,
            u.display_name AS player_name, u.email AS player_email,
-           v.name AS venue_name, c.name AS coach_name,
+           v.name AS venue_name, v.sport_type AS venue_sport_type,
+           v.address AS venue_address, v.price_per_hour AS venue_price_per_hour,
+           c.name AS coach_name, c.sport_type AS coach_sport_type,
+           c.price_per_hour AS coach_price_per_hour,
            ts.slot_date, ts.start_time, ts.end_time
     FROM bookings b
     LEFT JOIN users u ON u.id = b.player_id

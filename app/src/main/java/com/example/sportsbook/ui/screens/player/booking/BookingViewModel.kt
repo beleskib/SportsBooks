@@ -26,6 +26,7 @@ data class BookingUiState(
     val isBookingLoading: Boolean = false,
     val error: String? = null,
     val bookingSuccess: Boolean = false,
+    val createdBookingId: Long? = null,
     val venueId: Long? = null,
     val coachId: Long? = null,
 )
@@ -131,11 +132,12 @@ class BookingViewModel @Inject constructor(
                     notes = state.notes.ifBlank { null },
                 )
                 .fold(
-                    onSuccess = { _ ->
+                    onSuccess = { booking ->
                         _uiState.update { current ->
                             current.copy(
                                 isBookingLoading = false,
                                 bookingSuccess = true,
+                                createdBookingId = booking.id,
                             )
                         }
                     },

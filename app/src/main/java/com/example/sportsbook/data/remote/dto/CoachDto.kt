@@ -8,14 +8,14 @@ import kotlinx.serialization.Serializable
 
 @Serializable
 data class CoachDto(
-    val id: Long,
-    val userId: Long,
-    val name: String,
+    val id: Long = 0,
+    val userId: Long = 0,
+    val name: String = "",
     val bio: String? = null,
-    val sportType: SportType,
+    val sportType: SportType = SportType.BASKETBALL,
     val specialization: String? = null,
     val experienceYears: Int = 0,
-    val pricePerHour: Double,
+    val pricePerHour: Double = 0.0,
     val address: String? = null,
     val city: String? = null,
     val country: String? = null,
@@ -50,9 +50,9 @@ data class CoachDto(
 
 @Serializable
 data class CoachImageDto(
-    val id: Long,
-    val coachId: Long,
-    val imageUrl: String,
+    val id: Long = 0,
+    val coachId: Long = 0,
+    val imageUrl: String = "",
     val isPrimary: Boolean = false,
     val displayOrder: Int = 0
 ) {
@@ -64,9 +64,9 @@ data class CoachImageDto(
 
 @Serializable
 data class CoachCertificationDto(
-    val id: Long,
-    val coachId: Long,
-    val name: String,
+    val id: Long = 0,
+    val coachId: Long = 0,
+    val name: String = "",
     val issuingBody: String? = null,
     val yearObtained: Int? = null,
     val certificateUrl: String? = null

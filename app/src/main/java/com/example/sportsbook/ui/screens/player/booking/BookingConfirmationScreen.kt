@@ -55,6 +55,10 @@ fun BookingConfirmationScreen(
     LaunchedEffect(uiState.bookingSuccess) {
         if (uiState.bookingSuccess) {
             snackbarHostState.showSnackbar("Booking request sent! The venue partner will review your request.")
+            // Navigate to My Bookings so the player can track the pending booking
+            uiState.createdBookingId?.let { bookingId ->
+                onProceedToPayment(bookingId, "")
+            }
         }
     }
 

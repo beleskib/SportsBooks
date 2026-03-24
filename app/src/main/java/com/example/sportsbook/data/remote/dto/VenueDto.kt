@@ -9,13 +9,13 @@ import kotlinx.serialization.Serializable
 
 @Serializable
 data class VenueDto(
-    val id: Long,
-    val ownerId: Long,
-    val name: String,
+    val id: Long = 0,
+    val ownerId: Long = 0,
+    val name: String = "",
     val description: String? = null,
-    val sportType: SportType,
-    val pricePerHour: Double,
-    val address: String,
+    val sportType: SportType = SportType.BASKETBALL,
+    val pricePerHour: Double = 0.0,
+    val address: String = "",
     val city: String? = null,
     val country: String? = null,
     val latitude: Double? = null,
@@ -58,9 +58,9 @@ data class VenueDto(
 
 @Serializable
 data class VenueImageDto(
-    val id: Long,
-    val venueId: Long,
-    val imageUrl: String,
+    val id: Long = 0,
+    val venueId: Long = 0,
+    val imageUrl: String = "",
     val isPrimary: Boolean = false,
     val displayOrder: Int = 0
 ) {
@@ -72,9 +72,9 @@ data class VenueImageDto(
 
 @Serializable
 data class VenueEquipmentDto(
-    val id: Long,
-    val venueId: Long,
-    val name: String,
+    val id: Long = 0,
+    val venueId: Long = 0,
+    val name: String = "",
     val description: String? = null,
     val isIncluded: Boolean = true
 ) {
