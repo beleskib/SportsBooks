@@ -1,0 +1,1312 @@
+{
+  "info": {
+    "name": "SportsBooks — Booking Flow Scenario",
+    "description": "End-to-end scenario: Player books → Partner approves → Player pays.\n\nRun these requests **in order** to simulate the complete booking lifecycle.\n\n## Prerequisites\n- Backend running on localhost:3000\n- DEV_AUTH_BYPASS=true in .env\n- PostgreSQL with seeded data (test users, venues, time slots)\n\n## Flow\n1. 🔐 Register/verify Player & Partner accounts\n2. 🏟️ Partner lists a venue & generates time slots\n3. 📋 Player browses available slots\n4. 📝 Player creates a booking (status: pending)\n5. 🔔 Partner sees pending booking notification\n6. ✅ Partner approves the booking (status: approved)\n7. 🔔 Player gets approval notification\n8. 💳 Player creates payment intent\n9. 💰 Player confirms payment (status: confirmed)\n10. ⭐ Booking marked completed → Player earns 25 XP",
+    "_postman_id": "b1e2f3a4-5678-9abc-def0-1234567890ab",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    {
+      "key": "base_url",
+      "value": "http://localhost:3000/api"
+    },
+    {
+      "key": "player_token",
+      "value": "test-player-uid-1"
+    },
+    {
+      "key": "partner_token",
+      "value": "test-partner-uid-1"
+    },
+    {
+      "key": "venue_id",
+      "value": ""
+    },
+    {
+      "key": "time_slot_id",
+      "value": ""
+    },
+    {
+      "key": "booking_id",
+      "value": ""
+    },
+    {
+      "key": "payment_id",
+      "value": ""
+    },
+    {
+      "key": "player_id",
+      "value": ""
+    },
+    {
+      "key": "partner_id",
+      "value": ""
+    }
+  ],
+  "item": [
+    {
+      "name": "0. Health Check",
+      "item": [
+        {
+          "name": "Health Check",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Server is running', function () {",
+                  "    pm.response.to.have.status(200);",
+                  "    var jsonData = pm.response.json();",
+                  "    pm.expect(jsonData.status).to.eql('ok');",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "http://localhost:3000/health",
+              "protocol": "http",
+              "host": ["localhost"],
+              "port": "3000",
+              "path": ["health"]
+            },
+            "description": "Verify the backend server is running before starting the scenario."
+          },
+          "response": []
+        }
+      ],
+      "description": "Quick check that the server is alive."
+    },
+    {
+      "name": "1. Setup — Register Users",
+      "item": [
+        {
+          "name": "Register Player",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "var jsonData = pm.response.json();",
+                  "",
+                  "if (pm.response.code === 201) {",
+                  "    pm.test('Player registered successfully', function () {",
+                  "        pm.expect(jsonData.success).to.be.true;",
+                  "        pm.expect(jsonData.data).to.have.property('id');",
+                  "    });",
+                  "    pm.collectionVariables.set('player_id', jsonData.data.id);",
+                  "} else if (pm.response.code === 409) {",
+                  "    pm.test('Player already registered', function () {",
+                  "        pm.expect(pm.response.code).to.eql(409);",
+                  "    });",
+                  "    // Fetch player profile to get ID",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{player_token}}" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"displayName\": \"Test Player\",\n  \"email\": \"player@test.com\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/auth/register",
+              "host": ["{{base_url}}"],
+              "path": ["auth", "register"]
+            },
+            "description": "Register the player account. Returns 409 if already exists — that's OK."
+          },
+          "response": []
+        },
+        {
+          "name": "Register Partner",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "var jsonData = pm.response.json();",
+                  "",
+                  "if (pm.response.code === 201) {",
+                  "    pm.test('Partner registered successfully', function () {",
+                  "        pm.expect(jsonData.success).to.be.true;",
+                  "        pm.expect(jsonData.data).to.have.property('id');",
+                  "    });",
+                  "    pm.collectionVariables.set('partner_id', jsonData.data.id);",
+                  "} else if (pm.response.code === 409) {",
+                  "    pm.test('Partner already registered', function () {",
+                  "        pm.expect(pm.response.code).to.eql(409);",
+                  "    });",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{partner_token}}" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"displayName\": \"Test Partner\",\n  \"email\": \"partner@test.com\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/auth/register",
+              "host": ["{{base_url}}"],
+              "path": ["auth", "register"]
+            },
+            "description": "Register the partner account. Returns 409 if already exists — that's OK."
+          },
+          "response": []
+        },
+        {
+          "name": "Get Player Profile",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Player profile retrieved', function () {",
+                  "    pm.response.to.have.status(200);",
+                  "    var jsonData = pm.response.json();",
+                  "    pm.expect(jsonData.success).to.be.true;",
+                  "    pm.expect(jsonData.data).to.have.property('id');",
+                  "    pm.expect(jsonData.data).to.have.property('role');",
+                  "    pm.collectionVariables.set('player_id', jsonData.data.id);",
+                  "    console.log('Player ID: ' + jsonData.data.id + ', Role: ' + jsonData.data.role);",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{player_token}}" }
+            ],
+            "url": {
+              "raw": "{{base_url}}/users/me",
+              "host": ["{{base_url}}"],
+              "path": ["users", "me"]
+            },
+            "description": "Fetch the player's profile and save the player_id for later requests."
+          },
+          "response": []
+        },
+        {
+          "name": "Get Partner Profile",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Partner profile retrieved', function () {",
+                  "    pm.response.to.have.status(200);",
+                  "    var jsonData = pm.response.json();",
+                  "    pm.expect(jsonData.success).to.be.true;",
+                  "    pm.expect(jsonData.data).to.have.property('id');",
+                  "    pm.collectionVariables.set('partner_id', jsonData.data.id);",
+                  "    console.log('Partner ID: ' + jsonData.data.id + ', Role: ' + jsonData.data.role + ', Type: ' + jsonData.data.partnerType);",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{partner_token}}" }
+            ],
+            "url": {
+              "raw": "{{base_url}}/users/me",
+              "host": ["{{base_url}}"],
+              "path": ["users", "me"]
+            },
+            "description": "Fetch the partner's profile and save the partner_id."
+          },
+          "response": []
+        },
+        {
+          "name": "Set Partner Role (if needed)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Partner role set', function () {",
+                  "    pm.response.to.have.status(200);",
+                  "    var jsonData = pm.response.json();",
+                  "    pm.expect(jsonData.success).to.be.true;",
+                  "    pm.expect(jsonData.data.role).to.eql('partner');",
+                  "    console.log('Partner role confirmed: ' + jsonData.data.role + ', Type: ' + jsonData.data.partnerType);",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "PUT",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{partner_token}}" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"role\": \"partner\",\n  \"partnerType\": \"venue_owner\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/users/me/role",
+              "host": ["{{base_url}}"],
+              "path": ["users", "me", "role"]
+            },
+            "description": "Ensure the partner has the 'partner' role and 'venue_owner' partnerType. Skip if already set."
+          },
+          "response": []
+        }
+      ],
+      "description": "Register or verify both test users exist in the system."
+    },
+    {
+      "name": "2. Partner — Create Venue & Time Slots",
+      "item": [
+        {
+          "name": "List Partner's Venues",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Venues listed', function () {",
+                  "    pm.response.to.have.status(200);",
+                  "    var jsonData = pm.response.json();",
+                  "    pm.expect(jsonData.success).to.be.true;",
+                  "",
+                  "    if (jsonData.data && jsonData.data.length > 0) {",
+                  "        var venue = jsonData.data[0];",
+                  "        pm.collectionVariables.set('venue_id', venue.id);",
+                  "        console.log('Using existing venue: ' + venue.name + ' (ID: ' + venue.id + ')');",
+                  "    } else {",
+                  "        console.log('No venues found — create one in the next request');",
+                  "    }",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{partner_token}}" }
+            ],
+            "url": {
+              "raw": "{{base_url}}/venues/mine",
+              "host": ["{{base_url}}"],
+              "path": ["venues", "mine"]
+            },
+            "description": "Check if the partner already has a venue. If yes, reuse it."
+          },
+          "response": []
+        },
+        {
+          "name": "Create Venue (if needed)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Venue created', function () {",
+                  "    pm.response.to.have.status(201);",
+                  "    var jsonData = pm.response.json();",
+                  "    pm.expect(jsonData.success).to.be.true;",
+                  "    pm.expect(jsonData.data).to.have.property('id');",
+                  "    pm.collectionVariables.set('venue_id', jsonData.data.id);",
+                  "    console.log('Created venue: ' + jsonData.data.name + ' (ID: ' + jsonData.data.id + ')');",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{partner_token}}" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Postman Test Court\",\n  \"sportType\": \"basketball\",\n  \"pricePerHour\": 1500,\n  \"address\": \"ul. Testna 42, Skopje\",\n  \"city\": \"Skopje\",\n  \"country\": \"MK\",\n  \"latitude\": 41.9981,\n  \"longitude\": 21.4254,\n  \"description\": \"Indoor basketball court created via Postman scenario testing\",\n  \"maxPlayers\": 10\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/venues",
+              "host": ["{{base_url}}"],
+              "path": ["venues"]
+            },
+            "description": "Create a venue for the partner. Skip if partner already has venues from the previous step."
+          },
+          "response": []
+        },
+        {
+          "name": "Generate Time Slots (next 7 days)",
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "exec": [
+                  "// Calculate dates: today → 7 days from now",
+                  "var today = new Date();",
+                  "var nextWeek = new Date(today);",
+                  "nextWeek.setDate(today.getDate() + 7);",
+                  "",
+                  "function formatDate(d) {",
+                  "    return d.getFullYear() + '-' + ",
+                  "        String(d.getMonth() + 1).padStart(2, '0') + '-' + ",
+                  "        String(d.getDate()).padStart(2, '0');",
+                  "}",
+                  "",
+                  "pm.variables.set('date_from', formatDate(today));",
+                  "pm.variables.set('date_to', formatDate(nextWeek));",
+                  "console.log('Generating slots from ' + formatDate(today) + ' to ' + formatDate(nextWeek));"
+                ],
+                "type": "text/javascript"
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Time slots generated', function () {",
+                  "    pm.response.to.have.status(200).or.have.status(201);",
+                  "    var jsonData = pm.response.json();",
+                  "    pm.expect(jsonData.success).to.be.true;",
+                  "    console.log('Generated ' + (jsonData.data ? jsonData.data.length : 0) + ' time slots');",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{partner_token}}" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"venueId\": {{venue_id}},\n  \"dateFrom\": \"{{date_from}}\",\n  \"dateTo\": \"{{date_to}}\",\n  \"startHour\": 9,\n  \"endHour\": 22,\n  \"daysOfWeek\": [0, 1, 2, 3, 4, 5, 6]\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/time-slots/generate",
+              "host": ["{{base_url}}"],
+              "path": ["time-slots", "generate"]
+            },
+            "description": "Generate hourly time slots (9:00–22:00) for the next 7 days. Pre-request script auto-calculates dates."
+          },
+          "response": []
+        }
+      ],
+      "description": "Partner creates a venue and generates bookable time slots."
+    },
+    {
+      "name": "3. Player — Browse & Book",
+      "item": [
+        {
+          "name": "Browse All Venues",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Venues list returned', function () {",
+                  "    pm.response.to.have.status(200);",
+                  "    var jsonData = pm.response.json();",
+                  "    pm.expect(jsonData.success).to.be.true;",
+                  "    pm.expect(jsonData.data).to.be.an('array');",
+                  "    console.log('Found ' + jsonData.data.length + ' venues');",
+                  "",
+                  "    // If venue_id not already set, pick the first one",
+                  "    if (!pm.collectionVariables.get('venue_id') && jsonData.data.length > 0) {",
+                  "        pm.collectionVariables.set('venue_id', jsonData.data[0].id);",
+                  "    }",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{player_token}}" }
+            ],
+            "url": {
+              "raw": "{{base_url}}/venues",
+              "host": ["{{base_url}}"],
+              "path": ["venues"]
+            },
+            "description": "Player browses all available venues."
+          },
+          "response": []
+        },
+        {
+          "name": "View Venue Details",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Venue details returned', function () {",
+                  "    pm.response.to.have.status(200);",
+                  "    var jsonData = pm.response.json();",
+                  "    pm.expect(jsonData.success).to.be.true;",
+                  "    pm.expect(jsonData.data).to.have.property('name');",
+                  "    pm.expect(jsonData.data).to.have.property('pricePerHour');",
+                  "    console.log('Venue: ' + jsonData.data.name + ' | Price: ' + jsonData.data.pricePerHour + ' MKD/hr');",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{player_token}}" }
+            ],
+            "url": {
+              "raw": "{{base_url}}/venues/{{venue_id}}",
+              "host": ["{{base_url}}"],
+              "path": ["venues", "{{venue_id}}"]
+            },
+            "description": "Player views details of a specific venue."
+          },
+          "response": []
+        },
+        {
+          "name": "Get Available Time Slots",
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "exec": [
+                  "// Calculate tomorrow + 3 days",
+                  "var tomorrow = new Date();",
+                  "tomorrow.setDate(tomorrow.getDate() + 1);",
+                  "var threeDays = new Date(tomorrow);",
+                  "threeDays.setDate(tomorrow.getDate() + 3);",
+                  "",
+                  "function formatDate(d) {",
+                  "    return d.getFullYear() + '-' + ",
+                  "        String(d.getMonth() + 1).padStart(2, '0') + '-' + ",
+                  "        String(d.getDate()).padStart(2, '0');",
+                  "}",
+                  "",
+                  "pm.variables.set('slot_date_from', formatDate(tomorrow));",
+                  "pm.variables.set('slot_date_to', formatDate(threeDays));"
+                ],
+                "type": "text/javascript"
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Time slots returned', function () {",
+                  "    pm.response.to.have.status(200);",
+                  "    var jsonData = pm.response.json();",
+                  "    pm.expect(jsonData.success).to.be.true;",
+                  "    pm.expect(jsonData.data).to.be.an('array');",
+                  "",
+                  "    // Find first available slot",
+                  "    var available = jsonData.data.filter(function(s) { return s.isAvailable === true; });",
+                  "    console.log('Total slots: ' + jsonData.data.length + ' | Available: ' + available.length);",
+                  "",
+                  "    if (available.length > 0) {",
+                  "        var slot = available[0];",
+                  "        pm.collectionVariables.set('time_slot_id', slot.id);",
+                  "        console.log('Selected slot ID: ' + slot.id + ' | Date: ' + slot.slotDate + ' | Time: ' + slot.startTime + '-' + slot.endTime);",
+                  "    } else {",
+                  "        console.warn('⚠️ No available slots found! Generate time slots first.');",
+                  "    }",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{player_token}}" }
+            ],
+            "url": {
+              "raw": "{{base_url}}/venues/{{venue_id}}/time-slots?dateFrom={{slot_date_from}}&dateTo={{slot_date_to}}",
+              "host": ["{{base_url}}"],
+              "path": ["venues", "{{venue_id}}", "time-slots"],
+              "query": [
+                { "key": "dateFrom", "value": "{{slot_date_from}}" },
+                { "key": "dateTo", "value": "{{slot_date_to}}" }
+              ]
+            },
+            "description": "Player checks available time slots for the venue. Auto-picks the first available slot and saves its ID."
+          },
+          "response": []
+        },
+        {
+          "name": "📝 Create Booking",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Booking created (status: pending)', function () {",
+                  "    pm.response.to.have.status(201);",
+                  "    var jsonData = pm.response.json();",
+                  "    pm.expect(jsonData.success).to.be.true;",
+                  "    pm.expect(jsonData.data).to.have.property('id');",
+                  "    pm.expect(jsonData.data.status).to.eql('pending');",
+                  "",
+                  "    pm.collectionVariables.set('booking_id', jsonData.data.id);",
+                  "",
+                  "    console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');",
+                  "    console.log('📝 BOOKING CREATED');",
+                  "    console.log('   Booking ID: ' + jsonData.data.id);",
+                  "    console.log('   Status:     ' + jsonData.data.status);",
+                  "    console.log('   Price:      ' + jsonData.data.totalPrice + ' MKD');",
+                  "    if (jsonData.data.venue) {",
+                  "        console.log('   Venue:      ' + jsonData.data.venue.name);",
+                  "    }",
+                  "    if (jsonData.data.timeSlot) {",
+                  "        console.log('   Date:       ' + jsonData.data.timeSlot.slotDate);",
+                  "        console.log('   Time:       ' + jsonData.data.timeSlot.startTime + ' - ' + jsonData.data.timeSlot.endTime);",
+                  "    }",
+                  "    console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{player_token}}" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"timeSlotId\": {{time_slot_id}},\n  \"notes\": \"Looking forward to playing! Booked via Postman scenario test.\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/bookings",
+              "host": ["{{base_url}}"],
+              "path": ["bookings"]
+            },
+            "description": "🎯 **KEY STEP** — Player creates a booking for the selected time slot.\n\nExpected: Booking in `pending` status. Partner gets notified. 30-min expiry window starts."
+          },
+          "response": []
+        }
+      ],
+      "description": "Player browses venues, picks a time slot, and creates a booking."
+    },
+    {
+      "name": "4. Partner — Review & Approve",
+      "item": [
+        {
+          "name": "Check Partner Notifications",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Notifications retrieved', function () {",
+                  "    pm.response.to.have.status(200);",
+                  "    var jsonData = pm.response.json();",
+                  "    pm.expect(jsonData.success).to.be.true;",
+                  "",
+                  "    var bookingNotifs = jsonData.data.filter(function(n) {",
+                  "        return n.type === 'booking_request';",
+                  "    });",
+                  "    console.log('Total notifications: ' + jsonData.data.length);",
+                  "    console.log('Booking request notifications: ' + bookingNotifs.length);",
+                  "",
+                  "    if (bookingNotifs.length > 0) {",
+                  "        var latest = bookingNotifs[0];",
+                  "        console.log('Latest: \"' + latest.title + '\" — ' + latest.message);",
+                  "    }",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{partner_token}}" }
+            ],
+            "url": {
+              "raw": "{{base_url}}/notifications",
+              "host": ["{{base_url}}"],
+              "path": ["notifications"]
+            },
+            "description": "Partner checks their notifications. Should see a 'booking_request' notification."
+          },
+          "response": []
+        },
+        {
+          "name": "Get Pending Bookings",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Pending bookings listed', function () {",
+                  "    pm.response.to.have.status(200);",
+                  "    var jsonData = pm.response.json();",
+                  "    pm.expect(jsonData.success).to.be.true;",
+                  "    pm.expect(jsonData.data).to.be.an('array');",
+                  "",
+                  "    console.log('Pending bookings: ' + jsonData.data.length);",
+                  "    jsonData.data.forEach(function(b) {",
+                  "        console.log('  Booking #' + b.id + ' | Player: ' + (b.playerName || 'Player #' + b.playerId) + ' | Price: ' + b.totalPrice + ' MKD');",
+                  "    });",
+                  "",
+                  "    // Verify our booking is in the list",
+                  "    var bookingId = pm.collectionVariables.get('booking_id');",
+                  "    if (bookingId) {",
+                  "        var found = jsonData.data.find(function(b) { return b.id == bookingId; });",
+                  "        if (found) {",
+                  "            pm.expect(found.status).to.eql('pending');",
+                  "            console.log('✅ Our booking #' + bookingId + ' found in pending list');",
+                  "        }",
+                  "    }",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{partner_token}}" }
+            ],
+            "url": {
+              "raw": "{{base_url}}/bookings/partner?status=pending",
+              "host": ["{{base_url}}"],
+              "path": ["bookings", "partner"],
+              "query": [
+                { "key": "status", "value": "pending" }
+              ]
+            },
+            "description": "Partner fetches all pending booking requests for their venues."
+          },
+          "response": []
+        },
+        {
+          "name": "View Booking Details",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Booking details returned', function () {",
+                  "    pm.response.to.have.status(200);",
+                  "    var jsonData = pm.response.json();",
+                  "    pm.expect(jsonData.success).to.be.true;",
+                  "    pm.expect(jsonData.data.status).to.eql('pending');",
+                  "",
+                  "    console.log('Booking #' + jsonData.data.id);",
+                  "    console.log('  Status:  ' + jsonData.data.status);",
+                  "    console.log('  Player:  ' + (jsonData.data.playerName || 'ID ' + jsonData.data.playerId));",
+                  "    console.log('  Price:   ' + jsonData.data.totalPrice + ' MKD');",
+                  "    console.log('  Notes:   ' + (jsonData.data.notes || '—'));",
+                  "    if (jsonData.data.venue) console.log('  Venue:   ' + jsonData.data.venue.name);",
+                  "    if (jsonData.data.timeSlot) console.log('  Slot:    ' + jsonData.data.timeSlot.slotDate + ' ' + jsonData.data.timeSlot.startTime);",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{partner_token}}" }
+            ],
+            "url": {
+              "raw": "{{base_url}}/bookings/{{booking_id}}",
+              "host": ["{{base_url}}"],
+              "path": ["bookings", "{{booking_id}}"]
+            },
+            "description": "Partner reviews the full booking details before making a decision."
+          },
+          "response": []
+        },
+        {
+          "name": "✅ Approve Booking",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Booking approved (status: approved)', function () {",
+                  "    pm.response.to.have.status(200);",
+                  "    var jsonData = pm.response.json();",
+                  "    pm.expect(jsonData.success).to.be.true;",
+                  "    pm.expect(jsonData.data.status).to.eql('approved');",
+                  "",
+                  "    console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');",
+                  "    console.log('✅ BOOKING APPROVED');",
+                  "    console.log('   Booking ID: ' + jsonData.data.id);",
+                  "    console.log('   Status:     ' + jsonData.data.status);",
+                  "    console.log('   Player notified → can now pay');",
+                  "    console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "PUT",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{partner_token}}" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{}"
+            },
+            "url": {
+              "raw": "{{base_url}}/bookings/{{booking_id}}/approve",
+              "host": ["{{base_url}}"],
+              "path": ["bookings", "{{booking_id}}", "approve"]
+            },
+            "description": "🎯 **KEY STEP** — Partner approves the pending booking.\n\nExpected: Booking status changes to `approved`. Player receives notification. Player can now proceed to payment."
+          },
+          "response": []
+        }
+      ],
+      "description": "Partner receives the booking request, reviews it, and approves it."
+    },
+    {
+      "name": "5. Player — Pay & Confirm",
+      "item": [
+        {
+          "name": "Check Player Notifications",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Player notifications retrieved', function () {",
+                  "    pm.response.to.have.status(200);",
+                  "    var jsonData = pm.response.json();",
+                  "    pm.expect(jsonData.success).to.be.true;",
+                  "",
+                  "    var approvalNotifs = jsonData.data.filter(function(n) {",
+                  "        return n.type === 'booking_approved';",
+                  "    });",
+                  "    console.log('Total notifications: ' + jsonData.data.length);",
+                  "    console.log('Approval notifications: ' + approvalNotifs.length);",
+                  "",
+                  "    if (approvalNotifs.length > 0) {",
+                  "        var latest = approvalNotifs[0];",
+                  "        console.log('✅ \"' + latest.title + '\" — ' + latest.message);",
+                  "    }",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{player_token}}" }
+            ],
+            "url": {
+              "raw": "{{base_url}}/notifications",
+              "host": ["{{base_url}}"],
+              "path": ["notifications"]
+            },
+            "description": "Player checks notifications. Should see 'Booking Approved!' from the partner."
+          },
+          "response": []
+        },
+        {
+          "name": "View My Bookings",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Player bookings listed', function () {",
+                  "    pm.response.to.have.status(200);",
+                  "    var jsonData = pm.response.json();",
+                  "    pm.expect(jsonData.success).to.be.true;",
+                  "",
+                  "    console.log('My bookings: ' + jsonData.data.length);",
+                  "    jsonData.data.forEach(function(b) {",
+                  "        var venueName = b.venue ? b.venue.name : (b.coach ? b.coach.name : 'Unknown');",
+                  "        console.log('  #' + b.id + ' | ' + b.status + ' | ' + venueName + ' | ' + b.totalPrice + ' MKD');",
+                  "    });",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{player_token}}" }
+            ],
+            "url": {
+              "raw": "{{base_url}}/bookings/mine",
+              "host": ["{{base_url}}"],
+              "path": ["bookings", "mine"]
+            },
+            "description": "Player views all their bookings. The recent booking should show status 'approved'."
+          },
+          "response": []
+        },
+        {
+          "name": "Check XP Balance (pre-payment)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('XP level retrieved', function () {",
+                  "    pm.response.to.have.status(200);",
+                  "    var jsonData = pm.response.json();",
+                  "    pm.expect(jsonData.success).to.be.true;",
+                  "",
+                  "    console.log('━━━ XP Status (before payment) ━━━');",
+                  "    console.log('  Level:     ' + (jsonData.data.currentLevel || 'N/A'));",
+                  "    console.log('  Total XP:  ' + (jsonData.data.totalXp || 0));",
+                  "    console.log('  Available: ' + (jsonData.data.availableXp || 0) + ' XP');",
+                  "    console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{player_token}}" }
+            ],
+            "url": {
+              "raw": "{{base_url}}/gamification/me/level",
+              "host": ["{{base_url}}"],
+              "path": ["gamification", "me", "level"]
+            },
+            "description": "Check player's XP before payment. 100 XP = 1 MKD discount."
+          },
+          "response": []
+        },
+        {
+          "name": "💳 Create Payment Intent",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Payment intent created', function () {",
+                  "    pm.response.to.have.status(201);",
+                  "    var jsonData = pm.response.json();",
+                  "    pm.expect(jsonData.success).to.be.true;",
+                  "    pm.expect(jsonData.data).to.have.property('paymentId');",
+                  "",
+                  "    pm.collectionVariables.set('payment_id', jsonData.data.paymentId);",
+                  "",
+                  "    console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');",
+                  "    console.log('💳 PAYMENT INTENT CREATED');",
+                  "    console.log('   Payment ID:    ' + jsonData.data.paymentId);",
+                  "    console.log('   Booking ID:    ' + jsonData.data.bookingId);",
+                  "    console.log('   Amount:        ' + jsonData.data.amount + ' ' + (jsonData.data.currency || 'MKD'));",
+                  "    console.log('   Client Secret: ' + (jsonData.data.clientSecret ? jsonData.data.clientSecret.substring(0, 30) + '...' : 'N/A'));",
+                  "    console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{player_token}}" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"bookingId\": {{booking_id}}\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/payments/create-intent",
+              "host": ["{{base_url}}"],
+              "path": ["payments", "create-intent"]
+            },
+            "description": "🎯 **KEY STEP** — Create a Stripe Payment Intent for the approved booking.\n\nIn production, the clientSecret is used by Stripe.js/SDK to collect card details.\nFor testing, we'll confirm the payment manually in the next step."
+          },
+          "response": []
+        },
+        {
+          "name": "💰 Confirm Payment",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Payment confirmed (status: completed)', function () {",
+                  "    pm.response.to.have.status(200);",
+                  "    var jsonData = pm.response.json();",
+                  "    pm.expect(jsonData.success).to.be.true;",
+                  "",
+                  "    console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');",
+                  "    console.log('💰 PAYMENT CONFIRMED');",
+                  "    console.log('   Payment Status: ' + jsonData.data.status);",
+                  "    console.log('   Booking is now: confirmed');",
+                  "    console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{player_token}}" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{}"
+            },
+            "url": {
+              "raw": "{{base_url}}/payments/{{payment_id}}/confirm",
+              "host": ["{{base_url}}"],
+              "path": ["payments", "{{payment_id}}", "confirm"]
+            },
+            "description": "🎯 **KEY STEP** — Confirm the payment.\n\nIn production, Stripe webhook calls this after successful card charge.\nFor testing, we call it directly to simulate successful payment.\n\nExpected: Payment → completed, Booking → confirmed."
+          },
+          "response": []
+        },
+        {
+          "name": "Verify Booking is Confirmed",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Booking is confirmed after payment', function () {",
+                  "    pm.response.to.have.status(200);",
+                  "    var jsonData = pm.response.json();",
+                  "    pm.expect(jsonData.success).to.be.true;",
+                  "    pm.expect(jsonData.data.status).to.eql('confirmed');",
+                  "",
+                  "    console.log('✅ Booking #' + jsonData.data.id + ' is now CONFIRMED');",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{player_token}}" }
+            ],
+            "url": {
+              "raw": "{{base_url}}/bookings/{{booking_id}}",
+              "host": ["{{base_url}}"],
+              "path": ["bookings", "{{booking_id}}"]
+            },
+            "description": "Verify the booking status changed from 'approved' to 'confirmed' after payment."
+          },
+          "response": []
+        }
+      ],
+      "description": "Player receives approval notification, creates payment, and confirms it."
+    },
+    {
+      "name": "6. Complete — Mark Done & Earn XP",
+      "item": [
+        {
+          "name": "⭐ Mark Booking Completed",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Booking completed + XP awarded', function () {",
+                  "    pm.response.to.have.status(200);",
+                  "    var jsonData = pm.response.json();",
+                  "    pm.expect(jsonData.success).to.be.true;",
+                  "    pm.expect(jsonData.data.status).to.eql('completed');",
+                  "",
+                  "    console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');",
+                  "    console.log('⭐ BOOKING COMPLETED');",
+                  "    console.log('   Booking #' + jsonData.data.id + ' → completed');",
+                  "    console.log('   +25 XP awarded to player!');",
+                  "    console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "PUT",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{player_token}}" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"status\": \"completed\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/bookings/{{booking_id}}/status",
+              "host": ["{{base_url}}"],
+              "path": ["bookings", "{{booking_id}}", "status"]
+            },
+            "description": "Mark the booking as completed after the session is done.\n\nThis awards 25 XP to the player and updates their level."
+          },
+          "response": []
+        },
+        {
+          "name": "Check XP Balance (post-completion)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('XP updated after completion', function () {",
+                  "    pm.response.to.have.status(200);",
+                  "    var jsonData = pm.response.json();",
+                  "    pm.expect(jsonData.success).to.be.true;",
+                  "",
+                  "    console.log('━━━ XP Status (after completion) ━━━');",
+                  "    console.log('  Level:     ' + (jsonData.data.currentLevel || 'N/A'));",
+                  "    console.log('  Total XP:  ' + (jsonData.data.totalXp || 0));",
+                  "    console.log('  Available: ' + (jsonData.data.availableXp || 0) + ' XP');",
+                  "    console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{player_token}}" }
+            ],
+            "url": {
+              "raw": "{{base_url}}/gamification/me/level",
+              "host": ["{{base_url}}"],
+              "path": ["gamification", "me", "level"]
+            },
+            "description": "Verify the player received +25 XP after completing the booking."
+          },
+          "response": []
+        },
+        {
+          "name": "View Payment History",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Payment history returned', function () {",
+                  "    pm.response.to.have.status(200);",
+                  "    var jsonData = pm.response.json();",
+                  "    pm.expect(jsonData.success).to.be.true;",
+                  "    pm.expect(jsonData.data).to.be.an('array');",
+                  "",
+                  "    console.log('Total payments: ' + jsonData.data.length);",
+                  "    jsonData.data.forEach(function(p) {",
+                  "        console.log('  Payment #' + p.id + ' | ' + p.status + ' | ' + p.amount + ' ' + (p.currency || 'MKD') + ' | Booking #' + p.bookingId);",
+                  "    });",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{player_token}}" }
+            ],
+            "url": {
+              "raw": "{{base_url}}/payments/mine",
+              "host": ["{{base_url}}"],
+              "path": ["payments", "mine"]
+            },
+            "description": "View the player's complete payment history."
+          },
+          "response": []
+        }
+      ],
+      "description": "After the booking session, mark it complete. Player earns 25 XP."
+    },
+    {
+      "name": "7. Alternative — Partner Declines",
+      "item": [
+        {
+          "name": "Create Another Booking (for decline test)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Booking created for decline test', function () {",
+                  "    // May fail if no available slots remain",
+                  "    if (pm.response.code === 201) {",
+                  "        var jsonData = pm.response.json();",
+                  "        pm.expect(jsonData.data.status).to.eql('pending');",
+                  "        pm.collectionVariables.set('booking_id', jsonData.data.id);",
+                  "        console.log('Created booking #' + jsonData.data.id + ' for decline test');",
+                  "    } else {",
+                  "        console.warn('Could not create booking — no available slots?');",
+                  "    }",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{player_token}}" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"timeSlotId\": {{time_slot_id}},\n  \"notes\": \"Testing the decline flow\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/bookings",
+              "host": ["{{base_url}}"],
+              "path": ["bookings"]
+            },
+            "description": "Create a second booking to test the decline path. You may need to update time_slot_id to an available slot."
+          },
+          "response": []
+        },
+        {
+          "name": "❌ Decline Booking",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Booking declined (status: cancelled)', function () {",
+                  "    pm.response.to.have.status(200);",
+                  "    var jsonData = pm.response.json();",
+                  "    pm.expect(jsonData.success).to.be.true;",
+                  "    pm.expect(jsonData.data.status).to.eql('cancelled');",
+                  "",
+                  "    console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');",
+                  "    console.log('❌ BOOKING DECLINED');",
+                  "    console.log('   Booking #' + jsonData.data.id + ' → cancelled');",
+                  "    console.log('   Time slot released back to available');",
+                  "    console.log('   Player notified');",
+                  "    console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "PUT",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{partner_token}}" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{}"
+            },
+            "url": {
+              "raw": "{{base_url}}/bookings/{{booking_id}}/decline",
+              "host": ["{{base_url}}"],
+              "path": ["bookings", "{{booking_id}}", "decline"]
+            },
+            "description": "Partner declines the booking. The time slot becomes available again and the player is notified."
+          },
+          "response": []
+        },
+        {
+          "name": "Verify Player Got Decline Notification",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Decline notification received', function () {",
+                  "    pm.response.to.have.status(200);",
+                  "    var jsonData = pm.response.json();",
+                  "",
+                  "    var declineNotifs = jsonData.data.filter(function(n) {",
+                  "        return n.type === 'booking_declined';",
+                  "    });",
+                  "    console.log('Decline notifications: ' + declineNotifs.length);",
+                  "    if (declineNotifs.length > 0) {",
+                  "        console.log('Latest: \"' + declineNotifs[0].title + '\" — ' + declineNotifs[0].message);",
+                  "    }",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{player_token}}" }
+            ],
+            "url": {
+              "raw": "{{base_url}}/notifications",
+              "host": ["{{base_url}}"],
+              "path": ["notifications"]
+            },
+            "description": "Verify the player received the 'Booking Declined' notification."
+          },
+          "response": []
+        }
+      ],
+      "description": "Alternative flow: Partner declines the booking instead of approving."
+    }
+  ]
+}
