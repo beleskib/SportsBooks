@@ -13,7 +13,7 @@ export async function getAll(_req: Request, res: Response, next: NextFunction) {
 
 export async function getBySport(req: Request, res: Response, next: NextFunction) {
   try {
-    const coaches = await coachRepo.findBySport(req.params.sportType);
+    const coaches = await coachRepo.findBySport(String(req.params.sportType));
     success(res, coaches);
   } catch (e) { next(e); }
 }

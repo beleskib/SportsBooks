@@ -57,7 +57,29 @@ export async function createPaymentIntent(
     };
   }
 
-  // 4. Resolve partner's Stripe Connect account for destination charges
+  // 4. Dev mode bypass: skip Stripe when no valid key is configured
+  if (process.env.DEV_AUTH_BYPASS === 'true') {
+    const devPaymentId = `dev_pi_${Date.now()}_${booking.id}`;
+    const platformFee = Math.round(effectivePrice * PLATFORM_FEE_PERCENT);
+    const payment = await paymentRepo.create(
+      booking.id,
+      playerId,
+      effectivePrice,
+      'MKD',
+      devPaymentId,
+      platformFee
+    );
+
+    return {
+      clientSecret: `dev_secret_${devPaymentId}`,
+      bookingId: booking.id,
+      paymentId: payment.id,
+      amount: effectivePrice,
+      currency: 'MKD',
+    };
+  }
+
+  // 5. Resolve partner's Stripe Connect account for destination charges
   const stripe = getStripe();
   const amountInCents = Math.round(effectivePrice * 100);
   const partnerStripeAccountId = await resolvePartnerStripeAccountId(
@@ -65,7 +87,7 @@ export async function createPaymentIntent(
     booking.coachId ?? null
   );
 
-  // 5. Create Stripe PaymentIntent (with destination charge if partner is onboarded)
+  // 6. Create Stripe PaymentIntent (with destination charge if partner is onboarded)
   let platformFeeAmount: number | undefined;
   const paymentIntentParams: Record<string, any> = {
     amount: amountInCents,
@@ -85,9 +107,9 @@ export async function createPaymentIntent(
     platformFeeAmount = feeInCents / 100; // store in denar
   }
 
-  const paymentIntent = await stripe.paymentIntents.create(paymentIntentParams);
+  const paymentIntent = await stripe.paymentIntents.create(paymentIntentParams as any);
 
-  // 6. Create payment record (pending)
+  // 7. Create payment record (pending)
   const payment = await paymentRepo.create(
     booking.id,
     playerId,
@@ -114,8 +136,8 @@ export async function confirmPayment(paymentId: number): Promise<paymentRepo.Pay
     return payment; // idempotent
   }
 
-  // Verify with Stripe that payment succeeded
-  if (payment.externalPaymentId) {
+  // Verify with Stripe that payment succeeded (skip in dev mode)
+  if (payment.externalPaymentId && !payment.externalPaymentId.startsWith('dev_')) {
     const stripe = getStripe();
     const pi = await stripe.paymentIntents.retrieve(payment.externalPaymentId);
     if (pi.status !== 'succeeded') {

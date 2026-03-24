@@ -9,7 +9,7 @@ export function getStripe(): Stripe {
       throw new Error('STRIPE_SECRET_KEY is not configured');
     }
     stripeInstance = new Stripe(env.stripeSecretKey, {
-      apiVersion: '2025-01-27.acacia',
+      apiVersion: '2025-02-24.acacia',
       typescript: true,
     });
   }
