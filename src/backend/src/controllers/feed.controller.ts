@@ -57,11 +57,13 @@ export async function likePost(req: Request, res: Response, next: NextFunction) 
     const alreadyLiked = await feedRepo.hasUserLiked(postId, req.user!.id);
     if (alreadyLiked) {
       await feedRepo.unlikePost(postId, req.user!.id);
-      success(res, { liked: false });
     } else {
       await feedRepo.likePost(postId, req.user!.id);
-      success(res, { liked: true });
     }
+
+    // Return the updated post so the client can refresh its state
+    const updatedPost = await feedRepo.getPostById(postId, req.user!.id);
+    success(res, updatedPost);
   } catch (e) { next(e); }
 }
 

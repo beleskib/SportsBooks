@@ -55,18 +55,25 @@ async function migrate() {
       upSql = sql.substring(upMatch + '-- UP'.length).trim();
     }
 
-    // Check if migration contains CONCURRENTLY (can't run in transaction)
+    // ALTER TYPE ... ADD VALUE cannot run inside a transaction block in PostgreSQL.
+    // If the migration contains such statements, we must run them outside a transaction.
+    const hasAddValue = /ALTER\s+TYPE\s+\w+\s+ADD\s+VALUE/i.test(upSql);
     const hasConcurrently = /CONCURRENTLY/i.test(upSql);
+    const needsNoTransaction = hasAddValue || hasConcurrently;
 
     try {
-      if (hasConcurrently) {
-        // Split statements and run each outside a transaction
-        // Replace CONCURRENTLY with regular index creation to allow transactional safety
+      if (needsNoTransaction) {
+        // Run outside a transaction — split by semicolons and execute each statement
         const safeSql = upSql.replace(/\bCONCURRENTLY\b/gi, '');
-        await pool.query('BEGIN');
-        await pool.query(safeSql);
+        const statements = safeSql
+          .split(/;\s*\n/)
+          .map(s => s.trim())
+          .filter(s => s.length > 0 && !s.startsWith('--'));
+
+        for (const stmt of statements) {
+          await pool.query(stmt);
+        }
         await pool.query('INSERT INTO _migrations (filename) VALUES ($1)', [file]);
-        await pool.query('COMMIT');
       } else {
         await pool.query('BEGIN');
         await pool.query(upSql);
@@ -76,7 +83,9 @@ async function migrate() {
       console.log(`  ✅ ${file} (applied)`);
       ranCount++;
     } catch (err) {
-      await pool.query('ROLLBACK');
+      if (!needsNoTransaction) {
+        await pool.query('ROLLBACK');
+      }
       console.error(`  ❌ ${file} FAILED:`);
       console.error(err);
       process.exit(1);

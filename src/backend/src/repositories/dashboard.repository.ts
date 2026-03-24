@@ -19,26 +19,35 @@ export interface MonthlyRevenueRow {
 }
 
 export async function getPartnerStats(userId: number): Promise<PartnerStatsRow> {
-  const result = await query('SELECT * FROM get_partner_dashboard_stats($1)', [userId]);
-  const row = result.rows[0];
-  if (!row) {
-    return {
-      totalBookings: 0, confirmedBookings: 0, pendingBookings: 0,
-      completedBookings: 0, cancelledBookings: 0, upcomingBookings: 0,
-      totalRevenue: 0, avgRating: 0, totalReviews: 0
-    };
-  }
-  return {
-    totalBookings: Number(row.total_bookings) || 0,
-    confirmedBookings: Number(row.confirmed_bookings) || 0,
-    pendingBookings: Number(row.pending_bookings) || 0,
-    completedBookings: Number(row.completed_bookings) || 0,
-    cancelledBookings: Number(row.cancelled_bookings) || 0,
-    upcomingBookings: Number(row.upcoming_bookings) || 0,
-    totalRevenue: Number(row.total_revenue) || 0,
-    avgRating: Number(row.avg_rating) || 0,
-    totalReviews: Number(row.total_reviews) || 0,
+  const emptyStats: PartnerStatsRow = {
+    totalBookings: 0, confirmedBookings: 0, pendingBookings: 0,
+    completedBookings: 0, cancelledBookings: 0, upcomingBookings: 0,
+    totalRevenue: 0, avgRating: 0, totalReviews: 0
   };
+
+  try {
+    const result = await query('SELECT * FROM get_partner_dashboard_stats($1)', [userId]);
+    const row = result.rows[0];
+    if (!row) return emptyStats;
+    return {
+      totalBookings: Number(row.total_bookings) || 0,
+      confirmedBookings: Number(row.confirmed_bookings) || 0,
+      pendingBookings: Number(row.pending_bookings) || 0,
+      completedBookings: Number(row.completed_bookings) || 0,
+      cancelledBookings: Number(row.cancelled_bookings) || 0,
+      upcomingBookings: Number(row.upcoming_bookings) || 0,
+      totalRevenue: Number(row.total_revenue) || 0,
+      avgRating: Number(row.avg_rating) || 0,
+      totalReviews: Number(row.total_reviews) || 0,
+    };
+  } catch (e: any) {
+    // If the stored procedure doesn't exist yet, return empty stats gracefully
+    if (e.message?.includes('get_partner_dashboard_stats') || e.code === '42883') {
+      console.warn('get_partner_dashboard_stats function not found — returning empty stats. Run migrations to fix.');
+      return emptyStats;
+    }
+    throw e;
+  }
 }
 
 export async function getPartnerMonthlyRevenue(userId: number, months: number = 6): Promise<MonthlyRevenueRow[]> {
