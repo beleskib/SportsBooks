@@ -39,7 +39,7 @@ class MyBookingsViewModel @Inject constructor(
             bookingRepository.getMyBookings()
                 .onSuccess { bookings ->
                     val upcoming = bookings.filter {
-                        it.status in listOf(BookingStatus.PENDING, BookingStatus.CONFIRMED)
+                        it.status in listOf(BookingStatus.PENDING, BookingStatus.APPROVED, BookingStatus.CONFIRMED)
                     }
                     val past = bookings.filter {
                         it.status in listOf(
@@ -68,7 +68,7 @@ class MyBookingsViewModel @Inject constructor(
             bookingRepository.getMyBookings()
                 .onSuccess { bookings ->
                     val upcoming = bookings.filter {
-                        it.status in listOf(BookingStatus.PENDING, BookingStatus.CONFIRMED)
+                        it.status in listOf(BookingStatus.PENDING, BookingStatus.APPROVED, BookingStatus.CONFIRMED)
                     }
                     val past = bookings.filter {
                         it.status in listOf(

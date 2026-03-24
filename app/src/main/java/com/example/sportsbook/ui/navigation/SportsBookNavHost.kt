@@ -24,6 +24,7 @@ import com.example.sportsbook.ui.screens.partner.dashboard.PartnerDashboardScree
 import com.example.sportsbook.ui.screens.partner.images.ManageImagesScreen
 import com.example.sportsbook.ui.screens.partner.setup.PartnerSetupScreen
 import com.example.sportsbook.ui.screens.player.booking.BookingCalendarScreen
+import com.example.sportsbook.ui.screens.player.booking.BookingChatScreen
 import com.example.sportsbook.ui.screens.player.booking.BookingConfirmationScreen
 import com.example.sportsbook.ui.screens.player.coach.CoachDetailScreen
 import com.example.sportsbook.ui.screens.player.coach.CoachListScreen
@@ -435,6 +436,15 @@ fun SportsBookNavHost() {
                     onWriteReview = { bookingId ->
                         navController.navigate(Route.WriteReview(bookingId))
                     },
+                    onOpenChat = { bookingId ->
+                        navController.navigate(Route.BookingChat(bookingId))
+                    },
+                    onBack = { navController.popBackStack() }
+                )
+            }
+
+            composable<Route.BookingChat> {
+                BookingChatScreen(
                     onBack = { navController.popBackStack() }
                 )
             }

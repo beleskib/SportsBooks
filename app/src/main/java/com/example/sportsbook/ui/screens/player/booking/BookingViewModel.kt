@@ -153,6 +153,32 @@ class BookingViewModel @Inject constructor(
         }
     }
 
+    fun loadSlotById(slotId: Long) {
+        viewModelScope.launch {
+            _uiState.update { it.copy(isLoading = true) }
+            timeSlotRepository.getSlotById(slotId)
+                .onSuccess { slot ->
+                    _uiState.update { current ->
+                        current.copy(
+                            isLoading = false,
+                            selectedSlotId = slot.id,
+                            selectedSlot = slot,
+                            venueId = slot.venueId,
+                            coachId = slot.coachId,
+                        )
+                    }
+                }
+                .onFailure { error ->
+                    _uiState.update { current ->
+                        current.copy(
+                            isLoading = false,
+                            error = error.message ?: "Failed to load slot details",
+                        )
+                    }
+                }
+        }
+    }
+
     fun clearError() {
         _uiState.update { current -> current.copy(error = null) }
     }

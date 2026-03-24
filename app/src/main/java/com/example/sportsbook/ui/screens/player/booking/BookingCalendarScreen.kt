@@ -1,5 +1,6 @@
 package com.example.sportsbook.ui.screens.player.booking
 
+import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -79,7 +80,7 @@ fun BookingCalendarScreen(
 
             Spacer(modifier = Modifier.height(8.dp))
 
-            Row {
+            Row(modifier = Modifier.horizontalScroll(rememberScrollState())) {
                 nextSevenDays.forEach { date ->
                     val dateString = date.toString()
                     val isSelected = uiState.selectedDate == dateString

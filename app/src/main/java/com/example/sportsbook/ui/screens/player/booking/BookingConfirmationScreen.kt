@@ -45,6 +45,13 @@ fun BookingConfirmationScreen(
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
     val snackbarHostState = remember { SnackbarHostState() }
 
+    // Load slot details for the summary card (separate VM instance from BookingCalendar)
+    LaunchedEffect(timeSlotId) {
+        if (uiState.selectedSlot == null) {
+            viewModel.loadSlotById(timeSlotId)
+        }
+    }
+
     LaunchedEffect(uiState.error) {
         uiState.error?.let { errorMessage ->
             snackbarHostState.showSnackbar(errorMessage)
