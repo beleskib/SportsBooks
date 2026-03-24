@@ -3,15 +3,15 @@ package com.example.sportsbook.data.service
 import android.app.NotificationChannel
 import android.app.NotificationManager
 import android.app.PendingIntent
+import android.content.Context
 import android.content.Intent
-import android.os.Build
+import android.media.RingtoneManager
 import androidx.core.app.NotificationCompat
 import com.example.sportsbook.MainActivity
 import com.example.sportsbook.R
 import com.google.firebase.messaging.FirebaseMessagingService
 import com.google.firebase.messaging.RemoteMessage
 import dagger.hilt.android.AndroidEntryPoint
-import javax.inject.Inject
 
 @AndroidEntryPoint
 class SportsBookFirebaseMessagingService : FirebaseMessagingService() {
@@ -29,9 +29,13 @@ class SportsBookFirebaseMessagingService : FirebaseMessagingService() {
                 },
                 NotificationChannel(CHANNEL_ID_MATCHES, "Matches", NotificationManager.IMPORTANCE_HIGH).apply {
                     description = "Match updates and join requests"
+                    enableVibration(true)
+                    vibrationPattern = longArrayOf(0, 300, 200, 300)
                 },
                 NotificationChannel(CHANNEL_ID_BOOKINGS, "Bookings", NotificationManager.IMPORTANCE_HIGH).apply {
                     description = "Booking confirmations and reminders"
+                    enableVibration(true)
+                    vibrationPattern = longArrayOf(0, 300, 200, 300)
                 },
                 NotificationChannel(CHANNEL_ID_CHAT, "Chat", NotificationManager.IMPORTANCE_DEFAULT).apply {
                     description = "New chat messages"
@@ -43,8 +47,7 @@ class SportsBookFirebaseMessagingService : FirebaseMessagingService() {
 
     override fun onNewToken(token: String) {
         super.onNewToken(token)
-        // Token will be registered when user logs in and the app starts
-        // Store locally for later registration
+        // Store locally — will be registered with backend on next app launch via SplashViewModel
         getSharedPreferences("fcm_prefs", MODE_PRIVATE)
             .edit()
             .putString("fcm_token", token)
@@ -64,6 +67,9 @@ class SportsBookFirebaseMessagingService : FirebaseMessagingService() {
             else -> CHANNEL_ID_GENERAL
         }
 
+        val isHighPriority = channelId in listOf(CHANNEL_ID_BOOKINGS, CHANNEL_ID_MATCHES)
+
+        // Build intent with notification data for deep linking
         val intent = Intent(this, MainActivity::class.java).apply {
             flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TOP
             message.data.forEach { (key, value) -> putExtra(key, value) }
@@ -74,16 +80,29 @@ class SportsBookFirebaseMessagingService : FirebaseMessagingService() {
             PendingIntent.FLAG_ONE_SHOT or PendingIntent.FLAG_IMMUTABLE
         )
 
-        val notification = NotificationCompat.Builder(this, channelId)
+        val defaultSoundUri = RingtoneManager.getDefaultUri(RingtoneManager.TYPE_NOTIFICATION)
+
+        val notificationBuilder = NotificationCompat.Builder(this, channelId)
             .setSmallIcon(R.drawable.ic_launcher_foreground)
             .setContentTitle(title)
             .setContentText(body)
             .setAutoCancel(true)
+            .setSound(defaultSoundUri)
             .setContentIntent(pendingIntent)
-            .setPriority(NotificationCompat.PRIORITY_HIGH)
-            .build()
+            .setStyle(NotificationCompat.BigTextStyle().bigText(body))
 
-        val manager = getSystemService(NOTIFICATION_SERVICE) as NotificationManager
-        manager.notify(System.currentTimeMillis().toInt(), notification)
+        if (isHighPriority) {
+            notificationBuilder
+                .setPriority(NotificationCompat.PRIORITY_HIGH)
+                .setDefaults(NotificationCompat.DEFAULT_VIBRATE)
+                .setCategory(NotificationCompat.CATEGORY_MESSAGE)
+                // Heads-up pop-up on the device
+                .setVisibility(NotificationCompat.VISIBILITY_PUBLIC)
+        } else {
+            notificationBuilder.setPriority(NotificationCompat.PRIORITY_DEFAULT)
+        }
+
+        val manager = getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
+        manager.notify(System.currentTimeMillis().toInt(), notificationBuilder.build())
     }
 }

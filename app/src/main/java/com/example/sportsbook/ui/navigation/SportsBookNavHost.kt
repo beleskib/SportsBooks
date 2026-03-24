@@ -5,17 +5,22 @@ import android.net.Uri
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Scaffold
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.toRoute
+import com.example.sportsbook.MainActivity
+import com.example.sportsbook.NotificationDeepLink
+import kotlinx.coroutines.flow.StateFlow
 import com.example.sportsbook.ui.screens.auth.LoginScreen
 import com.example.sportsbook.ui.screens.auth.RegisterScreen
 import com.example.sportsbook.ui.screens.onboarding.PartnerTypeSelectionScreen
@@ -73,9 +78,41 @@ import com.example.sportsbook.ui.screens.partner.analytics.PartnerAnalyticsScree
 import com.example.sportsbook.ui.screens.splash.SplashScreen
 
 @Composable
-fun SportsBookNavHost() {
+fun SportsBookNavHost(
+    pendingDeepLink: StateFlow<NotificationDeepLink?>? = null,
+) {
     val navController = rememberNavController()
     val currentBackStackEntry by navController.currentBackStackEntryAsState()
+    val context = LocalContext.current
+
+    // Handle notification deep links
+    val deepLink = pendingDeepLink?.collectAsStateWithLifecycle()
+    LaunchedEffect(deepLink?.value) {
+        val link = deepLink?.value ?: return@LaunchedEffect
+        // Only navigate if we're past the splash/login screens
+        val current = navController.currentDestination?.route ?: return@LaunchedEffect
+        val isOnMainScreen = current.contains("PlayerHome") ||
+            current.contains("PartnerDashboard") ||
+            current.contains("MyBookings") ||
+            current.contains("NewsFeed") ||
+            current.contains("PendingReservations")
+        if (!isOnMainScreen) return@LaunchedEffect
+
+        when {
+            link.type.startsWith("booking_") && link.bookingId != null -> {
+                navController.navigate(Route.BookingDetail(link.bookingId))
+            }
+            link.type == "booking_request" && link.bookingId != null -> {
+                navController.navigate(Route.PendingReservations)
+            }
+            link.type.startsWith("match_") && link.matchId != null -> {
+                navController.navigate(Route.MatchDetail(link.matchId))
+            }
+        }
+
+        // Consume the deep link so it doesn't re-navigate
+        (context as? MainActivity)?.consumeDeepLink()
+    }
 
     val currentRoute = currentBackStackEntry?.destination?.route
 
