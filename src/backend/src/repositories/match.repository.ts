@@ -307,19 +307,21 @@ export async function findAll(filters: {
 
 export async function findNearby(lat: number, lng: number, radiusKm: number): Promise<MatchRow[]> {
   const result = await query(
-    `SELECT ${MATCH_SELECT},
-       (6371 * acos(cos(radians($1)) * cos(radians(m.latitude))
-        * cos(radians(m.longitude) - radians($2))
-        + sin(radians($1)) * sin(radians(m.latitude)))) AS distance_km
-     FROM matches m
-     LEFT JOIN users u ON u.id = m.host_id
-     LEFT JOIN venues v ON v.id = m.venue_id
-     WHERE m.status = 'open' AND m.visibility = 'public'
-       AND m.latitude IS NOT NULL AND m.longitude IS NOT NULL
-     HAVING (6371 * acos(cos(radians($1)) * cos(radians(m.latitude))
-        * cos(radians(m.longitude) - radians($2))
-        + sin(radians($1)) * sin(radians(m.latitude)))) <= $3
-     ORDER BY distance_km ASC`,
+    `SELECT sub.* FROM (
+       SELECT ${MATCH_SELECT},
+         (6371 * acos(
+           LEAST(1.0, cos(radians($1)) * cos(radians(m.latitude))
+           * cos(radians(m.longitude) - radians($2))
+           + sin(radians($1)) * sin(radians(m.latitude)))
+         )) AS distance_km
+       FROM matches m
+       LEFT JOIN users u ON u.id = m.host_id
+       LEFT JOIN venues v ON v.id = m.venue_id
+       WHERE m.status = 'open' AND m.visibility = 'public'
+         AND m.latitude IS NOT NULL AND m.longitude IS NOT NULL
+     ) sub
+     WHERE sub.distance_km <= $3
+     ORDER BY sub.distance_km ASC`,
     [lat, lng, radiusKm]
   );
   return result.rows.map((r: any) => ({ ...mapMatchRow(r), participants: [] }));
