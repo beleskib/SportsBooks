@@ -14,11 +14,12 @@ data class FriendshipDto(
     @SerialName("createdAt") val createdAt: String? = null,
     @SerialName("updatedAt") val updatedAt: String? = null
 ) {
-    fun toDomain(currentUserId: Long): Friendship {
-        val friendId = if (requesterId == currentUserId) addresseeId else requesterId
+    fun toDomain(): Friendship {
+        // Backend now always provides the "other user" in the `user` field,
+        // so we don't need currentUserId to determine the friend.
         return Friendship(
             id = id,
-            friendId = friendId,
+            friendId = user?.id ?: 0,
             friendName = user?.displayName,
             friendPhotoUrl = user?.photoUrl,
             status = status,

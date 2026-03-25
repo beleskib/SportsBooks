@@ -8,14 +8,40 @@ import * as notificationService from '../services/notification.service';
 export async function getMyFriends(req: Request, res: Response, next: NextFunction) {
   try {
     const friends = await friendshipRepo.findFriends(req.user!.id);
-    success(res, friends);
+    // Transform to consistent shape Android expects (FriendshipDto with nested user)
+    const mapped = friends.map(f => ({
+      id: f.friendshipId,
+      requesterId: 0,
+      addresseeId: 0,
+      status: 'accepted',
+      user: {
+        id: f.userId,
+        displayName: f.displayName,
+        photoUrl: f.photoUrl,
+      },
+      createdAt: f.createdAt,
+    }));
+    success(res, mapped);
   } catch (e) { next(e); }
 }
 
 export async function getPendingRequests(req: Request, res: Response, next: NextFunction) {
   try {
     const requests = await friendshipRepo.findPendingRequests(req.user!.id);
-    success(res, requests);
+    // Transform to consistent shape Android expects
+    const mapped = requests.map(r => ({
+      id: r.friendshipId,
+      requesterId: r.requesterId,
+      addresseeId: req.user!.id,
+      status: 'pending',
+      user: {
+        id: r.requesterId,
+        displayName: r.displayName,
+        photoUrl: r.photoUrl,
+      },
+      createdAt: r.createdAt,
+    }));
+    success(res, mapped);
   } catch (e) { next(e); }
 }
 
@@ -45,13 +71,29 @@ export async function sendFriendRequest(req: Request, res: Response, next: NextF
     const friendship = await friendshipRepo.sendRequest(req.user!.id, userId);
 
     // Send notification to the addressee (fire-and-forget)
-    const requesterName = req.user!.email; // fallback; ideally display_name
+    const currentUser = await userRepo.findById(req.user!.id);
+    const requesterName = currentUser?.displayName || req.user!.email || 'Someone';
     notificationService.notifyFriendRequest(
       userId,
       requesterName
     ).catch((err) => console.error('Failed to send friend request notification:', err));
 
-    created(res, friendship, 'Friend request sent');
+    // Return response with target user info so Android gets a complete object
+    const response = {
+      id: friendship.id,
+      requesterId: friendship.requesterId,
+      addresseeId: friendship.addresseeId,
+      status: friendship.status,
+      user: {
+        id: targetUser.id,
+        displayName: targetUser.displayName,
+        photoUrl: targetUser.photoUrl,
+      },
+      createdAt: friendship.createdAt,
+      updatedAt: friendship.updatedAt,
+    };
+
+    created(res, response, 'Friend request sent');
   } catch (e) { next(e); }
 }
 
@@ -71,14 +113,32 @@ export async function respondToFriendRequest(req: Request, res: Response, next: 
 
     // If accepted, notify the requester (fire-and-forget)
     if (accept) {
-      const friendName = req.user!.email; // fallback; ideally display_name
+      // Get the current user's display name for a proper notification
+      const currentUser = await userRepo.findById(req.user!.id);
+      const friendName = currentUser?.displayName || req.user!.email || 'Someone';
       notificationService.notifyFriendRequestAccepted(
         updated.requesterId,
         friendName
       ).catch((err) => console.error('Failed to send friend accepted notification:', err));
     }
 
-    success(res, updated, accept ? 'Friend request accepted' : 'Friend request declined');
+    // Get requester info so Android gets a complete response with user object
+    const requester = await userRepo.findById(updated.requesterId);
+    const response = {
+      id: updated.id,
+      requesterId: updated.requesterId,
+      addresseeId: updated.addresseeId,
+      status: updated.status,
+      user: {
+        id: updated.requesterId,
+        displayName: requester?.displayName || null,
+        photoUrl: requester?.photoUrl || null,
+      },
+      createdAt: updated.createdAt,
+      updatedAt: updated.updatedAt,
+    };
+
+    success(res, response, accept ? 'Friend request accepted' : 'Friend request declined');
   } catch (e) { next(e); }
 }
 

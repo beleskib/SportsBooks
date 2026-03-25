@@ -14,19 +14,19 @@ class FriendshipRepositoryImpl @Inject constructor(
 ) : FriendshipRepository {
 
     override suspend fun getMyFriends(): Result<List<Friendship>> = runCatching {
-        apiService.getMyFriends().data.map { it.toDomain(currentUserId = 0) }
+        apiService.getMyFriends().data.map { it.toDomain() }
     }
 
     override suspend fun getPendingRequests(): Result<List<Friendship>> = runCatching {
-        apiService.getPendingRequests().data.map { it.toDomain(currentUserId = 0) }
+        apiService.getPendingRequests().data.map { it.toDomain() }
     }
 
     override suspend fun sendFriendRequest(userId: Long): Result<Friendship> = runCatching {
-        apiService.sendFriendRequest(SendFriendRequestDto(userId)).data.toDomain(currentUserId = 0)
+        apiService.sendFriendRequest(SendFriendRequestDto(userId)).data.toDomain()
     }
 
     override suspend fun respondToFriendRequest(friendshipId: Long, accept: Boolean): Result<Friendship> = runCatching {
-        apiService.respondToFriendRequest(friendshipId, RespondToFriendRequestDto(accept)).data.toDomain(currentUserId = 0)
+        apiService.respondToFriendRequest(friendshipId, RespondToFriendRequestDto(accept)).data.toDomain()
     }
 
     override suspend fun removeFriend(friendId: Long): Result<Unit> = runCatching {
