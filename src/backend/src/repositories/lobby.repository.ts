@@ -216,9 +216,12 @@ export async function findPublicLobbies(
 }
 
 export async function join(lobbyId: number, userId: number): Promise<LobbyParticipantRow> {
+  // UPSERT — handles rejoin after leave (unique constraint on lobby_id + user_id)
   const result = await query(
-    `INSERT INTO lobby_participants (lobby_id, user_id, status)
-     VALUES ($1, $2, 'joined')
+    `INSERT INTO lobby_participants (lobby_id, user_id, status, joined_at)
+     VALUES ($1, $2, 'joined', NOW())
+     ON CONFLICT (lobby_id, user_id)
+     DO UPDATE SET status = 'joined', joined_at = NOW(), updated_at = NOW()
      RETURNING *`,
     [lobbyId, userId]
   );
@@ -326,4 +329,64 @@ export async function isParticipant(lobbyId: number, userId: number): Promise<bo
     [lobbyId, userId]
   );
   return result.rows.length > 0;
+}
+
+// ============================================================
+// Lobby Chat
+// ============================================================
+
+export interface LobbyMessageRow {
+  id: number;
+  lobbyId: number;
+  userId: number;
+  displayName: string | null;
+  photoUrl: string | null;
+  message: string;
+  createdAt: string;
+}
+
+export async function getMessages(lobbyId: number, limit = 50, offset = 0): Promise<LobbyMessageRow[]> {
+  const result = await query(
+    `SELECT lm.id, lm.lobby_id, lm.user_id, lm.message, lm.created_at,
+            u.display_name, u.photo_url
+     FROM lobby_messages lm
+     LEFT JOIN users u ON u.id = lm.user_id
+     WHERE lm.lobby_id = $1
+     ORDER BY lm.created_at ASC
+     LIMIT $2 OFFSET $3`,
+    [lobbyId, limit, offset]
+  );
+  return result.rows.map((r: any) => ({
+    id: r.id,
+    lobbyId: r.lobby_id,
+    userId: r.user_id,
+    displayName: r.display_name ?? null,
+    photoUrl: r.photo_url ?? null,
+    message: r.message,
+    createdAt: r.created_at?.toISOString?.() ?? r.created_at,
+  }));
+}
+
+export async function sendMessage(lobbyId: number, userId: number, message: string): Promise<LobbyMessageRow> {
+  const result = await query(
+    `INSERT INTO lobby_messages (lobby_id, user_id, message)
+     VALUES ($1, $2, $3)
+     RETURNING *`,
+    [lobbyId, userId, message]
+  );
+  const row = result.rows[0];
+  // Get user info
+  const userResult = await query(
+    `SELECT display_name, photo_url FROM users WHERE id = $1`,
+    [userId]
+  );
+  return {
+    id: row.id,
+    lobbyId: row.lobby_id,
+    userId: row.user_id,
+    displayName: userResult.rows[0]?.display_name ?? null,
+    photoUrl: userResult.rows[0]?.photo_url ?? null,
+    message: row.message,
+    createdAt: row.created_at?.toISOString?.() ?? row.created_at,
+  };
 }

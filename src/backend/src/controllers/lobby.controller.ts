@@ -167,3 +167,50 @@ export async function updateLobbyStatus(req: Request, res: Response, next: NextF
     success(res, updated);
   } catch (e) { next(e); }
 }
+
+// ============================================================
+// Lobby Chat
+// ============================================================
+
+export async function getLobbyChatMessages(req: Request, res: Response, next: NextFunction) {
+  try {
+    const lobbyId = Number(req.params.id);
+    const lobby = await lobbyRepo.findById(lobbyId);
+    if (!lobby) throw new NotFoundError('Lobby not found');
+
+    // Must be a participant or community member to read chat
+    const isParticipant = await lobbyRepo.isParticipant(lobbyId, req.user!.id);
+    const isMember = await communityRepo.isMember(lobby.communityId, req.user!.id);
+    if (!isParticipant && !isMember) {
+      throw new ForbiddenError('You must be a lobby participant or community member to view chat');
+    }
+
+    const limit = Number(req.query.limit) || 50;
+    const offset = Number(req.query.offset) || 0;
+    const messages = await lobbyRepo.getMessages(lobbyId, limit, offset);
+    success(res, messages);
+  } catch (e) { next(e); }
+}
+
+export async function sendLobbyChatMessage(req: Request, res: Response, next: NextFunction) {
+  try {
+    const lobbyId = Number(req.params.id);
+    const { message } = req.body;
+
+    if (!message || typeof message !== 'string' || message.trim().length === 0) {
+      throw new ValidationError('Message is required');
+    }
+
+    const lobby = await lobbyRepo.findById(lobbyId);
+    if (!lobby) throw new NotFoundError('Lobby not found');
+
+    // Must be a participant to send messages
+    const isParticipant = await lobbyRepo.isParticipant(lobbyId, req.user!.id);
+    if (!isParticipant) {
+      throw new ForbiddenError('You must be a lobby participant to send messages');
+    }
+
+    const newMessage = await lobbyRepo.sendMessage(lobbyId, req.user!.id, message.trim());
+    created(res, newMessage, 'Message sent');
+  } catch (e) { next(e); }
+}

@@ -16,4 +16,8 @@ router.post('/lobbies/:id/leave', authenticate, lobbyController.leaveLobby);
 router.post('/lobbies/:id/make-public', authenticate, lobbyController.makeLobbyPublic);
 router.put('/lobbies/:id/status', authenticate, lobbyController.updateLobbyStatus);
 
+// Lobby chat
+router.get('/lobbies/:id/chat', authenticate, lobbyController.getLobbyChatMessages);
+router.post('/lobbies/:id/chat', authenticate, lobbyController.sendLobbyChatMessage);
+
 export default router;
