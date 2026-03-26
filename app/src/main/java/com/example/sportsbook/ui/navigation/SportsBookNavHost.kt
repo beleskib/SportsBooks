@@ -75,6 +75,12 @@ import com.example.sportsbook.ui.screens.player.gamification.PlayerXpLevelScreen
 import com.example.sportsbook.ui.screens.player.gamification.PlayerAchievementsScreen
 import com.example.sportsbook.ui.screens.player.gamification.PlayerStatsScreen
 import com.example.sportsbook.ui.screens.partner.analytics.PartnerAnalyticsScreen
+import com.example.sportsbook.ui.screens.player.community.CommunityListScreen
+import com.example.sportsbook.ui.screens.player.community.CommunityDetailScreen
+import com.example.sportsbook.ui.screens.player.community.CreateCommunityScreen
+import com.example.sportsbook.ui.screens.player.community.CreateLobbyScreen
+import com.example.sportsbook.ui.screens.player.community.InviteFriendsScreen
+import com.example.sportsbook.ui.screens.player.community.LobbyDetailScreen
 import com.example.sportsbook.ui.screens.splash.SplashScreen
 
 @Composable
@@ -302,6 +308,9 @@ fun SportsBookNavHost(
                     },
                     onBrowseAllSports = {
                         navController.navigate(Route.AllSports)
+                    },
+                    onNavigateToCommunities = {
+                        navController.navigate(Route.CommunityList)
                     }
                 )
             }
@@ -827,6 +836,72 @@ fun SportsBookNavHost(
             composable<Route.PartnerAnalytics> {
                 PartnerAnalyticsScreen(
                     onBack = { navController.popBackStack() }
+                )
+            }
+
+            // Community & Lobby flow
+            composable<Route.CommunityList> {
+                CommunityListScreen(
+                    onCommunityClick = { communityId ->
+                        navController.navigate(Route.CommunityDetail(communityId))
+                    },
+                    onCreateCommunity = {
+                        navController.navigate(Route.CreateCommunity)
+                    },
+                    onBack = { navController.popBackStack() }
+                )
+            }
+
+            composable<Route.CommunityDetail> {
+                CommunityDetailScreen(
+                    onBack = { navController.popBackStack() },
+                    onLobbyClick = { lobbyId ->
+                        navController.navigate(Route.LobbyDetail(lobbyId))
+                    },
+                    onCreateLobby = { communityId ->
+                        navController.navigate(Route.CreateLobby(communityId))
+                    },
+                    onInviteFriends = { communityId ->
+                        navController.navigate(Route.InviteFriends(communityId))
+                    }
+                )
+            }
+
+            composable<Route.CreateCommunity> {
+                CreateCommunityScreen(
+                    onCommunityCreated = { communityId ->
+                        navController.navigate(Route.CommunityDetail(communityId)) {
+                            popUpTo(Route.CreateCommunity) { inclusive = true }
+                        }
+                    },
+                    onBack = { navController.popBackStack() }
+                )
+            }
+
+            composable<Route.CreateLobby> {
+                CreateLobbyScreen(
+                    onLobbyCreated = { lobbyId ->
+                        navController.navigate(Route.LobbyDetail(lobbyId)) {
+                            popUpTo(Route.CreateLobby) { inclusive = true }
+                        }
+                    },
+                    onBack = { navController.popBackStack() }
+                )
+            }
+
+            composable<Route.LobbyDetail> {
+                LobbyDetailScreen(
+                    onBack = { navController.popBackStack() },
+                    onBrowseAvailablePlayers = {
+                        navController.navigate(Route.AvailablePlayers())
+                    }
+                )
+            }
+
+            composable<Route.InviteFriends> {
+                InviteFriendsScreen(
+                    onBack = { navController.popBackStack() },
+                    onInvitesSent = { navController.popBackStack() }
                 )
             }
         }

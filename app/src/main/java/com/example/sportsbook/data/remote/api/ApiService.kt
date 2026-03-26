@@ -83,6 +83,14 @@ import com.example.sportsbook.data.remote.dto.BookingMessageDto
 import com.example.sportsbook.data.remote.dto.SendMessageRequestDto
 import com.example.sportsbook.data.remote.dto.BookingContactDto
 import com.example.sportsbook.data.remote.dto.PartnerDashboardStatsDto
+import com.example.sportsbook.data.remote.dto.CommunityDto
+import com.example.sportsbook.data.remote.dto.CommunityMemberDto
+import com.example.sportsbook.data.remote.dto.LobbyDto
+import com.example.sportsbook.data.remote.dto.CreateCommunityRequestDto
+import com.example.sportsbook.data.remote.dto.UpdateCommunityRequestDto
+import com.example.sportsbook.data.remote.dto.InviteToCommunityRequestDto
+import com.example.sportsbook.data.remote.dto.RespondToMemberRequestDto
+import com.example.sportsbook.data.remote.dto.CreateLobbyRequestDto
 import retrofit2.http.Body
 import retrofit2.http.DELETE
 import retrofit2.http.GET
@@ -546,6 +554,59 @@ interface ApiService {
     // ── Partner Analytics ─────────────────────────────────────────────────
     @GET("api/dashboard/partner/stats")
     suspend fun getPartnerDashboardStats(): ApiResponseDto<PartnerDashboardStatsDto>
+
+    // Communities
+    @POST("api/communities")
+    suspend fun createCommunity(@Body request: CreateCommunityRequestDto): ApiResponseDto<CommunityDto>
+
+    @GET("api/communities")
+    suspend fun getMyCommunities(): ApiResponseDto<List<CommunityDto>>
+
+    @GET("api/communities/public")
+    suspend fun getPublicCommunities(@Query("sportType") sportType: String? = null): ApiResponseDto<List<CommunityDto>>
+
+    @GET("api/communities/{id}")
+    suspend fun getCommunityById(@Path("id") id: Long): ApiResponseDto<CommunityDto>
+
+    @PUT("api/communities/{id}")
+    suspend fun updateCommunity(@Path("id") id: Long, @Body request: UpdateCommunityRequestDto): ApiResponseDto<CommunityDto>
+
+    @POST("api/communities/{id}/invite")
+    suspend fun inviteToCommunity(@Path("id") id: Long, @Body request: InviteToCommunityRequestDto): ApiResponseDto<Map<String, String>>
+
+    @POST("api/communities/{id}/join")
+    suspend fun joinCommunity(@Path("id") id: Long): ApiResponseDto<CommunityMemberDto>
+
+    @GET("api/communities/{id}/members")
+    suspend fun getCommunityMembers(@Path("id") id: Long, @Query("status") status: String? = null): ApiResponseDto<List<CommunityMemberDto>>
+
+    @PUT("api/communities/{id}/members/{userId}/respond")
+    suspend fun respondToMember(@Path("id") id: Long, @Path("userId") userId: Long, @Body request: RespondToMemberRequestDto): ApiResponseDto<CommunityMemberDto>
+
+    @DELETE("api/communities/{id}/members/{userId}")
+    suspend fun removeCommunityMember(@Path("id") id: Long, @Path("userId") userId: Long): ApiResponseDto<Map<String, String>>
+
+    // Lobbies
+    @POST("api/communities/{communityId}/lobbies")
+    suspend fun createLobby(@Path("communityId") communityId: Long, @Body request: CreateLobbyRequestDto): ApiResponseDto<LobbyDto>
+
+    @GET("api/communities/{communityId}/lobbies")
+    suspend fun getCommunityLobbies(@Path("communityId") communityId: Long, @Query("status") status: String? = null): ApiResponseDto<List<LobbyDto>>
+
+    @GET("api/lobbies/public")
+    suspend fun getPublicLobbies(@Query("sportType") sportType: String? = null): ApiResponseDto<List<LobbyDto>>
+
+    @GET("api/lobbies/{id}")
+    suspend fun getLobbyById(@Path("id") id: Long): ApiResponseDto<LobbyDto>
+
+    @POST("api/lobbies/{id}/join")
+    suspend fun joinLobby(@Path("id") id: Long): ApiResponseDto<LobbyDto>
+
+    @POST("api/lobbies/{id}/leave")
+    suspend fun leaveLobby(@Path("id") id: Long): ApiResponseDto<LobbyDto>
+
+    @POST("api/lobbies/{id}/make-public")
+    suspend fun makeLobbyPublic(@Path("id") id: Long): ApiResponseDto<LobbyDto>
 
     // Feed
     @GET("api/feed")

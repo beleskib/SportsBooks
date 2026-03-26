@@ -84,6 +84,14 @@ sealed interface Route {
     @Serializable data object PlayerAchievements : Route
     @Serializable data object PlayerStatsScreen : Route
 
+    // Community & Lobby
+    @Serializable data object CommunityList : Route
+    @Serializable data class CommunityDetail(val communityId: Long) : Route
+    @Serializable data object CreateCommunity : Route
+    @Serializable data class LobbyDetail(val lobbyId: Long) : Route
+    @Serializable data class InviteFriends(val communityId: Long) : Route
+    @Serializable data class CreateLobby(val communityId: Long) : Route
+
     @Serializable data object PendingReservations : Route
 
     // Partner flow

@@ -18,8 +18,10 @@ import com.example.sportsbook.data.repository.NotificationRepositoryImpl
 import com.example.sportsbook.data.repository.AvailablePlayerRepositoryImpl
 import com.example.sportsbook.data.repository.StripeConnectRepositoryImpl
 import com.example.sportsbook.data.repository.GamificationRepositoryImpl
+import com.example.sportsbook.data.repository.CommunityRepositoryImpl
 import com.example.sportsbook.data.repository.DashboardRepositoryImpl
 import com.example.sportsbook.domain.repository.AuthRepository
+import com.example.sportsbook.domain.repository.CommunityRepository
 import com.example.sportsbook.domain.repository.DashboardRepository
 import com.example.sportsbook.domain.repository.FavoriteRepository
 import com.example.sportsbook.domain.repository.FriendshipRepository
@@ -123,4 +125,8 @@ abstract class RepositoryModule {
     @Binds
     @Singleton
     abstract fun bindDashboardRepository(impl: DashboardRepositoryImpl): DashboardRepository
+
+    @Binds
+    @Singleton
+    abstract fun bindCommunityRepository(impl: CommunityRepositoryImpl): CommunityRepository
 }

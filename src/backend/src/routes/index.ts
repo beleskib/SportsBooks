@@ -21,6 +21,8 @@ import gamificationRoutes from './gamification.routes';
 import dashboardRoutes from './dashboard.routes';
 import bookingChatRoutes from './bookingChat.routes';
 import feedRoutes from './feed.routes';
+import communityRoutes from './community.routes';
+import lobbyRoutes from './lobby.routes';
 
 const router = Router();
 
@@ -46,5 +48,7 @@ router.use('/gamification', gamificationRoutes);
 router.use('/dashboard', dashboardRoutes);
 router.use('/bookings', bookingChatRoutes);
 router.use('/feed', feedRoutes);
+router.use('/communities', communityRoutes);
+router.use('/', lobbyRoutes);  // handles both /communities/:id/lobbies and /lobbies/*
 
 export default router;

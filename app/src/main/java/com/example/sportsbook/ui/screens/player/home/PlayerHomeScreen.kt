@@ -25,9 +25,19 @@ import androidx.compose.material.icons.filled.Favorite
 import androidx.compose.material.icons.filled.Notifications
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material.icons.filled.SportsBasketball
+import androidx.compose.material.icons.filled.Groups
+import androidx.compose.material.icons.filled.Home
+import androidx.compose.material.icons.filled.Menu
 import androidx.compose.material.icons.filled.People
+import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material.icons.filled.Star
 import androidx.compose.material3.Card
+import androidx.compose.material3.DrawerValue
+import androidx.compose.material3.ModalDrawerSheet
+import androidx.compose.material3.ModalNavigationDrawer
+import androidx.compose.material3.NavigationDrawerItem
+import androidx.compose.material3.NavigationDrawerItemDefaults
+import androidx.compose.material3.rememberDrawerState
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.FilterChip
 import androidx.compose.material3.FilterChipDefaults
@@ -38,7 +48,9 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
+import kotlinx.coroutines.launch
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
@@ -63,6 +75,7 @@ import com.example.sportsbook.ui.common.LoadingIndicator
 import com.example.sportsbook.ui.common.PriceTag
 import com.example.sportsbook.ui.theme.Navy600
 import com.example.sportsbook.ui.theme.Navy700
+import com.example.sportsbook.ui.theme.Navy800
 import com.example.sportsbook.ui.theme.Navy900
 import com.example.sportsbook.ui.theme.SportsBookTheme
 import com.example.sportsbook.ui.theme.USOpenGold
@@ -145,6 +158,7 @@ fun PlayerHomeScreen(
     onNavigateToFavorites: () -> Unit = {},
     onNavigateToFriends: () -> Unit = {},
     onBrowseAllSports: () -> Unit = {},
+    onNavigateToCommunities: () -> Unit = {},
     viewModel: PlayerHomeViewModel = hiltViewModel()
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
@@ -162,12 +176,14 @@ fun PlayerHomeScreen(
             onCoachClick = onCoachClick,
             onNavigateToProfile = onNavigateToProfile,
             onNavigateToNotifications = onNavigateToNotifications,
+            onNavigateToSettings = onNavigateToSettings,
             onNavigateToSearch = onNavigateToSearch,
             onNavigateToFavorites = onNavigateToFavorites,
             onNavigateToFriends = onNavigateToFriends,
             onFindMatch = onFindMatch,
             onSelectSport = viewModel::selectSport,
-            onBrowseAllSports = onBrowseAllSports
+            onBrowseAllSports = onBrowseAllSports,
+            onNavigateToCommunities = onNavigateToCommunities
         )
     }
 }
@@ -180,13 +196,39 @@ private fun PlayerHomeContent(
     onCoachClick: (Long) -> Unit,
     onNavigateToProfile: () -> Unit,
     onNavigateToNotifications: () -> Unit,
+    onNavigateToSettings: () -> Unit,
     onNavigateToSearch: () -> Unit,
     onNavigateToFavorites: () -> Unit,
     onNavigateToFriends: () -> Unit,
     onFindMatch: () -> Unit,
     onSelectSport: (SportType?) -> Unit,
-    onBrowseAllSports: () -> Unit = {}
+    onBrowseAllSports: () -> Unit = {},
+    onNavigateToCommunities: () -> Unit = {}
 ) {
+    val drawerState = rememberDrawerState(DrawerValue.Closed)
+    val scope = rememberCoroutineScope()
+
+    ModalNavigationDrawer(
+        drawerState = drawerState,
+        drawerContent = {
+            PlayerHomeDrawer(
+                user = uiState.user,
+                onNavigateToHome = { scope.launch { drawerState.close() } },
+                onNavigateToCommunities = {
+                    scope.launch { drawerState.close() }
+                    onNavigateToCommunities()
+                },
+                onNavigateToFriends = {
+                    scope.launch { drawerState.close() }
+                    onNavigateToFriends()
+                },
+                onNavigateToSettings = {
+                    scope.launch { drawerState.close() }
+                    onNavigateToSettings()
+                }
+            )
+        }
+    ) {
     Box(modifier = Modifier.fillMaxSize()) {
     LazyColumn(
         modifier = Modifier
@@ -202,7 +244,8 @@ private fun PlayerHomeContent(
                 onProfileClick = onNavigateToProfile,
                 onNotificationClick = onNavigateToNotifications,
                 onSearchClick = onNavigateToSearch,
-                onFavoritesClick = onNavigateToFavorites
+                onFavoritesClick = onNavigateToFavorites,
+                onMenuClick = { scope.launch { drawerState.open() } }
             )
         }
 
@@ -329,6 +372,115 @@ private fun PlayerHomeContent(
                 modifier = Modifier.size(26.dp)
             )
         }
+    } // end Box
+    } // end ModalNavigationDrawer content
+}
+
+// ── Navigation Drawer ──
+
+@Composable
+private fun PlayerHomeDrawer(
+    user: com.example.sportsbook.domain.model.User?,
+    onNavigateToHome: () -> Unit,
+    onNavigateToCommunities: () -> Unit,
+    onNavigateToFriends: () -> Unit,
+    onNavigateToSettings: () -> Unit
+) {
+    ModalDrawerSheet(
+        drawerContainerColor = Navy800
+    ) {
+        Spacer(modifier = Modifier.height(24.dp))
+
+        // User profile section
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 16.dp, vertical = 8.dp),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Box(
+                modifier = Modifier
+                    .size(48.dp)
+                    .clip(CircleShape)
+                    .background(Navy600),
+                contentAlignment = Alignment.Center
+            ) {
+                val photoUrl = user?.photoUrl
+                val name = user?.displayName ?: "Player"
+                if (!photoUrl.isNullOrBlank()) {
+                    AsyncImage(
+                        model = photoUrl,
+                        contentDescription = "Profile",
+                        modifier = Modifier.fillMaxSize(),
+                        contentScale = ContentScale.Crop
+                    )
+                } else {
+                    Text(
+                        text = name.firstOrNull()?.uppercaseChar()?.toString() ?: "P",
+                        style = MaterialTheme.typography.titleMedium,
+                        color = USOpenGold
+                    )
+                }
+            }
+            Spacer(modifier = Modifier.width(12.dp))
+            Column {
+                Text(
+                    text = user?.displayName ?: "Player",
+                    style = MaterialTheme.typography.titleSmall,
+                    color = WarmWhite,
+                    fontWeight = FontWeight.SemiBold
+                )
+                Text(
+                    text = user?.email ?: "",
+                    style = MaterialTheme.typography.bodySmall,
+                    color = WarmWhite.copy(alpha = 0.6f)
+                )
+            }
+        }
+
+        Spacer(modifier = Modifier.height(8.dp))
+
+        NavigationDrawerItem(
+            label = { Text("Home", color = WarmWhite) },
+            icon = { Icon(Icons.Default.Home, contentDescription = null, tint = WarmWhite) },
+            selected = true,
+            onClick = onNavigateToHome,
+            colors = NavigationDrawerItemDefaults.colors(
+                selectedContainerColor = USOpenGold.copy(alpha = 0.15f),
+                unselectedContainerColor = androidx.compose.ui.graphics.Color.Transparent
+            )
+        )
+
+        NavigationDrawerItem(
+            label = { Text("My Communities", color = WarmWhite) },
+            icon = { Icon(Icons.Default.Groups, contentDescription = null, tint = USOpenGold) },
+            selected = false,
+            onClick = onNavigateToCommunities,
+            colors = NavigationDrawerItemDefaults.colors(
+                selectedContainerColor = USOpenGold.copy(alpha = 0.15f),
+                unselectedContainerColor = androidx.compose.ui.graphics.Color.Transparent
+            )
+        )
+
+        NavigationDrawerItem(
+            label = { Text("Find Players", color = WarmWhite) },
+            icon = { Icon(Icons.Default.People, contentDescription = null, tint = WarmWhite) },
+            selected = false,
+            onClick = onNavigateToFriends,
+            colors = NavigationDrawerItemDefaults.colors(
+                unselectedContainerColor = androidx.compose.ui.graphics.Color.Transparent
+            )
+        )
+
+        NavigationDrawerItem(
+            label = { Text("Settings", color = WarmWhite) },
+            icon = { Icon(Icons.Default.Settings, contentDescription = null, tint = WarmWhite) },
+            selected = false,
+            onClick = onNavigateToSettings,
+            colors = NavigationDrawerItemDefaults.colors(
+                unselectedContainerColor = androidx.compose.ui.graphics.Color.Transparent
+            )
+        )
     }
 }
 
@@ -341,7 +493,8 @@ private fun GreetingHeader(
     onProfileClick: () -> Unit,
     onNotificationClick: () -> Unit,
     onSearchClick: () -> Unit,
-    onFavoritesClick: () -> Unit
+    onFavoritesClick: () -> Unit,
+    onMenuClick: () -> Unit = {}
 ) {
     Row(
         modifier = Modifier
@@ -349,6 +502,11 @@ private fun GreetingHeader(
             .padding(horizontal = 16.dp, vertical = 12.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {
+        // Hamburger menu icon
+        IconButton(onClick = onMenuClick) {
+            Icon(Icons.Default.Menu, contentDescription = "Menu", tint = WarmWhite)
+        }
+
         // Profile avatar
         Box(
             modifier = Modifier
@@ -969,6 +1127,7 @@ private fun PlayerHomeScreenPreview() {
             onCoachClick = {},
             onNavigateToProfile = {},
             onNavigateToNotifications = {},
+            onNavigateToSettings = {},
             onNavigateToSearch = {},
             onNavigateToFavorites = {},
             onNavigateToFriends = {},
