@@ -20,7 +20,9 @@ data class PublicPlayerProfileDto(
     @SerialName("totalPlayerRatings") val totalPlayerRatings: Int = 0,
     @SerialName("totalMatchesPlayed") val totalMatchesPlayed: Int = 0,
     @SerialName("recentMatches") val recentMatches: List<PublicMatchSummaryDto> = emptyList(),
-    @SerialName("createdAt") val createdAt: String? = null
+    @SerialName("createdAt") val createdAt: String? = null,
+    @SerialName("friendshipStatus") val friendshipStatus: String? = null,
+    @SerialName("friendshipId") val friendshipId: Long? = null
 ) {
     fun toDomain() = PublicPlayerProfile(
         id = id,
@@ -30,14 +32,16 @@ data class PublicPlayerProfileDto(
         interestedSports = interestedSports.mapNotNull { name ->
             try { SportType.valueOf(name.uppercase()) } catch (_: Exception) { null }
         },
-        sportExpertise = emptyList(), // Simplified — expertise mapping handled separately
+        sportExpertise = emptyList(),
         avgPlayerSkillRating = avgPlayerSkillRating,
         avgPlayerSportsmanshipRating = avgPlayerSportsmanshipRating,
         avgPlayerPunctualityRating = avgPlayerPunctualityRating,
         totalPlayerRatings = totalPlayerRatings,
         totalMatchesPlayed = totalMatchesPlayed,
         recentMatches = recentMatches.map { it.toDomain() },
-        createdAt = createdAt
+        createdAt = createdAt,
+        friendshipStatus = friendshipStatus,
+        friendshipId = friendshipId
     )
 }
 

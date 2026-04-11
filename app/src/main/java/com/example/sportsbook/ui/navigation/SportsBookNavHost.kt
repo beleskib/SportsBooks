@@ -81,6 +81,9 @@ import com.example.sportsbook.ui.screens.player.community.CreateCommunityScreen
 import com.example.sportsbook.ui.screens.player.community.CreateLobbyScreen
 import com.example.sportsbook.ui.screens.player.community.InviteFriendsScreen
 import com.example.sportsbook.ui.screens.player.community.LobbyDetailScreen
+import com.example.sportsbook.ui.screens.player.venuelobby.BrowseVenueLobbiesScreen
+import com.example.sportsbook.ui.screens.player.venuelobby.CreateVenueBookingLobbyScreen
+import com.example.sportsbook.ui.screens.player.venuelobby.VenueBookingLobbyDetailScreen
 import com.example.sportsbook.ui.screens.splash.SplashScreen
 
 @Composable
@@ -400,7 +403,10 @@ fun SportsBookNavHost(
                             popUpTo(Route.PlayerHome) { inclusive = false }
                         }
                     },
-                    onBack = { navController.popBackStack() }
+                    onBack = { navController.popBackStack() },
+                    onSplitWithFriends = { timeSlotId, venueId ->
+                        navController.navigate(Route.CreateVenueBookingLobby(timeSlotId = timeSlotId, venueId = venueId))
+                    }
                 )
             }
 
@@ -902,6 +908,35 @@ fun SportsBookNavHost(
                 InviteFriendsScreen(
                     onBack = { navController.popBackStack() },
                     onInvitesSent = { navController.popBackStack() }
+                )
+            }
+
+            // Venue Booking Lobbies
+            composable<Route.BrowseVenueLobbies> {
+                BrowseVenueLobbiesScreen(
+                    onLobbyClick = { lobbyId ->
+                        navController.navigate(Route.VenueBookingLobbyDetail(lobbyId))
+                    },
+                    onCreateLobby = {
+                        navController.navigate(Route.CreateVenueBookingLobby())
+                    },
+                    onBack = { navController.popBackStack() }
+                )
+            }
+
+            composable<Route.CreateVenueBookingLobby> {
+                CreateVenueBookingLobbyScreen(
+                    onLobbyCreated = { lobbyId ->
+                        navController.popBackStack()
+                        navController.navigate(Route.VenueBookingLobbyDetail(lobbyId))
+                    },
+                    onBack = { navController.popBackStack() }
+                )
+            }
+
+            composable<Route.VenueBookingLobbyDetail> {
+                VenueBookingLobbyDetailScreen(
+                    onBack = { navController.popBackStack() }
                 )
             }
         }

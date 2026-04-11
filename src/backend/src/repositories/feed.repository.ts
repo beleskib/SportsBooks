@@ -68,7 +68,8 @@ function mapFeedCommentRow(row: any): FeedCommentRow {
 // ── Feed queries ────────────────────────────────────────────────────
 
 /**
- * Get the social feed for a user: posts from friends (accepted friendships)
+ * Get the social feed for a user: posts from friends (accepted friendships),
+ * community members (users who share an approved community membership),
  * plus the user's own posts, ordered newest first.
  */
 export async function getFeedForUser(
@@ -98,6 +99,15 @@ export async function getFeedForUser(
            FROM friendships f
            WHERE f.status = 'accepted'
              AND (f.requester_id = $1 OR f.addressee_id = $1)
+         )
+         OR fp.user_id IN (
+           SELECT cm2.user_id
+           FROM community_members cm1
+           JOIN community_members cm2 ON cm2.community_id = cm1.community_id
+           WHERE cm1.user_id = $1
+             AND cm1.status = 'approved'
+             AND cm2.status = 'approved'
+             AND cm2.user_id != $1
          )
        )
      ORDER BY fp.created_at DESC

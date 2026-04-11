@@ -60,6 +60,13 @@ class SportsBookFirebaseMessagingService : FirebaseMessagingService() {
         val body = message.notification?.body ?: message.data["body"] ?: ""
         val type = message.data["type"] ?: "general"
 
+        // Silent feed refresh — broadcast locally, do not show a notification
+        if (type == "feed_refresh") {
+            val refreshIntent = Intent("com.example.sportsbook.FEED_REFRESH")
+            sendBroadcast(refreshIntent)
+            return
+        }
+
         val channelId = when {
             type.startsWith("match_chat") -> CHANNEL_ID_CHAT
             type.startsWith("match_") -> CHANNEL_ID_MATCHES

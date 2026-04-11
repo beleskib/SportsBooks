@@ -1,0 +1,21 @@
+import { Router } from 'express';
+import { authenticate } from '../middleware/auth';
+import * as controller from '../controllers/venueBookingLobby.controller';
+
+const router = Router();
+router.post('/', authenticate, controller.create);
+router.get('/', authenticate, controller.listOpen);
+router.get('/mine', authenticate, controller.getMyLobbies);
+router.get('/:id', authenticate, controller.getById);
+router.put('/:id', authenticate, controller.updateLobby);
+router.post('/:id/join', authenticate, controller.joinLobby);
+router.post('/:id/leave', authenticate, controller.leaveLobby);
+router.post('/:id/create-booking', authenticate, controller.createBookingFromLobby);
+router.post('/:id/cancel', authenticate, controller.cancelLobby);
+router.post('/:id/pay', authenticate, controller.createSplitPaymentIntent);
+router.post('/:id/confirm-payment', authenticate, controller.confirmMemberPayment);
+router.get('/:id/teams', authenticate, controller.getTeams);
+router.post('/:id/teams', authenticate, controller.addTeam);
+router.post('/:id/teams/:teamId/join', authenticate, controller.joinTeam);
+router.post('/:id/teams/leave', authenticate, controller.leaveTeam);
+export default router;

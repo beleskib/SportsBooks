@@ -44,6 +44,43 @@ export async function sendNotification(
 }
 
 // ============================================================
+// Silent / data-only FCM helpers
+// ============================================================
+
+/**
+ * Send a data-only (silent) FCM message to a list of users, telling
+ * their app to refresh the feed in the background.  No visible
+ * notification is shown to the user.
+ */
+export async function sendSilentFeedRefresh(
+  userIds: number[],
+  postId: number
+): Promise<void> {
+  try {
+    const messaging = firebaseApp ? admin.messaging(firebaseApp) : null;
+    if (!messaging) return;
+
+    const uniqueIds = [...new Set(userIds)];
+
+    for (const userId of uniqueIds) {
+      const tokens = await notificationRepo.findActiveTokensByUserId(userId);
+      if (tokens.length === 0) continue;
+
+      await messaging.sendEachForMulticast({
+        tokens,
+        data: {
+          type: 'feed_refresh',
+          postId: String(postId),
+        },
+        // No 'notification' key = silent/data-only message
+      });
+    }
+  } catch (error) {
+    console.error('Silent feed refresh FCM failed:', error);
+  }
+}
+
+// ============================================================
 // Domain-specific notification helpers
 // ============================================================
 

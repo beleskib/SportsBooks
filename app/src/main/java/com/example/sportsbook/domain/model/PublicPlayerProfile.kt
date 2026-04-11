@@ -15,7 +15,9 @@ data class PublicPlayerProfile(
     val totalPlayerRatings: Int = 0,
     val totalMatchesPlayed: Int = 0,
     val recentMatches: List<PublicMatchSummary> = emptyList(),
-    val createdAt: String? = null
+    val createdAt: String? = null,
+    val friendshipStatus: String? = null,
+    val friendshipId: Long? = null
 )
 
 data class PublicMatchSummary(

@@ -1,0 +1,515 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>SportsBooks — Pitch & Walkthrough</title>
+
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/reveal.js@5.1.0/dist/reset.css" />
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/reveal.js@5.1.0/dist/reveal.css" />
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/reveal.js@5.1.0/dist/theme/black.css" id="theme" />
+
+  <style>
+    :root {
+      --accent: #34d399;
+      --accent-dark: #059669;
+      --bg-grad-1: #0f172a;
+      --bg-grad-2: #1e293b;
+    }
+
+    .reveal {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    }
+
+    .reveal .slides section {
+      text-align: left;
+    }
+
+    .reveal h1, .reveal h2, .reveal h3 {
+      text-transform: none;
+      letter-spacing: -0.02em;
+      color: #f1f5f9;
+    }
+
+    .reveal h1 {
+      font-size: 3.2em;
+      font-weight: 800;
+      background: linear-gradient(135deg, var(--accent) 0%, #60a5fa 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+
+    .reveal h2 {
+      font-size: 2.2em;
+      font-weight: 700;
+      margin-bottom: 0.4em;
+    }
+
+    .reveal h3 {
+      font-size: 1.4em;
+      color: var(--accent);
+      font-weight: 600;
+    }
+
+    .reveal .slides section.title-slide {
+      text-align: center;
+    }
+
+    .tagline {
+      font-size: 1.3em;
+      color: #94a3b8;
+      margin-top: 0.5em;
+    }
+
+    .reveal ul {
+      list-style: none;
+      padding-left: 0;
+    }
+
+    .reveal ul li {
+      padding: 0.4em 0 0.4em 1.6em;
+      position: relative;
+      font-size: 0.9em;
+      line-height: 1.5;
+      color: #e2e8f0;
+    }
+
+    .reveal ul li::before {
+      content: "▸";
+      color: var(--accent);
+      position: absolute;
+      left: 0;
+      font-weight: bold;
+    }
+
+    .grid-2 {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 2em;
+      margin-top: 1em;
+    }
+
+    .grid-3 {
+      display: grid;
+      grid-template-columns: 1fr 1fr 1fr;
+      gap: 1.5em;
+      margin-top: 1em;
+    }
+
+    .card {
+      background: rgba(255, 255, 255, 0.05);
+      border: 1px solid rgba(52, 211, 153, 0.2);
+      border-radius: 12px;
+      padding: 1.2em;
+    }
+
+    .card h4 {
+      color: var(--accent);
+      margin: 0 0 0.4em 0;
+      font-size: 1.1em;
+    }
+
+    .card p {
+      font-size: 0.75em;
+      color: #cbd5e1;
+      margin: 0;
+      line-height: 1.5;
+    }
+
+    .icon {
+      font-size: 2.5em;
+      display: block;
+      margin-bottom: 0.2em;
+    }
+
+    .stat {
+      text-align: center;
+    }
+
+    .stat .num {
+      font-size: 3em;
+      font-weight: 800;
+      color: var(--accent);
+      display: block;
+      line-height: 1;
+    }
+
+    .stat .label {
+      font-size: 0.75em;
+      color: #94a3b8;
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+    }
+
+    .step {
+      display: flex;
+      align-items: flex-start;
+      gap: 1em;
+      margin: 0.6em 0;
+    }
+
+    .step-num {
+      flex-shrink: 0;
+      width: 2.2em;
+      height: 2.2em;
+      border-radius: 50%;
+      background: var(--accent);
+      color: #0f172a;
+      font-weight: 800;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1em;
+    }
+
+    .step-body {
+      font-size: 0.85em;
+      color: #e2e8f0;
+      line-height: 1.5;
+    }
+
+    .step-body strong {
+      color: #f1f5f9;
+      display: block;
+      font-size: 1.1em;
+    }
+
+    .badge {
+      display: inline-block;
+      background: rgba(52, 211, 153, 0.15);
+      color: var(--accent);
+      padding: 0.2em 0.6em;
+      border-radius: 6px;
+      font-size: 0.6em;
+      font-weight: 600;
+      vertical-align: middle;
+      margin-left: 0.5em;
+    }
+
+    .tech-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 0.8em;
+      font-size: 0.7em;
+    }
+
+    .tech-row {
+      display: flex;
+      justify-content: space-between;
+      padding: 0.5em 0.8em;
+      background: rgba(255, 255, 255, 0.04);
+      border-radius: 6px;
+      border-left: 3px solid var(--accent);
+    }
+
+    .tech-row .label {
+      color: #94a3b8;
+    }
+
+    .tech-row .value {
+      color: #f1f5f9;
+      font-weight: 600;
+    }
+
+    .reveal section img {
+      border: none;
+      box-shadow: none;
+      background: none;
+    }
+
+    .reveal .progress {
+      color: var(--accent);
+    }
+
+    .footer-cta {
+      position: absolute;
+      bottom: 1em;
+      left: 0;
+      right: 0;
+      text-align: center;
+      font-size: 0.6em;
+      color: #64748b;
+    }
+  </style>
+</head>
+<body>
+  <div class="reveal">
+    <div class="slides">
+
+      <!-- 1. Title -->
+      <section class="title-slide" data-background-gradient="linear-gradient(135deg, #0f172a 0%, #1e293b 100%)">
+        <h1>SportsBooks</h1>
+        <p class="tagline">Find courts. Book coaches. Play together.</p>
+        <p style="margin-top: 2em; color: #64748b; font-size: 0.7em;">
+          The all-in-one platform for booking sports venues and finding people to play with
+        </p>
+      </section>
+
+      <!-- 2. The Problem -->
+      <section data-background-gradient="linear-gradient(135deg, #1e1b4b 0%, #0f172a 100%)">
+        <h2>The Problem</h2>
+        <div class="grid-3">
+          <div class="card">
+            <span class="icon">📞</span>
+            <h4>Manual Booking</h4>
+            <p>Players still phone venues to check availability and reserve courts.</p>
+          </div>
+          <div class="card">
+            <span class="icon">🤷</span>
+            <h4>Nobody to Play</h4>
+            <p>You finally book a court — then can't find enough players to fill it.</p>
+          </div>
+          <div class="card">
+            <span class="icon">💸</span>
+            <h4>Awkward Splits</h4>
+            <p>One person pays, then chases everyone else to send their share.</p>
+          </div>
+        </div>
+      </section>
+
+      <!-- 3. The Solution -->
+      <section data-background-gradient="linear-gradient(135deg, #064e3b 0%, #0f172a 100%)">
+        <h2>The Solution</h2>
+        <p style="font-size: 1.1em; color: #cbd5e1; margin-bottom: 1.2em;">
+          A single app that handles <strong style="color: var(--accent);">booking</strong>,
+          <strong style="color: var(--accent);">matchmaking</strong>, and
+          <strong style="color: var(--accent);">payment</strong> — for any sport, any venue.
+        </p>
+        <ul>
+          <li>Browse venues and coaches by sport, location, price, and availability</li>
+          <li>Book hourly slots in seconds with secure Stripe payments</li>
+          <li>Create or join lobbies to fill your court with friends or strangers</li>
+          <li>Split the cost automatically — no chasing people for money</li>
+        </ul>
+      </section>
+
+      <!-- 4. Two Sides -->
+      <section>
+        <h2>Built for Both Sides</h2>
+        <div class="grid-2">
+          <div class="card">
+            <h3>🏃 Players</h3>
+            <ul style="font-size: 0.85em;">
+              <li>Discover venues and coaches</li>
+              <li>Book and pay in one tap</li>
+              <li>Join matches with the right skill level</li>
+              <li>Earn XP, achievements, and reviews</li>
+            </ul>
+          </div>
+          <div class="card">
+            <h3>🏟️ Venue & Coach Partners</h3>
+            <ul style="font-size: 0.85em;">
+              <li>List your venue or coaching service</li>
+              <li>Manage your calendar and bookings</li>
+              <li>Get paid via Stripe Connect</li>
+              <li>Track revenue and player insights</li>
+            </ul>
+          </div>
+        </div>
+      </section>
+
+      <!-- 5. Player Journey -->
+      <section>
+        <h2>Player Journey</h2>
+        <div class="step">
+          <div class="step-num">1</div>
+          <div class="step-body"><strong>Pick a sport</strong>Tennis, basketball, padel, football, volleyball, and more.</div>
+        </div>
+        <div class="step">
+          <div class="step-num">2</div>
+          <div class="step-body"><strong>Find a venue or coach</strong>Browse the list, view on the map, or filter by what's nearest.</div>
+        </div>
+        <div class="step">
+          <div class="step-num">3</div>
+          <div class="step-body"><strong>Pick a time slot</strong>See real-time availability between 9:00 and 22:00.</div>
+        </div>
+        <div class="step">
+          <div class="step-num">4</div>
+          <div class="step-body"><strong>Pay & confirm</strong>Pay securely with Stripe. The slot is yours when the partner approves.</div>
+        </div>
+        <div class="step">
+          <div class="step-num">5</div>
+          <div class="step-body"><strong>Show up and play</strong>Get push reminders. Rate your experience after.</div>
+        </div>
+      </section>
+
+      <!-- 6. Matchmaking Lobbies -->
+      <section data-background-gradient="linear-gradient(135deg, #0f172a 0%, #064e3b 100%)">
+        <h2>Matchmaking Lobbies <span class="badge">NEW</span></h2>
+        <p style="color: #cbd5e1; font-size: 0.9em; margin-bottom: 1em;">
+          Don't have enough players? Create a lobby and let others join.
+        </p>
+        <div class="grid-3">
+          <div class="card">
+            <h4>💰 Split</h4>
+            <p>Everyone pays their share when the lobby fills up.</p>
+          </div>
+          <div class="card">
+            <h4>👤 Creator Pays</h4>
+            <p>One person covers it — others just show up and play.</p>
+          </div>
+          <div class="card">
+            <h4>👥 Team Split</h4>
+            <p>Two teams. Each team leader pays for their squad.</p>
+          </div>
+        </div>
+        <p style="font-size: 0.7em; color: #64748b; margin-top: 1.2em;">
+          Players get notified the moment the lobby is full and it's their turn to pay.
+        </p>
+      </section>
+
+      <!-- 7. Community Features -->
+      <section>
+        <h2>More Than Just Bookings</h2>
+        <div class="grid-2">
+          <div class="card">
+            <h4>👫 Friends & Parties</h4>
+            <p>Add friends, create parties, invite them to your next match in one tap.</p>
+          </div>
+          <div class="card">
+            <h4>🏘️ Communities</h4>
+            <p>Join communities around your favorite sport and meet regular players in your area.</p>
+          </div>
+          <div class="card">
+            <h4>📰 News Feed</h4>
+            <p>See what's happening: new venues, top deals, friend activity, upcoming matches.</p>
+          </div>
+          <div class="card">
+            <h4>💬 In-app Chat</h4>
+            <p>Coordinate with your booking partner, lobby, or community without leaving the app.</p>
+          </div>
+        </div>
+      </section>
+
+      <!-- 8. Gamification -->
+      <section data-background-gradient="linear-gradient(135deg, #1e1b4b 0%, #064e3b 100%)">
+        <h2>Level Up Your Game</h2>
+        <p style="color: #cbd5e1; font-size: 0.9em; margin-bottom: 1.2em;">
+          Every match counts. Earn XP, unlock achievements, and climb the ranks.
+        </p>
+        <div class="grid-3">
+          <div class="stat">
+            <span class="num">XP</span>
+            <span class="label">Earn from bookings, matches, reviews</span>
+          </div>
+          <div class="stat">
+            <span class="num">🏆</span>
+            <span class="label">Achievements for milestones</span>
+          </div>
+          <div class="stat">
+            <span class="num">⭐</span>
+            <span class="label">Skill level matching for fair games</span>
+          </div>
+        </div>
+      </section>
+
+      <!-- 9. Partner Side -->
+      <section>
+        <h2>Partner Dashboard</h2>
+        <div class="grid-2">
+          <div>
+            <h3>List & Manage</h3>
+            <ul>
+              <li>Set up your venue or coaching profile</li>
+              <li>Upload photos, set hourly prices</li>
+              <li>Configure time slots day-by-day</li>
+              <li>Approve or decline incoming bookings</li>
+            </ul>
+          </div>
+          <div>
+            <h3>Get Paid & Grow</h3>
+            <ul>
+              <li>Stripe Connect — direct payouts to your bank</li>
+              <li>Analytics: revenue, bookings, ratings</li>
+              <li>Run discounts and promotions</li>
+              <li>Build a reputation through reviews</li>
+            </ul>
+          </div>
+        </div>
+      </section>
+
+      <!-- 10. How to Use - Players -->
+      <section data-background-gradient="linear-gradient(135deg, #0f172a 0%, #1e293b 100%)">
+        <h2>How to Use It — Player</h2>
+        <div class="step">
+          <div class="step-num">1</div>
+          <div class="step-body"><strong>Sign up with email</strong>Pick "Player", set your sport interests and skill levels.</div>
+        </div>
+        <div class="step">
+          <div class="step-num">2</div>
+          <div class="step-body"><strong>Browse from the home screen</strong>Sport tiles, top deals, nearby venues, and recommended coaches.</div>
+        </div>
+        <div class="step">
+          <div class="step-num">3</div>
+          <div class="step-body"><strong>Book solo or open a lobby</strong>Reserve the whole slot, or open it to others if you need more players.</div>
+        </div>
+        <div class="step">
+          <div class="step-num">4</div>
+          <div class="step-body"><strong>Pay & track in "My Bookings"</strong>See upcoming, past, and pending bookings in one place.</div>
+        </div>
+      </section>
+
+      <!-- 11. How to Use - Partners -->
+      <section data-background-gradient="linear-gradient(135deg, #0f172a 0%, #1e293b 100%)">
+        <h2>How to Use It — Partner</h2>
+        <div class="step">
+          <div class="step-num">1</div>
+          <div class="step-body"><strong>Sign up as Venue Owner or Coach</strong>Complete onboarding with location, pricing, and equipment details.</div>
+        </div>
+        <div class="step">
+          <div class="step-num">2</div>
+          <div class="step-body"><strong>Connect Stripe</strong>One-time onboarding so you can receive payouts to your bank.</div>
+        </div>
+        <div class="step">
+          <div class="step-num">3</div>
+          <div class="step-body"><strong>Open your time slots</strong>Mark which hours are bookable for the days ahead.</div>
+        </div>
+        <div class="step">
+          <div class="step-num">4</div>
+          <div class="step-body"><strong>Approve bookings & track revenue</strong>Push notifications for every new booking. Analytics in the dashboard.</div>
+        </div>
+      </section>
+
+      <!-- 12. Tech Stack -->
+      <section>
+        <h2>Built On a Solid Stack</h2>
+        <div class="tech-grid">
+          <div class="tech-row"><span class="label">Android</span><span class="value">Kotlin · Compose · Hilt</span></div>
+          <div class="tech-row"><span class="label">iOS</span><span class="value">Swift · SwiftUI</span></div>
+          <div class="tech-row"><span class="label">Web</span><span class="value">React · TypeScript · Vite</span></div>
+          <div class="tech-row"><span class="label">Backend</span><span class="value">Node · Express · TypeScript</span></div>
+          <div class="tech-row"><span class="label">Database</span><span class="value">PostgreSQL 16</span></div>
+          <div class="tech-row"><span class="label">Auth</span><span class="value">Firebase Auth</span></div>
+          <div class="tech-row"><span class="label">Payments</span><span class="value">Stripe Connect</span></div>
+          <div class="tech-row"><span class="label">Notifications</span><span class="value">Firebase Cloud Messaging</span></div>
+        </div>
+      </section>
+
+      <!-- 13. CTA -->
+      <section class="title-slide" data-background-gradient="linear-gradient(135deg, #064e3b 0%, #0f172a 100%)">
+        <h1 style="font-size: 2.6em;">Ready to Play?</h1>
+        <p class="tagline" style="margin-top: 1em;">Find your court. Find your people. Just play.</p>
+        <p style="margin-top: 3em; font-size: 0.7em; color: #64748b;">
+          SportsBooks · Available on iOS, Android, and Web
+        </p>
+      </section>
+
+    </div>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/reveal.js@5.1.0/dist/reveal.js"></script>
+  <script>
+    Reveal.initialize({
+      hash: true,
+      controls: true,
+      progress: true,
+      slideNumber: 'c/t',
+      transition: 'slide',
+      backgroundTransition: 'fade',
+      width: 1280,
+      height: 720,
+    });
+  </script>
+</body>
+</html>

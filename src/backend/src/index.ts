@@ -3,6 +3,7 @@ import express from 'express';
 import cors from 'cors';
 import { env } from './config/env';
 import { errorHandler } from './middleware/errorHandler';
+import { authLimiter, apiLimiter } from './middleware/rateLimiter';
 import routes from './routes';
 import webhookRoutes from './routes/webhook.routes';
 import { expirePendingBookings } from './services/bookingExpiry.service';
@@ -21,6 +22,10 @@ app.use(express.json());
 app.get('/health', (_req, res) => {
   res.json({ status: 'ok', timestamp: new Date().toISOString() });
 });
+
+// Rate limiting — strict on auth, general cap on everything else under /api
+app.use('/api/auth', authLimiter);
+app.use('/api', apiLimiter);
 
 // API routes
 app.use('/api', routes);

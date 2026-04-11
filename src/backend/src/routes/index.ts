@@ -23,6 +23,7 @@ import bookingChatRoutes from './bookingChat.routes';
 import feedRoutes from './feed.routes';
 import communityRoutes from './community.routes';
 import lobbyRoutes from './lobby.routes';
+import venueBookingLobbyRoutes from './venueBookingLobby.routes';
 
 const router = Router();
 
@@ -50,5 +51,6 @@ router.use('/bookings', bookingChatRoutes);
 router.use('/feed', feedRoutes);
 router.use('/communities', communityRoutes);
 router.use('/', lobbyRoutes);  // handles both /communities/:id/lobbies and /lobbies/*
+router.use('/venue-booking-lobbies', venueBookingLobbyRoutes);
 
 export default router;

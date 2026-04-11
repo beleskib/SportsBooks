@@ -11,4 +11,5 @@ router.post('/me/complete-onboarding', authenticate, userController.completeOnbo
 router.get('/me/sport-expertise', authenticate, userController.getSportExpertise);
 router.put('/me/sport-expertise', authenticate, userController.setSportExpertise);
 router.get('/me/follow-counts', authenticate, userController.getFollowCounts);
+router.get('/:id/profile', authenticate, userController.getPublicProfile);
 export default router;

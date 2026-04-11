@@ -17,28 +17,45 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.filled.CalendarMonth
+import androidx.compose.material.icons.filled.Check
+import androidx.compose.material.icons.filled.HourglassTop
 import androidx.compose.material.icons.filled.Person
+import androidx.compose.material.icons.filled.PersonAdd
+import androidx.compose.material.icons.filled.PersonRemove
 import androidx.compose.material.icons.filled.SportsSoccer
 import androidx.compose.material3.AssistChip
+import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.SnackbarHost
+import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
+import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
@@ -49,8 +66,13 @@ import com.example.sportsbook.domain.model.PublicMatchSummary
 import com.example.sportsbook.domain.model.PublicPlayerProfile
 import com.example.sportsbook.ui.common.ErrorView
 import com.example.sportsbook.ui.common.LoadingIndicator
-import com.example.sportsbook.ui.common.toDisplayDate
 import com.example.sportsbook.ui.screens.player.match.components.PlayerRatingStars
+import com.example.sportsbook.ui.theme.Navy600
+import com.example.sportsbook.ui.theme.Navy700
+import com.example.sportsbook.ui.theme.Navy900
+import com.example.sportsbook.ui.theme.SportsBookTheme
+import com.example.sportsbook.ui.theme.USOpenGold
+import com.example.sportsbook.ui.theme.WarmWhite
 
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalLayoutApi::class)
 @Composable
@@ -59,18 +81,40 @@ fun PublicPlayerProfileScreen(
     viewModel: PublicPlayerProfileViewModel = hiltViewModel()
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
+    val snackbarHostState = remember { SnackbarHostState() }
+
+    LaunchedEffect(uiState.friendActionSuccess) {
+        uiState.friendActionSuccess?.let {
+            snackbarHostState.showSnackbar(it)
+            viewModel.clearMessage()
+        }
+    }
+
+    LaunchedEffect(uiState.error) {
+        uiState.error?.let {
+            if (uiState.profile != null) {
+                snackbarHostState.showSnackbar(it)
+                viewModel.clearMessage()
+            }
+        }
+    }
 
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text("Player Profile") },
+                title = { Text("Player Profile", color = WarmWhite) },
                 navigationIcon = {
                     IconButton(onClick = onBack) {
-                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back")
+                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back", tint = WarmWhite)
                     }
-                }
+                },
+                colors = TopAppBarDefaults.topAppBarColors(
+                    containerColor = Navy900
+                )
             )
-        }
+        },
+        snackbarHost = { SnackbarHost(snackbarHostState) },
+        containerColor = Navy900
     ) { padding ->
         Box(
             modifier = Modifier
@@ -84,7 +128,10 @@ fun PublicPlayerProfileScreen(
                     onRetry = viewModel::loadProfile
                 )
                 uiState.profile != null -> PublicPlayerProfileContent(
-                    profile = uiState.profile!!
+                    profile = uiState.profile!!,
+                    friendActionLoading = uiState.friendActionLoading,
+                    onSendFriendRequest = viewModel::sendFriendRequest,
+                    onRemoveFriend = viewModel::removeFriend
                 )
             }
         }
@@ -95,145 +142,191 @@ fun PublicPlayerProfileScreen(
 @Composable
 private fun PublicPlayerProfileContent(
     profile: PublicPlayerProfile,
+    friendActionLoading: Boolean = false,
+    onSendFriendRequest: () -> Unit = {},
+    onRemoveFriend: () -> Unit = {},
     modifier: Modifier = Modifier
 ) {
     LazyColumn(
-        modifier = modifier
-            .fillMaxSize()
-            .padding(horizontal = 16.dp),
+        modifier = modifier.fillMaxSize(),
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
-        // Avatar + name + bio
+        // ── Profile Header ──
         item {
-            Spacer(modifier = Modifier.height(24.dp))
-            if (profile.photoUrl != null) {
-                AsyncImage(
-                    model = profile.photoUrl,
-                    contentDescription = "Player photo",
-                    modifier = Modifier
-                        .size(96.dp)
-                        .clip(CircleShape),
-                    contentScale = ContentScale.Crop
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 16.dp, vertical = 24.dp),
+                horizontalAlignment = Alignment.CenterHorizontally
+            ) {
+                // Avatar
+                if (profile.photoUrl != null) {
+                    AsyncImage(
+                        model = profile.photoUrl,
+                        contentDescription = "Player photo",
+                        modifier = Modifier
+                            .size(110.dp)
+                            .clip(CircleShape),
+                        contentScale = ContentScale.Crop
+                    )
+                } else {
+                    Box(
+                        modifier = Modifier
+                            .size(110.dp)
+                            .clip(CircleShape)
+                            .background(Navy600),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.Person,
+                            contentDescription = "Player avatar",
+                            modifier = Modifier.size(56.dp),
+                            tint = USOpenGold
+                        )
+                    }
+                }
+
+                Spacer(modifier = Modifier.height(16.dp))
+
+                // Name
+                Text(
+                    text = profile.displayName ?: "Unknown Player",
+                    style = MaterialTheme.typography.headlineSmall.copy(fontWeight = FontWeight.Bold),
+                    color = WarmWhite
                 )
-            } else {
-                Box(
-                    modifier = Modifier
-                        .size(96.dp)
-                        .clip(CircleShape)
-                        .background(MaterialTheme.colorScheme.primaryContainer),
-                    contentAlignment = Alignment.Center
-                ) {
-                    Icon(
-                        imageVector = Icons.Default.Person,
-                        contentDescription = "Player avatar",
-                        modifier = Modifier.size(48.dp),
-                        tint = MaterialTheme.colorScheme.onPrimaryContainer
+
+                // Bio
+                if (!profile.bio.isNullOrBlank()) {
+                    Spacer(modifier = Modifier.height(8.dp))
+                    Text(
+                        text = profile.bio,
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = WarmWhite.copy(alpha = 0.7f),
+                        textAlign = TextAlign.Center,
+                        modifier = Modifier.padding(horizontal = 24.dp)
                     )
                 }
-            }
-            Spacer(modifier = Modifier.height(12.dp))
-            Text(
-                text = profile.displayName ?: "Unknown Player",
-                style = MaterialTheme.typography.headlineSmall.copy(fontWeight = FontWeight.Bold)
-            )
-            if (!profile.bio.isNullOrBlank()) {
-                Spacer(modifier = Modifier.height(8.dp))
-                Text(
-                    text = profile.bio,
-                    style = MaterialTheme.typography.bodyMedium,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    modifier = Modifier.fillMaxWidth()
+
+                // Member since
+                if (profile.createdAt != null) {
+                    Spacer(modifier = Modifier.height(6.dp))
+                    val memberSince = try {
+                        profile.createdAt.substring(0, 10)
+                    } catch (_: Exception) {
+                        profile.createdAt
+                    }
+                    Text(
+                        text = "Member since $memberSince",
+                        style = MaterialTheme.typography.bodySmall,
+                        color = WarmWhite.copy(alpha = 0.4f)
+                    )
+                }
+
+                Spacer(modifier = Modifier.height(20.dp))
+
+                // ── Friend Action Button ──
+                FriendActionButton(
+                    friendshipStatus = profile.friendshipStatus,
+                    isLoading = friendActionLoading,
+                    onSendRequest = onSendFriendRequest,
+                    onRemoveFriend = onRemoveFriend
                 )
             }
-            Spacer(modifier = Modifier.height(16.dp))
         }
 
-        // Stats row
+        // ── Stats Row ──
         item {
-            HorizontalDivider()
-            Spacer(modifier = Modifier.height(16.dp))
             Row(
-                modifier = Modifier.fillMaxWidth(),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .background(Navy700.copy(alpha = 0.5f))
+                    .padding(vertical = 16.dp),
                 horizontalArrangement = Arrangement.SpaceEvenly
             ) {
-                PlayerStatItem(
-                    label = "Matches Played",
-                    value = profile.totalMatchesPlayed.toString()
+                ProfileStatItem(
+                    value = profile.totalMatchesPlayed.toString(),
+                    label = "Matches"
                 )
-                PlayerStatItem(
-                    label = "Total Ratings",
-                    value = profile.totalPlayerRatings.toString()
+                ProfileStatItem(
+                    value = String.format("%.1f", profile.avgPlayerSkillRating),
+                    label = "Skill"
+                )
+                ProfileStatItem(
+                    value = profile.totalPlayerRatings.toString(),
+                    label = "Ratings"
                 )
             }
-            Spacer(modifier = Modifier.height(16.dp))
         }
 
-        // Ratings section
-        item {
-            HorizontalDivider()
-            Spacer(modifier = Modifier.height(16.dp))
-            Text(
-                text = "Player Ratings",
-                style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.SemiBold),
-                modifier = Modifier.fillMaxWidth()
-            )
-            Spacer(modifier = Modifier.height(12.dp))
+        // ── Player Ratings Section ──
+        if (profile.totalPlayerRatings > 0) {
+            item {
+                Spacer(modifier = Modifier.height(20.dp))
+                SectionTitle("Player Ratings")
+                Spacer(modifier = Modifier.height(12.dp))
+            }
+
+            item {
+                Card(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = 16.dp),
+                    colors = CardDefaults.cardColors(containerColor = Navy700.copy(alpha = 0.5f)),
+                    shape = RoundedCornerShape(12.dp)
+                ) {
+                    Column(modifier = Modifier.padding(16.dp)) {
+                        RatingRow(label = "Skill", rating = profile.avgPlayerSkillRating)
+                        Spacer(modifier = Modifier.height(12.dp))
+                        RatingRow(label = "Sportsmanship", rating = profile.avgPlayerSportsmanshipRating)
+                        Spacer(modifier = Modifier.height(12.dp))
+                        RatingRow(label = "Punctuality", rating = profile.avgPlayerPunctualityRating)
+                    }
+                }
+            }
         }
 
-        item {
-            PlayerRatingRow(label = "Skill", rating = profile.avgPlayerSkillRating)
-            Spacer(modifier = Modifier.height(8.dp))
-            PlayerRatingRow(label = "Sportsmanship", rating = profile.avgPlayerSportsmanshipRating)
-            Spacer(modifier = Modifier.height(8.dp))
-            PlayerRatingRow(label = "Punctuality", rating = profile.avgPlayerPunctualityRating)
-            Spacer(modifier = Modifier.height(16.dp))
-        }
-
-        // Sport interests
+        // ── Sport Interests ──
         if (profile.interestedSports.isNotEmpty()) {
             item {
-                HorizontalDivider()
-                Spacer(modifier = Modifier.height(16.dp))
-                Text(
-                    text = "Interested Sports",
-                    style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.SemiBold),
-                    modifier = Modifier.fillMaxWidth()
-                )
-                Spacer(modifier = Modifier.height(8.dp))
+                Spacer(modifier = Modifier.height(20.dp))
+                SectionTitle("Interested Sports")
+                Spacer(modifier = Modifier.height(12.dp))
                 FlowRow(
-                    modifier = Modifier.fillMaxWidth(),
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = 16.dp),
                     horizontalArrangement = Arrangement.spacedBy(8.dp),
-                    verticalArrangement = Arrangement.spacedBy(4.dp)
+                    verticalArrangement = Arrangement.spacedBy(8.dp)
                 ) {
                     profile.interestedSports.forEach { sport ->
                         AssistChip(
                             onClick = {},
-                            label = { Text(sport.displayName) },
+                            label = {
+                                Text(
+                                    sport.displayName,
+                                    color = WarmWhite
+                                )
+                            },
                             leadingIcon = {
                                 Icon(
                                     imageVector = Icons.Default.SportsSoccer,
                                     contentDescription = null,
-                                    modifier = Modifier.size(16.dp)
+                                    modifier = Modifier.size(16.dp),
+                                    tint = USOpenGold
                                 )
                             }
                         )
                     }
                 }
-                Spacer(modifier = Modifier.height(16.dp))
             }
         }
 
-        // Recent matches
+        // ── Recent Matches ──
         if (profile.recentMatches.isNotEmpty()) {
             item {
-                HorizontalDivider()
-                Spacer(modifier = Modifier.height(16.dp))
-                Text(
-                    text = "Recent Matches",
-                    style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.SemiBold),
-                    modifier = Modifier.fillMaxWidth()
-                )
-                Spacer(modifier = Modifier.height(8.dp))
+                Spacer(modifier = Modifier.height(20.dp))
+                SectionTitle("Recent Matches")
+                Spacer(modifier = Modifier.height(12.dp))
             }
             items(profile.recentMatches) { match ->
                 RecentMatchItem(match = match)
@@ -248,9 +341,142 @@ private fun PublicPlayerProfileContent(
 }
 
 @Composable
-private fun PlayerStatItem(
-    label: String,
+private fun FriendActionButton(
+    friendshipStatus: String?,
+    isLoading: Boolean,
+    onSendRequest: () -> Unit,
+    onRemoveFriend: () -> Unit,
+    modifier: Modifier = Modifier
+) {
+    when {
+        isLoading -> {
+            Button(
+                onClick = {},
+                enabled = false,
+                modifier = modifier.fillMaxWidth(0.6f),
+                shape = RoundedCornerShape(12.dp),
+                colors = ButtonDefaults.buttonColors(
+                    disabledContainerColor = Navy600
+                )
+            ) {
+                CircularProgressIndicator(
+                    modifier = Modifier.size(18.dp),
+                    strokeWidth = 2.dp,
+                    color = WarmWhite
+                )
+                Spacer(modifier = Modifier.width(8.dp))
+                Text("Loading...", color = WarmWhite.copy(alpha = 0.6f))
+            }
+        }
+        friendshipStatus == null -> {
+            // No relationship — show Add Friend
+            Button(
+                onClick = onSendRequest,
+                modifier = modifier.fillMaxWidth(0.6f),
+                shape = RoundedCornerShape(12.dp),
+                colors = ButtonDefaults.buttonColors(
+                    containerColor = USOpenGold
+                )
+            ) {
+                Icon(
+                    Icons.Default.PersonAdd,
+                    contentDescription = null,
+                    modifier = Modifier.size(18.dp),
+                    tint = Navy900
+                )
+                Spacer(modifier = Modifier.width(8.dp))
+                Text("Add Friend", color = Navy900, fontWeight = FontWeight.Bold)
+            }
+        }
+        friendshipStatus == "pending" -> {
+            // Pending request
+            OutlinedButton(
+                onClick = {},
+                enabled = false,
+                modifier = modifier.fillMaxWidth(0.6f),
+                shape = RoundedCornerShape(12.dp)
+            ) {
+                Icon(
+                    Icons.Default.HourglassTop,
+                    contentDescription = null,
+                    modifier = Modifier.size(18.dp),
+                    tint = USOpenGold
+                )
+                Spacer(modifier = Modifier.width(8.dp))
+                Text("Request Pending", color = USOpenGold)
+            }
+        }
+        friendshipStatus == "accepted" -> {
+            // Already friends — show Friends badge with option to remove
+            Row(
+                modifier = modifier.fillMaxWidth(0.8f),
+                horizontalArrangement = Arrangement.spacedBy(8.dp)
+            ) {
+                Button(
+                    onClick = {},
+                    enabled = false,
+                    modifier = Modifier.weight(1f),
+                    shape = RoundedCornerShape(12.dp),
+                    colors = ButtonDefaults.buttonColors(
+                        disabledContainerColor = Color(0xFF2E7D32).copy(alpha = 0.3f)
+                    )
+                ) {
+                    Icon(
+                        Icons.Default.Check,
+                        contentDescription = null,
+                        modifier = Modifier.size(18.dp),
+                        tint = Color(0xFF66BB6A)
+                    )
+                    Spacer(modifier = Modifier.width(6.dp))
+                    Text("Friends", color = Color(0xFF66BB6A))
+                }
+                OutlinedButton(
+                    onClick = onRemoveFriend,
+                    modifier = Modifier.weight(1f),
+                    shape = RoundedCornerShape(12.dp)
+                ) {
+                    Icon(
+                        Icons.Default.PersonRemove,
+                        contentDescription = null,
+                        modifier = Modifier.size(16.dp),
+                        tint = MaterialTheme.colorScheme.error
+                    )
+                    Spacer(modifier = Modifier.width(6.dp))
+                    Text(
+                        "Remove",
+                        color = MaterialTheme.colorScheme.error,
+                        style = MaterialTheme.typography.labelMedium
+                    )
+                }
+            }
+        }
+        else -> {
+            // Declined/blocked — allow re-send
+            Button(
+                onClick = onSendRequest,
+                modifier = modifier.fillMaxWidth(0.6f),
+                shape = RoundedCornerShape(12.dp),
+                colors = ButtonDefaults.buttonColors(
+                    containerColor = USOpenGold
+                )
+            ) {
+                Icon(
+                    Icons.Default.PersonAdd,
+                    contentDescription = null,
+                    modifier = Modifier.size(18.dp),
+                    tint = Navy900
+                )
+                Spacer(modifier = Modifier.width(8.dp))
+                Text("Add Friend", color = Navy900, fontWeight = FontWeight.Bold)
+            }
+        }
+    }
+}
+
+@Composable
+private fun ProfileStatItem(
     value: String,
+    label: String,
     modifier: Modifier = Modifier
 ) {
     Column(
@@ -260,18 +486,33 @@ private fun PlayerStatItem(
         Text(
             text = value,
             style = MaterialTheme.typography.headlineSmall.copy(fontWeight = FontWeight.Bold),
-            color = MaterialTheme.colorScheme.primary
+            color = USOpenGold
         )
         Text(
             text = label,
             style = MaterialTheme.typography.labelMedium,
-            color = MaterialTheme.colorScheme.onSurfaceVariant
+            color = WarmWhite.copy(alpha = 0.6f)
         )
     }
 }
 
 @Composable
-private fun PlayerRatingRow(
+private fun SectionTitle(
+    title: String,
+    modifier: Modifier = Modifier
+) {
+    Text(
+        text = title,
+        style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.SemiBold),
+        color = WarmWhite,
+        modifier = modifier
+            .fillMaxWidth()
+            .padding(horizontal = 16.dp)
+    )
+}
+
+@Composable
+private fun RatingRow(
     label: String,
     rating: Double,
     modifier: Modifier = Modifier
@@ -284,6 +525,7 @@ private fun PlayerRatingRow(
         Text(
             text = label,
             style = MaterialTheme.typography.bodyMedium,
+            color = WarmWhite.copy(alpha = 0.8f),
             modifier = Modifier.width(120.dp)
         )
         Row(
@@ -294,7 +536,7 @@ private fun PlayerRatingRow(
             Text(
                 text = String.format("%.1f", rating),
                 style = MaterialTheme.typography.bodySmall,
-                color = MaterialTheme.colorScheme.onSurfaceVariant
+                color = USOpenGold
             )
         }
     }
@@ -306,10 +548,13 @@ private fun RecentMatchItem(
     modifier: Modifier = Modifier
 ) {
     Card(
-        modifier = modifier.fillMaxWidth(),
+        modifier = modifier
+            .fillMaxWidth()
+            .padding(horizontal = 16.dp),
         colors = CardDefaults.cardColors(
-            containerColor = MaterialTheme.colorScheme.surfaceVariant
-        )
+            containerColor = Navy700.copy(alpha = 0.5f)
+        ),
+        shape = RoundedCornerShape(12.dp)
     ) {
         Row(
             modifier = Modifier
@@ -318,75 +563,66 @@ private fun RecentMatchItem(
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.SpaceBetween
         ) {
-            Column(modifier = Modifier.weight(1f)) {
-                Text(
-                    text = match.title,
-                    style = MaterialTheme.typography.bodyMedium.copy(fontWeight = FontWeight.Medium)
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                modifier = Modifier.weight(1f)
+            ) {
+                Icon(
+                    imageVector = Icons.Default.CalendarMonth,
+                    contentDescription = null,
+                    modifier = Modifier.size(20.dp),
+                    tint = USOpenGold
                 )
-                Text(
-                    text = "${match.sportType.displayName} • ${match.matchDate.toDisplayDate()}",
-                    style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
-                )
+                Spacer(modifier = Modifier.width(12.dp))
+                Column {
+                    Text(
+                        text = match.title,
+                        style = MaterialTheme.typography.bodyMedium.copy(fontWeight = FontWeight.Medium),
+                        color = WarmWhite
+                    )
+                    Text(
+                        text = "${match.sportType.displayName} • ${match.matchDate}",
+                        style = MaterialTheme.typography.bodySmall,
+                        color = WarmWhite.copy(alpha = 0.5f)
+                    )
+                }
             }
-            Text(
-                text = match.status.replaceFirstChar { it.uppercase() },
-                style = MaterialTheme.typography.labelSmall,
-                color = MaterialTheme.colorScheme.primary
-            )
-        }
-    }
-}
-
-@Preview(showBackground = true)
-@OptIn(ExperimentalMaterial3Api::class)
-@Composable
-private fun PublicPlayerProfileScreenPreview() {
-    MaterialTheme {
-        Scaffold(
-            topBar = {
-                TopAppBar(
-                    title = { Text("Player Profile") },
-                    navigationIcon = {
-                        IconButton(onClick = {}) {
-                            Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back")
+            Box(
+                modifier = Modifier
+                    .clip(RoundedCornerShape(6.dp))
+                    .background(
+                        when (match.status.lowercase()) {
+                            "completed" -> Color(0xFF2E7D32).copy(alpha = 0.2f)
+                            "in_progress" -> USOpenGold.copy(alpha = 0.2f)
+                            else -> Navy600.copy(alpha = 0.3f)
                         }
+                    )
+                    .padding(horizontal = 8.dp, vertical = 4.dp)
+            ) {
+                Text(
+                    text = match.status.replaceFirstChar { it.uppercase() },
+                    style = MaterialTheme.typography.labelSmall,
+                    color = when (match.status.lowercase()) {
+                        "completed" -> Color(0xFF66BB6A)
+                        "in_progress" -> USOpenGold
+                        else -> WarmWhite.copy(alpha = 0.6f)
                     }
                 )
             }
-        ) { padding ->
-            PublicPlayerProfileContent(
-                profile = PublicPlayerProfile(
-                    id = 1,
-                    displayName = "Alex Johnson",
-                    bio = "Passionate basketball and tennis player.",
-                    interestedSports = listOf(SportType.BASKETBALL, SportType.TENNIS),
-                    avgPlayerSkillRating = 4.2,
-                    avgPlayerSportsmanshipRating = 4.8,
-                    avgPlayerPunctualityRating = 3.9,
-                    totalPlayerRatings = 15,
-                    totalMatchesPlayed = 23,
-                    recentMatches = listOf(
-                        PublicMatchSummary(1, "Friday Basketball", SportType.BASKETBALL, "2026-03-10", "completed"),
-                        PublicMatchSummary(2, "Weekend Tennis", SportType.TENNIS, "2026-03-08", "completed")
-                    )
-                ),
-                modifier = Modifier.padding(padding)
-            )
         }
     }
 }
 
-@Preview(showBackground = true)
+@Preview(showBackground = true, backgroundColor = 0xFF0A1628)
 @Composable
-private fun PublicPlayerProfileContentPreview() {
-    MaterialTheme {
+private fun PublicPlayerProfileScreenPreview() {
+    SportsBookTheme {
         PublicPlayerProfileContent(
             profile = PublicPlayerProfile(
                 id = 1,
                 displayName = "Alex Johnson",
-                bio = "Passionate basketball and tennis player.",
-                interestedSports = listOf(SportType.BASKETBALL, SportType.TENNIS),
+                bio = "Passionate basketball and tennis player. Always looking for a game!",
+                interestedSports = listOf(SportType.BASKETBALL, SportType.TENNIS, SportType.FOOTBALL),
                 avgPlayerSkillRating = 4.2,
                 avgPlayerSportsmanshipRating = 4.8,
                 avgPlayerPunctualityRating = 3.9,
@@ -395,7 +631,56 @@ private fun PublicPlayerProfileContentPreview() {
                 recentMatches = listOf(
                     PublicMatchSummary(1, "Friday Basketball", SportType.BASKETBALL, "2026-03-10", "completed"),
                     PublicMatchSummary(2, "Weekend Tennis", SportType.TENNIS, "2026-03-08", "completed")
-                )
+                ),
+                createdAt = "2025-06-15T10:00:00Z",
+                friendshipStatus = null
+            )
+        )
+    }
+}
+
+@Preview(showBackground = true, backgroundColor = 0xFF0A1628)
+@Composable
+private fun PublicPlayerProfileFriendPreview() {
+    SportsBookTheme {
+        PublicPlayerProfileContent(
+            profile = PublicPlayerProfile(
+                id = 2,
+                displayName = "Sarah Wilson",
+                bio = "Tennis enthusiast and weekend warrior.",
+                interestedSports = listOf(SportType.TENNIS, SportType.PADDLE),
+                avgPlayerSkillRating = 3.8,
+                avgPlayerSportsmanshipRating = 4.5,
+                avgPlayerPunctualityRating = 4.7,
+                totalPlayerRatings = 8,
+                totalMatchesPlayed = 12,
+                recentMatches = emptyList(),
+                createdAt = "2025-09-01T10:00:00Z",
+                friendshipStatus = "accepted"
+            )
+        )
+    }
+}
+
+@Preview(showBackground = true, backgroundColor = 0xFF0A1628)
+@Composable
+private fun PublicPlayerProfilePendingPreview() {
+    SportsBookTheme {
+        PublicPlayerProfileContent(
+            profile = PublicPlayerProfile(
+                id = 3,
+                displayName = "Mike Chen",
+                photoUrl = null,
+                bio = null,
+                interestedSports = listOf(SportType.VOLLEYBALL),
+                avgPlayerSkillRating = 0.0,
+                avgPlayerSportsmanshipRating = 0.0,
+                avgPlayerPunctualityRating = 0.0,
+                totalPlayerRatings = 0,
+                totalMatchesPlayed = 0,
+                recentMatches = emptyList(),
+                createdAt = "2026-01-20T10:00:00Z",
+                friendshipStatus = "pending"
             )
         )
     }

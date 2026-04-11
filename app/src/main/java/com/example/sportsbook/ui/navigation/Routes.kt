@@ -92,6 +92,11 @@ sealed interface Route {
     @Serializable data class InviteFriends(val communityId: Long) : Route
     @Serializable data class CreateLobby(val communityId: Long) : Route
 
+    // Venue Booking Lobbies
+    @Serializable data class BrowseVenueLobbies(val venueId: Long? = null) : Route
+    @Serializable data class CreateVenueBookingLobby(val timeSlotId: Long = -1, val venueId: Long = -1) : Route
+    @Serializable data class VenueBookingLobbyDetail(val lobbyId: Long) : Route
+
     @Serializable data object PendingReservations : Route
 
     // Partner flow

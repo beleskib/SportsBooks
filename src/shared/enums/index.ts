@@ -120,3 +120,20 @@ export enum StripeOnboardingStatus {
   PENDING = 'pending',
   COMPLETE = 'complete',
 }
+
+export enum VenueBookingLobbyStatus {
+  OPEN = 'open',
+  FULL = 'full',
+  BOOKING_PENDING = 'booking_pending',
+  BOOKING_APPROVED = 'booking_approved',
+  PAYMENT_IN_PROGRESS = 'payment_in_progress',
+  CONFIRMED = 'confirmed',
+  CANCELLED = 'cancelled',
+  EXPIRED = 'expired',
+}
+
+export enum LobbyPaymentType {
+  SPLIT = 'split',
+  CREATOR_PAYS = 'creator_pays',
+  SPLIT_TO_TEAMS = 'split_to_teams',
+}

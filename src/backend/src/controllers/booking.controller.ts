@@ -5,6 +5,8 @@ import * as gamificationRepo from '../repositories/gamification.repository';
 import * as notificationRepo from '../repositories/notification.repository';
 import * as venueRepo from '../repositories/venue.repository';
 import * as coachRepo from '../repositories/coach.repository';
+import * as venueBookingLobbyRepo from '../repositories/venueBookingLobby.repository';
+import * as timeSlotRepo from '../repositories/timeSlot.repository';
 import { NotFoundError, ForbiddenError } from '../utils/errors';
 
 export async function create(req: Request, res: Response, next: NextFunction) {
@@ -110,15 +112,24 @@ export const approveBooking = async (req: Request, res: Response, next: NextFunc
     let entityName = '';
     if (existing.venueId) {
       const venue = await venueRepo.findById(existing.venueId);
-      if (venue && venue.ownerId === userId) { isOwner = true; entityName = venue.name; }
+      if (venue && Number(venue.ownerId) === userId) { isOwner = true; entityName = venue.name; }
     }
     if (existing.coachId) {
       const coach = await coachRepo.findById(existing.coachId);
-      if (coach && coach.userId === userId) { isOwner = true; entityName = coach.name; }
+      if (coach && Number(coach.userId) === userId) { isOwner = true; entityName = coach.name; }
     }
     if (!isOwner) throw new ForbiddenError('You can only approve bookings for your own venues/coaches');
 
     const booking = await bookingRepo.approveBooking(Number(id));
+
+    // Close the time slot so no one else can book it
+    if (existing.timeSlotId) {
+      try {
+        await timeSlotRepo.setAvailability(existing.timeSlotId, false);
+      } catch (e) {
+        console.error('Failed to close time slot on approval:', e);
+      }
+    }
 
     // Notify the player
     try {
@@ -131,6 +142,25 @@ export const approveBooking = async (req: Request, res: Response, next: NextFunc
       );
     } catch (e) {
       console.error('Failed to send booking approved notification:', e);
+    }
+
+    // Check if this booking is linked to a venue booking lobby
+    try {
+      const lobbyForBooking = await venueBookingLobbyRepo.findByBookingId(booking.id);
+      if (lobbyForBooking) {
+        await venueBookingLobbyRepo.updateStatus(lobbyForBooking.id, 'booking_approved');
+        // Update all joined members to payment_pending
+        const members = await venueBookingLobbyRepo.getMembers(lobbyForBooking.id);
+        for (const member of members) {
+          if (member.status === 'joined') {
+            await venueBookingLobbyRepo.updateMemberPaymentStatus(
+              lobbyForBooking.id, member.userId, null, 'payment_pending'
+            );
+          }
+        }
+      }
+    } catch (e) {
+      console.error('Failed to update lobby status on booking approval:', e);
     }
 
     success(res, booking);
@@ -151,11 +181,11 @@ export const declineBooking = async (req: Request, res: Response, next: NextFunc
     let entityName = '';
     if (existing.venueId) {
       const venue = await venueRepo.findById(existing.venueId);
-      if (venue && venue.ownerId === userId) { isOwner = true; entityName = venue.name; }
+      if (venue && Number(venue.ownerId) === userId) { isOwner = true; entityName = venue.name; }
     }
     if (existing.coachId) {
       const coach = await coachRepo.findById(existing.coachId);
-      if (coach && coach.userId === userId) { isOwner = true; entityName = coach.name; }
+      if (coach && Number(coach.userId) === userId) { isOwner = true; entityName = coach.name; }
     }
     if (!isOwner) throw new ForbiddenError('You can only decline bookings for your own venues/coaches');
 
@@ -172,6 +202,16 @@ export const declineBooking = async (req: Request, res: Response, next: NextFunc
       );
     } catch (e) {
       console.error('Failed to send booking declined notification:', e);
+    }
+
+    // Check if this booking is linked to a venue booking lobby and cancel it
+    try {
+      const lobbyForBooking = await venueBookingLobbyRepo.findByBookingId(booking.id);
+      if (lobbyForBooking) {
+        await venueBookingLobbyRepo.updateStatus(lobbyForBooking.id, 'cancelled');
+      }
+    } catch (e) {
+      console.error('Failed to cancel lobby on booking decline:', e);
     }
 
     success(res, booking);

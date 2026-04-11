@@ -59,7 +59,7 @@ export async function authenticate(req: Request, _res: Response, next: NextFunct
     if (result.rows.length > 0) {
       const row = result.rows[0];
       req.user = {
-        id: row.id,
+        id: Number(row.id),
         firebaseUid: row.firebase_uid,
         email: row.email,
         role: row.role,

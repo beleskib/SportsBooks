@@ -159,24 +159,40 @@ class PaymentCheckoutViewModel @Inject constructor(
                 bookingId = bookingId,
             ).fold(
                 onSuccess = { response ->
-                    if (response.clientSecret.isNullOrEmpty()) {
-                        // XP fully covered the payment — no Stripe needed
-                        _uiState.update {
-                            it.copy(
-                                isCreatingIntent = false,
-                                paymentSuccess = true,
-                            )
+                    when {
+                        response.clientSecret.isNullOrEmpty() -> {
+                            // XP fully covered the payment — no Stripe needed
+                            _uiState.update {
+                                it.copy(
+                                    isCreatingIntent = false,
+                                    paymentSuccess = true,
+                                )
+                            }
                         }
-                    } else {
-                        _uiState.update {
-                            it.copy(
-                                isCreatingIntent = false,
-                                clientSecret = response.clientSecret,
-                                paymentId = response.paymentId,
-                                bookingId = response.bookingId,
-                                amount = response.amount,
-                                currency = response.currency,
-                            )
+                        response.clientSecret.startsWith("dev_secret_") -> {
+                            // Dev mode — skip Stripe PaymentSheet, confirm directly
+                            _uiState.update {
+                                it.copy(
+                                    isCreatingIntent = false,
+                                    paymentId = response.paymentId,
+                                    bookingId = response.bookingId,
+                                    amount = response.amount,
+                                    currency = response.currency,
+                                )
+                            }
+                            confirmPayment()
+                        }
+                        else -> {
+                            _uiState.update {
+                                it.copy(
+                                    isCreatingIntent = false,
+                                    clientSecret = response.clientSecret,
+                                    paymentId = response.paymentId,
+                                    bookingId = response.bookingId,
+                                    amount = response.amount,
+                                    currency = response.currency,
+                                )
+                            }
                         }
                     }
                 },

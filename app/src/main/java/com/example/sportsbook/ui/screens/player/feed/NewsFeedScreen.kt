@@ -21,6 +21,7 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.Send
 import androidx.compose.material.icons.filled.ChatBubbleOutline
 import androidx.compose.material.icons.filled.EmojiEvents
 import androidx.compose.material.icons.filled.Favorite
@@ -41,13 +42,20 @@ import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.SnackbarHost
+import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextField
 import androidx.compose.material3.TextFieldDefaults
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
+import androidx.compose.material3.pulltorefresh.PullToRefreshBox
+import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -58,7 +66,6 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
@@ -66,7 +73,9 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewModelScope
 import coil.compose.AsyncImage
+import com.example.sportsbook.data.remote.dto.AddCommentRequestDto
 import com.example.sportsbook.data.remote.dto.CreateFeedPostRequestDto
+import com.example.sportsbook.data.remote.dto.FeedCommentDto
 import com.example.sportsbook.data.remote.dto.FeedPostDto
 import com.example.sportsbook.domain.repository.AuthRepository
 import com.example.sportsbook.ui.theme.Navy600
@@ -78,6 +87,8 @@ import com.example.sportsbook.ui.theme.USOpenGold
 import com.example.sportsbook.ui.theme.WarmWhite
 import dagger.hilt.android.lifecycle.HiltViewModel
 import com.example.sportsbook.data.remote.api.ApiService
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -91,7 +102,12 @@ data class FeedUiState(
     val isPosting: Boolean = false,
     val error: String? = null,
     val currentUserName: String? = null,
-    val currentUserPhotoUrl: String? = null
+    val currentUserPhotoUrl: String? = null,
+    val selectedPostId: Long? = null,
+    val comments: List<FeedCommentDto> = emptyList(),
+    val isLoadingComments: Boolean = false,
+    val isPostingComment: Boolean = false,
+    val showComments: Boolean = false
 )
 
 @HiltViewModel
@@ -102,6 +118,8 @@ class NewsFeedViewModel @Inject constructor(
 
     private val _uiState = MutableStateFlow(FeedUiState())
     val uiState: StateFlow<FeedUiState> = _uiState.asStateFlow()
+
+    private var autoRefreshJob: Job? = null
 
     init {
         loadCurrentUser()
@@ -127,6 +145,7 @@ class NewsFeedViewModel @Inject constructor(
                 val response = apiService.getFeed()
                 _uiState.update { it.copy(posts = response.data, isLoading = false) }
             } catch (e: Exception) {
+                android.util.Log.e("NewsFeed", "loadFeed failed", e)
                 _uiState.update { it.copy(error = e.message, isLoading = false) }
             }
         }
@@ -143,9 +162,11 @@ class NewsFeedViewModel @Inject constructor(
                     metadata = metadata
                 )
                 apiService.createPost(request)
-                loadFeed()
-                _uiState.update { it.copy(isPosting = false) }
+                // Reload feed inline (don't call loadFeed() which launches a separate coroutine)
+                val response = apiService.getFeed()
+                _uiState.update { it.copy(posts = response.data, isPosting = false) }
             } catch (e: Exception) {
+                android.util.Log.e("NewsFeed", "createPost failed", e)
                 _uiState.update { it.copy(isPosting = false, error = e.message) }
             }
         }
@@ -166,6 +187,71 @@ class NewsFeedViewModel @Inject constructor(
             } catch (_: Exception) { }
         }
     }
+
+    fun openComments(postId: Long) {
+        _uiState.update { it.copy(selectedPostId = postId, showComments = true) }
+        loadComments(postId)
+    }
+
+    fun closeComments() {
+        _uiState.update { it.copy(showComments = false, selectedPostId = null, comments = emptyList()) }
+    }
+
+    private fun loadComments(postId: Long) {
+        viewModelScope.launch {
+            _uiState.update { it.copy(isLoadingComments = true) }
+            try {
+                val response = apiService.getPostComments(postId)
+                _uiState.update { it.copy(comments = response.data, isLoadingComments = false) }
+            } catch (e: Exception) {
+                _uiState.update { it.copy(isLoadingComments = false) }
+            }
+        }
+    }
+
+    fun postComment(content: String) {
+        val postId = _uiState.value.selectedPostId ?: return
+        if (content.isBlank()) return
+        viewModelScope.launch {
+            _uiState.update { it.copy(isPostingComment = true) }
+            try {
+                apiService.addComment(postId, AddCommentRequestDto(content = content))
+                loadComments(postId)
+                _uiState.update { state ->
+                    state.copy(
+                        isPostingComment = false,
+                        posts = state.posts.map {
+                            if (it.id == postId) it.copy(commentsCount = it.commentsCount + 1) else it
+                        }
+                    )
+                }
+            } catch (e: Exception) {
+                _uiState.update { it.copy(isPostingComment = false) }
+            }
+        }
+    }
+
+    fun startAutoRefresh() {
+        autoRefreshJob?.cancel()
+        autoRefreshJob = viewModelScope.launch {
+            while (true) {
+                delay(30_000)
+                try {
+                    val response = apiService.getFeed()
+                    _uiState.update { it.copy(posts = response.data) }
+                } catch (_: Exception) { }
+            }
+        }
+    }
+
+    fun stopAutoRefresh() {
+        autoRefreshJob?.cancel()
+        autoRefreshJob = null
+    }
+
+    fun clearError() {
+        _uiState.update { it.copy(error = null) }
+    }
 }
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -176,9 +262,23 @@ fun NewsFeedScreen(
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
     var composerText by remember { mutableStateOf("") }
+    val snackbarHostState = remember { SnackbarHostState() }
+
+    DisposableEffect(Unit) {
+        viewModel.startAutoRefresh()
+        onDispose { viewModel.stopAutoRefresh() }
+    }
+
+    LaunchedEffect(uiState.error) {
+        uiState.error?.let { error ->
+            snackbarHostState.showSnackbar(error)
+            viewModel.clearError()
+        }
+    }
 
     Scaffold(
         containerColor = Navy900,
+        snackbarHost = { SnackbarHost(hostState = snackbarHostState) },
         topBar = {
             TopAppBar(
                 title = {
@@ -192,83 +292,257 @@ fun NewsFeedScreen(
             )
         }
     ) { paddingValues ->
-        when {
-            uiState.isLoading && uiState.posts.isEmpty() -> {
-                Box(
-                    modifier = Modifier
-                        .fillMaxSize()
-                        .padding(paddingValues),
-                    contentAlignment = Alignment.Center
-                ) {
-                    CircularProgressIndicator(color = USOpenGold)
+        PullToRefreshBox(
+            isRefreshing = uiState.isLoading && uiState.posts.isEmpty(),
+            onRefresh = { viewModel.loadFeed() },
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(paddingValues)
+        ) {
+            LazyColumn(
+                modifier = Modifier.fillMaxSize(),
+                contentPadding = PaddingValues(vertical = 0.dp),
+                verticalArrangement = Arrangement.spacedBy(2.dp)
+            ) {
+                // Inline post composer
+                item {
+                    FeedComposer(
+                        text = composerText,
+                        onTextChange = { composerText = it },
+                        userPhotoUrl = uiState.currentUserPhotoUrl,
+                        isPosting = uiState.isPosting,
+                        onPost = {
+                            viewModel.createPost(composerText)
+                            composerText = ""
+                        },
+                        onSuggestionClick = { suggestion ->
+                            composerText = suggestion
+                        }
+                    )
                 }
-            }
-            else -> {
-                LazyColumn(
-                    modifier = Modifier
-                        .fillMaxSize()
-                        .padding(paddingValues),
-                    contentPadding = PaddingValues(vertical = 0.dp),
-                    verticalArrangement = Arrangement.spacedBy(2.dp)
-                ) {
-                    // Inline post composer
-                    item {
-                        FeedComposer(
-                            text = composerText,
-                            onTextChange = { composerText = it },
-                            userPhotoUrl = uiState.currentUserPhotoUrl,
-                            isPosting = uiState.isPosting,
-                            onPost = {
-                                viewModel.createPost(composerText)
-                                composerText = ""
-                            },
-                            onSuggestionClick = { suggestion ->
-                                composerText = suggestion
-                            }
-                        )
-                    }
 
-                    if (uiState.posts.isEmpty() && !uiState.isLoading) {
-                        item {
-                            Box(
-                                modifier = Modifier
-                                    .fillMaxWidth()
-                                    .height(300.dp),
-                                contentAlignment = Alignment.Center
-                            ) {
-                                Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                                    Icon(
-                                        Icons.Default.SportsScore,
-                                        contentDescription = null,
-                                        modifier = Modifier.size(64.dp),
-                                        tint = WarmWhite.copy(alpha = 0.3f)
-                                    )
-                                    Spacer(modifier = Modifier.height(12.dp))
-                                    Text(
-                                        text = "No posts yet",
-                                        style = MaterialTheme.typography.titleMedium,
-                                        color = WarmWhite.copy(alpha = 0.5f)
-                                    )
-                                    Spacer(modifier = Modifier.height(4.dp))
-                                    Text(
-                                        text = "Follow players and partners to see their updates",
-                                        style = MaterialTheme.typography.bodySmall,
-                                        color = WarmWhite.copy(alpha = 0.3f)
-                                    )
-                                }
+                if (uiState.posts.isEmpty() && !uiState.isLoading) {
+                    item {
+                        Box(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .height(300.dp),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                                Icon(
+                                    Icons.Default.SportsScore,
+                                    contentDescription = null,
+                                    modifier = Modifier.size(64.dp),
+                                    tint = WarmWhite.copy(alpha = 0.3f)
+                                )
+                                Spacer(modifier = Modifier.height(12.dp))
+                                Text(
+                                    text = "No posts yet",
+                                    style = MaterialTheme.typography.titleMedium,
+                                    color = WarmWhite.copy(alpha = 0.5f)
+                                )
+                                Spacer(modifier = Modifier.height(4.dp))
+                                Text(
+                                    text = "Follow players and partners to see their updates",
+                                    style = MaterialTheme.typography.bodySmall,
+                                    color = WarmWhite.copy(alpha = 0.3f)
+                                )
                             }
                         }
-                    } else {
-                        items(uiState.posts, key = { it.id }) { post ->
-                            FeedPostCard(
-                                post = post,
-                                onLike = { viewModel.toggleLike(post.id) },
-                                onUserClick = { onUserClick(post.userId) }
+                    }
+                } else {
+                    items(uiState.posts, key = { it.id }) { post ->
+                        FeedPostCard(
+                            post = post,
+                            onLike = { viewModel.toggleLike(post.id) },
+                            onComment = { viewModel.openComments(post.id) },
+                            onUserClick = { onUserClick(post.userId) }
+                        )
+                    }
+                }
+            }
+        }
+
+        if (uiState.showComments) {
+            CommentsBottomSheet(
+                comments = uiState.comments,
+                isLoading = uiState.isLoadingComments,
+                isPosting = uiState.isPostingComment,
+                onDismiss = { viewModel.closeComments() },
+                onPostComment = { viewModel.postComment(it) }
+            )
+        }
+    }
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+private fun CommentsBottomSheet(
+    comments: List<FeedCommentDto>,
+    isLoading: Boolean,
+    isPosting: Boolean,
+    onDismiss: () -> Unit,
+    onPostComment: (String) -> Unit
+) {
+    val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
+    var commentText by remember { mutableStateOf("") }
+
+    ModalBottomSheet(
+        onDismissRequest = onDismiss,
+        sheetState = sheetState,
+        containerColor = Navy800
+    ) {
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(450.dp)
+                .padding(horizontal = 16.dp)
+        ) {
+            Text(
+                text = "Comments",
+                style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold),
+                color = WarmWhite,
+                modifier = Modifier.padding(bottom = 12.dp)
+            )
+
+            LazyColumn(
+                modifier = Modifier.weight(1f),
+                verticalArrangement = Arrangement.spacedBy(12.dp)
+            ) {
+                if (isLoading) {
+                    item {
+                        Box(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(32.dp),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            CircularProgressIndicator(color = USOpenGold)
+                        }
+                    }
+                } else if (comments.isEmpty()) {
+                    item {
+                        Box(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(32.dp),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Text(
+                                "No comments yet. Be the first!",
+                                color = WarmWhite.copy(alpha = 0.5f),
+                                style = MaterialTheme.typography.bodyMedium
                             )
                         }
                     }
+                } else {
+                    items(comments, key = { it.id }) { comment ->
+                        CommentItem(comment = comment)
+                    }
                 }
             }
+
+            HorizontalDivider(color = Navy600.copy(alpha = 0.5f))
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(vertical = 8.dp),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                TextField(
+                    value = commentText,
+                    onValueChange = { commentText = it },
+                    placeholder = { Text("Write a comment...", color = WarmWhite.copy(alpha = 0.35f)) },
+                    modifier = Modifier.weight(1f),
+                    colors = TextFieldDefaults.colors(
+                        focusedContainerColor = Navy700.copy(alpha = 0.5f),
+                        unfocusedContainerColor = Navy700.copy(alpha = 0.3f),
+                        focusedTextColor = WarmWhite,
+                        unfocusedTextColor = WarmWhite,
+                        cursorColor = USOpenGold,
+                        focusedIndicatorColor = Color.Transparent,
+                        unfocusedIndicatorColor = Color.Transparent
+                    ),
+                    shape = RoundedCornerShape(20.dp),
+                    maxLines = 3
+                )
+                Spacer(modifier = Modifier.width(8.dp))
+                IconButton(
+                    onClick = {
+                        onPostComment(commentText)
+                        commentText = ""
+                    },
+                    enabled = commentText.isNotBlank() && !isPosting
+                ) {
+                    if (isPosting) {
+                        CircularProgressIndicator(
+                            modifier = Modifier.size(20.dp),
+                            color = USOpenGold,
+                            strokeWidth = 2.dp
+                        )
+                    } else {
+                        Icon(
+                            Icons.AutoMirrored.Filled.Send,
+                            contentDescription = "Send",
+                            tint = if (commentText.isNotBlank()) USOpenGold else WarmWhite.copy(alpha = 0.3f)
+                        )
+                    }
+                }
+            }
+            Spacer(modifier = Modifier.height(16.dp))
+        }
+    }
+}
+
+@Composable
+private fun CommentItem(comment: FeedCommentDto) {
+    Row(modifier = Modifier.fillMaxWidth()) {
+        if (comment.userPhotoUrl != null) {
+            AsyncImage(
+                model = comment.userPhotoUrl,
+                contentDescription = null,
+                modifier = Modifier
+                    .size(32.dp)
+                    .clip(CircleShape),
+                contentScale = ContentScale.Crop
+            )
+        } else {
+            Box(
+                modifier = Modifier
+                    .size(32.dp)
+                    .clip(CircleShape)
+                    .background(Navy600),
+                contentAlignment = Alignment.Center
+            ) {
+                Icon(
+                    Icons.Default.Person,
+                    contentDescription = null,
+                    modifier = Modifier.size(16.dp),
+                    tint = USOpenGold
+                )
+            }
+        }
+        Spacer(modifier = Modifier.width(10.dp))
+        Column(modifier = Modifier.weight(1f)) {
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Text(
+                    text = comment.userName,
+                    style = MaterialTheme.typography.labelMedium.copy(fontWeight = FontWeight.Bold),
+                    color = WarmWhite
+                )
+                Spacer(modifier = Modifier.width(8.dp))
+                Text(
+                    text = formatTimeAgo(comment.createdAt),
+                    style = MaterialTheme.typography.labelSmall,
+                    color = WarmWhite.copy(alpha = 0.4f)
+                )
+            }
+            Text(
+                text = comment.content,
+                style = MaterialTheme.typography.bodyMedium,
+                color = WarmWhite.copy(alpha = 0.85f)
+            )
         }
     }
 }
@@ -444,6 +718,7 @@ private fun SuggestionChip(
 private fun FeedPostCard(
     post: FeedPostDto,
     onLike: () -> Unit,
+    onComment: () -> Unit,
     onUserClick: () -> Unit
 ) {
     Card(
@@ -646,18 +921,23 @@ private fun FeedPostCard(
 
                 Spacer(modifier = Modifier.width(16.dp))
 
-                Icon(
-                    Icons.Default.ChatBubbleOutline,
-                    contentDescription = "Comments",
-                    modifier = Modifier.size(18.dp),
-                    tint = WarmWhite.copy(alpha = 0.6f)
-                )
-                Spacer(modifier = Modifier.width(4.dp))
-                Text(
-                    text = "${post.commentsCount}",
-                    style = MaterialTheme.typography.bodySmall,
-                    color = WarmWhite.copy(alpha = 0.6f)
-                )
+                Row(
+                    modifier = Modifier.clickable(onClick = onComment),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Icon(
+                        Icons.Default.ChatBubbleOutline,
+                        contentDescription = "Comments",
+                        modifier = Modifier.size(18.dp),
+                        tint = WarmWhite.copy(alpha = 0.6f)
+                    )
+                    Spacer(modifier = Modifier.width(4.dp))
+                    Text(
+                        text = "${post.commentsCount}",
+                        style = MaterialTheme.typography.bodySmall,
+                        color = WarmWhite.copy(alpha = 0.6f)
+                    )
+                }
             }
         }
     }
@@ -762,7 +1042,7 @@ private fun NewsFeedScreenPreview() {
                 )
             }
             items(samplePosts) { post ->
-                FeedPostCard(post = post, onLike = {}, onUserClick = {})
+                FeedPostCard(post = post, onLike = {}, onComment = {}, onUserClick = {})
             }
         }
     }

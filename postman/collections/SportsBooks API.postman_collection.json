@@ -1,0 +1,1897 @@
+{
+  "info": {
+    "_postman_id": "3ca5bab3-a120-439a-b584-1ffe295cb8c1",
+    "name": "SportsBooks API",
+    "description": "Complete API collection for SportsBooks — Sports Venue & Coach Booking Platform.\n\nAll endpoints require Firebase Auth token (Bearer) unless noted.\nPartner/Admin endpoints require role = 'partner' or 'admin'.\n\nStripe Test Card: 4242 4242 4242 4242 | Exp: 12/34 | CVC: 123 | ZIP: 42424",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "item": [
+    {
+      "name": "Health",
+      "item": [
+        {
+          "name": "Health Check",
+          "request": {
+            "auth": { "type": "noauth" },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/health",
+              "host": ["{{base_url}}"],
+              "path": ["health"]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Auth",
+      "item": [
+        {
+          "name": "Register User",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"firebaseUid\": \"test-partner-uid-1\",\n  \"email\": \"marko@test.com\",\n  \"displayName\": \"Marko\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/auth/register",
+              "host": ["{{base_url}}"],
+              "path": ["api", "auth", "register"]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Users",
+      "item": [
+        {
+          "name": "Get My Profile",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/users/me",
+              "host": ["{{base_url}}"],
+              "path": ["api", "users", "me"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Update My Profile",
+          "request": {
+            "method": "PUT",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"displayName\": \"Marko Updated\",\n  \"phoneNumber\": \"+38970123456\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/users/me",
+              "host": ["{{base_url}}"],
+              "path": ["api", "users", "me"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Set Role (Partner/Venue Owner)",
+          "request": {
+            "method": "PUT",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"role\": \"partner\",\n  \"partnerType\": \"venue_owner\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/users/me/role",
+              "host": ["{{base_url}}"],
+              "path": ["api", "users", "me", "role"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Set Role (Partner/Coach)",
+          "request": {
+            "method": "PUT",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"role\": \"partner\",\n  \"partnerType\": \"coach\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/users/me/role",
+              "host": ["{{base_url}}"],
+              "path": ["api", "users", "me", "role"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Update Interested Sports",
+          "request": {
+            "method": "PUT",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"sports\": [\"basketball\", \"tennis\", \"football\"]\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/users/me/interested-sports",
+              "host": ["{{base_url}}"],
+              "path": ["api", "users", "me", "interested-sports"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Complete Onboarding",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/users/me/complete-onboarding",
+              "host": ["{{base_url}}"],
+              "path": ["api", "users", "me", "complete-onboarding"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Get Sport Expertise",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/users/me/sport-expertise",
+              "host": ["{{base_url}}"],
+              "path": ["api", "users", "me", "sport-expertise"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Set Sport Expertise",
+          "request": {
+            "method": "PUT",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"expertise\": [\n    { \"sportType\": \"basketball\", \"skillLevel\": \"intermediate\" },\n    { \"sportType\": \"tennis\", \"skillLevel\": \"beginner\" }\n  ]\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/users/me/sport-expertise",
+              "host": ["{{base_url}}"],
+              "path": ["api", "users", "me", "sport-expertise"]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Sports",
+      "item": [
+        {
+          "name": "Get All Sports",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/sports",
+              "host": ["{{base_url}}"],
+              "path": ["api", "sports"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Get Sport by ID",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/sports/1",
+              "host": ["{{base_url}}"],
+              "path": ["api", "sports", "1"]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Venues",
+      "description": "Venue CRUD. POST/PUT/DELETE require partner or admin role. Ownership enforced for partners.",
+      "item": [
+        {
+          "name": "Get All Venues",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/venues",
+              "host": ["{{base_url}}"],
+              "path": ["api", "venues"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Create Venue",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Markos Indoor Court\",\n  \"description\": \"Full-size indoor basketball court with wooden floors\",\n  \"sportType\": \"basketball\",\n  \"pricePerHour\": 1500,\n  \"address\": \"ul. Partizanska 12, Skopje\",\n  \"city\": \"Skopje\",\n  \"phoneNumber\": \"+38970123456\",\n  \"email\": \"marko@court.com\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/venues",
+              "host": ["{{base_url}}"],
+              "path": ["api", "venues"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Get Venue by ID",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/venues/1",
+              "host": ["{{base_url}}"],
+              "path": ["api", "venues", "1"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Update Venue",
+          "request": {
+            "method": "PUT",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Markos Indoor Court - Updated\",\n  \"pricePerHour\": 1800,\n  \"description\": \"Renovated full-size indoor basketball court\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/venues/1",
+              "host": ["{{base_url}}"],
+              "path": ["api", "venues", "1"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Delete Venue",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/venues/1",
+              "host": ["{{base_url}}"],
+              "path": ["api", "venues", "1"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Get My Venues",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/venues/mine",
+              "host": ["{{base_url}}"],
+              "path": ["api", "venues", "mine"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Get Venues by Sport",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/venues/by-sport/basketball",
+              "host": ["{{base_url}}"],
+              "path": ["api", "venues", "by-sport", "basketball"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Get Top Deal Venues",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/venues/top-deals",
+              "host": ["{{base_url}}"],
+              "path": ["api", "venues", "top-deals"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Search Venues",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/venues/search?q=Skopje",
+              "host": ["{{base_url}}"],
+              "path": ["api", "venues", "search"],
+              "query": [
+                { "key": "q", "value": "Skopje" }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Add Venue Image",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"imageUrl\": \"https://firebasestorage.googleapis.com/v0/b/sportsbooks/o/venues%2Fimage1.jpg\",\n  \"isPrimary\": true\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/venues/1/images",
+              "host": ["{{base_url}}"],
+              "path": ["api", "venues", "1", "images"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Delete Venue Image",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/venues/1/images/1",
+              "host": ["{{base_url}}"],
+              "path": ["api", "venues", "1", "images", "1"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Set Primary Venue Image",
+          "request": {
+            "method": "PUT",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/venues/1/images/1/primary",
+              "host": ["{{base_url}}"],
+              "path": ["api", "venues", "1", "images", "1", "primary"]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Coaches",
+      "description": "Coach CRUD. POST/PUT/DELETE require partner or admin role. Ownership enforced for partners.",
+      "item": [
+        {
+          "name": "Get All Coaches",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/coaches",
+              "host": ["{{base_url}}"],
+              "path": ["api", "coaches"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Create Coach",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Coach Stefan\",\n  \"bio\": \"10 years of basketball coaching experience\",\n  \"sportType\": \"basketball\",\n  \"specialization\": \"Youth Development\",\n  \"experienceYears\": 10,\n  \"pricePerHour\": 2000,\n  \"address\": \"Skopje\",\n  \"city\": \"Skopje\",\n  \"phoneNumber\": \"+38970654321\",\n  \"email\": \"stefan@coach.com\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/coaches",
+              "host": ["{{base_url}}"],
+              "path": ["api", "coaches"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Get Coach by ID",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/coaches/1",
+              "host": ["{{base_url}}"],
+              "path": ["api", "coaches", "1"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Update Coach",
+          "request": {
+            "method": "PUT",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Coach Stefan - Updated\",\n  \"pricePerHour\": 2500,\n  \"specialization\": \"Pro Skills Training\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/coaches/1",
+              "host": ["{{base_url}}"],
+              "path": ["api", "coaches", "1"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Delete Coach",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/coaches/1",
+              "host": ["{{base_url}}"],
+              "path": ["api", "coaches", "1"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Get My Coach Profile",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/coaches/mine",
+              "host": ["{{base_url}}"],
+              "path": ["api", "coaches", "mine"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Get Coaches by Sport",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/coaches/by-sport/basketball",
+              "host": ["{{base_url}}"],
+              "path": ["api", "coaches", "by-sport", "basketball"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Get Top Deal Coaches",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/coaches/top-deals",
+              "host": ["{{base_url}}"],
+              "path": ["api", "coaches", "top-deals"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Search Coaches",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/coaches/search?q=Stefan",
+              "host": ["{{base_url}}"],
+              "path": ["api", "coaches", "search"],
+              "query": [
+                { "key": "q", "value": "Stefan" }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Add Coach Image",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"imageUrl\": \"https://firebasestorage.googleapis.com/v0/b/sportsbooks/o/coaches%2Fimage1.jpg\",\n  \"isPrimary\": true\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/coaches/1/images",
+              "host": ["{{base_url}}"],
+              "path": ["api", "coaches", "1", "images"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Delete Coach Image",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/coaches/1/images/1",
+              "host": ["{{base_url}}"],
+              "path": ["api", "coaches", "1", "images", "1"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Set Primary Coach Image",
+          "request": {
+            "method": "PUT",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/coaches/1/images/1/primary",
+              "host": ["{{base_url}}"],
+              "path": ["api", "coaches", "1", "images", "1", "primary"]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Time Slots",
+      "description": "Time slot management. Generate creates hourly slots 09:00-22:00. Generate and Delete require partner/admin role.",
+      "item": [
+        {
+          "name": "Generate Time Slots (Venue)",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"venueId\": 1,\n  \"dateFrom\": \"2026-03-16\",\n  \"dateTo\": \"2026-03-22\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/time-slots/generate",
+              "host": ["{{base_url}}"],
+              "path": ["api", "time-slots", "generate"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Generate Time Slots (Coach)",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"coachId\": 1,\n  \"dateFrom\": \"2026-03-16\",\n  \"dateTo\": \"2026-03-22\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/time-slots/generate",
+              "host": ["{{base_url}}"],
+              "path": ["api", "time-slots", "generate"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Get Venue Time Slots",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/venues/1/time-slots?dateFrom=2026-03-16&dateTo=2026-03-22",
+              "host": ["{{base_url}}"],
+              "path": ["api", "venues", "1", "time-slots"],
+              "query": [
+                { "key": "dateFrom", "value": "2026-03-16" },
+                { "key": "dateTo", "value": "2026-03-22" }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Get Coach Time Slots",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/coaches/1/time-slots?dateFrom=2026-03-16&dateTo=2026-03-22",
+              "host": ["{{base_url}}"],
+              "path": ["api", "coaches", "1", "time-slots"],
+              "query": [
+                { "key": "dateFrom", "value": "2026-03-16" },
+                { "key": "dateTo", "value": "2026-03-22" }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Get Time Slot by ID",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/time-slots/1",
+              "host": ["{{base_url}}"],
+              "path": ["api", "time-slots", "1"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Delete Time Slot",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/time-slots/1",
+              "host": ["{{base_url}}"],
+              "path": ["api", "time-slots", "1"]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Bookings",
+      "item": [
+        {
+          "name": "Create Booking",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"timeSlotId\": 10,\n  \"notes\": \"Looking forward to playing!\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/bookings",
+              "host": ["{{base_url}}"],
+              "path": ["api", "bookings"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Get My Bookings",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/bookings/mine",
+              "host": ["{{base_url}}"],
+              "path": ["api", "bookings", "mine"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Get My Bookings (filtered by status)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/bookings/mine?status=pending",
+              "host": ["{{base_url}}"],
+              "path": ["api", "bookings", "mine"],
+              "query": [
+                { "key": "status", "value": "pending" }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Get Booking by ID",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/bookings/1",
+              "host": ["{{base_url}}"],
+              "path": ["api", "bookings", "1"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Get Booking Counts",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/bookings/counts",
+              "host": ["{{base_url}}"],
+              "path": ["api", "bookings", "counts"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Get Partner Bookings",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/bookings/partner",
+              "host": ["{{base_url}}"],
+              "path": ["api", "bookings", "partner"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Update Booking Status (Confirm)",
+          "request": {
+            "method": "PUT",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"status\": \"confirmed\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/bookings/1/status",
+              "host": ["{{base_url}}"],
+              "path": ["api", "bookings", "1", "status"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Update Booking Status (Cancel)",
+          "request": {
+            "method": "PUT",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"status\": \"cancelled\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/bookings/1/status",
+              "host": ["{{base_url}}"],
+              "path": ["api", "bookings", "1", "status"]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Payments",
+      "description": "Payment processing via Stripe. Platform collects 10% fee, rest goes to partner via Stripe Connect.",
+      "item": [
+        {
+          "name": "Create Payment Intent",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"bookingId\": 1\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/payments/create-intent",
+              "host": ["{{base_url}}"],
+              "path": ["api", "payments", "create-intent"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Confirm Payment",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/payments/1/confirm",
+              "host": ["{{base_url}}"],
+              "path": ["api", "payments", "1", "confirm"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Fail Payment",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/payments/1/fail",
+              "host": ["{{base_url}}"],
+              "path": ["api", "payments", "1", "fail"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Get My Payments",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/payments/mine",
+              "host": ["{{base_url}}"],
+              "path": ["api", "payments", "mine"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Get Payment by Booking ID",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/payments/booking/1",
+              "host": ["{{base_url}}"],
+              "path": ["api", "payments", "booking", "1"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Get Payment by ID",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/payments/1",
+              "host": ["{{base_url}}"],
+              "path": ["api", "payments", "1"]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Stripe Connect",
+      "description": "Partner Stripe Connect onboarding & dashboard. Partners receive 90% of booking payments.\n\nTest card: 4242 4242 4242 4242 | Exp: 12/34 | CVC: 123\nTest routing: 110000000 | Account: 000123456789 | SSN last 4: 0000\nTest phone: 000 000 0000 | Verification: 000000",
+      "item": [
+        {
+          "name": "Onboard Partner (Start Stripe Connect)",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/stripe-connect/onboard",
+              "host": ["{{base_url}}"],
+              "path": ["api", "stripe-connect", "onboard"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Get Stripe Connect Status",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/stripe-connect/status",
+              "host": ["{{base_url}}"],
+              "path": ["api", "stripe-connect", "status"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Get Stripe Dashboard Link",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/stripe-connect/dashboard-link",
+              "host": ["{{base_url}}"],
+              "path": ["api", "stripe-connect", "dashboard-link"]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Webhooks",
+      "description": "Stripe webhooks. No auth required — Stripe signature verification used instead.",
+      "item": [
+        {
+          "name": "Stripe Webhook",
+          "request": {
+            "auth": { "type": "noauth" },
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "stripe-signature", "value": "{{stripe_webhook_signature}}" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"id\": \"evt_test\",\n  \"type\": \"payment_intent.succeeded\",\n  \"data\": {\n    \"object\": {}\n  }\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/webhooks/stripe",
+              "host": ["{{base_url}}"],
+              "path": ["api", "webhooks", "stripe"]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Reviews",
+      "item": [
+        {
+          "name": "Create Review (Venue)",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"venueId\": 1,\n  \"rating\": 5,\n  \"comment\": \"Great court, clean facilities!\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/reviews",
+              "host": ["{{base_url}}"],
+              "path": ["api", "reviews"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Create Review (Coach)",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"coachId\": 1,\n  \"rating\": 4,\n  \"comment\": \"Very knowledgeable coach!\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/reviews",
+              "host": ["{{base_url}}"],
+              "path": ["api", "reviews"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Get Venue Reviews",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/reviews/venue/1",
+              "host": ["{{base_url}}"],
+              "path": ["api", "reviews", "venue", "1"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Get Coach Reviews",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/reviews/coach/1",
+              "host": ["{{base_url}}"],
+              "path": ["api", "reviews", "coach", "1"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Get My Reviews",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/reviews/mine",
+              "host": ["{{base_url}}"],
+              "path": ["api", "reviews", "mine"]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Discounts",
+      "item": [
+        {
+          "name": "Create Discount (Venue)",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"venueId\": 1,\n  \"title\": \"Grand Opening 20% Off\",\n  \"description\": \"20% off all bookings for the first month!\",\n  \"discountPercent\": 20,\n  \"validFrom\": \"2026-03-16\",\n  \"validUntil\": \"2026-04-16\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/discounts",
+              "host": ["{{base_url}}"],
+              "path": ["api", "discounts"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Create Discount (Coach)",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"coachId\": 1,\n  \"title\": \"First Session Free\",\n  \"description\": \"500 MKD off your first session!\",\n  \"discountAmount\": 500,\n  \"validFrom\": \"2026-03-16\",\n  \"validUntil\": \"2026-04-16\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/discounts",
+              "host": ["{{base_url}}"],
+              "path": ["api", "discounts"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Update Discount",
+          "request": {
+            "method": "PUT",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"discountPercent\": 30,\n  \"title\": \"Extended 30% Off!\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/discounts/1",
+              "host": ["{{base_url}}"],
+              "path": ["api", "discounts", "1"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Get Venue Discounts",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/discounts/venue/1",
+              "host": ["{{base_url}}"],
+              "path": ["api", "discounts", "venue", "1"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Get Coach Discounts",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/discounts/coach/1",
+              "host": ["{{base_url}}"],
+              "path": ["api", "discounts", "coach", "1"]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Matches",
+      "description": "Match creation, joining, chat, ratings, and recurrence rules.",
+      "item": [
+        {
+          "name": "Create Match",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"venueId\": 1,\n  \"sportType\": \"basketball\",\n  \"matchDate\": \"2026-03-20\",\n  \"startTime\": \"18:00\",\n  \"endTime\": \"19:00\",\n  \"maxPlayers\": 10,\n  \"skillLevel\": \"intermediate\",\n  \"isPrivate\": false,\n  \"description\": \"Friendly 5v5 basketball game\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/matches",
+              "host": ["{{base_url}}"],
+              "path": ["api", "matches"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "List Matches",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/matches?sportType=basketball&status=open",
+              "host": ["{{base_url}}"],
+              "path": ["api", "matches"],
+              "query": [
+                { "key": "sportType", "value": "basketball" },
+                { "key": "status", "value": "open" }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Get My Matches",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/matches/mine",
+              "host": ["{{base_url}}"],
+              "path": ["api", "matches", "mine"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Get Nearby Matches",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/matches/nearby?lat=41.9981&lng=21.4254&radiusKm=10",
+              "host": ["{{base_url}}"],
+              "path": ["api", "matches", "nearby"],
+              "query": [
+                { "key": "lat", "value": "41.9981" },
+                { "key": "lng", "value": "21.4254" },
+                { "key": "radiusKm", "value": "10" }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Get Match by ID",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/matches/1",
+              "host": ["{{base_url}}"],
+              "path": ["api", "matches", "1"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Update Match",
+          "request": {
+            "method": "PUT",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"description\": \"Updated description\",\n  \"maxPlayers\": 12\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/matches/1",
+              "host": ["{{base_url}}"],
+              "path": ["api", "matches", "1"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Cancel Match",
+          "request": {
+            "method": "PUT",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/matches/1/cancel",
+              "host": ["{{base_url}}"],
+              "path": ["api", "matches", "1", "cancel"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Join Match",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/matches/1/join",
+              "host": ["{{base_url}}"],
+              "path": ["api", "matches", "1", "join"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Join Match with Party",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"partyId\": 1\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/matches/1/join-with-party",
+              "host": ["{{base_url}}"],
+              "path": ["api", "matches", "1", "join-with-party"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Leave Match",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/matches/1/leave",
+              "host": ["{{base_url}}"],
+              "path": ["api", "matches", "1", "leave"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Get Match Participants",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/matches/1/participants",
+              "host": ["{{base_url}}"],
+              "path": ["api", "matches", "1", "participants"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Respond to Join Request",
+          "request": {
+            "method": "PUT",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"status\": \"approved\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/matches/1/participants/1",
+              "host": ["{{base_url}}"],
+              "path": ["api", "matches", "1", "participants", "1"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Get Match Chat Messages",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/matches/1/chat",
+              "host": ["{{base_url}}"],
+              "path": ["api", "matches", "1", "chat"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Send Chat Message",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"message\": \"Hey everyone, see you at the court!\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/matches/1/chat",
+              "host": ["{{base_url}}"],
+              "path": ["api", "matches", "1", "chat"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Rate Player",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"ratedUserId\": 2,\n  \"sportmanship\": 5,\n  \"skill\": 4,\n  \"punctuality\": 5,\n  \"comment\": \"Great player!\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/matches/1/ratings",
+              "host": ["{{base_url}}"],
+              "path": ["api", "matches", "1", "ratings"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Get Match Ratings",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/matches/1/ratings",
+              "host": ["{{base_url}}"],
+              "path": ["api", "matches", "1", "ratings"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Get Player Ratings",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/matches/players/2/ratings",
+              "host": ["{{base_url}}"],
+              "path": ["api", "matches", "players", "2", "ratings"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Create Recurrence Rule",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"matchId\": 1,\n  \"frequency\": \"weekly\",\n  \"dayOfWeek\": 3,\n  \"untilDate\": \"2026-06-01\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/matches/recurrence-rules",
+              "host": ["{{base_url}}"],
+              "path": ["api", "matches", "recurrence-rules"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Get Recurrence Rule",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/matches/recurrence-rules/1",
+              "host": ["{{base_url}}"],
+              "path": ["api", "matches", "recurrence-rules", "1"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Update Recurrence Rule",
+          "request": {
+            "method": "PUT",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"untilDate\": \"2026-08-01\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/matches/recurrence-rules/1",
+              "host": ["{{base_url}}"],
+              "path": ["api", "matches", "recurrence-rules", "1"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Deactivate Recurrence Rule",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/matches/recurrence-rules/1",
+              "host": ["{{base_url}}"],
+              "path": ["api", "matches", "recurrence-rules", "1"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Generate Recurrences",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"ruleId\": 1\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/matches/recurrence-rules/generate",
+              "host": ["{{base_url}}"],
+              "path": ["api", "matches", "recurrence-rules", "generate"]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Notifications",
+      "item": [
+        {
+          "name": "Get Notifications",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/notifications",
+              "host": ["{{base_url}}"],
+              "path": ["api", "notifications"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Get Unread Count",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/notifications/unread-count",
+              "host": ["{{base_url}}"],
+              "path": ["api", "notifications", "unread-count"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Mark Notifications as Read",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"notificationIds\": [1, 2, 3]\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/notifications/mark-read",
+              "host": ["{{base_url}}"],
+              "path": ["api", "notifications", "mark-read"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Register Device Token",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"token\": \"fcm-device-token-here\",\n  \"platform\": \"android\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/notifications/device-token",
+              "host": ["{{base_url}}"],
+              "path": ["api", "notifications", "device-token"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Remove Device Token",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"token\": \"fcm-device-token-here\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/notifications/device-token",
+              "host": ["{{base_url}}"],
+              "path": ["api", "notifications", "device-token"]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Search",
+      "item": [
+        {
+          "name": "Global Search",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/search?q=basketball&type=all",
+              "host": ["{{base_url}}"],
+              "path": ["api", "search"],
+              "query": [
+                { "key": "q", "value": "basketball" },
+                { "key": "type", "value": "all" }
+              ]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Favorites",
+      "item": [
+        {
+          "name": "Get My Favorites",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/favorites",
+              "host": ["{{base_url}}"],
+              "path": ["api", "favorites"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Toggle Favorite",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"entityType\": \"venue\",\n  \"entityId\": 1\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/favorites/toggle",
+              "host": ["{{base_url}}"],
+              "path": ["api", "favorites", "toggle"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Check Favorites",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"items\": [\n    { \"entityType\": \"venue\", \"entityId\": 1 },\n    { \"entityType\": \"coach\", \"entityId\": 1 }\n  ]\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/favorites/check",
+              "host": ["{{base_url}}"],
+              "path": ["api", "favorites", "check"]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Friends",
+      "item": [
+        {
+          "name": "Get My Friends",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/friends",
+              "host": ["{{base_url}}"],
+              "path": ["api", "friends"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Get Friend Requests",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/friends/requests",
+              "host": ["{{base_url}}"],
+              "path": ["api", "friends", "requests"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Send Friend Request",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"friendId\": 2\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/friends/request",
+              "host": ["{{base_url}}"],
+              "path": ["api", "friends", "request"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Respond to Friend Request",
+          "request": {
+            "method": "PUT",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"status\": \"accepted\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/friends/request/1/respond",
+              "host": ["{{base_url}}"],
+              "path": ["api", "friends", "request", "1", "respond"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Remove Friend",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/friends/2",
+              "host": ["{{base_url}}"],
+              "path": ["api", "friends", "2"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Search Users",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/friends/search-users?q=marko",
+              "host": ["{{base_url}}"],
+              "path": ["api", "friends", "search-users"],
+              "query": [
+                { "key": "q", "value": "marko" }
+              ]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Parties",
+      "item": [
+        {
+          "name": "Create Party",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Basketball Squad\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/parties",
+              "host": ["{{base_url}}"],
+              "path": ["api", "parties"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Get Active Party",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/parties/active",
+              "host": ["{{base_url}}"],
+              "path": ["api", "parties", "active"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Get Party by ID",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/parties/1",
+              "host": ["{{base_url}}"],
+              "path": ["api", "parties", "1"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Invite to Party",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"userId\": 2\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/parties/1/invite",
+              "host": ["{{base_url}}"],
+              "path": ["api", "parties", "1", "invite"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Respond to Party Invite",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"status\": \"accepted\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/parties/1/respond",
+              "host": ["{{base_url}}"],
+              "path": ["api", "parties", "1", "respond"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Disband Party",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/parties/1/disband",
+              "host": ["{{base_url}}"],
+              "path": ["api", "parties", "1", "disband"]
+            }
+          },
+          "response": []
+        }
+      ]
+    }
+  ],
+  "auth": {
+    "type": "bearer",
+    "bearer": [
+      {
+        "key": "token",
+        "value": "{{auth_token}}",
+        "type": "string"
+      }
+    ]
+  },
+  "variable": [
+    {
+      "key": "base_url",
+      "value": "http://localhost:3000",
+      "type": "string"
+    },
+    {
+      "key": "auth_token",
+      "value": "YOUR_FIREBASE_TOKEN_HERE",
+      "type": "string"
+    }
+  ]
+}

@@ -91,6 +91,12 @@ import com.example.sportsbook.data.remote.dto.UpdateCommunityRequestDto
 import com.example.sportsbook.data.remote.dto.InviteToCommunityRequestDto
 import com.example.sportsbook.data.remote.dto.RespondToMemberRequestDto
 import com.example.sportsbook.data.remote.dto.CreateLobbyRequestDto
+import com.example.sportsbook.data.remote.dto.VenueBookingLobbyDto
+import com.example.sportsbook.data.remote.dto.VenueBookingLobbyTeamDto
+import com.example.sportsbook.data.remote.dto.CreateVenueBookingLobbyRequestDto
+import com.example.sportsbook.data.remote.dto.UpdateVenueBookingLobbyRequestDto
+import com.example.sportsbook.data.remote.dto.AddTeamRequestDto
+import com.example.sportsbook.data.remote.dto.SplitPaymentIntentResponseDto
 import retrofit2.http.Body
 import retrofit2.http.DELETE
 import retrofit2.http.GET
@@ -626,4 +632,54 @@ interface ApiService {
 
     @POST("api/feed/{id}/comments")
     suspend fun addComment(@Path("id") postId: Long, @Body request: AddCommentRequestDto): ApiResponseDto<FeedCommentDto>
+
+    // Venue Booking Lobbies
+    @POST("api/venue-booking-lobbies")
+    suspend fun createVenueBookingLobby(@Body request: CreateVenueBookingLobbyRequestDto): ApiResponseDto<VenueBookingLobbyDto>
+
+    @GET("api/venue-booking-lobbies")
+    suspend fun getOpenVenueBookingLobbies(
+        @Query("venueId") venueId: Long? = null,
+        @Query("sportType") sportType: String? = null
+    ): ApiResponseDto<List<VenueBookingLobbyDto>>
+
+    @GET("api/venue-booking-lobbies/mine")
+    suspend fun getMyVenueBookingLobbies(): ApiResponseDto<List<VenueBookingLobbyDto>>
+
+    @GET("api/venue-booking-lobbies/{id}")
+    suspend fun getVenueBookingLobbyById(@Path("id") id: Long): ApiResponseDto<VenueBookingLobbyDto>
+
+    @PUT("api/venue-booking-lobbies/{id}")
+    suspend fun updateVenueBookingLobby(@Path("id") id: Long, @Body request: UpdateVenueBookingLobbyRequestDto): ApiResponseDto<VenueBookingLobbyDto>
+
+    @POST("api/venue-booking-lobbies/{id}/join")
+    suspend fun joinVenueBookingLobby(@Path("id") id: Long): ApiResponseDto<VenueBookingLobbyDto>
+
+    @POST("api/venue-booking-lobbies/{id}/leave")
+    suspend fun leaveVenueBookingLobby(@Path("id") id: Long): ApiResponseDto<VenueBookingLobbyDto>
+
+    @POST("api/venue-booking-lobbies/{id}/create-booking")
+    suspend fun createBookingFromLobby(@Path("id") id: Long): ApiResponseDto<VenueBookingLobbyDto>
+
+    @POST("api/venue-booking-lobbies/{id}/cancel")
+    suspend fun cancelVenueBookingLobby(@Path("id") id: Long): ApiResponseDto<VenueBookingLobbyDto>
+
+    @POST("api/venue-booking-lobbies/{id}/pay")
+    suspend fun createLobbyPaymentIntent(@Path("id") id: Long): ApiResponseDto<SplitPaymentIntentResponseDto>
+
+    @POST("api/venue-booking-lobbies/{id}/confirm-payment")
+    suspend fun confirmLobbyPayment(@Path("id") id: Long): ApiResponseDto<VenueBookingLobbyDto>
+
+    // Lobby Teams
+    @GET("api/venue-booking-lobbies/{id}/teams")
+    suspend fun getLobbyTeams(@Path("id") lobbyId: Long): ApiResponseDto<List<VenueBookingLobbyTeamDto>>
+
+    @POST("api/venue-booking-lobbies/{id}/teams")
+    suspend fun addLobbyTeam(@Path("id") lobbyId: Long, @Body request: AddTeamRequestDto): ApiResponseDto<VenueBookingLobbyDto>
+
+    @POST("api/venue-booking-lobbies/{id}/teams/{teamId}/join")
+    suspend fun joinLobbyTeam(@Path("id") lobbyId: Long, @Path("teamId") teamId: Long): ApiResponseDto<VenueBookingLobbyDto>
+
+    @POST("api/venue-booking-lobbies/{id}/teams/leave")
+    suspend fun leaveLobbyTeam(@Path("id") lobbyId: Long): ApiResponseDto<VenueBookingLobbyDto>
 }

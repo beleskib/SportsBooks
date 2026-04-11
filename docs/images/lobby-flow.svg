@@ -1,0 +1,103 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1000 720" font-family="-apple-system, BlinkMacSystemFont, Segoe UI, Roboto, sans-serif">
+  <defs>
+    <linearGradient id="bg4" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#0f172a"/>
+      <stop offset="100%" stop-color="#1e293b"/>
+    </linearGradient>
+    <linearGradient id="boxOk" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#064e3b"/>
+      <stop offset="100%" stop-color="#022c22"/>
+    </linearGradient>
+    <linearGradient id="boxDecide" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#1e3a8a"/>
+      <stop offset="100%" stop-color="#172554"/>
+    </linearGradient>
+    <linearGradient id="boxErr" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#7f1d1d"/>
+      <stop offset="100%" stop-color="#450a0a"/>
+    </linearGradient>
+    <marker id="arrow4" markerWidth="10" markerHeight="10" refX="9" refY="5" orient="auto">
+      <path d="M0,0 L10,5 L0,10 z" fill="#34d399"/>
+    </marker>
+    <marker id="arrowR" markerWidth="10" markerHeight="10" refX="9" refY="5" orient="auto">
+      <path d="M0,0 L10,5 L0,10 z" fill="#f87171"/>
+    </marker>
+  </defs>
+
+  <rect width="1000" height="720" fill="url(#bg4)"/>
+
+  <text x="500" y="40" text-anchor="middle" fill="#f1f5f9" font-size="22" font-weight="800">Matchmaking Lobby Flow</text>
+  <text x="500" y="62" text-anchor="middle" fill="#94a3b8" font-size="13">Need more players? Open a lobby. Pay only when it's full.</text>
+
+  <!-- Step 1: Create lobby -->
+  <g>
+    <rect x="370" y="90" width="260" height="60" rx="12" fill="url(#boxOk)" stroke="#34d399" stroke-width="2"/>
+    <text x="500" y="120" text-anchor="middle" fill="#f1f5f9" font-size="14" font-weight="700">Player creates lobby</text>
+    <text x="500" y="138" text-anchor="middle" fill="#94a3b8" font-size="11">Picks venue · time slot · max players</text>
+  </g>
+  <line x1="500" y1="150" x2="500" y2="180" stroke="#34d399" stroke-width="2" marker-end="url(#arrow4)"/>
+
+  <!-- Step 2: Decide payment type -->
+  <g>
+    <polygon points="500,185 700,235 500,285 300,235" fill="url(#boxDecide)" stroke="#60a5fa" stroke-width="2"/>
+    <text x="500" y="232" text-anchor="middle" fill="#f1f5f9" font-size="14" font-weight="700">Choose payment type</text>
+    <text x="500" y="252" text-anchor="middle" fill="#94a3b8" font-size="11">Split · Creator pays · Team split</text>
+  </g>
+
+  <line x1="700" y1="235" x2="780" y2="235" stroke="#34d399" stroke-width="2" marker-end="url(#arrow4)"/>
+  <line x1="300" y1="235" x2="220" y2="235" stroke="#34d399" stroke-width="2" marker-end="url(#arrow4)"/>
+  <line x1="500" y1="285" x2="500" y2="320" stroke="#34d399" stroke-width="2" marker-end="url(#arrow4)"/>
+
+  <!-- Three payment branches -->
+  <g>
+    <rect x="60" y="210" width="160" height="50" rx="10" fill="rgba(96,165,250,0.15)" stroke="#60a5fa" stroke-width="1.5"/>
+    <text x="140" y="232" text-anchor="middle" fill="#f1f5f9" font-size="12" font-weight="700">💰 Split</text>
+    <text x="140" y="248" text-anchor="middle" fill="#94a3b8" font-size="10">Everyone pays equal</text>
+  </g>
+  <g>
+    <rect x="420" y="320" width="160" height="50" rx="10" fill="rgba(96,165,250,0.15)" stroke="#60a5fa" stroke-width="1.5"/>
+    <text x="500" y="342" text-anchor="middle" fill="#f1f5f9" font-size="12" font-weight="700">👤 Creator Pays</text>
+    <text x="500" y="358" text-anchor="middle" fill="#94a3b8" font-size="10">One pays for all</text>
+  </g>
+  <g>
+    <rect x="780" y="210" width="160" height="50" rx="10" fill="rgba(96,165,250,0.15)" stroke="#60a5fa" stroke-width="1.5"/>
+    <text x="860" y="232" text-anchor="middle" fill="#f1f5f9" font-size="12" font-weight="700">👥 Team Split</text>
+    <text x="860" y="248" text-anchor="middle" fill="#94a3b8" font-size="10">Leaders pay per team</text>
+  </g>
+
+  <!-- Converge into "Open lobby" -->
+  <line x1="140" y1="260" x2="430" y2="395" stroke="#34d399" stroke-width="2" marker-end="url(#arrow4)"/>
+  <line x1="500" y1="370" x2="500" y2="395" stroke="#34d399" stroke-width="2" marker-end="url(#arrow4)"/>
+  <line x1="860" y1="260" x2="570" y2="395" stroke="#34d399" stroke-width="2" marker-end="url(#arrow4)"/>
+
+  <g>
+    <rect x="370" y="395" width="260" height="60" rx="12" fill="url(#boxOk)" stroke="#34d399" stroke-width="2"/>
+    <text x="500" y="425" text-anchor="middle" fill="#f1f5f9" font-size="14" font-weight="700">Lobby is open</text>
+    <text x="500" y="443" text-anchor="middle" fill="#94a3b8" font-size="11">Other players join · listed in browse</text>
+  </g>
+
+  <line x1="500" y1="455" x2="500" y2="485" stroke="#34d399" stroke-width="2" marker-end="url(#arrow4)"/>
+
+  <!-- Decision: full? -->
+  <g>
+    <polygon points="500,490 620,530 500,570 380,530" fill="url(#boxDecide)" stroke="#60a5fa" stroke-width="2"/>
+    <text x="500" y="535" text-anchor="middle" fill="#f1f5f9" font-size="14" font-weight="700">Lobby full?</text>
+  </g>
+
+  <!-- Loop back if not full -->
+  <path d="M380 530 Q 250 530 250 425 Q 250 425 370 425" stroke="#f87171" stroke-width="2" fill="none" marker-end="url(#arrowR)"/>
+  <text x="200" y="475" fill="#f87171" font-size="11">no</text>
+
+  <!-- Continue if full -->
+  <line x1="500" y1="570" x2="500" y2="600" stroke="#34d399" stroke-width="2" marker-end="url(#arrow4)"/>
+  <text x="510" y="590" fill="#34d399" font-size="11">yes</text>
+
+  <!-- Final: notify + pay + confirmed -->
+  <g>
+    <rect x="320" y="600" width="360" height="60" rx="12" fill="url(#boxOk)" stroke="#34d399" stroke-width="2"/>
+    <text x="500" y="625" text-anchor="middle" fill="#f1f5f9" font-size="14" font-weight="700">🔔 Notify members → 💳 Pay → ✅ Confirmed</text>
+    <text x="500" y="648" text-anchor="middle" fill="#94a3b8" font-size="11">Time slot closed · partner approves · everyone shows up</text>
+  </g>
+
+  <text x="500" y="700" text-anchor="middle" fill="#475569" font-size="11">If partner rejects after submission, all paid members are refunded automatically</text>
+</svg>

@@ -99,6 +99,14 @@ export async function createBatch(slots: {
   return result.rows.map(mapRow);
 }
 
+export async function setAvailability(id: number, isAvailable: boolean): Promise<boolean> {
+  const result = await query(
+    'UPDATE time_slots SET is_available = $1, updated_at = NOW() WHERE id = $2',
+    [isAvailable, id]
+  );
+  return (result.rowCount ?? 0) > 0;
+}
+
 export async function deleteById(id: number): Promise<boolean> {
   const result = await query('DELETE FROM time_slots WHERE id = $1', [id]);
   return (result.rowCount ?? 0) > 0;

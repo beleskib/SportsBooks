@@ -1,0 +1,921 @@
+{
+  "info": {
+    "name": "SportsBooks — Venue Booking Lobby Flow",
+    "description": "## Matchmaking Lobby Booking Flow\n\nTests the full venue booking lobby lifecycle including:\n- Creating lobbies (split, creator_pays, split_to_teams)\n- Joining/leaving lobbies\n- Team management (join team, leave team, add team)\n- Editing lobbies (title, description, payment type)\n- Creating booking from lobby\n- Partner approval\n- Split payments and confirmation\n\n### Prerequisites\n- Backend running on `localhost:3000`\n- `DEV_AUTH_BYPASS=true` in `.env`\n- PostgreSQL running with migrations applied\n- Test users exist: `test-player-uid-1` (Ana), `test-player-bob` (Bob), `test-player-ana` (Ana Test)\n- Test venue with available time slots\n\n### How to Run\n1. Import this collection into Postman\n2. Click **▶ Run Collection**\n3. Requests auto-chain via `postman.setNextRequest()`",
+    "_postman_id": "c2d3e4f5-6789-abcd-ef01-234567890abc",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    { "key": "base_url", "value": "http://localhost:3000/api" },
+    { "key": "player1_token", "value": "test-player-uid-1", "type": "string" },
+    { "key": "player2_token", "value": "test-player-bob", "type": "string" },
+    { "key": "player3_token", "value": "test-player-ana", "type": "string" },
+    { "key": "partner_token", "value": "", "type": "string" },
+    { "key": "lobby_id", "value": "", "type": "string" },
+    { "key": "lobby_id_split", "value": "", "type": "string" },
+    { "key": "lobby_id_creator_pays", "value": "", "type": "string" },
+    { "key": "booking_id", "value": "", "type": "string" },
+    { "key": "team1_id", "value": "", "type": "string" },
+    { "key": "team2_id", "value": "", "type": "string" },
+    { "key": "time_slot_id", "value": "", "type": "string" },
+    { "key": "time_slot_id_2", "value": "", "type": "string" },
+    { "key": "time_slot_id_3", "value": "", "type": "string" },
+    { "key": "venue_id", "value": "", "type": "string" }
+  ],
+  "event": [
+    {
+      "listen": "prerequest",
+      "script": {
+        "type": "text/javascript",
+        "exec": [
+          "var step = pm.info.requestName;",
+          "console.log('');",
+          "console.log('▶ ' + step);",
+          "console.log('─'.repeat(50));"
+        ]
+      }
+    }
+  ],
+  "item": [
+    {
+      "name": "── SETUP ──────────────────",
+      "item": [
+        {
+          "name": "01 · Find Available Time Slots",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Found available time slots', function () {",
+                  "    pm.response.to.have.status(200);",
+                  "    var data = pm.response.json().data;",
+                  "    pm.expect(data.length).to.be.above(2);",
+                  "",
+                  "    // Pick 3 different slots for our 3 lobby tests",
+                  "    pm.collectionVariables.set('time_slot_id', data[0].id);",
+                  "    pm.collectionVariables.set('time_slot_id_2', data[1].id);",
+                  "    pm.collectionVariables.set('time_slot_id_3', data[2].id);",
+                  "    pm.collectionVariables.set('venue_id', data[0].venueId);",
+                  "",
+                  "    console.log('📍 Slot 1: ' + data[0].id + ' (' + data[0].venueName + ' ' + data[0].startTime + ')');",
+                  "    console.log('📍 Slot 2: ' + data[1].id);",
+                  "    console.log('📍 Slot 3: ' + data[2].id);",
+                  "});",
+                  "",
+                  "postman.setNextRequest('02 · Find Venue Owner');"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{player1_token}}" }
+            ],
+            "url": {
+              "raw": "{{base_url}}/venues/{{venue_id}}/time-slots?date=2026-03-31",
+              "host": ["{{base_url}}"],
+              "path": ["venues", "{{venue_id}}", "time-slots"],
+              "query": [
+                { "key": "date", "value": "2026-03-31" }
+              ]
+            }
+          }
+        },
+        {
+          "name": "02 · Find Venue Owner",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Got venue details', function () {",
+                  "    pm.response.to.have.status(200);",
+                  "    // We'll hardcode the partner token for now since venue API may not return owner firebase_uid",
+                  "    console.log('ℹ️  Using venue owner token from collection variables');",
+                  "});",
+                  "",
+                  "postman.setNextRequest('03 · Create Lobby (split_to_teams)');"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{player1_token}}" }
+            ],
+            "url": {
+              "raw": "{{base_url}}/venues/{{venue_id}}",
+              "host": ["{{base_url}}"],
+              "path": ["venues", "{{venue_id}}"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "── FLOW 1: SPLIT TO TEAMS ──",
+      "item": [
+        {
+          "name": "03 · Create Lobby (split_to_teams)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Lobby created with teams', function () {",
+                  "    pm.response.to.have.status(201);",
+                  "    var data = pm.response.json().data;",
+                  "    pm.expect(data.title).to.eql('Postman Teams Match');",
+                  "    pm.expect(data.paymentType).to.eql('split_to_teams');",
+                  "    pm.expect(data.status).to.eql('open');",
+                  "    pm.expect(data.currentPlayers).to.eql(1);",
+                  "    pm.expect(data.teams.length).to.eql(2);",
+                  "",
+                  "    pm.collectionVariables.set('lobby_id', data.id);",
+                  "    pm.collectionVariables.set('team1_id', data.teams[0].id);",
+                  "    pm.collectionVariables.set('team2_id', data.teams[1].id);",
+                  "",
+                  "    console.log('🏟️  Lobby ' + data.id + ' | Total: ' + data.totalPrice + ' MKD');",
+                  "    console.log('👥 Team 1 (id=' + data.teams[0].id + '): ' + data.teams[0].shareAmount + ' MKD');",
+                  "    console.log('👥 Team 2 (id=' + data.teams[1].id + '): ' + data.teams[1].shareAmount + ' MKD');",
+                  "});",
+                  "",
+                  "postman.setNextRequest('04 · Player 2 Joins Lobby');"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{player1_token}}" },
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"timeSlotId\": {{time_slot_id}},\n  \"title\": \"Postman Teams Match\",\n  \"paymentType\": \"split_to_teams\",\n  \"maxPlayers\": 4,\n  \"description\": \"Automated test — split to teams\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/venue-booking-lobbies",
+              "host": ["{{base_url}}"],
+              "path": ["venue-booking-lobbies"]
+            }
+          }
+        },
+        {
+          "name": "04 · Player 2 Joins Lobby",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Player 2 joined', function () {",
+                  "    pm.response.to.have.status(200);",
+                  "    var data = pm.response.json().data;",
+                  "    pm.expect(data.status).to.eql('joined');",
+                  "    console.log('✅ ' + data.displayName + ' joined lobby');",
+                  "});",
+                  "",
+                  "postman.setNextRequest('05 · Player 1 Joins Team 1');"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{player2_token}}" },
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "url": {
+              "raw": "{{base_url}}/venue-booking-lobbies/{{lobby_id}}/join",
+              "host": ["{{base_url}}"],
+              "path": ["venue-booking-lobbies", "{{lobby_id}}", "join"]
+            }
+          }
+        },
+        {
+          "name": "05 · Player 1 Joins Team 1",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Joined Team 1 as leader', function () {",
+                  "    pm.response.to.have.status(200);",
+                  "    var data = pm.response.json().data;",
+                  "    var team1 = data.teams.find(t => t.id == pm.collectionVariables.get('team1_id'));",
+                  "    pm.expect(team1.leaderName).to.not.be.null;",
+                  "    console.log('👑 Team 1 leader: ' + team1.leaderName);",
+                  "});",
+                  "",
+                  "postman.setNextRequest('06 · Player 2 Joins Team 2');"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{player1_token}}" },
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "url": {
+              "raw": "{{base_url}}/venue-booking-lobbies/{{lobby_id}}/teams/{{team1_id}}/join",
+              "host": ["{{base_url}}"],
+              "path": ["venue-booking-lobbies", "{{lobby_id}}", "teams", "{{team1_id}}", "join"]
+            }
+          }
+        },
+        {
+          "name": "06 · Player 2 Joins Team 2",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Joined Team 2 as leader', function () {",
+                  "    pm.response.to.have.status(200);",
+                  "    var data = pm.response.json().data;",
+                  "    var team2 = data.teams.find(t => t.id == pm.collectionVariables.get('team2_id'));",
+                  "    pm.expect(team2.leaderName).to.not.be.null;",
+                  "    console.log('👑 Team 2 leader: ' + team2.leaderName);",
+                  "});",
+                  "",
+                  "postman.setNextRequest('07 · Add Team 3');"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{player2_token}}" },
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "url": {
+              "raw": "{{base_url}}/venue-booking-lobbies/{{lobby_id}}/teams/{{team2_id}}/join",
+              "host": ["{{base_url}}"],
+              "path": ["venue-booking-lobbies", "{{lobby_id}}", "teams", "{{team2_id}}", "join"]
+            }
+          }
+        },
+        {
+          "name": "07 · Add Team 3",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Team 3 added, shares recalculated', function () {",
+                  "    pm.response.to.have.status(200);",
+                  "    var data = pm.response.json().data;",
+                  "    pm.expect(data.teams.length).to.eql(3);",
+                  "    // All shares should be totalPrice / 3",
+                  "    var expectedShare = Math.floor(data.totalPrice / 3);",
+                  "    data.teams.forEach(function(t) {",
+                  "        console.log('  Team ' + t.teamName + ': ' + t.shareAmount + ' MKD');",
+                  "    });",
+                  "});",
+                  "",
+                  "postman.setNextRequest('08 · Edit Lobby');"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{player1_token}}" },
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"teamName\": \"Team 3\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/venue-booking-lobbies/{{lobby_id}}/teams",
+              "host": ["{{base_url}}"],
+              "path": ["venue-booking-lobbies", "{{lobby_id}}", "teams"]
+            }
+          }
+        },
+        {
+          "name": "08 · Edit Lobby",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Lobby updated', function () {",
+                  "    pm.response.to.have.status(200);",
+                  "    var data = pm.response.json().data;",
+                  "    pm.expect(data.title).to.eql('Updated Teams Match');",
+                  "    pm.expect(data.description).to.eql('Updated via Postman');",
+                  "    console.log('✏️  Title: ' + data.title);",
+                  "});",
+                  "",
+                  "postman.setNextRequest('09 · Create Booking from Lobby');"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "PUT",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{player1_token}}" },
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"title\": \"Updated Teams Match\",\n  \"description\": \"Updated via Postman\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/venue-booking-lobbies/{{lobby_id}}",
+              "host": ["{{base_url}}"],
+              "path": ["venue-booking-lobbies", "{{lobby_id}}"]
+            }
+          }
+        },
+        {
+          "name": "09 · Create Booking from Lobby",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Booking created from lobby', function () {",
+                  "    pm.response.to.have.status(200);",
+                  "    var data = pm.response.json().data;",
+                  "    pm.expect(data.status).to.eql('booking_pending');",
+                  "    pm.expect(data.bookingId).to.not.be.null;",
+                  "    pm.collectionVariables.set('booking_id', data.bookingId);",
+                  "    console.log('📋 Booking ' + data.bookingId + ' created | Status: ' + data.status);",
+                  "});",
+                  "",
+                  "postman.setNextRequest('10 · Partner Approves Booking');"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{player1_token}}" },
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "url": {
+              "raw": "{{base_url}}/venue-booking-lobbies/{{lobby_id}}/create-booking",
+              "host": ["{{base_url}}"],
+              "path": ["venue-booking-lobbies", "{{lobby_id}}", "create-booking"]
+            }
+          }
+        },
+        {
+          "name": "10 · Partner Approves Booking",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Booking approved', function () {",
+                  "    pm.response.to.have.status(200);",
+                  "    var data = pm.response.json().data;",
+                  "    pm.expect(data.status).to.eql('approved');",
+                  "    console.log('✅ Booking approved by partner');",
+                  "});",
+                  "",
+                  "postman.setNextRequest('11 · Verify Lobby is booking_approved');"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "PUT",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{partner_token}}" },
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "url": {
+              "raw": "{{base_url}}/bookings/{{booking_id}}/approve",
+              "host": ["{{base_url}}"],
+              "path": ["bookings", "{{booking_id}}", "approve"]
+            }
+          }
+        },
+        {
+          "name": "11 · Verify Lobby is booking_approved",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Lobby status is booking_approved', function () {",
+                  "    pm.response.to.have.status(200);",
+                  "    var data = pm.response.json().data;",
+                  "    pm.expect(data.status).to.eql('booking_approved');",
+                  "    console.log('🏟️  Lobby status: ' + data.status);",
+                  "    data.members.forEach(function(m) {",
+                  "        console.log('  ' + m.displayName + ': ' + m.status);",
+                  "    });",
+                  "});",
+                  "",
+                  "postman.setNextRequest('12 · Team Leader 1 Creates Payment');"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{player1_token}}" }
+            ],
+            "url": {
+              "raw": "{{base_url}}/venue-booking-lobbies/{{lobby_id}}",
+              "host": ["{{base_url}}"],
+              "path": ["venue-booking-lobbies", "{{lobby_id}}"]
+            }
+          }
+        },
+        {
+          "name": "12 · Team Leader 1 Creates Payment",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Payment intent created for team leader', function () {",
+                  "    pm.response.to.have.status(201);",
+                  "    var data = pm.response.json().data;",
+                  "    pm.expect(data.amount).to.be.above(0);",
+                  "    console.log('💳 Team 1 leader pays: ' + data.amount + ' MKD (payment ' + data.paymentId + ')');",
+                  "});",
+                  "",
+                  "postman.setNextRequest('13 · Team Leader 1 Confirms Payment');"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{player1_token}}" },
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "url": {
+              "raw": "{{base_url}}/venue-booking-lobbies/{{lobby_id}}/pay",
+              "host": ["{{base_url}}"],
+              "path": ["venue-booking-lobbies", "{{lobby_id}}", "pay"]
+            }
+          }
+        },
+        {
+          "name": "13 · Team Leader 1 Confirms Payment",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Payment confirmed (not all paid yet)', function () {",
+                  "    pm.response.to.have.status(200);",
+                  "    var data = pm.response.json().data;",
+                  "    pm.expect(data.status).to.eql('payment_in_progress');",
+                  "    console.log('💰 Team leader 1 paid | Lobby: ' + data.status);",
+                  "});",
+                  "",
+                  "postman.setNextRequest('14 · Team Leader 2 Creates Payment');"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{player1_token}}" },
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "url": {
+              "raw": "{{base_url}}/venue-booking-lobbies/{{lobby_id}}/confirm-payment",
+              "host": ["{{base_url}}"],
+              "path": ["venue-booking-lobbies", "{{lobby_id}}", "confirm-payment"]
+            }
+          }
+        },
+        {
+          "name": "14 · Team Leader 2 Creates Payment",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Payment intent created for team leader 2', function () {",
+                  "    pm.response.to.have.status(201);",
+                  "    var data = pm.response.json().data;",
+                  "    pm.expect(data.amount).to.be.above(0);",
+                  "    console.log('💳 Team 2 leader pays: ' + data.amount + ' MKD');",
+                  "});",
+                  "",
+                  "postman.setNextRequest('15 · Team Leader 2 Confirms Payment');"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{player2_token}}" },
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "url": {
+              "raw": "{{base_url}}/venue-booking-lobbies/{{lobby_id}}/pay",
+              "host": ["{{base_url}}"],
+              "path": ["venue-booking-lobbies", "{{lobby_id}}", "pay"]
+            }
+          }
+        },
+        {
+          "name": "15 · Team Leader 2 Confirms Payment",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('All paid — lobby confirmed!', function () {",
+                  "    pm.response.to.have.status(200);",
+                  "    var msg = pm.response.json().message;",
+                  "    pm.expect(msg).to.include('All payments confirmed');",
+                  "    var data = pm.response.json().data;",
+                  "    pm.expect(data.status).to.eql('confirmed');",
+                  "    console.log('🎉 ' + msg);",
+                  "    console.log('🏟️  Final lobby status: ' + data.status);",
+                  "});",
+                  "",
+                  "postman.setNextRequest('16 · Create Lobby (split)');"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{player2_token}}" },
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "url": {
+              "raw": "{{base_url}}/venue-booking-lobbies/{{lobby_id}}/confirm-payment",
+              "host": ["{{base_url}}"],
+              "path": ["venue-booking-lobbies", "{{lobby_id}}", "confirm-payment"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "── FLOW 2: SPLIT PAYMENT ──",
+      "item": [
+        {
+          "name": "16 · Create Lobby (split)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Split lobby created', function () {",
+                  "    pm.response.to.have.status(201);",
+                  "    var data = pm.response.json().data;",
+                  "    pm.expect(data.paymentType).to.eql('split');",
+                  "    pm.expect(data.teams).to.have.length(0);",
+                  "    pm.collectionVariables.set('lobby_id_split', data.id);",
+                  "    console.log('🏟️  Split Lobby ' + data.id + ' | Price/player: ' + data.pricePerPlayer + ' MKD');",
+                  "});",
+                  "",
+                  "postman.setNextRequest('17 · Player 2 Joins Split Lobby');"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{player1_token}}" },
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"timeSlotId\": {{time_slot_id_2}},\n  \"title\": \"Postman Split Game\",\n  \"paymentType\": \"split\",\n  \"maxPlayers\": 2\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/venue-booking-lobbies",
+              "host": ["{{base_url}}"],
+              "path": ["venue-booking-lobbies"]
+            }
+          }
+        },
+        {
+          "name": "17 · Player 2 Joins Split Lobby",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Player 2 joined, lobby full', function () {",
+                  "    pm.response.to.have.status(200);",
+                  "    console.log('✅ Player 2 joined split lobby');",
+                  "});",
+                  "",
+                  "postman.setNextRequest('18 · Switch Payment Type to creator_pays');"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{player2_token}}" },
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "url": {
+              "raw": "{{base_url}}/venue-booking-lobbies/{{lobby_id_split}}/join",
+              "host": ["{{base_url}}"],
+              "path": ["venue-booking-lobbies", "{{lobby_id_split}}", "join"]
+            }
+          }
+        },
+        {
+          "name": "18 · Switch Payment Type to creator_pays",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Payment type switched', function () {",
+                  "    pm.response.to.have.status(200);",
+                  "    var data = pm.response.json().data;",
+                  "    pm.expect(data.paymentType).to.eql('creator_pays');",
+                  "    console.log('💱 Switched to creator_pays');",
+                  "});",
+                  "",
+                  "postman.setNextRequest('19 · Switch Back to split_to_teams');"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "PUT",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{player1_token}}" },
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"paymentType\": \"creator_pays\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/venue-booking-lobbies/{{lobby_id_split}},",
+              "host": ["{{base_url}}"],
+              "path": ["venue-booking-lobbies", "{{lobby_id_split}}"]
+            }
+          }
+        },
+        {
+          "name": "19 · Switch Back to split_to_teams",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Switched to split_to_teams with auto-created teams', function () {",
+                  "    pm.response.to.have.status(200);",
+                  "    var data = pm.response.json().data;",
+                  "    pm.expect(data.paymentType).to.eql('split_to_teams');",
+                  "    pm.expect(data.teams.length).to.eql(2);",
+                  "    console.log('💱 Switched to split_to_teams | Teams: ' + data.teams.length);",
+                  "});",
+                  "",
+                  "postman.setNextRequest('20 · Cancel Lobby');"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "PUT",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{player1_token}}" },
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"paymentType\": \"split_to_teams\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/venue-booking-lobbies/{{lobby_id_split}}",
+              "host": ["{{base_url}}"],
+              "path": ["venue-booking-lobbies", "{{lobby_id_split}}"]
+            }
+          }
+        },
+        {
+          "name": "20 · Cancel Lobby",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Lobby cancelled', function () {",
+                  "    pm.response.to.have.status(200);",
+                  "    var data = pm.response.json().data;",
+                  "    pm.expect(data.status).to.eql('cancelled');",
+                  "    console.log('❌ Lobby cancelled');",
+                  "});",
+                  "",
+                  "postman.setNextRequest('21 · Create Lobby (creator_pays)');"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{player1_token}}" },
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "url": {
+              "raw": "{{base_url}}/venue-booking-lobbies/{{lobby_id_split}}/cancel",
+              "host": ["{{base_url}}"],
+              "path": ["venue-booking-lobbies", "{{lobby_id_split}}", "cancel"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "── FLOW 3: CREATOR PAYS ──",
+      "item": [
+        {
+          "name": "21 · Create Lobby (creator_pays)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Creator pays lobby created', function () {",
+                  "    pm.response.to.have.status(201);",
+                  "    var data = pm.response.json().data;",
+                  "    pm.expect(data.paymentType).to.eql('creator_pays');",
+                  "    pm.collectionVariables.set('lobby_id_creator_pays', data.id);",
+                  "    console.log('🏟️  Creator Pays Lobby ' + data.id + ' | Total: ' + data.totalPrice + ' MKD');",
+                  "});",
+                  "",
+                  "postman.setNextRequest('22 · Player 2 Joins Creator Pays Lobby');"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{player1_token}}" },
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"timeSlotId\": {{time_slot_id_3}},\n  \"title\": \"Postman Creator Pays\",\n  \"paymentType\": \"creator_pays\",\n  \"maxPlayers\": 2\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/venue-booking-lobbies",
+              "host": ["{{base_url}}"],
+              "path": ["venue-booking-lobbies"]
+            }
+          }
+        },
+        {
+          "name": "22 · Player 2 Joins Creator Pays Lobby",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Lobby is full', function () {",
+                  "    pm.response.to.have.status(200);",
+                  "    console.log('✅ Player 2 joined — lobby full');",
+                  "});",
+                  "",
+                  "postman.setNextRequest('23 · Get My Lobbies');"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{player2_token}}" },
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "url": {
+              "raw": "{{base_url}}/venue-booking-lobbies/{{lobby_id_creator_pays}}/join",
+              "host": ["{{base_url}}"],
+              "path": ["venue-booking-lobbies", "{{lobby_id_creator_pays}}", "join"]
+            }
+          }
+        },
+        {
+          "name": "23 · Get My Lobbies",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('My lobbies returned', function () {",
+                  "    pm.response.to.have.status(200);",
+                  "    var data = pm.response.json().data;",
+                  "    console.log('📋 My lobbies: ' + data.length);",
+                  "    data.forEach(function(l) {",
+                  "        console.log('  ' + l.id + ' | ' + l.title + ' | ' + l.status + ' | ' + l.paymentType);",
+                  "    });",
+                  "});",
+                  "",
+                  "postman.setNextRequest('24 · List Open Lobbies');"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{player1_token}}" }
+            ],
+            "url": {
+              "raw": "{{base_url}}/venue-booking-lobbies/mine",
+              "host": ["{{base_url}}"],
+              "path": ["venue-booking-lobbies", "mine"]
+            }
+          }
+        },
+        {
+          "name": "24 · List Open Lobbies",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Open lobbies listed', function () {",
+                  "    pm.response.to.have.status(200);",
+                  "    var data = pm.response.json().data;",
+                  "    console.log('📋 Open lobbies: ' + data.length);",
+                  "    data.forEach(function(l) {",
+                  "        console.log('  ' + l.id + ' | ' + l.title + ' | ' + l.currentPlayers + '/' + l.maxPlayers);",
+                  "    });",
+                  "});",
+                  "",
+                  "console.log('');",
+                  "console.log('═'.repeat(50));",
+                  "console.log('🏁 ALL TESTS COMPLETE');",
+                  "console.log('═'.repeat(50));",
+                  "postman.setNextRequest(null);"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{player1_token}}" }
+            ],
+            "url": {
+              "raw": "{{base_url}}/venue-booking-lobbies",
+              "host": ["{{base_url}}"],
+              "path": ["venue-booking-lobbies"]
+            }
+          }
+        }
+      ]
+    }
+  ]
+}

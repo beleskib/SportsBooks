@@ -2,7 +2,8 @@ import { Request, Response, NextFunction } from 'express';
 import { success } from '../utils/apiResponse';
 import * as userRepo from '../repositories/user.repository';
 import * as feedRepo from '../repositories/feed.repository';
-import { NotFoundError } from '../utils/errors';
+import { NotFoundError, ValidationError } from '../utils/errors';
+import * as friendshipRepo from '../repositories/friendship.repository';
 
 export async function getMe(req: Request, res: Response, next: NextFunction) {
   try {
@@ -118,5 +119,34 @@ export async function getFollowCounts(req: Request, res: Response, next: NextFun
       feedRepo.getFollowingCount(userId),
     ]);
     success(res, { followers, following });
+  } catch (e) { next(e); }
+}
+
+export async function getPublicProfile(req: Request, res: Response, next: NextFunction) {
+  try {
+    const userId = Number(req.params.id);
+    if (!userId || isNaN(userId)) {
+      throw new ValidationError('Invalid user ID');
+    }
+
+    const profile = await userRepo.findPublicProfile(userId);
+    if (!profile) throw new NotFoundError('User');
+
+    // Check friendship status between viewer and this user
+    let friendshipStatus: string | null = null;
+    let friendshipId: number | null = null;
+    if (req.user?.id && req.user.id !== userId) {
+      const friendship = await friendshipRepo.findFriendship(req.user.id, userId);
+      if (friendship) {
+        friendshipStatus = friendship.status;
+        friendshipId = friendship.id;
+      }
+    }
+
+    success(res, {
+      ...profile,
+      friendshipStatus,
+      friendshipId,
+    });
   } catch (e) { next(e); }
 }

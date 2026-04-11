@@ -11,6 +11,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
+import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
@@ -40,6 +41,7 @@ fun BookingConfirmationScreen(
     timeSlotId: Long,
     onProceedToPayment: (Long, String) -> Unit,
     onBack: () -> Unit,
+    onSplitWithFriends: ((timeSlotId: Long, venueId: Long) -> Unit)? = null,
     viewModel: BookingViewModel = hiltViewModel()
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
@@ -154,26 +156,35 @@ fun BookingConfirmationScreen(
 
             Spacer(modifier = Modifier.height(24.dp))
 
-            Box(
-                modifier = Modifier.fillMaxWidth(),
-                contentAlignment = Alignment.Center
-            ) {
-                if (uiState.isBookingLoading) {
+            if (uiState.isBookingLoading) {
+                Box(modifier = Modifier.fillMaxWidth(), contentAlignment = Alignment.Center) {
                     CircularProgressIndicator()
-                } else if (!uiState.bookingSuccess) {
-                    Button(
-                        onClick = { viewModel.confirmBooking() },
+                }
+            } else if (!uiState.bookingSuccess) {
+                Button(
+                    onClick = { viewModel.confirmBooking() },
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    Text("Request Booking")
+                }
+
+                // Only show Split with Friends for venue time slots
+                val venueId = uiState.selectedSlot?.venueId
+                if (onSplitWithFriends != null && venueId != null) {
+                    Spacer(modifier = Modifier.height(8.dp))
+                    OutlinedButton(
+                        onClick = { onSplitWithFriends(timeSlotId, venueId) },
                         modifier = Modifier.fillMaxWidth()
                     ) {
-                        Text("Request Booking")
+                        Text("Split with Friends")
                     }
-                } else {
-                    Text(
-                        text = "Booking request sent! The venue partner will review your request.",
-                        style = MaterialTheme.typography.bodyMedium,
-                        color = MaterialTheme.colorScheme.primary
-                    )
                 }
+            } else {
+                Text(
+                    text = "Booking request sent! The venue partner will review your request.",
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.primary
+                )
             }
         }
     }

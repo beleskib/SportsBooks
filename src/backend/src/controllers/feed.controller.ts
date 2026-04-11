@@ -2,6 +2,8 @@ import { Request, Response, NextFunction } from 'express';
 import { success, created } from '../utils/apiResponse';
 import { ValidationError, NotFoundError } from '../utils/errors';
 import * as feedRepo from '../repositories/feed.repository';
+import * as notificationService from '../services/notification.service';
+import { query as dbQuery } from '../config/database';
 
 export async function getFeed(req: Request, res: Response, next: NextFunction) {
   try {
@@ -28,6 +30,41 @@ export async function createPost(req: Request, res: Response, next: NextFunction
       metadata ?? null
     );
     created(res, post);
+
+    // Fire-and-forget: notify friends + community members to refresh their feed
+    (async () => {
+      try {
+        const friendsResult = await dbQuery(
+          `SELECT CASE
+             WHEN f.requester_id = $1 THEN f.addressee_id
+             ELSE f.requester_id
+           END AS friend_id
+           FROM friendships f
+           WHERE f.status = 'accepted'
+             AND (f.requester_id = $1 OR f.addressee_id = $1)`,
+          [req.user!.id]
+        );
+        const communityResult = await dbQuery(
+          `SELECT DISTINCT cm2.user_id
+           FROM community_members cm1
+           JOIN community_members cm2 ON cm2.community_id = cm1.community_id
+           WHERE cm1.user_id = $1
+             AND cm1.status = 'approved'
+             AND cm2.status = 'approved'
+             AND cm2.user_id != $1`,
+          [req.user!.id]
+        );
+        const userIds = [
+          ...friendsResult.rows.map((r: any) => Number(r.friend_id)),
+          ...communityResult.rows.map((r: any) => Number(r.user_id)),
+        ];
+        if (userIds.length > 0) {
+          await notificationService.sendSilentFeedRefresh(userIds, post.id);
+        }
+      } catch (err) {
+        console.error('Feed refresh notification error:', err);
+      }
+    })();
   } catch (e) { next(e); }
 }
 
