@@ -6,6 +6,8 @@ import {
   CreditCard,
   DollarSign,
   Calendar,
+  Sparkles,
+  CalendarRange,
 } from 'lucide-react'
 import { useAuth } from '@/context/AuthContext'
 import { PartnerType } from '@/types'
@@ -33,7 +35,14 @@ export function Sidebar() {
     { to: '/stripe', icon: CreditCard, label: 'Payment Setup' },
   ]
 
-  const navItems = isAdmin ? adminNavItems : partnerNavItems
+  // v2-practical-ux: Option 2 redesign entries — appended for both roles so
+  // both panels can preview the new flows side-by-side with Option 1.
+  const v2NavItems = [
+    { to: '/v2/calendar', icon: CalendarRange, label: 'Calendar (v2)' },
+    { to: '/v2/play', icon: Sparkles, label: 'Play (v2)' },
+  ]
+
+  const navItems = [...(isAdmin ? adminNavItems : partnerNavItems), ...v2NavItems]
 
   return (
     <aside className="flex w-64 flex-col bg-gray-900 text-white">
