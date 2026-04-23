@@ -178,6 +178,37 @@ export type {
   InviteToMatchRequest,
 } from './types/availablePlayer';
 
+// ============================================================
+// v2-practical-ux types
+// ============================================================
+
+export type {
+  SplitPayment,
+  SplitPaymentStatus,
+  CreateSplitPaymentRequest,
+  SplitPaymentSummary,
+} from './types/splitPayment';
+
+export type {
+  BookingParticipant,
+  BookingParticipantStatus,
+  InviteBookingParticipantsRequest,
+  RespondToBookingInviteRequest,
+  MarkAttendanceRequest,
+} from './types/bookingParticipant';
+
+export type {
+  HomeFeedResponse,
+  RebookSuggestion,
+  PlaySuggestion,
+  FriendAvailability,
+} from './types/homeFeed';
+
+export type {
+  PlaySearchRequest,
+  PlaySearchResponse,
+} from './types/playSearch';
+
 // API Endpoints
 export {
   AUTH_ENDPOINTS,
@@ -199,4 +230,9 @@ export {
   STRIPE_CONNECT_ENDPOINTS,
   PARTY_ENDPOINTS,
   AVAILABLE_PLAYER_ENDPOINTS,
+  HOME_ENDPOINTS,
+  PLAY_ENDPOINTS,
+  REBOOK_ENDPOINTS,
+  SPLIT_PAYMENT_ENDPOINTS,
+  BOOKING_PARTICIPANT_ENDPOINTS,
 } from './api/endpoints';

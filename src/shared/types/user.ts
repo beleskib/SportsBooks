@@ -27,6 +27,12 @@ export interface UserProfile {
   avgPlayerPunctualityRating: number;
   totalPlayerRatings: number;
   totalMatchesPlayed: number;
+  // v2-practical-ux: simple 1-5 overall skill level used for quick lobby filtering.
+  // Distinct from the per-sport `sportExpertise` list which remains for detailed profiles.
+  skillLevel: number | null;
+  noShowCount: number;
+  totalAttended: number;
+  reliabilityScore: number; // 0.00 – 1.00; generated column in DB
   createdAt: string;
   updatedAt: string;
 }
@@ -54,6 +60,8 @@ export interface UpdateUserRequest {
   phoneNumber?: string;
   bio?: string;
   dateOfBirth?: string;
+  // v2-practical-ux
+  skillLevel?: number; // 1-5
 }
 
 export interface SetRoleRequest {
@@ -98,6 +106,8 @@ export interface PublicPlayerProfile {
   avgPlayerPunctualityRating: number;
   totalPlayerRatings: number;
   totalMatchesPlayed: number;
+  skillLevel: number | null;
+  reliabilityScore: number;
   recentMatches: PublicMatchSummary[];
   createdAt: string;
 }

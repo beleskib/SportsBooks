@@ -140,3 +140,32 @@ export const AVAILABLE_PLAYER_ENDPOINTS = {
   UNREGISTER: (sportType: string) => `${API_PREFIX}/available-players/${sportType}`,
   INVITE_TO_MATCH: (matchId: number) => `${API_PREFIX}/matches/${matchId}/invite`,
 } as const;
+
+// ============================================================
+// v2-practical-ux — unified home feed, unified Play search,
+// one-tap rebook, split payments, booking participants
+// ============================================================
+
+export const HOME_ENDPOINTS = {
+  FEED: `${API_PREFIX}/home/feed`,
+} as const;
+
+export const PLAY_ENDPOINTS = {
+  SEARCH: `${API_PREFIX}/play/search`,
+} as const;
+
+export const REBOOK_ENDPOINTS = {
+  FROM_BOOKING: (bookingId: number) => `${API_PREFIX}/bookings/${bookingId}/rebook`,
+} as const;
+
+export const SPLIT_PAYMENT_ENDPOINTS = {
+  CREATE: (bookingId: number) => `${API_PREFIX}/bookings/${bookingId}/split`,
+  SUMMARY: (bookingId: number) => `${API_PREFIX}/bookings/${bookingId}/split`,
+  PAY_SHARE: (shareId: number) => `${API_PREFIX}/split-payments/${shareId}/pay`,
+} as const;
+
+export const BOOKING_PARTICIPANT_ENDPOINTS = {
+  INVITE: (bookingId: number) => `${API_PREFIX}/bookings/${bookingId}/invite`,
+  RESPOND: (bookingId: number) => `${API_PREFIX}/bookings/${bookingId}/respond`,
+  MARK_ATTENDANCE: (bookingId: number) => `${API_PREFIX}/bookings/${bookingId}/attendance`,
+} as const;

@@ -35,6 +35,9 @@ export interface Match {
   currentPlayers: number;
   minSkillLevel: number | null;
   maxSkillLevel: number | null;
+  // v2-practical-ux: enforce skill range strictly and gate on reliability
+  skillStrict: boolean;
+  minReliability: number;
   locationName: string | null;
   address: string | null;
   latitude: number | null;
@@ -127,6 +130,8 @@ export interface CreateMatchRequest {
   maxPlayers: number;
   minSkillLevel?: number;
   maxSkillLevel?: number;
+  skillStrict?: boolean;
+  minReliability?: number;
   locationName?: string;
   address?: string;
   latitude?: number;
@@ -145,6 +150,8 @@ export interface UpdateMatchRequest {
   maxPlayers?: number;
   minSkillLevel?: number;
   maxSkillLevel?: number;
+  skillStrict?: boolean;
+  minReliability?: number;
   locationName?: string;
   address?: string;
   latitude?: number;
