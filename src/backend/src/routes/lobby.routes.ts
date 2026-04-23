@@ -13,6 +13,7 @@ router.get('/lobbies/public', authenticate, lobbyController.listPublicLobbies);
 router.get('/lobbies/:id', authenticate, lobbyController.getLobbyById);
 router.post('/lobbies/:id/join', authenticate, lobbyController.joinLobby);
 router.post('/lobbies/:id/leave', authenticate, lobbyController.leaveLobby);
+router.post('/lobbies/:id/invite', authenticate, lobbyController.inviteToLobby);
 router.post('/lobbies/:id/make-public', authenticate, lobbyController.makeLobbyPublic);
 router.put('/lobbies/:id/status', authenticate, lobbyController.updateLobbyStatus);
 

@@ -47,10 +47,10 @@ export interface LobbyParticipantRow {
 
 function mapLobbyRow(row: any): Omit<LobbyRow, 'participants'> {
   return {
-    id: row.id,
-    communityId: row.community_id,
+    id: Number(row.id),
+    communityId: Number(row.community_id),
     communityName: row.community_name ?? null,
-    createdBy: row.created_by,
+    createdBy: Number(row.created_by),
     creatorName: row.creator_name ?? null,
     creatorPhotoUrl: row.creator_photo_url ?? null,
     title: row.title,
@@ -62,7 +62,7 @@ function mapLobbyRow(row: any): Omit<LobbyRow, 'participants'> {
     durationMinutes: row.duration_minutes,
     maxPlayers: row.max_players,
     currentPlayers: row.current_players,
-    venueId: row.venue_id ?? null,
+    venueId: row.venue_id ? Number(row.venue_id) : null,
     skillLevelMin: row.skill_level_min,
     skillLevelMax: row.skill_level_max,
     status: row.status,
@@ -76,9 +76,9 @@ function mapLobbyRow(row: any): Omit<LobbyRow, 'participants'> {
 
 function mapParticipantRow(row: any): LobbyParticipantRow {
   return {
-    id: row.id,
-    lobbyId: row.lobby_id,
-    userId: row.user_id,
+    id: Number(row.id),
+    lobbyId: Number(row.lobby_id),
+    userId: Number(row.user_id),
     displayName: row.display_name ?? null,
     photoUrl: row.photo_url ?? null,
     status: row.status,
@@ -357,9 +357,9 @@ export async function getMessages(lobbyId: number, limit = 50, offset = 0): Prom
     [lobbyId, limit, offset]
   );
   return result.rows.map((r: any) => ({
-    id: r.id,
-    lobbyId: r.lobby_id,
-    userId: r.user_id,
+    id: Number(r.id),
+    lobbyId: Number(r.lobby_id),
+    userId: Number(r.user_id),
     displayName: r.display_name ?? null,
     photoUrl: r.photo_url ?? null,
     message: r.message,
@@ -381,9 +381,9 @@ export async function sendMessage(lobbyId: number, userId: number, message: stri
     [userId]
   );
   return {
-    id: row.id,
-    lobbyId: row.lobby_id,
-    userId: row.user_id,
+    id: Number(row.id),
+    lobbyId: Number(row.lobby_id),
+    userId: Number(row.user_id),
     displayName: userResult.rows[0]?.display_name ?? null,
     photoUrl: userResult.rows[0]?.photo_url ?? null,
     message: row.message,

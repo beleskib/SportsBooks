@@ -15,9 +15,9 @@ export interface BookingMessageRow {
 
 function mapRow(row: any): BookingMessageRow {
   return {
-    id: row.id,
-    bookingId: row.booking_id,
-    senderId: row.sender_id,
+    id: Number(row.id),
+    bookingId: Number(row.booking_id),
+    senderId: Number(row.sender_id),
     senderName: row.sender_name ?? row.display_name ?? '',
     message: row.message,
     createdAt: row.created_at?.toISOString?.() ?? row.created_at,

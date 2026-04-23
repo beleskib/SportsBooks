@@ -66,12 +66,12 @@ export interface VenueBookingLobbyTeamRow {
 
 function mapLobbyRow(row: any): Omit<VenueBookingLobbyRow, 'members' | 'teams'> {
   return {
-    id: row.id,
-    creatorId: row.creator_id,
+    id: Number(row.id),
+    creatorId: Number(row.creator_id),
     creatorName: row.creator_name ?? null,
     creatorPhotoUrl: row.creator_photo_url ?? null,
-    timeSlotId: row.time_slot_id,
-    venueId: row.venue_id,
+    timeSlotId: Number(row.time_slot_id),
+    venueId: Number(row.venue_id),
     venueName: row.venue_name ?? null,
     title: row.title,
     paymentType: row.payment_type,
@@ -81,7 +81,7 @@ function mapLobbyRow(row: any): Omit<VenueBookingLobbyRow, 'members' | 'teams'> 
     pricePerPlayer: Number(row.price_per_player),
     currency: row.currency,
     status: row.status,
-    bookingId: row.booking_id ?? null,
+    bookingId: row.booking_id ? Number(row.booking_id) : null,
     description: row.description ?? null,
     slotDate: row.slot_date instanceof Date
       ? row.slot_date.toISOString().split('T')[0]
@@ -97,15 +97,15 @@ function mapLobbyRow(row: any): Omit<VenueBookingLobbyRow, 'members' | 'teams'> 
 
 function mapMemberRow(row: any): VenueBookingLobbyMemberRow {
   return {
-    id: row.id,
-    lobbyId: row.lobby_id,
-    userId: row.user_id,
+    id: Number(row.id),
+    lobbyId: Number(row.lobby_id),
+    userId: Number(row.user_id),
     displayName: row.display_name ?? null,
     photoUrl: row.photo_url ?? null,
     status: row.status,
     shareAmount: row.share_amount != null ? Number(row.share_amount) : null,
-    paymentId: row.payment_id ?? null,
-    teamId: row.team_id ?? null,
+    paymentId: row.payment_id ? Number(row.payment_id) : null,
+    teamId: row.team_id ? Number(row.team_id) : null,
     joinedAt: row.joined_at?.toISOString?.() ?? row.joined_at,
     paidAt: row.paid_at?.toISOString?.() ?? row.paid_at ?? null,
   };
@@ -113,11 +113,11 @@ function mapMemberRow(row: any): VenueBookingLobbyMemberRow {
 
 function mapTeamRow(row: any): Omit<VenueBookingLobbyTeamRow, 'members'> {
   return {
-    id: row.id,
-    lobbyId: row.lobby_id,
+    id: Number(row.id),
+    lobbyId: Number(row.lobby_id),
     teamName: row.team_name,
     teamNumber: row.team_number,
-    leaderId: row.leader_id ?? null,
+    leaderId: row.leader_id ? Number(row.leader_id) : null,
     leaderName: row.leader_name ?? null,
     shareAmount: row.share_amount != null ? Number(row.share_amount) : null,
     createdAt: row.created_at?.toISOString?.() ?? row.created_at,

@@ -169,6 +169,59 @@ export async function updateLobbyStatus(req: Request, res: Response, next: NextF
 }
 
 // ============================================================
+// Invite Available Player to Lobby
+// ============================================================
+
+export async function inviteToLobby(req: Request, res: Response, next: NextFunction) {
+  try {
+    const lobbyId = Number(req.params.id);
+    const { userId } = req.body;
+
+    if (!userId) {
+      throw new ValidationError('userId is required');
+    }
+
+    const lobby = await lobbyRepo.findById(lobbyId);
+    if (!lobby) throw new NotFoundError('Lobby');
+
+    if (lobby.status !== 'open') {
+      throw new ValidationError('This lobby is not open for new players');
+    }
+
+    if (lobby.currentPlayers >= lobby.maxPlayers) {
+      throw new ValidationError('This lobby is already full');
+    }
+
+    // Only the creator or an existing participant can invite
+    const isCreator = lobby.createdBy === req.user!.id;
+    const isParticipant = await lobbyRepo.isParticipant(lobbyId, req.user!.id);
+    if (!isCreator && !isParticipant) {
+      throw new ForbiddenError('Only the lobby creator or a participant can invite players');
+    }
+
+    // Check if the target user is already in the lobby
+    const alreadyIn = await lobbyRepo.isParticipant(lobbyId, Number(userId));
+    if (alreadyIn) {
+      throw new ConflictError('This player is already in the lobby');
+    }
+
+    // Add the invited player
+    const participant = await lobbyRepo.join(lobbyId, Number(userId));
+
+    // Notify the invited player
+    sendNotification(
+      Number(userId),
+      'lobby_invite',
+      'You\'ve been invited to a lobby!',
+      `You were invited to join "${lobby.title}". Tap to view details.`,
+      { lobbyId: String(lobbyId) }
+    ).catch((err) => console.error('Failed to send lobby invite notification:', err));
+
+    created(res, participant, 'Player invited to lobby');
+  } catch (e) { next(e); }
+}
+
+// ============================================================
 // Lobby Chat
 // ============================================================
 

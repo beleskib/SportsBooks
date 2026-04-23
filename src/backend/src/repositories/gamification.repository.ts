@@ -68,8 +68,8 @@ export interface PlayerStats {
 
 function mapXpTransactionRow(row: any): XpTransactionRow {
   return {
-    id: row.id,
-    userId: row.user_id,
+    id: Number(row.id),
+    userId: Number(row.user_id),
     amount: Number(row.amount),
     sourceType: row.source_type,
     sourceId: row.source_id ? Number(row.source_id) : null,
@@ -80,8 +80,8 @@ function mapXpTransactionRow(row: any): XpTransactionRow {
 
 function mapPlayerLevelRow(row: any): PlayerLevelRow {
   return {
-    id: row.id,
-    userId: row.user_id,
+    id: Number(row.id),
+    userId: Number(row.user_id),
     totalXp: Number(row.total_xp),
     currentLevel: Number(row.current_level),
     xpToNextLevel: Number(row.xp_to_next_level),
@@ -92,7 +92,7 @@ function mapPlayerLevelRow(row: any): PlayerLevelRow {
 
 function mapAchievementRow(row: any): AchievementRow {
   return {
-    id: row.id,
+    id: Number(row.id),
     name: row.name,
     description: row.description,
     icon: row.icon,
@@ -108,9 +108,9 @@ function mapAchievementRow(row: any): AchievementRow {
 
 function mapPlayerAchievementRow(row: any): PlayerAchievementRow {
   return {
-    id: row.id,
-    userId: row.user_id,
-    achievementId: row.achievement_id,
+    id: Number(row.id),
+    userId: Number(row.user_id),
+    achievementId: Number(row.achievement_id),
     earnedAt: row.earned_at?.toISOString?.() ?? row.earned_at,
     name: row.name,
     description: row.description,

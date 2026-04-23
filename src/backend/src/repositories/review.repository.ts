@@ -16,11 +16,11 @@ export interface ReviewRow {
 
 function mapRow(row: any): ReviewRow {
   return {
-    id: row.id,
-    playerId: row.player_id,
-    venueId: row.venue_id,
-    coachId: row.coach_id,
-    bookingId: row.booking_id,
+    id: Number(row.id),
+    playerId: Number(row.player_id),
+    venueId: row.venue_id ? Number(row.venue_id) : null,
+    coachId: row.coach_id ? Number(row.coach_id) : null,
+    bookingId: row.booking_id ? Number(row.booking_id) : null,
     rating: row.rating,
     comment: row.comment,
     playerName: row.player_name ?? row.display_name,

@@ -38,7 +38,7 @@ const USER_COLUMNS = `id, firebase_uid, email, display_name, photo_url, phone_nu
 
 function mapRow(row: any): UserRow {
   return {
-    id: row.id,
+    id: Number(row.id),
     firebaseUid: row.firebase_uid,
     email: row.email,
     displayName: row.display_name,
@@ -60,8 +60,8 @@ function mapRow(row: any): UserRow {
 
 function mapExpertiseRow(row: any): SportExpertiseRow {
   return {
-    id: row.id,
-    userId: row.user_id,
+    id: Number(row.id),
+    userId: Number(row.user_id),
     sportType: row.sport_type,
     skillLevel: row.skill_level,
     experienceDuration: row.experience_duration,
@@ -273,7 +273,7 @@ export interface RecentMatchRow {
 
 function mapRecentMatchRow(row: any): RecentMatchRow {
   return {
-    id: row.id,
+    id: Number(row.id),
     title: row.title,
     sportType: row.sport_type,
     matchDate: row.match_date instanceof Date ? row.match_date.toISOString().split('T')[0] : row.match_date,
@@ -316,7 +316,7 @@ export async function findPublicProfile(userId: number): Promise<PublicProfileRo
   ]);
 
   return {
-    id: row.id,
+    id: Number(row.id),
     displayName: row.display_name,
     photoUrl: row.photo_url,
     bio: row.bio,

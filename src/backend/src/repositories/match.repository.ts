@@ -105,12 +105,12 @@ export interface RecurrenceRuleRow {
 
 function mapMatchRow(row: any): Omit<MatchRow, 'participants'> {
   return {
-    id: row.id,
-    hostId: row.host_id,
+    id: Number(row.id),
+    hostId: Number(row.host_id),
     hostName: row.host_name ?? null,
     hostPhotoUrl: row.host_photo_url ?? null,
-    bookingId: row.booking_id,
-    venueId: row.venue_id,
+    bookingId: row.booking_id ? Number(row.booking_id) : null,
+    venueId: row.venue_id ? Number(row.venue_id) : null,
     venueName: row.venue_name ?? null,
     sportType: row.sport_type,
     matchType: row.match_type,
@@ -132,8 +132,8 @@ function mapMatchRow(row: any): Omit<MatchRow, 'participants'> {
     longitude: row.longitude ? Number(row.longitude) : null,
     isFree: row.is_free,
     costPerPlayer: Number(row.cost_per_player ?? 0),
-    recurrenceRuleId: row.recurrence_rule_id,
-    parentMatchId: row.parent_match_id,
+    recurrenceRuleId: row.recurrence_rule_id ? Number(row.recurrence_rule_id) : null,
+    parentMatchId: row.parent_match_id ? Number(row.parent_match_id) : null,
     createdAt: row.created_at?.toISOString?.() ?? row.created_at,
     updatedAt: row.updated_at?.toISOString?.() ?? row.updated_at,
   };
@@ -141,9 +141,9 @@ function mapMatchRow(row: any): Omit<MatchRow, 'participants'> {
 
 function mapParticipantRow(row: any): ParticipantRow {
   return {
-    id: row.id,
-    matchId: row.match_id,
-    userId: row.user_id,
+    id: Number(row.id),
+    matchId: Number(row.match_id),
+    userId: Number(row.user_id),
     userName: row.user_name ?? row.display_name ?? null,
     userPhotoUrl: row.user_photo_url ?? row.photo_url ?? null,
     status: row.status,
@@ -155,9 +155,9 @@ function mapParticipantRow(row: any): ParticipantRow {
 
 function mapChatMessageRow(row: any): ChatMessageRow {
   return {
-    id: row.id,
-    matchId: row.match_id,
-    senderId: row.sender_id,
+    id: Number(row.id),
+    matchId: Number(row.match_id),
+    senderId: Number(row.sender_id),
     senderName: row.sender_name ?? row.display_name ?? null,
     senderPhotoUrl: row.sender_photo_url ?? row.photo_url ?? null,
     content: row.content,
@@ -167,11 +167,11 @@ function mapChatMessageRow(row: any): ChatMessageRow {
 
 function mapRatingRow(row: any): PlayerRatingRow {
   return {
-    id: row.id,
-    matchId: row.match_id,
-    raterId: row.rater_id,
+    id: Number(row.id),
+    matchId: Number(row.match_id),
+    raterId: Number(row.rater_id),
     raterName: row.rater_name ?? null,
-    ratedId: row.rated_id,
+    ratedId: Number(row.rated_id),
     ratedName: row.rated_name ?? null,
     skillRating: row.skill_rating,
     sportsmanshipRating: row.sportsmanship_rating,
@@ -183,15 +183,15 @@ function mapRatingRow(row: any): PlayerRatingRow {
 
 function mapRecurrenceRow(row: any): RecurrenceRuleRow {
   return {
-    id: row.id,
-    hostId: row.host_id,
+    id: Number(row.id),
+    hostId: Number(row.host_id),
     frequency: row.frequency,
     dayOfWeek: row.day_of_week,
     startTime: row.start_time,
     endTime: row.end_time,
     sportType: row.sport_type,
     title: row.title,
-    venueId: row.venue_id,
+    venueId: row.venue_id ? Number(row.venue_id) : null,
     locationName: row.location_name,
     address: row.address,
     latitude: row.latitude ? Number(row.latitude) : null,

@@ -15,9 +15,9 @@ export interface TimeSlotRow {
 
 function mapRow(row: any): TimeSlotRow {
   return {
-    id: row.id,
-    venueId: row.venue_id,
-    coachId: row.coach_id,
+    id: Number(row.id),
+    venueId: row.venue_id ? Number(row.venue_id) : null,
+    coachId: row.coach_id ? Number(row.coach_id) : null,
     slotDate: row.slot_date instanceof Date ? row.slot_date.toISOString().split('T')[0] : row.slot_date,
     startTime: row.start_time,
     endTime: row.end_time,

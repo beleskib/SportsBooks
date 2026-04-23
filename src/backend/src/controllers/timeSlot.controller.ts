@@ -84,10 +84,10 @@ export async function deleteSlot(req: Request, res: Response, next: NextFunction
       let isOwner = false;
       if (slot.venueId) {
         const result = await query('SELECT owner_id FROM venues WHERE id = $1', [slot.venueId]);
-        isOwner = result.rows.length > 0 && result.rows[0].owner_id === req.user!.id;
+        isOwner = result.rows.length > 0 && Number(result.rows[0].owner_id) === req.user!.id;
       } else if (slot.coachId) {
         const result = await query('SELECT user_id FROM coaches WHERE id = $1', [slot.coachId]);
-        isOwner = result.rows.length > 0 && result.rows[0].user_id === req.user!.id;
+        isOwner = result.rows.length > 0 && Number(result.rows[0].user_id) === req.user!.id;
       }
       if (!isOwner) {
         throw new ForbiddenError('You can only delete time slots for your own venues or coach profile');

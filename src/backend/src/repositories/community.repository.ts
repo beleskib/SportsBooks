@@ -41,8 +41,8 @@ export interface CommunityMemberRow {
 
 function mapCommunityRow(row: any): CommunityRow {
   return {
-    id: row.id,
-    ownerId: row.owner_id,
+    id: Number(row.id),
+    ownerId: Number(row.owner_id),
     ownerName: row.owner_name ?? null,
     ownerPhotoUrl: row.owner_photo_url ?? null,
     name: row.name,
@@ -61,14 +61,14 @@ function mapCommunityRow(row: any): CommunityRow {
 
 function mapMemberRow(row: any): CommunityMemberRow {
   return {
-    id: row.id,
-    communityId: row.community_id,
-    userId: row.user_id,
+    id: Number(row.id),
+    communityId: Number(row.community_id),
+    userId: Number(row.user_id),
     displayName: row.display_name ?? null,
     photoUrl: row.photo_url ?? null,
     role: row.role,
     status: row.status,
-    invitedBy: row.invited_by ?? null,
+    invitedBy: row.invited_by ? Number(row.invited_by) : null,
     createdAt: row.created_at?.toISOString?.() ?? row.created_at,
     updatedAt: row.updated_at?.toISOString?.() ?? row.updated_at,
   };

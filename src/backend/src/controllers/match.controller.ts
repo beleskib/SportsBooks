@@ -71,8 +71,7 @@ export async function updateMatch(req: Request, res: Response, next: NextFunctio
     const match = await matchRepo.findById(Number(req.params.id));
     if (!match) throw new NotFoundError('Match');
     if (match.hostId !== req.user!.id) {
-      res.status(403).json({ error: 'Only the host can update this match' });
-      return;
+      throw new ForbiddenError('Only the host can update this match');
     }
     const updated = await matchRepo.update(Number(req.params.id), req.body);
     success(res, updated);
@@ -84,8 +83,7 @@ export async function cancelMatch(req: Request, res: Response, next: NextFunctio
     const match = await matchRepo.findById(Number(req.params.id));
     if (!match) throw new NotFoundError('Match');
     if (match.hostId !== req.user!.id) {
-      res.status(403).json({ error: 'Only the host can cancel this match' });
-      return;
+      throw new ForbiddenError('Only the host can cancel this match');
     }
     const updated = await matchRepo.updateStatus(Number(req.params.id), 'cancelled');
     success(res, updated);
@@ -134,8 +132,7 @@ export async function respondToJoinRequest(req: Request, res: Response, next: Ne
     const match = await matchRepo.findById(Number(req.params.matchId));
     if (!match) throw new NotFoundError('Match');
     if (match.hostId !== req.user!.id) {
-      res.status(403).json({ error: 'Only the host can approve/decline' });
-      return;
+      throw new ForbiddenError('Only the host can approve/decline');
     }
     const updated = await matchRepo.updateParticipantStatus(
       Number(req.params.matchId),

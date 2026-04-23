@@ -4,7 +4,7 @@ import { NotFoundError } from '../utils/errors';
 export interface BookingRow {
   id: number;
   playerId: number;
-  timeSlotId: number;
+  timeSlotId: number | null;
   venueId: number | null;
   coachId: number | null;
   status: string;
@@ -14,7 +14,7 @@ export interface BookingRow {
   playerName?: string;
   playerEmail?: string;
   timeSlot?: {
-    id: number;
+    id: number | null;
     slotDate: string;
     startTime: string;
     endTime: string;
@@ -35,11 +35,11 @@ function mapRow(row: any): BookingRow {
     : row.slot_date;
 
   return {
-    id: row.id ?? row.booking_id,
-    playerId: row.player_id,
-    timeSlotId: row.time_slot_id,
-    venueId: row.venue_id,
-    coachId: row.coach_id,
+    id: Number(row.id ?? row.booking_id),
+    playerId: Number(row.player_id),
+    timeSlotId: row.time_slot_id ? Number(row.time_slot_id) : null,
+    venueId: row.venue_id ? Number(row.venue_id) : null,
+    coachId: row.coach_id ? Number(row.coach_id) : null,
     status: row.status,
     totalPrice: Number(row.total_price),
     notes: row.notes,
@@ -47,24 +47,24 @@ function mapRow(row: any): BookingRow {
     playerName: row.player_name ?? row.display_name,
     playerEmail: row.player_email ?? row.email,
     timeSlot: (slotDate || row.start_time || row.end_time) ? {
-      id: row.time_slot_id,
+      id: row.time_slot_id ? Number(row.time_slot_id) : null,
       slotDate: slotDate ?? '',
       startTime: row.start_time ?? '',
       endTime: row.end_time ?? '',
-      venueId: row.venue_id,
-      coachId: row.coach_id,
+      venueId: row.venue_id ? Number(row.venue_id) : null,
+      coachId: row.coach_id ? Number(row.coach_id) : null,
       isAvailable: false,
       priceOverride: null,
     } : null,
     venue: (row.venue_id && row.venue_name) ? {
-      id: row.venue_id,
+      id: Number(row.venue_id),
       name: row.venue_name,
       sportType: row.venue_sport_type,
       address: row.venue_address,
       pricePerHour: row.venue_price_per_hour ? Number(row.venue_price_per_hour) : undefined,
     } : null,
     coach: (row.coach_id && row.coach_name) ? {
-      id: row.coach_id,
+      id: Number(row.coach_id),
       name: row.coach_name,
       sportType: row.coach_sport_type,
       pricePerHour: row.coach_price_per_hour ? Number(row.coach_price_per_hour) : undefined,

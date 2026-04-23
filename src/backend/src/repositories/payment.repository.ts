@@ -25,9 +25,9 @@ export interface PaymentRow {
 
 function mapRow(row: any): PaymentRow {
   return {
-    id: row.id,
-    bookingId: row.booking_id,
-    payerId: row.payer_id,
+    id: Number(row.id),
+    bookingId: Number(row.booking_id),
+    payerId: Number(row.payer_id),
     amount: Number(row.amount),
     currency: row.currency,
     status: row.status,
@@ -41,8 +41,8 @@ function mapRow(row: any): PaymentRow {
     slotDate: row.slot_date instanceof Date ? row.slot_date.toISOString().split('T')[0] : (row.slot_date ?? null),
     startTime: row.start_time ?? null,
     endTime: row.end_time ?? null,
-    venueId: row.venue_id ?? null,
-    coachId: row.coach_id ?? null,
+    venueId: row.venue_id ? Number(row.venue_id) : null,
+    coachId: row.coach_id ? Number(row.coach_id) : null,
     createdAt: row.created_at?.toISOString?.() ?? row.created_at,
     updatedAt: row.updated_at?.toISOString?.() ?? row.updated_at,
   };

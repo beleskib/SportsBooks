@@ -46,8 +46,8 @@ export interface CoachCertificationRow {
 
 function mapCoachRow(row: any): Omit<CoachRow, 'images' | 'certifications' | 'activeDiscount'> {
   return {
-    id: row.id,
-    userId: row.user_id,
+    id: Number(row.id),
+    userId: Number(row.user_id),
     name: row.name,
     bio: row.bio,
     sportType: row.sport_type,
@@ -100,26 +100,26 @@ async function loadCoachRelations(coachIds: number[]) {
   for (const row of imgResult.rows) {
     const list = images.get(row.coach_id) || [];
     list.push({
-      id: row.id, coachId: row.coach_id, imageUrl: row.image_url,
+      id: Number(row.id), coachId: Number(row.coach_id), imageUrl: row.image_url,
       isPrimary: row.is_primary, displayOrder: row.display_order,
     });
-    images.set(row.coach_id, list);
+    images.set(Number(row.coach_id), list);
   }
 
   for (const row of certResult.rows) {
-    const list = certifications.get(row.coach_id) || [];
+    const list = certifications.get(Number(row.coach_id)) || [];
     list.push({
-      id: row.id, coachId: row.coach_id, name: row.name,
+      id: Number(row.id), coachId: Number(row.coach_id), name: row.name,
       issuingBody: row.issuing_body, yearObtained: row.year_obtained,
       certificateUrl: row.certificate_url,
     });
-    certifications.set(row.coach_id, list);
+    certifications.set(Number(row.coach_id), list);
   }
 
   for (const row of discResult.rows) {
-    if (!discounts.has(row.coach_id)) {
-      discounts.set(row.coach_id, {
-        id: row.id, venueId: row.venue_id, coachId: row.coach_id,
+    if (!discounts.has(Number(row.coach_id))) {
+      discounts.set(Number(row.coach_id), {
+        id: Number(row.id), venueId: row.venue_id ? Number(row.venue_id) : null, coachId: Number(row.coach_id),
         title: row.title, description: row.description,
         discountPercent: row.discount_percent != null ? Number(row.discount_percent) : null,
         discountAmount: row.discount_amount != null ? Number(row.discount_amount) : null,
@@ -331,8 +331,8 @@ export async function createCoachImage(data: {
   );
   const row = result.rows[0];
   return {
-    id: row.id,
-    coachId: row.coach_id,
+    id: Number(row.id),
+    coachId: Number(row.coach_id),
     imageUrl: row.image_url,
     isPrimary: row.is_primary,
     displayOrder: row.display_order,

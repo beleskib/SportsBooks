@@ -31,8 +31,8 @@ export interface DeviceTokenRow {
 
 function mapNotificationRow(row: any): NotificationRow {
   return {
-    id: row.id,
-    userId: row.user_id,
+    id: Number(row.id),
+    userId: Number(row.user_id),
     type: row.type,
     title: row.title,
     body: row.body,
@@ -45,8 +45,8 @@ function mapNotificationRow(row: any): NotificationRow {
 
 function mapDeviceTokenRow(row: any): DeviceTokenRow {
   return {
-    id: row.id,
-    userId: row.user_id,
+    id: Number(row.id),
+    userId: Number(row.user_id),
     fcmToken: row.fcm_token,
     deviceType: row.device_type,
     isActive: row.is_active,

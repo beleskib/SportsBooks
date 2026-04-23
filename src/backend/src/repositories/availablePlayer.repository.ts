@@ -5,8 +5,8 @@ import { query } from '../config/database';
 // ============================================================
 
 export interface AvailablePlayerRow {
-  id: string;
-  userId: string;
+  id: number;
+  userId: number;
   sportType: string;
   skillLevel: number | null;
   note: string | null;
@@ -27,8 +27,8 @@ export interface AvailablePlayerRow {
 
 function mapRow(row: any): AvailablePlayerRow {
   return {
-    id: row.id,
-    userId: row.user_id,
+    id: Number(row.id),
+    userId: Number(row.user_id),
     sportType: row.sport_type,
     skillLevel: row.skill_level ?? null,
     note: row.note ?? null,

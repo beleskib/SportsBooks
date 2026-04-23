@@ -35,14 +35,14 @@ export interface PartyMemberRow {
 
 function mapPartyRow(row: any): Omit<PartyRow, 'members'> {
   return {
-    id: row.id,
-    leaderId: row.leader_id,
+    id: Number(row.id),
+    leaderId: Number(row.leader_id),
     leaderName: row.leader_name ?? row.display_name ?? null,
     leaderPhotoUrl: row.leader_photo_url ?? row.photo_url ?? null,
     name: row.name,
     sportType: row.sport_type,
     status: row.status,
-    matchId: row.match_id,
+    matchId: row.match_id ? Number(row.match_id) : null,
     createdAt: row.created_at?.toISOString?.() ?? row.created_at,
     updatedAt: row.updated_at?.toISOString?.() ?? row.updated_at,
   };
@@ -50,9 +50,9 @@ function mapPartyRow(row: any): Omit<PartyRow, 'members'> {
 
 function mapPartyMemberRow(row: any): PartyMemberRow {
   return {
-    id: row.id,
-    partyId: row.party_id,
-    userId: row.user_id,
+    id: Number(row.id),
+    partyId: Number(row.party_id),
+    userId: Number(row.user_id),
     userName: row.user_name ?? row.display_name ?? null,
     userPhotoUrl: row.user_photo_url ?? row.photo_url ?? null,
     status: row.status,

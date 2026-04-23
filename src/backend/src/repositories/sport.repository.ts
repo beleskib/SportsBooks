@@ -12,7 +12,7 @@ export interface SportCategoryRow {
 
 function mapRow(row: any): SportCategoryRow {
   return {
-    id: row.id,
+    id: Number(row.id),
     name: row.name,
     sportType: row.sport_type,
     iconUrl: row.icon_url,

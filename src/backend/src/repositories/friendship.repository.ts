@@ -41,9 +41,9 @@ export interface UserSearchRow {
 
 function mapFriendshipRow(row: any): FriendshipRow {
   return {
-    id: row.id,
-    requesterId: row.requester_id,
-    addresseeId: row.addressee_id,
+    id: Number(row.id),
+    requesterId: Number(row.requester_id),
+    addresseeId: Number(row.addressee_id),
     status: row.status,
     createdAt: row.created_at?.toISOString?.() ?? row.created_at,
     updatedAt: row.updated_at?.toISOString?.() ?? row.updated_at,
@@ -52,8 +52,8 @@ function mapFriendshipRow(row: any): FriendshipRow {
 
 function mapFriendRow(row: any): FriendRow {
   return {
-    friendshipId: row.friendship_id,
-    userId: row.user_id,
+    friendshipId: Number(row.friendship_id),
+    userId: Number(row.user_id),
     displayName: row.display_name,
     photoUrl: row.photo_url,
     createdAt: row.created_at?.toISOString?.() ?? row.created_at,
@@ -62,8 +62,8 @@ function mapFriendRow(row: any): FriendRow {
 
 function mapPendingRequestRow(row: any): PendingRequestRow {
   return {
-    friendshipId: row.friendship_id,
-    requesterId: row.requester_id,
+    friendshipId: Number(row.friendship_id),
+    requesterId: Number(row.requester_id),
     displayName: row.display_name,
     photoUrl: row.photo_url,
     createdAt: row.created_at?.toISOString?.() ?? row.created_at,
@@ -72,7 +72,7 @@ function mapPendingRequestRow(row: any): PendingRequestRow {
 
 function mapUserSearchRow(row: any): UserSearchRow {
   return {
-    id: row.id,
+    id: Number(row.id),
     displayName: row.display_name,
     photoUrl: row.photo_url,
   };

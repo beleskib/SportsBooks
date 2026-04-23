@@ -17,9 +17,9 @@ export interface DiscountRow {
 
 function mapRow(row: any): DiscountRow {
   return {
-    id: row.id,
-    venueId: row.venue_id,
-    coachId: row.coach_id,
+    id: Number(row.id),
+    venueId: row.venue_id ? Number(row.venue_id) : null,
+    coachId: row.coach_id ? Number(row.coach_id) : null,
     title: row.title,
     description: row.description,
     discountPercent: row.discount_percent != null ? Number(row.discount_percent) : null,

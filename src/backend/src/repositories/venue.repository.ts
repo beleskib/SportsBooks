@@ -57,8 +57,8 @@ export interface DiscountRow {
 
 function mapVenueRow(row: any): Omit<VenueRow, 'images' | 'equipment' | 'activeDiscount'> {
   return {
-    id: row.id,
-    ownerId: row.owner_id,
+    id: Number(row.id),
+    ownerId: Number(row.owner_id),
     name: row.name,
     description: row.description,
     sportType: row.sport_type,
@@ -80,9 +80,9 @@ function mapVenueRow(row: any): Omit<VenueRow, 'images' | 'equipment' | 'activeD
 
 function mapDiscountRow(row: any): DiscountRow {
   return {
-    id: row.id ?? row.discount_id,
-    venueId: row.venue_id ?? row.discount_venue_id ?? null,
-    coachId: row.coach_id ?? row.discount_coach_id ?? null,
+    id: Number(row.id ?? row.discount_id),
+    venueId: (row.venue_id ?? row.discount_venue_id) ? Number(row.venue_id ?? row.discount_venue_id) : null,
+    coachId: (row.coach_id ?? row.discount_coach_id) ? Number(row.coach_id ?? row.discount_coach_id) : null,
     title: row.title ?? row.discount_title,
     description: row.discount_description ?? row.description ?? null,
     discountPercent: row.discount_percent != null ? Number(row.discount_percent) : null,
@@ -128,32 +128,35 @@ async function loadVenueRelations(venueIds: number[]): Promise<{
   ]);
 
   for (const row of imgResult.rows) {
-    const list = images.get(row.venue_id) || [];
+    const vid = Number(row.venue_id);
+    const list = images.get(vid) || [];
     list.push({
-      id: row.id,
-      venueId: row.venue_id,
+      id: Number(row.id),
+      venueId: vid,
       imageUrl: row.image_url,
       isPrimary: row.is_primary,
       displayOrder: row.display_order,
     });
-    images.set(row.venue_id, list);
+    images.set(vid, list);
   }
 
   for (const row of eqResult.rows) {
-    const list = equipment.get(row.venue_id) || [];
+    const vid = Number(row.venue_id);
+    const list = equipment.get(vid) || [];
     list.push({
-      id: row.id,
-      venueId: row.venue_id,
+      id: Number(row.id),
+      venueId: vid,
       name: row.name,
       description: row.description,
       isIncluded: row.is_included,
     });
-    equipment.set(row.venue_id, list);
+    equipment.set(vid, list);
   }
 
   for (const row of discResult.rows) {
-    if (!discounts.has(row.venue_id)) {
-      discounts.set(row.venue_id, mapDiscountRow(row));
+    const vid = Number(row.venue_id);
+    if (!discounts.has(vid)) {
+      discounts.set(vid, mapDiscountRow(row));
     }
   }
 
