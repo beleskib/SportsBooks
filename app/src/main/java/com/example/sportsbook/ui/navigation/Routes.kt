@@ -109,4 +109,8 @@ sealed interface Route {
     @Serializable data class EditVenue(val venueId: Long) : Route
     @Serializable data class EditCoach(val coachId: Long) : Route
     @Serializable data object PartnerAnalytics : Route
+
+    // v2-practical-ux
+    @Serializable data object V2PlayHome : Route
+    @Serializable data object V2WeeklyCalendar : Route
 }

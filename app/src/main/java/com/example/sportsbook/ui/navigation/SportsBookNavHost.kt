@@ -85,6 +85,8 @@ import com.example.sportsbook.ui.screens.player.venuelobby.BrowseVenueLobbiesScr
 import com.example.sportsbook.ui.screens.player.venuelobby.CreateVenueBookingLobbyScreen
 import com.example.sportsbook.ui.screens.player.venuelobby.VenueBookingLobbyDetailScreen
 import com.example.sportsbook.ui.screens.splash.SplashScreen
+import com.example.sportsbook.ui.v2.play.PlayHomeScreen
+import com.example.sportsbook.ui.v2.calendar.WeeklyCalendarScreen
 
 @Composable
 fun SportsBookNavHost(
@@ -130,7 +132,8 @@ fun SportsBookNavHost(
             Route.PlayerHome::class.qualifiedName,
             Route.NewsFeed::class.qualifiedName,
             Route.MyBookings::class.qualifiedName,
-            Route.PlayerProfile::class.qualifiedName -> true
+            Route.PlayerProfile::class.qualifiedName,
+            Route.V2PlayHome::class.qualifiedName -> true  // v2-practical-ux
             else -> false
         }
     }
@@ -139,7 +142,8 @@ fun SportsBookNavHost(
         when (currentRoute) {
             Route.PartnerDashboard::class.qualifiedName,
             Route.PendingReservations::class.qualifiedName,
-            Route.PartnerAnalytics::class.qualifiedName -> true
+            Route.PartnerAnalytics::class.qualifiedName,
+            Route.V2WeeklyCalendar::class.qualifiedName -> true  // v2-practical-ux
             else -> false
         }
     }
@@ -160,8 +164,11 @@ fun SportsBookNavHost(
                 showPartnerBottomBar -> PartnerBottomNavBar(
                     currentRoute = currentRoute,
                     onNavigate = { route ->
+                        // v2-practical-ux: V2WeeklyCalendar is a partner-bar destination
+                        // but its back-stack root is PartnerDashboard
+                        val partnerRoot: Route = Route.PartnerDashboard
                         navController.navigate(route) {
-                            popUpTo(Route.PartnerDashboard) { inclusive = false }
+                            popUpTo(partnerRoot) { inclusive = false }
                             launchSingleTop = true
                         }
                     }
@@ -936,6 +943,19 @@ fun SportsBookNavHost(
 
             composable<Route.VenueBookingLobbyDetail> {
                 VenueBookingLobbyDetailScreen(
+                    onBack = { navController.popBackStack() }
+                )
+            }
+
+            // v2-practical-ux
+            composable<Route.V2PlayHome> {
+                PlayHomeScreen(
+                    onBack = { navController.popBackStack() }
+                )
+            }
+
+            composable<Route.V2WeeklyCalendar> {
+                WeeklyCalendarScreen(
                     onBack = { navController.popBackStack() }
                 )
             }

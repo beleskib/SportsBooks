@@ -3,11 +3,13 @@ package com.example.sportsbook.ui.navigation
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.TrendingUp
 import androidx.compose.material.icons.filled.CalendarMonth
+import androidx.compose.material.icons.filled.CalendarViewWeek
 import androidx.compose.material.icons.filled.Dashboard
 import androidx.compose.material.icons.filled.DynamicFeed
 import androidx.compose.material.icons.filled.Home
 import androidx.compose.material.icons.filled.Inbox
 import androidx.compose.material.icons.filled.Person
+import androidx.compose.material.icons.filled.SportsSoccer
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.NavigationBar
@@ -35,13 +37,17 @@ val playerNavItems = listOf(
     BottomNavItem("Home", Icons.Default.Home, Route.PlayerHome),
     BottomNavItem("Feed", Icons.Default.DynamicFeed, Route.NewsFeed),
     BottomNavItem("Bookings", Icons.Default.CalendarMonth, Route.MyBookings),
-    BottomNavItem("Profile", Icons.Default.Person, Route.PlayerProfile)
+    BottomNavItem("Profile", Icons.Default.Person, Route.PlayerProfile),
+    // v2-practical-ux
+    BottomNavItem("Play v2", Icons.Default.SportsSoccer, Route.V2PlayHome)
 )
 
 val partnerNavItems = listOf(
     BottomNavItem("Dashboard", Icons.Default.Dashboard, Route.PartnerDashboard),
     BottomNavItem("Reservations", Icons.Default.Inbox, Route.PendingReservations),
     BottomNavItem("Analytics", Icons.AutoMirrored.Filled.TrendingUp, Route.PartnerAnalytics),
+    // v2-practical-ux
+    BottomNavItem("Calendar v2", Icons.Default.CalendarViewWeek, Route.V2WeeklyCalendar)
 )
 
 // Keep backward compatibility
