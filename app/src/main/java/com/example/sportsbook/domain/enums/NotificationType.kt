@@ -21,6 +21,8 @@ enum class NotificationType(val value: String, val displayName: String) {
     PARTY_INVITE_DECLINED("party_invite_declined", "Invite Declined"),
     PARTY_JOINED_MATCH("party_joined_match", "Party Joined Match"),
     PARTY_DISBANDED("party_disbanded", "Party Disbanded"),
+    FEED_POST_LIKED("feed_post_liked", "Post Liked"),
+    FEED_POST_COMMENTED("feed_post_commented", "Post Comment"),
     GENERAL("general", "General");
 
     companion object {

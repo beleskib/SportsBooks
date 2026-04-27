@@ -23,6 +23,8 @@ export type NotificationType =
   | 'party_invite_declined'
   | 'party_joined_match'
   | 'party_disbanded'
+  | 'feed_post_liked'
+  | 'feed_post_commented'
   | 'general';
 
 export interface Notification {

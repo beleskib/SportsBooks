@@ -1,6 +1,7 @@
 import { Request, Response, NextFunction } from 'express';
 import { success, created } from '../utils/apiResponse';
 import * as matchRepo from '../repositories/match.repository';
+import * as userRepo from '../repositories/user.repository';
 import { NotFoundError, ForbiddenError, ValidationError } from '../utils/errors';
 import * as notificationService from '../services/notification.service';
 
@@ -102,12 +103,17 @@ export async function joinMatch(req: Request, res: Response, next: NextFunction)
     const autoApprove = match.visibility === 'public';
     const participant = await matchRepo.addParticipant(Number(req.params.id), req.user!.id, autoApprove);
 
-    // Notify the host about the join request
-    notificationService.notifyMatchJoinRequest(
-      match.id,
-      match.hostId,
-      req.user!.email
-    ).catch((err) => console.error('Failed to send join notification:', err));
+    // Only notify the host when there's actually something to approve.
+    // For auto-approved (public) matches we skip the noise.
+    if (!autoApprove) {
+      const joiner = await userRepo.findById(req.user!.id);
+      notificationService.notifyMatchJoinRequest(
+        match.id,
+        match.hostId,
+        joiner?.displayName ?? joiner?.email ?? 'Someone',
+        participant.id
+      ).catch((err) => console.error('Failed to send join notification:', err));
+    }
 
     created(res, participant, autoApprove ? 'Joined match' : 'Join request sent');
   } catch (e) { next(e); }

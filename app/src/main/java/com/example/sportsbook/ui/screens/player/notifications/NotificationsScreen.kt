@@ -111,12 +111,16 @@ fun NotificationsScreen(
                         items(uiState.notifications, key = { it.id }) { notification ->
                             NotificationItem(
                                 notification = notification,
+                                isActionPending = notification.id in uiState.pendingActionIds,
+                                resolvedActionLabel = uiState.resolvedActions[notification.id],
                                 onClick = {
                                     if (!notification.isRead) {
                                         viewModel.markAsRead(notification.id)
                                     }
                                     onNotificationClick(notification)
-                                }
+                                },
+                                onApprove = { viewModel.respondToJoinRequest(notification, approve = true) },
+                                onDecline = { viewModel.respondToJoinRequest(notification, approve = false) }
                             )
                             HorizontalDivider()
                         }
@@ -130,13 +134,22 @@ fun NotificationsScreen(
 @Composable
 private fun NotificationItem(
     notification: Notification,
-    onClick: () -> Unit
+    isActionPending: Boolean = false,
+    resolvedActionLabel: String? = null,
+    onClick: () -> Unit,
+    onApprove: () -> Unit = {},
+    onDecline: () -> Unit = {}
 ) {
     val bgColor = if (!notification.isRead) {
         MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.1f)
     } else {
         MaterialTheme.colorScheme.surface
     }
+    // Show inline approve/decline only for join-request notifications that
+    // carry both matchId + participantId in their data payload.
+    val isActionable = notification.type == NotificationType.MATCH_JOIN_REQUEST &&
+        notification.data["matchId"] != null &&
+        notification.data["participantId"] != null
 
     Row(
         modifier = Modifier
@@ -186,6 +199,16 @@ private fun NotificationItem(
                 style = MaterialTheme.typography.labelSmall,
                 color = MaterialTheme.colorScheme.onSurfaceVariant
             )
+
+            if (isActionable) {
+                Spacer(modifier = Modifier.height(10.dp))
+                JoinRequestActionRow(
+                    isPending = isActionPending,
+                    resolvedLabel = resolvedActionLabel,
+                    onApprove = onApprove,
+                    onDecline = onDecline
+                )
+            }
         }
 
         if (!notification.isRead) {
@@ -195,6 +218,47 @@ private fun NotificationItem(
                     .clip(CircleShape)
                     .background(MaterialTheme.colorScheme.primary)
             )
+        }
+    }
+}
+
+@Composable
+private fun JoinRequestActionRow(
+    isPending: Boolean,
+    resolvedLabel: String?,
+    onApprove: () -> Unit,
+    onDecline: () -> Unit
+) {
+    if (resolvedLabel != null) {
+        // Already responded — show outcome pill, no buttons.
+        val color = when (resolvedLabel) {
+            "Approved" -> MaterialTheme.colorScheme.primary
+            "Declined" -> MaterialTheme.colorScheme.error
+            else -> MaterialTheme.colorScheme.onSurfaceVariant
+        }
+        Text(
+            text = "$resolvedLabel ✓",
+            style = MaterialTheme.typography.labelMedium,
+            color = color,
+            fontWeight = FontWeight.SemiBold
+        )
+        return
+    }
+
+    Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+        androidx.compose.material3.Button(
+            onClick = onApprove,
+            enabled = !isPending,
+            contentPadding = androidx.compose.foundation.layout.PaddingValues(horizontal = 14.dp, vertical = 6.dp)
+        ) {
+            Text("Approve", style = MaterialTheme.typography.labelMedium)
+        }
+        androidx.compose.material3.OutlinedButton(
+            onClick = onDecline,
+            enabled = !isPending,
+            contentPadding = androidx.compose.foundation.layout.PaddingValues(horizontal = 14.dp, vertical = 6.dp)
+        ) {
+            Text("Decline", style = MaterialTheme.typography.labelMedium)
         }
     }
 }
@@ -221,6 +285,8 @@ private fun notificationIcon(type: NotificationType): ImageVector = when (type) 
     NotificationType.PARTY_INVITE_DECLINED,
     NotificationType.PARTY_JOINED_MATCH,
     NotificationType.PARTY_DISBANDED -> Icons.Default.Group
+    NotificationType.FEED_POST_LIKED -> Icons.Default.Star
+    NotificationType.FEED_POST_COMMENTED -> Icons.Default.Message
     NotificationType.GENERAL -> Icons.Default.Notifications
 }
 
@@ -246,6 +312,8 @@ private fun notificationIconColor(type: NotificationType) = when (type) {
     NotificationType.PARTY_INVITE_DECLINED -> MaterialTheme.colorScheme.primary
     NotificationType.PARTY_JOINED_MATCH -> MaterialTheme.colorScheme.secondary
     NotificationType.PARTY_DISBANDED -> MaterialTheme.colorScheme.error
+    NotificationType.FEED_POST_LIKED -> MaterialTheme.colorScheme.tertiary
+    NotificationType.FEED_POST_COMMENTED -> MaterialTheme.colorScheme.tertiary
     NotificationType.GENERAL -> MaterialTheme.colorScheme.primary
 }
 

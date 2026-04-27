@@ -87,14 +87,15 @@ export async function sendSilentFeedRefresh(
 export async function notifyMatchJoinRequest(
   matchId: number,
   hostId: number,
-  joinerName: string
+  joinerName: string,
+  participantId: number
 ): Promise<void> {
   await sendNotification(
     hostId,
     'match_join_request',
     `${joinerName} wants to join your match`,
-    `${joinerName} has requested to join your match. Tap to review the request.`,
-    { matchId: String(matchId) }
+    `${joinerName} has requested to join your match. Approve or decline below.`,
+    { matchId: String(matchId), participantId: String(participantId) }
   );
 }
 
@@ -191,6 +192,55 @@ export async function notifyFriendRequestAccepted(userId: number, friendName: st
     `${friendName} accepted your friend request`,
     `You and ${friendName} are now friends!`,
     {}
+  );
+}
+
+// ============================================================
+// Feed (likes / comments) notification helpers
+// ============================================================
+
+/**
+ * Notify a post author that someone liked their post.
+ * No-op if the liker is the author (silent self-action).
+ */
+export async function notifyFeedPostLiked(
+  postAuthorId: number,
+  likerId: number,
+  likerName: string,
+  postId: number
+): Promise<void> {
+  if (postAuthorId === likerId) return;
+  await sendNotification(
+    postAuthorId,
+    'feed_post_liked',
+    `${likerName} liked your post`,
+    `${likerName} reacted to your post.`,
+    { postId: String(postId) }
+  );
+}
+
+/**
+ * Notify a post author that someone commented on their post.
+ * Truncates long comments to keep the push payload tight.
+ * No-op if the commenter is the author.
+ */
+export async function notifyFeedPostCommented(
+  postAuthorId: number,
+  commenterId: number,
+  commenterName: string,
+  postId: number,
+  commentContent: string
+): Promise<void> {
+  if (postAuthorId === commenterId) return;
+  const preview = commentContent.length > 100
+    ? commentContent.substring(0, 97) + '...'
+    : commentContent;
+  await sendNotification(
+    postAuthorId,
+    'feed_post_commented',
+    `${commenterName} commented on your post`,
+    preview,
+    { postId: String(postId) }
   );
 }
 

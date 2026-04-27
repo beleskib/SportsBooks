@@ -3,6 +3,7 @@ import { success, created } from '../utils/apiResponse';
 import { ValidationError, NotFoundError } from '../utils/errors';
 import * as feedRepo from '../repositories/feed.repository';
 import * as notificationService from '../services/notification.service';
+import * as userRepo from '../repositories/user.repository';
 import { query as dbQuery } from '../config/database';
 
 export async function getFeed(req: Request, res: Response, next: NextFunction) {
@@ -96,6 +97,21 @@ export async function likePost(req: Request, res: Response, next: NextFunction) 
       await feedRepo.unlikePost(postId, req.user!.id);
     } else {
       await feedRepo.likePost(postId, req.user!.id);
+
+      // Notify the author (fire-and-forget; helper no-ops if liker == author)
+      (async () => {
+        try {
+          const liker = await userRepo.findById(req.user!.id);
+          await notificationService.notifyFeedPostLiked(
+            post.userId,
+            req.user!.id,
+            liker?.displayName ?? 'Someone',
+            postId
+          );
+        } catch (err) {
+          console.error('Feed like notification error:', err);
+        }
+      })();
     }
 
     // Return the updated post so the client can refresh its state
@@ -133,6 +149,22 @@ export async function addComment(req: Request, res: Response, next: NextFunction
 
     const comment = await feedRepo.addComment(postId, req.user!.id, content.trim());
     created(res, comment);
+
+    // Notify the author (fire-and-forget; helper no-ops if commenter == author)
+    (async () => {
+      try {
+        const commenter = await userRepo.findById(req.user!.id);
+        await notificationService.notifyFeedPostCommented(
+          post.userId,
+          req.user!.id,
+          commenter?.displayName ?? 'Someone',
+          postId,
+          content.trim()
+        );
+      } catch (err) {
+        console.error('Feed comment notification error:', err);
+      }
+    })();
   } catch (e) { next(e); }
 }
 

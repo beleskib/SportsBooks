@@ -3,6 +3,7 @@ package com.example.sportsbook.ui.screens.player.notifications
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.sportsbook.domain.model.Notification
+import com.example.sportsbook.domain.repository.MatchRepository
 import com.example.sportsbook.domain.repository.NotificationRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -16,12 +17,17 @@ data class NotificationsUiState(
     val notifications: List<Notification> = emptyList(),
     val isLoading: Boolean = false,
     val isRefreshing: Boolean = false,
-    val error: String? = null
+    val error: String? = null,
+    /** notification ids currently being approved/declined (disables the buttons) */
+    val pendingActionIds: Set<Long> = emptySet(),
+    /** notification ids whose join request was just resolved — show "Approved" / "Declined" pill instead of buttons */
+    val resolvedActions: Map<Long, String> = emptyMap()
 )
 
 @HiltViewModel
 class NotificationsViewModel @Inject constructor(
-    private val notificationRepository: NotificationRepository
+    private val notificationRepository: NotificationRepository,
+    private val matchRepository: MatchRepository
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(NotificationsUiState())
@@ -66,6 +72,44 @@ class NotificationsViewModel @Inject constructor(
                             notifications = state.notifications.map {
                                 if (it.id == notificationId) it.copy(isRead = true) else it
                             }
+                        )
+                    }
+                }
+        }
+    }
+
+    /**
+     * Inline approve/decline for `match_join_request` notifications.
+     * Reads matchId + participantId from the notification's data payload,
+     * calls the match endpoint, and on success marks the notification read
+     * and remembers the resolution so the UI can show "Approved ✓" / "Declined".
+     */
+    fun respondToJoinRequest(notification: Notification, approve: Boolean) {
+        val matchId = notification.data["matchId"]?.toLongOrNull()
+        val participantId = notification.data["participantId"]?.toLongOrNull()
+        if (matchId == null || participantId == null) return
+        if (notification.id in _uiState.value.pendingActionIds) return
+
+        viewModelScope.launch {
+            _uiState.update { it.copy(pendingActionIds = it.pendingActionIds + notification.id) }
+            matchRepository.respondToJoinRequest(matchId, participantId, approve)
+                .onSuccess {
+                    _uiState.update { state ->
+                        state.copy(
+                            pendingActionIds = state.pendingActionIds - notification.id,
+                            resolvedActions = state.resolvedActions + (notification.id to if (approve) "Approved" else "Declined"),
+                            notifications = state.notifications.map {
+                                if (it.id == notification.id) it.copy(isRead = true) else it
+                            }
+                        )
+                    }
+                    notificationRepository.markAsRead(listOf(notification.id))
+                }
+                .onFailure { e ->
+                    _uiState.update { state ->
+                        state.copy(
+                            pendingActionIds = state.pendingActionIds - notification.id,
+                            error = e.message
                         )
                     }
                 }
