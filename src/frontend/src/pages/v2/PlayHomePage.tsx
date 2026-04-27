@@ -5,20 +5,30 @@ import {
   Clock,
   Users,
   Repeat,
-  Star,
   Loader2,
   AlertCircle,
   Sparkles,
+  ShieldCheck,
+  ChevronRight,
 } from 'lucide-react'
 import { v2Api } from '@/api/v2'
 import type { HomeFeedResponse, PlaySearchResponse, PlaySuggestion } from '@/api/v2'
 
 // ------------------------------------------------------------
-// Canonical match-filter skill levels. Mirrors
-// src/shared/types/skillLevel.ts — keep in sync.
-// DB stores INTEGER (historically 1-5); legacy value 5 is
-// collapsed into "Competitive" so old rows still render.
+// v2-practical-ux: "When + Where first" Play home page.
+//
+// Visual direction: calm / confident / premium.
+//   - Navy 900 + US-Open-gold accent (yellow-300 on gray-900).
+//   - No gradients, no emoji prefixes.
+//   - Generous whitespace; subtle 1px borders; tabular numbers.
+//   - Type hierarchy is restrained: one bold headline, everything else
+//     in regular weight. Restraint is the brand.
+//
+// Behavior is unchanged from the previous mock — this is purely a
+// visual refresh, so the API contract stays identical.
 // ------------------------------------------------------------
+
+// Canonical match-filter skill levels. Mirrors src/shared/types/skillLevel.ts.
 const SKILL_LEVEL_META = [
   { numeric: 1, label: 'beginner', displayName: 'Beginner' },
   { numeric: 2, label: 'intermediate', displayName: 'Intermediate' },
@@ -47,15 +57,6 @@ function skillLevelRangeDisplay(
   return `${lo} – ${hi}`
 }
 
-// ============================================================
-// v2-practical-ux: "When + Where first" home page
-// 1) Greeting bar + reliability badge
-// 2) Time/location pickers ABOVE everything (primary CTA: search)
-// 3) One-tap rebook strip
-// 4) Suggested play cards
-// 5) Friends available
-// ============================================================
-
 const SPORTS = [
   { value: '', label: 'Any sport' },
   { value: 'tennis', label: 'Tennis' },
@@ -67,7 +68,6 @@ const SPORTS = [
 ]
 
 function isoLocal(d: Date): string {
-  // input[type=datetime-local] needs YYYY-MM-DDTHH:mm without seconds/zone
   const pad = (n: number) => String(n).padStart(2, '0')
   return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`
 }
@@ -75,17 +75,20 @@ function isoLocal(d: Date): string {
 function fmtTime(iso: string): string {
   try {
     return new Date(iso).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
-  } catch {
-    return iso
-  }
+  } catch { return iso }
 }
 
 function fmtDate(iso: string): string {
   try {
     return new Date(iso).toLocaleDateString([], { weekday: 'short', month: 'short', day: 'numeric' })
-  } catch {
-    return iso
-  }
+  } catch { return iso }
+}
+
+// Type guard for the {kind:'lobby'|'open_slot'|'match'} discriminator.
+function typeLabel(t: string): string {
+  if (t === 'lobby') return 'Lobby'
+  if (t === 'open_slot') return 'Open court'
+  return 'Match'
 }
 
 export function PlayHomePage() {
@@ -118,23 +121,13 @@ export function PlayHomePage() {
   const [searchError, setSearchError] = useState<string | null>(null)
   const [hasSearched, setHasSearched] = useState(false)
 
-  // Initial home feed load
   useEffect(() => {
     let cancelled = false
-    v2Api
-      .getHomeFeed()
-      .then(res => {
-        if (!cancelled) setFeed(res.data)
-      })
-      .catch(err => {
-        if (!cancelled) setFeedError(err?.error?.message ?? 'Failed to load feed')
-      })
-      .finally(() => {
-        if (!cancelled) setLoadingFeed(false)
-      })
-    return () => {
-      cancelled = true
-    }
+    v2Api.getHomeFeed()
+      .then(res => { if (!cancelled) setFeed(res.data) })
+      .catch(err => { if (!cancelled) setFeedError(err?.error?.message ?? 'Failed to load feed') })
+      .finally(() => { if (!cancelled) setLoadingFeed(false) })
+    return () => { cancelled = true }
   }, [])
 
   const onSearch = async (e?: React.FormEvent) => {
@@ -159,14 +152,12 @@ export function PlayHomePage() {
   }
 
   const onRebook = async (bookingId: number) => {
-    // Default: rebook for the same hour tomorrow
     const tomorrow = new Date()
     tomorrow.setDate(tomorrow.getDate() + 1)
     const slotDate = tomorrow.toISOString().split('T')[0]
     const startTime = '19:00'
     try {
       await v2Api.rebook(bookingId, slotDate, startTime)
-      // Optimistic refresh
       const fresh = await v2Api.getHomeFeed()
       setFeed(fresh.data)
     } catch (err: unknown) {
@@ -176,215 +167,194 @@ export function PlayHomePage() {
   }
 
   return (
-    <div className="space-y-6">
-      {/* Greeting */}
+    <div className="mx-auto max-w-5xl space-y-10">
+      {/* ─── Greeting (calm header, not a banner) ────────────────── */}
       {feed?.greeting && (
-        <div className="flex items-center justify-between rounded-lg bg-gradient-to-r from-indigo-600 to-purple-600 p-5 text-white shadow-sm">
+        <header className="flex items-end justify-between">
           <div>
-            <h1 className="text-2xl font-bold">
-              Hey {feed.greeting.displayName ?? 'there'} 👋
+            <p className="text-sm text-gray-500">Welcome back</p>
+            <h1 className="mt-1 text-3xl font-semibold tracking-tight text-gray-900">
+              {feed.greeting.displayName ?? 'Hello'}
             </h1>
-            <p className="mt-1 text-sm text-indigo-100">
-              Find a game, book a court, or invite friends
-            </p>
           </div>
-          <div className="text-right">
-            <div className="flex items-center justify-end gap-1 text-sm font-medium">
-              <Star className="h-4 w-4 fill-current" />
+          {/* Reliability pill — discreet, dark, gold accent. */}
+          <div className="inline-flex items-center gap-2 rounded-full bg-gray-900 px-3 py-1.5 text-xs font-medium text-yellow-300">
+            <ShieldCheck className="h-3.5 w-3.5" />
+            <span className="tabular-nums">
               {(feed.greeting.reliabilityScore * 100).toFixed(0)}%
-            </div>
-            <div className="text-xs text-indigo-200">
-              reliability · {feed.greeting.totalAttended} games
-            </div>
+            </span>
+            <span className="text-gray-300">reliability</span>
+            <span className="text-gray-500">·</span>
+            <span className="text-gray-300">{feed.greeting.totalAttended} games</span>
           </div>
-        </div>
+        </header>
       )}
 
-      {/* When + Where first — the primary CTA */}
+      {/* ─── Primary CTA: "I want to play..." ───────────────────── */}
       <form
         onSubmit={onSearch}
-        className="rounded-lg border border-gray-200 bg-white p-5 shadow-sm space-y-4"
+        className="rounded-2xl border border-gray-200 bg-white p-6 shadow-sm"
       >
-        <div className="flex items-center gap-2 text-gray-700 font-medium">
-          <Search className="h-5 w-5" />
-          <span>I want to play…</span>
+        <div className="flex items-baseline justify-between">
+          <h2 className="text-lg font-semibold text-gray-900">I want to play…</h2>
+          <p className="text-xs text-gray-500">Pick a window — we'll show what's open.</p>
         </div>
 
-        <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
-          <div>
-            <label className="block text-xs font-medium text-gray-600 mb-1">From</label>
+        <div className="mt-5 grid grid-cols-1 gap-4 sm:grid-cols-2">
+          <Field label="From">
             <input
               type="datetime-local"
               value={from}
               onChange={e => setFrom(e.target.value)}
-              className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm"
+              className="w-full rounded-lg border border-gray-300 bg-white px-3 py-2.5 text-sm text-gray-900 focus:border-gray-900 focus:outline-none"
             />
-          </div>
-          <div>
-            <label className="block text-xs font-medium text-gray-600 mb-1">To</label>
+          </Field>
+          <Field label="To">
             <input
               type="datetime-local"
               value={to}
               onChange={e => setTo(e.target.value)}
-              className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm"
+              className="w-full rounded-lg border border-gray-300 bg-white px-3 py-2.5 text-sm text-gray-900 focus:border-gray-900 focus:outline-none"
             />
-          </div>
+          </Field>
         </div>
 
-        <div className="grid grid-cols-1 gap-3 md:grid-cols-3">
-          <div>
-            <label className="block text-xs font-medium text-gray-600 mb-1">Sport</label>
+        <div className="mt-4 grid grid-cols-1 gap-4 sm:grid-cols-3">
+          <Field label="Sport">
             <select
               value={sportType}
               onChange={e => setSportType(e.target.value)}
-              className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm bg-white"
+              className="w-full rounded-lg border border-gray-300 bg-white px-3 py-2.5 text-sm text-gray-900 focus:border-gray-900 focus:outline-none"
             >
               {SPORTS.map(s => (
-                <option key={s.value} value={s.value}>
-                  {s.label}
-                </option>
+                <option key={s.value} value={s.value}>{s.label}</option>
               ))}
             </select>
-          </div>
-          <div>
-            <label className="block text-xs font-medium text-gray-600 mb-1">Skill from</label>
+          </Field>
+          <Field label="Skill from">
             <select
               value={skillMin}
               onChange={e => setSkillMin(e.target.value === '' ? '' : Number(e.target.value))}
-              className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm bg-white"
+              className="w-full rounded-lg border border-gray-300 bg-white px-3 py-2.5 text-sm text-gray-900 focus:border-gray-900 focus:outline-none"
             >
               <option value="">Any level</option>
               {SKILL_LEVEL_META.map(m => (
                 <option key={m.label} value={m.numeric}>{m.displayName}</option>
               ))}
             </select>
-          </div>
-          <div>
-            <label className="block text-xs font-medium text-gray-600 mb-1">Skill to</label>
+          </Field>
+          <Field label="Skill to">
             <select
               value={skillMax}
               onChange={e => setSkillMax(e.target.value === '' ? '' : Number(e.target.value))}
-              className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm bg-white"
+              className="w-full rounded-lg border border-gray-300 bg-white px-3 py-2.5 text-sm text-gray-900 focus:border-gray-900 focus:outline-none"
             >
               <option value="">Any level</option>
               {SKILL_LEVEL_META.map(m => (
                 <option key={m.label} value={m.numeric}>{m.displayName}</option>
               ))}
             </select>
-          </div>
+          </Field>
         </div>
 
         <button
           type="submit"
           disabled={searching}
-          className="inline-flex items-center justify-center gap-2 rounded-md bg-indigo-600 px-4 py-2 text-sm font-medium text-white hover:bg-indigo-700 disabled:opacity-60"
+          className="mt-6 inline-flex items-center justify-center gap-2 rounded-lg bg-gray-900 px-5 py-2.5 text-sm font-semibold text-yellow-300 hover:bg-gray-800 disabled:opacity-60"
         >
           {searching ? <Loader2 className="h-4 w-4 animate-spin" /> : <Search className="h-4 w-4" />}
-          Search
+          {searching ? 'Searching…' : 'Show me what\u2019s open'}
         </button>
       </form>
 
-      {/* Search results */}
+      {/* ─── Results ────────────────────────────────────────────── */}
       {searchError && (
-        <div className="flex items-start gap-2 rounded-md bg-red-50 p-3 text-sm text-red-700">
-          <AlertCircle className="h-4 w-4 mt-0.5" />
+        <div className="flex items-start gap-2 rounded-lg border border-rose-200 bg-rose-50 p-3 text-sm text-rose-700">
+          <AlertCircle className="mt-0.5 h-4 w-4" />
           <span>{searchError}</span>
         </div>
       )}
 
       {hasSearched && results && (
-        <section>
-          <div className="mb-3 flex items-center justify-between">
-            <h2 className="text-lg font-semibold text-gray-900">Available now</h2>
-            <div className="flex items-center gap-2 text-xs text-gray-600">
-              <Chip>{results.counts.lobbies} lobbies</Chip>
-              <Chip>{results.counts.openSlots} open courts</Chip>
-              <Chip>{results.counts.availablePlayers} players</Chip>
+        <Section
+          title="Available now"
+          aside={
+            <div className="flex items-center gap-2 text-xs text-gray-500 tabular-nums">
+              <Quiet>{results.counts.lobbies} lobbies</Quiet>
+              <Quiet>{results.counts.openSlots} courts</Quiet>
+              <Quiet>{results.counts.availablePlayers} players</Quiet>
             </div>
-          </div>
+          }
+        >
           {results.results.length === 0 ? (
-            <p className="rounded-md bg-gray-50 p-4 text-sm text-gray-500">
-              Nothing found for this window. Try a wider time range or another sport.
-            </p>
+            <EmptyState>
+              Nothing for that window. Try a wider time range or another sport.
+            </EmptyState>
           ) : (
-            <div className="grid gap-3 md:grid-cols-2 lg:grid-cols-3">
+            <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
               {results.results.map(r => (
                 <PlayCard key={`${r.type}-${r.id}`} item={r} />
               ))}
             </div>
           )}
-        </section>
+        </Section>
       )}
 
-      {/* One-tap rebook */}
+      {/* ─── Rebook strip ────────────────────────────────────────── */}
       {!hasSearched && feed && feed.recentBookings.length > 0 && (
-        <section>
-          <h2 className="mb-3 flex items-center gap-2 text-lg font-semibold text-gray-900">
-            <Repeat className="h-5 w-5" />
-            Rebook in one tap
-          </h2>
-          <div className="grid gap-3 md:grid-cols-2 lg:grid-cols-3">
+        <Section title="Rebook in one tap" icon={Repeat}>
+          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
             {feed.recentBookings.map(b => (
               <RebookCard key={b.bookingId} booking={b} onRebook={onRebook} />
             ))}
           </div>
-        </section>
+        </Section>
       )}
 
-      {/* Suggested play */}
+      {/* ─── Suggested ──────────────────────────────────────────── */}
       {!hasSearched && feed && feed.suggestedPlay.length > 0 && (
-        <section>
-          <h2 className="mb-3 flex items-center gap-2 text-lg font-semibold text-gray-900">
-            <Sparkles className="h-5 w-5" />
-            Suggested for you
-          </h2>
-          <div className="grid gap-3 md:grid-cols-2 lg:grid-cols-3">
+        <Section title="Suggested for you" icon={Sparkles}>
+          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
             {feed.suggestedPlay.map(s => (
               <PlayCard key={`sugg-${s.id}`} item={s} />
             ))}
           </div>
-        </section>
+        </Section>
       )}
 
-      {/* Friends available */}
+      {/* ─── Friends available ──────────────────────────────────── */}
       {!hasSearched && feed && feed.friendsAvailable.length > 0 && (
-        <section>
-          <h2 className="mb-3 flex items-center gap-2 text-lg font-semibold text-gray-900">
-            <Users className="h-5 w-5" />
-            Friends available now
-          </h2>
-          <div className="flex flex-wrap gap-3">
+        <Section title="Friends free now" icon={Users}>
+          <div className="flex flex-wrap gap-2">
             {feed.friendsAvailable.map(f => (
               <div
                 key={f.userId}
-                className="flex items-center gap-3 rounded-full border border-gray-200 bg-white px-3 py-1.5 text-sm shadow-sm"
+                className="inline-flex items-center gap-2 rounded-full border border-gray-200 bg-white px-3 py-1.5 text-sm shadow-sm"
               >
                 {f.photoUrl ? (
-                  <img src={f.photoUrl} alt="" className="h-7 w-7 rounded-full object-cover" />
+                  <img src={f.photoUrl} alt="" className="h-6 w-6 rounded-full object-cover" />
                 ) : (
-                  <div className="h-7 w-7 rounded-full bg-indigo-100 text-indigo-700 grid place-items-center text-xs font-semibold">
+                  <div className="grid h-6 w-6 place-items-center rounded-full bg-gray-900 text-[10px] font-semibold text-yellow-300">
                     {(f.displayName ?? '?').slice(0, 1).toUpperCase()}
                   </div>
                 )}
-                <div className="leading-tight">
-                  <div className="font-medium text-gray-900">{f.displayName ?? 'Player'}</div>
-                  <div className="text-xs text-gray-500">{f.sportType}</div>
-                </div>
+                <span className="font-medium text-gray-900">{f.displayName ?? 'Player'}</span>
+                <span className="text-xs text-gray-500 capitalize">· {f.sportType}</span>
               </div>
             ))}
           </div>
-        </section>
+        </Section>
       )}
 
-      {/* Loading + error states */}
+      {/* ─── Loading / error ────────────────────────────────────── */}
       {loadingFeed && (
         <div className="flex h-32 items-center justify-center">
-          <Loader2 className="h-6 w-6 animate-spin text-gray-400" />
+          <Loader2 className="h-5 w-5 animate-spin text-gray-400" />
         </div>
       )}
       {feedError && (
-        <div className="flex items-start gap-2 rounded-md bg-red-50 p-3 text-sm text-red-700">
-          <AlertCircle className="h-4 w-4 mt-0.5" />
+        <div className="flex items-start gap-2 rounded-lg border border-rose-200 bg-rose-50 p-3 text-sm text-rose-700">
+          <AlertCircle className="mt-0.5 h-4 w-4" />
           <span>{feedError}</span>
         </div>
       )}
@@ -393,14 +363,58 @@ export function PlayHomePage() {
 }
 
 // ============================================================
-// Sub-components
+// Sub-components — kept private to this file.
 // ============================================================
 
-function Chip({ children }: { children: React.ReactNode }) {
+function Field({ label, children }: { label: string; children: React.ReactNode }) {
   return (
-    <span className="inline-flex items-center rounded-full bg-gray-100 px-2 py-0.5 text-xs font-medium text-gray-700">
+    <label className="block">
+      <span className="mb-1.5 block text-[11px] font-semibold uppercase tracking-wider text-gray-500">
+        {label}
+      </span>
+      {children}
+    </label>
+  )
+}
+
+function Section({
+  title,
+  icon: Icon,
+  aside,
+  children,
+}: {
+  title: string
+  icon?: React.ComponentType<{ className?: string }>
+  aside?: React.ReactNode
+  children: React.ReactNode
+}) {
+  return (
+    <section>
+      <div className="mb-4 flex items-end justify-between">
+        <h2 className="inline-flex items-center gap-2 text-lg font-semibold text-gray-900">
+          {Icon && <Icon className="h-4 w-4 text-gray-500" />}
+          {title}
+        </h2>
+        {aside}
+      </div>
+      {children}
+    </section>
+  )
+}
+
+function Quiet({ children }: { children: React.ReactNode }) {
+  return (
+    <span className="inline-flex items-center rounded-full border border-gray-200 bg-white px-2.5 py-0.5">
       {children}
     </span>
+  )
+}
+
+function EmptyState({ children }: { children: React.ReactNode }) {
+  return (
+    <div className="rounded-xl border border-dashed border-gray-300 bg-white px-6 py-10 text-center text-sm text-gray-500">
+      {children}
+    </div>
   )
 }
 
@@ -410,45 +424,55 @@ function PlayCard({ item }: { item: PlaySuggestion }) {
     ? skillLevelRangeDisplay(item.skillLevelMin, item.skillLevelMax)
     : null
   return (
-    <div className="rounded-lg border border-gray-200 bg-white p-4 shadow-sm hover:shadow-md transition-shadow">
+    <article className="group flex flex-col rounded-2xl border border-gray-200 bg-white p-5 shadow-sm transition hover:border-gray-900">
       <div className="flex items-start justify-between gap-2">
         <div>
-          <div className="flex items-center gap-1 text-xs text-gray-500 capitalize">
-            {item.type === 'lobby' ? '🏟️ Lobby' : item.type === 'open_slot' ? '📅 Open court' : '🎯 Match'}
-            {' · '}
-            {item.sportType}
+          <div className="text-[11px] font-semibold uppercase tracking-wider text-gray-500">
+            {typeLabel(item.type)} · <span className="capitalize">{item.sportType}</span>
           </div>
-          <h3 className="mt-1 font-semibold text-gray-900 text-sm">{item.title}</h3>
+          <h3 className="mt-2 text-base font-semibold leading-tight text-gray-900">
+            {item.title}
+          </h3>
         </div>
         {item.price !== null && (
-          <div className="text-right">
-            <div className="text-sm font-semibold text-gray-900">€{item.price.toFixed(0)}</div>
+          <div className="shrink-0 text-right">
+            <div className="text-base font-semibold tabular-nums text-gray-900">
+              €{item.price.toFixed(0)}
+            </div>
           </div>
         )}
       </div>
-      <div className="mt-3 space-y-1 text-xs text-gray-600">
-        <div className="flex items-center gap-1">
-          <Clock className="h-3 w-3" />
-          {fmtDate(item.startAt)} · {fmtTime(item.startAt)}
+
+      <div className="mt-4 space-y-1.5 text-sm text-gray-600">
+        <div className="flex items-center gap-2">
+          <Clock className="h-3.5 w-3.5 text-gray-400" />
+          <span>{fmtDate(item.startAt)} · {fmtTime(item.startAt)}</span>
         </div>
         {item.venueName && (
-          <div className="flex items-center gap-1">
-            <MapPin className="h-3 w-3" />
-            {item.venueName}
-            {item.distanceKm !== null && ` · ${item.distanceKm.toFixed(1)} km`}
-          </div>
-        )}
-        {(seatLabel || skillRange) && (
-          <div className="flex items-center gap-2 pt-1">
-            {seatLabel && <Chip>{seatLabel} players</Chip>}
-            {skillRange && <Chip>{skillRange}</Chip>}
+          <div className="flex items-center gap-2">
+            <MapPin className="h-3.5 w-3.5 text-gray-400" />
+            <span>
+              {item.venueName}
+              {item.distanceKm !== null && (
+                <span className="text-gray-400 tabular-nums"> · {item.distanceKm.toFixed(1)} km</span>
+              )}
+            </span>
           </div>
         )}
       </div>
-      <button className="mt-3 w-full rounded-md bg-indigo-600 px-3 py-1.5 text-xs font-medium text-white hover:bg-indigo-700">
+
+      {(seatLabel || skillRange) && (
+        <div className="mt-3 flex flex-wrap gap-1.5">
+          {seatLabel && <Quiet>{seatLabel} players</Quiet>}
+          {skillRange && <Quiet>{skillRange}</Quiet>}
+        </div>
+      )}
+
+      <button className="mt-5 inline-flex items-center justify-center gap-1.5 rounded-lg bg-gray-900 px-4 py-2 text-sm font-semibold text-yellow-300 transition hover:bg-gray-800 group-hover:bg-gray-800">
         {item.type === 'lobby' ? 'Join lobby' : 'Book this slot'}
+        <ChevronRight className="h-4 w-4" />
       </button>
-    </div>
+    </article>
   )
 }
 
@@ -461,28 +485,26 @@ function RebookCard({
 }) {
   const target = booking.venueName ?? booking.coachName ?? 'Booking'
   return (
-    <div className="rounded-lg border border-gray-200 bg-white p-4 shadow-sm">
-      <div className="flex items-start justify-between">
-        <div>
-          <div className="text-xs text-gray-500 capitalize">{booking.sportType}</div>
-          <h3 className="mt-1 font-semibold text-gray-900 text-sm">{target}</h3>
-          <div className="mt-1 text-xs text-gray-600">
-            {booking.lastSlotStart || '—'} · €{booking.price.toFixed(0)}
-          </div>
-          {booking.timesBooked > 1 && (
-            <div className="mt-1 text-xs text-indigo-600">
-              You've booked here {booking.timesBooked}×
-            </div>
-          )}
-        </div>
-        <button
-          onClick={() => onRebook(booking.bookingId)}
-          className="inline-flex items-center gap-1 rounded-md bg-indigo-600 px-3 py-1.5 text-xs font-medium text-white hover:bg-indigo-700"
-        >
-          <Repeat className="h-3 w-3" />
-          Rebook
-        </button>
+    <article className="rounded-2xl border border-gray-200 bg-white p-5 shadow-sm">
+      <div className="text-[11px] font-semibold uppercase tracking-wider text-gray-500 capitalize">
+        {booking.sportType}
       </div>
-    </div>
+      <h3 className="mt-2 text-base font-semibold leading-tight text-gray-900">{target}</h3>
+      <div className="mt-1 text-sm text-gray-600 tabular-nums">
+        {booking.lastSlotStart || '—'} · €{booking.price.toFixed(0)}
+      </div>
+      {booking.timesBooked > 1 && (
+        <div className="mt-2 inline-flex items-center gap-1 rounded-full bg-gray-900 px-2.5 py-0.5 text-[11px] font-medium text-yellow-300">
+          You've booked here {booking.timesBooked}×
+        </div>
+      )}
+      <button
+        onClick={() => onRebook(booking.bookingId)}
+        className="mt-4 inline-flex w-full items-center justify-center gap-1.5 rounded-lg border border-gray-300 bg-white px-4 py-2 text-sm font-semibold text-gray-900 transition hover:border-gray-900"
+      >
+        <Repeat className="h-4 w-4" />
+        Rebook tomorrow
+      </button>
+    </article>
   )
 }
