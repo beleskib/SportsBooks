@@ -20,6 +20,10 @@ export interface UserProfile {
   stripeAccountId: string | null;
   stripeOnboardingStatus: StripeOnboardingStatus;
   stripePayoutsEnabled: boolean;
+  // Partner approval gate. NULL = awaiting admin review (cannot list venues/coaches).
+  // Admins (role=admin) bypass the gate; players ignore these fields.
+  partnerApprovedAt: string | null;
+  partnerRejectionReason: string | null;
   interestedSports: SportType[];
   sportExpertise: UserSportExpertise[];
   avgPlayerSkillRating: number;

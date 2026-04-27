@@ -8,6 +8,8 @@ import {
   Calendar,
   Sparkles,
   CalendarRange,
+  ShieldCheck,
+  UserCheck,
 } from 'lucide-react'
 import { useAuth } from '@/context/AuthContext'
 import { PartnerType } from '@/types'
@@ -42,6 +44,12 @@ export function Sidebar() {
     { to: '/v2/play', icon: Sparkles, label: 'Play (v2)' },
   ]
 
+  // Owner-only nav (admin role). Appended at the bottom under a divider.
+  const ownerNavItems = [
+    { to: '/admin', icon: ShieldCheck, label: 'Owner overview' },
+    { to: '/admin/partners', icon: UserCheck, label: 'Partner approvals' },
+  ]
+
   const navItems = [...(isAdmin ? adminNavItems : partnerNavItems), ...v2NavItems]
 
   return (
@@ -67,6 +75,31 @@ export function Sidebar() {
             {item.label}
           </NavLink>
         ))}
+
+        {isAdmin && (
+          <>
+            <div className="mt-4 px-3 text-[10px] font-semibold uppercase tracking-wider text-gray-500">
+              Owner tools
+            </div>
+            {ownerNavItems.map((item) => (
+              <NavLink
+                key={item.to}
+                to={item.to}
+                end={item.to === '/admin'}
+                className={({ isActive }) =>
+                  `flex items-center gap-3 rounded-md px-3 py-2 text-sm font-medium transition-colors ${
+                    isActive
+                      ? 'bg-yellow-300 text-gray-900'
+                      : 'text-gray-300 hover:bg-gray-800 hover:text-yellow-300'
+                  }`
+                }
+              >
+                <item.icon className="h-5 w-5" />
+                {item.label}
+              </NavLink>
+            ))}
+          </>
+        )}
       </nav>
       <div className="border-t border-gray-700 p-4">
         <p className="text-xs text-gray-400">

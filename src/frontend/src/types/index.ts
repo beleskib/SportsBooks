@@ -24,6 +24,9 @@ export interface BackendUser {
   stripeAccountId: string | null
   stripeOnboardingStatus: string
   stripePayoutsEnabled: boolean
+  // Partner approval gate (NULL = awaiting admin review).
+  partnerApprovedAt: string | null
+  partnerRejectionReason: string | null
 }
 
 // Time slots

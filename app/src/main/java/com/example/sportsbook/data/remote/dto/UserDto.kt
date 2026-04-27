@@ -27,6 +27,9 @@ data class UserDto(
     val avgPlayerPunctualityRating: Double = 0.0,
     val totalPlayerRatings: Int = 0,
     val totalMatchesPlayed: Int = 0,
+    // Partner approval gate (default null for backwards compat).
+    val partnerApprovedAt: String? = null,
+    val partnerRejectionReason: String? = null,
     val createdAt: String? = null,
     val updatedAt: String? = null
 ) {
@@ -50,6 +53,8 @@ data class UserDto(
         avgPlayerPunctualityRating = avgPlayerPunctualityRating,
         totalPlayerRatings = totalPlayerRatings,
         totalMatchesPlayed = totalMatchesPlayed,
+        partnerApprovedAt = partnerApprovedAt,
+        partnerRejectionReason = partnerRejectionReason,
         createdAt = createdAt,
         updatedAt = updatedAt
     )
