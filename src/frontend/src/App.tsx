@@ -16,6 +16,8 @@ import { TimeSlotPage } from '@/pages/TimeSlotPage'
 // v2-practical-ux: parallel "Option 2" pages (master pages above remain Option 1)
 import { WeeklyCalendarPage } from '@/pages/v2/WeeklyCalendarPage'
 import { PlayHomePage } from '@/pages/v2/PlayHomePage'
+// Partner reservation detail (landing page for partner-approval emails)
+import { PartnerReservationDetailPage } from '@/pages/partner/PartnerReservationDetailPage'
 import type { ReactNode } from 'react'
 
 function ProtectedRoute({ children }: { children: ReactNode }) {
@@ -57,6 +59,8 @@ function AppRoutes() {
         {/* v2-practical-ux: Option 2 redesign routes (parallel to master pages above) */}
         <Route path="v2/calendar" element={<WeeklyCalendarPage />} />
         <Route path="v2/play" element={<PlayHomePage />} />
+        {/* Partner approval flow: landing page from email links. Login is enforced by ProtectedRoute. */}
+        <Route path="partner/reservations/:id" element={<PartnerReservationDetailPage />} />
       </Route>
       <Route path="*" element={<Navigate to="/" replace />} />
     </Routes>

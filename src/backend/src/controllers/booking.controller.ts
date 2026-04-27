@@ -7,6 +7,8 @@ import * as venueRepo from '../repositories/venue.repository';
 import * as coachRepo from '../repositories/coach.repository';
 import * as venueBookingLobbyRepo from '../repositories/venueBookingLobby.repository';
 import * as timeSlotRepo from '../repositories/timeSlot.repository';
+import { sendBookingConfirmedEmails } from '../services/bookingEmail.service';
+import { sendPartnerBookingRequestEmail } from '../services/partnerApproval.service';
 import { NotFoundError, ForbiddenError } from '../utils/errors';
 
 export async function create(req: Request, res: Response, next: NextFunction) {
@@ -37,6 +39,12 @@ export async function create(req: Request, res: Response, next: NextFunction) {
     } catch (e) {
       console.error('Failed to send booking request notification:', e);
     }
+
+    // Email the partner with a login-required link to the dashboard
+    // (fire-and-forget; reminders at +2h/+6h handled by cron).
+    sendPartnerBookingRequestEmail(booking.id).catch((e) =>
+      console.error('Failed to send partner approval email:', e)
+    );
 
     created(res, booking, 'Booking created');
   } catch (e) { next(e); }
@@ -143,6 +151,11 @@ export const approveBooking = async (req: Request, res: Response, next: NextFunc
     } catch (e) {
       console.error('Failed to send booking approved notification:', e);
     }
+
+    // Email receipt to both player + partner (fire-and-forget, never blocks)
+    sendBookingConfirmedEmails(booking.id).catch((e) =>
+      console.error('Failed to send booking confirmation emails:', e)
+    );
 
     // Check if this booking is linked to a venue booking lobby
     try {

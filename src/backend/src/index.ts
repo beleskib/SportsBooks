@@ -7,6 +7,7 @@ import { authLimiter, apiLimiter } from './middleware/rateLimiter';
 import routes from './routes';
 import webhookRoutes from './routes/webhook.routes';
 import { expirePendingBookings } from './services/bookingExpiry.service';
+import { startReminderJob } from './services/bookingApprovalReminder.service';
 
 const app = express();
 
@@ -43,5 +44,8 @@ app.listen(env.port, () => {
 setInterval(expirePendingBookings, 15 * 60 * 1000);
 // Also run once on startup
 expirePendingBookings();
+
+// Partner approval reminder cron (+2h / +6h emails)
+startReminderJob();
 
 export default app;
