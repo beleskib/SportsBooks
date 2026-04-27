@@ -88,12 +88,14 @@ export async function getHomeFeed(req: Request, res: Response, next: NextFunctio
 
       // Suggested play: open community lobbies in sports the user cares about,
       // matching their skill level if set
+      // NOTE: community_lobbies has scheduled_date + scheduled_time as two
+      // columns (no scheduled_start); we synthesize a TIMESTAMP for comparisons.
       query(
         `SELECT
            cl.id,
            cl.title,
            cl.sport_type,
-           cl.scheduled_start       AS start_at,
+           (cl.scheduled_date::TIMESTAMP + cl.scheduled_time::TIME) AS start_at,
            v.name                   AS venue_name,
            cl.current_players,
            cl.max_players,
@@ -103,13 +105,13 @@ export async function getHomeFeed(req: Request, res: Response, next: NextFunctio
          LEFT JOIN venues v ON v.id = cl.venue_id
          LEFT JOIN users u  ON u.id = $1
          WHERE cl.status = 'open'
-           AND cl.scheduled_start > NOW()
-           AND cl.scheduled_start < NOW() + INTERVAL '7 days'
+           AND (cl.scheduled_date::TIMESTAMP + cl.scheduled_time::TIME) > NOW()
+           AND (cl.scheduled_date::TIMESTAMP + cl.scheduled_time::TIME) < NOW() + INTERVAL '7 days'
            AND (u.skill_level IS NULL
                 OR cl.skill_level_min IS NULL
                 OR cl.skill_level_max IS NULL
                 OR u.skill_level BETWEEN cl.skill_level_min AND cl.skill_level_max)
-         ORDER BY cl.scheduled_start ASC
+         ORDER BY start_at ASC
          LIMIT 5`,
         [userId],
       ),

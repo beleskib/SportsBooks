@@ -42,6 +42,7 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.example.sportsbook.domain.enums.FavoriteEntityType
 import com.example.sportsbook.domain.model.Favorite
 import com.example.sportsbook.ui.common.LoadingIndicator
+import com.example.sportsbook.ui.common.XpChip
 
 private val TABS = listOf(
     Triple("Venues", FavoriteEntityType.VENUE, Icons.Default.Place),
@@ -65,6 +66,9 @@ fun FavoritesScreen(
                     IconButton(onClick = onBack) {
                         Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back")
                     }
+                },
+                actions = {
+                    XpChip()
                 }
             )
         }

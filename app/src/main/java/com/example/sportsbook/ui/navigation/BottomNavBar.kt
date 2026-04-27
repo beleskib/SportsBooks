@@ -33,13 +33,15 @@ data class BottomNavItem(
     val route: Route
 )
 
+// Profile pinned LAST per UX convention — users expect account/profile
+// to live at the far right of the tab bar (matches Instagram, X, Strava, etc.).
 val playerNavItems = listOf(
     BottomNavItem("Home", Icons.Default.Home, Route.PlayerHome),
     BottomNavItem("Feed", Icons.Default.DynamicFeed, Route.NewsFeed),
     BottomNavItem("Bookings", Icons.Default.CalendarMonth, Route.MyBookings),
-    BottomNavItem("Profile", Icons.Default.Person, Route.PlayerProfile),
     // v2-practical-ux
-    BottomNavItem("Play v2", Icons.Default.SportsSoccer, Route.V2PlayHome)
+    BottomNavItem("Play v2", Icons.Default.SportsSoccer, Route.V2PlayHome),
+    BottomNavItem("Profile", Icons.Default.Person, Route.PlayerProfile)
 )
 
 val partnerNavItems = listOf(

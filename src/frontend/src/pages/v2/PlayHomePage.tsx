@@ -13,6 +13,40 @@ import {
 import { v2Api } from '@/api/v2'
 import type { HomeFeedResponse, PlaySearchResponse, PlaySuggestion } from '@/api/v2'
 
+// ------------------------------------------------------------
+// Canonical match-filter skill levels. Mirrors
+// src/shared/types/skillLevel.ts — keep in sync.
+// DB stores INTEGER (historically 1-5); legacy value 5 is
+// collapsed into "Competitive" so old rows still render.
+// ------------------------------------------------------------
+const SKILL_LEVEL_META = [
+  { numeric: 1, label: 'beginner', displayName: 'Beginner' },
+  { numeric: 2, label: 'intermediate', displayName: 'Intermediate' },
+  { numeric: 3, label: 'advanced', displayName: 'Advanced' },
+  { numeric: 4, label: 'competitive', displayName: 'Competitive' },
+] as const
+
+function skillLevelDisplayName(n: number | null | undefined): string {
+  if (n == null) return '—'
+  if (n <= 1) return 'Beginner'
+  if (n === 2) return 'Intermediate'
+  if (n === 3) return 'Advanced'
+  return 'Competitive' // 4 or legacy 5
+}
+
+function skillLevelRangeDisplay(
+  min: number | null | undefined,
+  max: number | null | undefined,
+): string | null {
+  const lo = skillLevelDisplayName(min)
+  const hi = skillLevelDisplayName(max)
+  if (lo === '—' && hi === '—') return null
+  if (lo === hi) return lo
+  if (lo === '—') return `Up to ${hi}`
+  if (hi === '—') return `${lo}+`
+  return `${lo} – ${hi}`
+}
+
 // ============================================================
 // v2-practical-ux: "When + Where first" home page
 // 1) Greeting bar + reliability badge
@@ -213,26 +247,30 @@ export function PlayHomePage() {
             </select>
           </div>
           <div>
-            <label className="block text-xs font-medium text-gray-600 mb-1">Skill min (1-5)</label>
-            <input
-              type="number"
-              min={1}
-              max={5}
+            <label className="block text-xs font-medium text-gray-600 mb-1">Skill from</label>
+            <select
               value={skillMin}
               onChange={e => setSkillMin(e.target.value === '' ? '' : Number(e.target.value))}
-              className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm"
-            />
+              className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm bg-white"
+            >
+              <option value="">Any level</option>
+              {SKILL_LEVEL_META.map(m => (
+                <option key={m.label} value={m.numeric}>{m.displayName}</option>
+              ))}
+            </select>
           </div>
           <div>
-            <label className="block text-xs font-medium text-gray-600 mb-1">Skill max (1-5)</label>
-            <input
-              type="number"
-              min={1}
-              max={5}
+            <label className="block text-xs font-medium text-gray-600 mb-1">Skill to</label>
+            <select
               value={skillMax}
               onChange={e => setSkillMax(e.target.value === '' ? '' : Number(e.target.value))}
-              className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm"
-            />
+              className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm bg-white"
+            >
+              <option value="">Any level</option>
+              {SKILL_LEVEL_META.map(m => (
+                <option key={m.label} value={m.numeric}>{m.displayName}</option>
+              ))}
+            </select>
           </div>
         </div>
 
@@ -369,7 +407,7 @@ function Chip({ children }: { children: React.ReactNode }) {
 function PlayCard({ item }: { item: PlaySuggestion }) {
   const seatLabel = item.maxPlayers > 1 ? `${item.currentPlayers}/${item.maxPlayers}` : null
   const skillRange = item.skillLevelMin && item.skillLevelMax
-    ? `Skill ${item.skillLevelMin}-${item.skillLevelMax}`
+    ? skillLevelRangeDisplay(item.skillLevelMin, item.skillLevelMax)
     : null
   return (
     <div className="rounded-lg border border-gray-200 bg-white p-4 shadow-sm hover:shadow-md transition-shadow">

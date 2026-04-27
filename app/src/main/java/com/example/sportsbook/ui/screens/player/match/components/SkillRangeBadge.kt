@@ -40,12 +40,16 @@ fun SkillRangeBadge(
     }
 }
 
+/**
+ * Canonical match-filter skill levels. Matches src/shared/types/skillLevel.ts.
+ * DB stores INTEGER; legacy value 5 is collapsed to "Competitive" so historical
+ * lobbies/matches with max=5 still render a sensible label.
+ */
 private fun skillLevelLabel(level: Int): String = when (level) {
-    1 -> "Newbie"
-    2 -> "Beginner"
-    3 -> "Intermediate"
-    4 -> "Semi Pro"
-    5 -> "Pro"
+    1 -> "Beginner"
+    2 -> "Intermediate"
+    3 -> "Advanced"
+    4, 5 -> "Competitive"
     else -> "Lvl $level"
 }
 

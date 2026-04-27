@@ -31,6 +31,17 @@ export type {
   PaginationParams,
 } from './types/common';
 
+// Skill level (match filter buckets — distinct from per-sport expertise enum)
+export {
+  PLAYER_SKILL_LEVELS,
+  SKILL_LEVEL_META,
+  skillLevelFromNumeric,
+  numericFromPlayerSkillLevel,
+  skillLevelDisplayName,
+  skillLevelRangeDisplay,
+} from './types/skillLevel';
+export type { PlayerSkillLevel, PlayerSkillLevelMeta } from './types/skillLevel';
+
 // User types
 export type {
   UserProfile,

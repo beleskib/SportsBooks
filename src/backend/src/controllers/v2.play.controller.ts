@@ -41,12 +41,14 @@ export async function searchPlay(req: Request, res: Response, next: NextFunction
     const toIdx = params.length;
 
     // --- Lobbies (community_lobbies) ---
+    // NOTE: community_lobbies stores scheduled_date (DATE) + scheduled_time (TIME)
+    // as two columns — there is no scheduled_start column. We synthesize it.
     const lobbiesRes = await query(
       `SELECT
          cl.id,
          cl.title,
          cl.sport_type,
-         cl.scheduled_start     AS start_at,
+         (cl.scheduled_date::TIMESTAMP + cl.scheduled_time::TIME) AS start_at,
          v.name                 AS venue_name,
          ${distanceCol}         AS distance_km,
          cl.current_players,
@@ -58,7 +60,8 @@ export async function searchPlay(req: Request, res: Response, next: NextFunction
        LEFT JOIN venues v ON v.id = cl.venue_id
        LEFT JOIN users me ON me.id = $1
        WHERE cl.status = 'open'
-         AND cl.scheduled_start BETWEEN $${fromIdx} AND $${toIdx}
+         AND (cl.scheduled_date::TIMESTAMP + cl.scheduled_time::TIME)
+             BETWEEN $${fromIdx}::TIMESTAMP AND $${toIdx}::TIMESTAMP
          ${sportType ? `AND cl.sport_type = '${sportType.replace(/'/g, "''")}'` : ''}
          ${skillMin !== null ? `AND (cl.skill_level_max IS NULL OR cl.skill_level_max >= ${skillMin})` : ''}
          ${skillMax !== null ? `AND (cl.skill_level_min IS NULL OR cl.skill_level_min <= ${skillMax})` : ''}

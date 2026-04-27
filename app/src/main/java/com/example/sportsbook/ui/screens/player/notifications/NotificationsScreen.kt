@@ -54,6 +54,7 @@ import com.example.sportsbook.domain.model.Notification
 import com.example.sportsbook.ui.common.EmptyStateView
 import com.example.sportsbook.ui.common.ErrorView
 import com.example.sportsbook.ui.common.LoadingIndicator
+import com.example.sportsbook.ui.common.XpChip
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -75,6 +76,7 @@ fun NotificationsScreen(
                     }
                 },
                 actions = {
+                    XpChip()
                     if (uiState.notifications.any { !it.isRead }) {
                         IconButton(onClick = viewModel::markAllAsRead) {
                             Icon(Icons.Default.DoneAll, contentDescription = "Mark all as read")

@@ -42,6 +42,7 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.example.sportsbook.domain.model.Coach
 import com.example.sportsbook.domain.model.Match
 import com.example.sportsbook.domain.model.Venue
+import com.example.sportsbook.ui.common.XpChip
 import com.example.sportsbook.ui.common.toDisplayDate
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -66,6 +67,9 @@ fun SearchScreen(
                             contentDescription = "Back"
                         )
                     }
+                },
+                actions = {
+                    XpChip()
                 }
             )
         }
