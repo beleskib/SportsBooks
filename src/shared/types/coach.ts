@@ -1,5 +1,6 @@
 import { SportType } from '../enums';
 import { Discount } from './discount';
+import { ListingApprovalStatus } from './venue';
 
 // ============================================================
 // Coach types
@@ -24,6 +25,11 @@ export interface Coach {
   avgRating: number;
   totalReviews: number;
   isActive: boolean;
+  // See ListingApprovalStatus on Venue. Same gate applies to coaches.
+  approvalStatus: ListingApprovalStatus;
+  approvalDecidedAt: string | null;
+  approvalDecidedByUserId: number | null;
+  approvalRejectionReason: string | null;
   images: CoachImage[];
   certifications: CoachCertification[];
   activeDiscount: Discount | null;

@@ -1,24 +1,25 @@
 import { Router } from 'express';
 import { authenticate } from '../middleware/auth';
-import { requireApprovedPartner } from '../middleware/authorize';
+import { requirePartnerOrAdmin } from '../middleware/authorize';
 import * as venueController from '../controllers/venue.controller';
 import * as imageController from '../controllers/image.controller';
 
 const router = Router();
 router.get('/', authenticate, venueController.getAll);
-// Write operations require an approved partner (or admin).
-router.post('/', authenticate, requireApprovedPartner, venueController.create);
+// Write operations require a partner or admin. The listing-level approval
+// gate (see migration 0054) hides pending venues from the public; the
+// partner can still create + edit them.
+router.post('/', authenticate, requirePartnerOrAdmin, venueController.create);
 // Static routes BEFORE parameterized
 router.get('/top-deals', authenticate, venueController.getTopDeals);
 router.get('/search', authenticate, venueController.search);
-// /mine intentionally allowed for unapproved partners — they need to see their drafts.
 router.get('/mine', authenticate, venueController.getMine);
 router.get('/by-sport/:sportType', authenticate, venueController.getBySport);
 router.get('/:id', authenticate, venueController.getById);
-router.put('/:id', authenticate, requireApprovedPartner, venueController.update);
-router.delete('/:id', authenticate, requireApprovedPartner, venueController.remove);
+router.put('/:id', authenticate, requirePartnerOrAdmin, venueController.update);
+router.delete('/:id', authenticate, requirePartnerOrAdmin, venueController.remove);
 // Image management — same gate as the venue write ops it serves.
-router.post('/:venueId/images', authenticate, requireApprovedPartner, imageController.addVenueImage);
-router.delete('/:venueId/images/:imageId', authenticate, requireApprovedPartner, imageController.deleteVenueImage);
-router.put('/:venueId/images/:imageId/primary', authenticate, requireApprovedPartner, imageController.setVenuePrimaryImage);
+router.post('/:venueId/images', authenticate, requirePartnerOrAdmin, imageController.addVenueImage);
+router.delete('/:venueId/images/:imageId', authenticate, requirePartnerOrAdmin, imageController.deleteVenueImage);
+router.put('/:venueId/images/:imageId/primary', authenticate, requirePartnerOrAdmin, imageController.setVenuePrimaryImage);
 export default router;

@@ -3,6 +3,7 @@ import { success, created } from '../utils/apiResponse';
 import * as coachRepo from '../repositories/coach.repository';
 import { NotFoundError, ValidationError, ForbiddenError } from '../utils/errors';
 import { syncCoachToFirestore, softDeleteCoachInFirestore } from '../services/firestoreSync.service';
+import { notifyAdminListingSubmitted } from '../services/listingApproval.service';
 
 export async function getAll(_req: Request, res: Response, next: NextFunction) {
   try {
@@ -22,6 +23,11 @@ export async function getById(req: Request, res: Response, next: NextFunction) {
   try {
     const coach = await coachRepo.findById(Number(req.params.id));
     if (!coach) throw new NotFoundError('Coach');
+    if (coach.approvalStatus !== 'approved') {
+      const isAdmin = req.user?.role === 'admin';
+      const isOwner = req.user?.id === coach.userId;
+      if (!isAdmin && !isOwner) throw new NotFoundError('Coach');
+    }
     success(res, coach);
   } catch (e) { next(e); }
 }
@@ -68,6 +74,11 @@ export async function create(req: Request, res: Response, next: NextFunction) {
       email: req.body.email,
     });
     syncCoachToFirestore(coach);
+    if (req.user!.role !== 'admin') {
+      notifyAdminListingSubmitted('coach', coach.id);
+    } else {
+      await coachRepo.approve(coach.id, req.user!.id);
+    }
     created(res, coach);
   } catch (e) { next(e); }
 }

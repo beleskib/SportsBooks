@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { Link } from 'react-router-dom'
 import { Pencil, Trash2, Plus } from 'lucide-react'
 import { ConfirmDialog } from '@/components/ui/ConfirmDialog'
+import { ApprovalStatusPill } from '@/components/ui/ApprovalStatusPill'
 import { SPORT_TYPE_LABELS } from '@/types'
 import type { Venue, SportType } from '@/types'
 import type { BookingCount } from '@/api/bookings'
@@ -71,6 +72,7 @@ export function VenueList({ venues, onDelete, deleting, bookingCounts, showOwner
                 <th className="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500">City</th>
                 <th className="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500">Rating</th>
                 <th className="px-4 py-3 text-right text-xs font-medium uppercase tracking-wider text-gray-500">Bookings</th>
+                <th className="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500">Review</th>
                 <th className="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500">Active</th>
                 <th className="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500">Actions</th>
               </tr>
@@ -90,6 +92,12 @@ export function VenueList({ venues, onDelete, deleting, bookingCounts, showOwner
                   </td>
                   <td className="whitespace-nowrap px-4 py-3 text-right text-sm font-semibold text-gray-900">
                     {bookingCounts?.get(venue.id)?.totalBookings ?? 0}
+                  </td>
+                  <td className="whitespace-nowrap px-4 py-3 text-sm">
+                    <ApprovalStatusPill
+                      status={venue.approvalStatus}
+                      rejectionReason={venue.approvalRejectionReason}
+                    />
                   </td>
                   <td className="whitespace-nowrap px-4 py-3 text-sm">
                     <span className={`inline-flex rounded-full px-2 py-0.5 text-xs font-medium ${

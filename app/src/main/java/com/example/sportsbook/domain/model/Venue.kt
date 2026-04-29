@@ -1,5 +1,6 @@
 package com.example.sportsbook.domain.model
 
+import com.example.sportsbook.domain.enums.ListingApprovalStatus
 import com.example.sportsbook.domain.enums.SportType
 
 data class Venue(
@@ -19,6 +20,13 @@ data class Venue(
     val avgRating: Double = 0.0,
     val totalReviews: Int = 0,
     val isActive: Boolean = true,
+    // Listing-level approval gate. New venues are PENDING until an admin reviews
+    // and approves them. Public listings only return APPROVED rows; the owner
+    // sees their own PENDING/REJECTED ones with a rejection reason if applicable.
+    val approvalStatus: ListingApprovalStatus = ListingApprovalStatus.APPROVED,
+    val approvalDecidedAt: String? = null,
+    val approvalDecidedByUserId: Long? = null,
+    val approvalRejectionReason: String? = null,
     val images: List<VenueImage> = emptyList(),
     val equipment: List<VenueEquipment> = emptyList(),
     val activeDiscount: Discount? = null,

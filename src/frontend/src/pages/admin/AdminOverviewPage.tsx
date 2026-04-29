@@ -1,17 +1,17 @@
 // Owner-only landing page at /admin.
 // Shows platform-wide metrics + a "needs your attention" panel pointing
-// at the partner approval queue.
+// at the listing approval queue (venues + coaches awaiting review).
 import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
 import {
   Users as UsersIcon,
-  UserCheck,
   Building2,
   GraduationCap,
   CalendarDays,
   TrendingUp,
   AlertCircle,
   ArrowRight,
+  ClipboardCheck,
 } from 'lucide-react'
 import { adminApi, type PlatformOverview } from '@/api/admin'
 import { LoadingSpinner } from '@/components/ui/LoadingSpinner'
@@ -59,7 +59,7 @@ export function AdminOverviewPage() {
   if (error) return <div className="p-8 text-red-600">{error}</div>
   if (!overview) return null
 
-  const hasPending = overview.pendingPartners > 0
+  const hasPending = overview.pendingListings > 0
 
   return (
     <div className="space-y-6">
@@ -70,16 +70,19 @@ export function AdminOverviewPage() {
 
       {hasPending && (
         <Link
-          to="/admin/partners"
+          to="/admin/listings"
           className="flex items-center justify-between rounded-xl border border-yellow-300 bg-yellow-50 p-4 hover:bg-yellow-100 transition"
         >
           <div className="flex items-center gap-3">
             <AlertCircle className="h-5 w-5 text-yellow-700" />
             <div>
               <div className="text-sm font-semibold text-yellow-900">
-                {overview.pendingPartners} partner{overview.pendingPartners === 1 ? '' : 's'} awaiting approval
+                {overview.pendingListings} listing{overview.pendingListings === 1 ? '' : 's'} awaiting review
               </div>
-              <div className="text-xs text-yellow-800">Review and approve to let them list venues / coaches.</div>
+              <div className="text-xs text-yellow-800">
+                {overview.pendingVenues} venue{overview.pendingVenues === 1 ? '' : 's'} ·{' '}
+                {overview.pendingCoaches} coach{overview.pendingCoaches === 1 ? '' : 'es'} need your decision before going live.
+              </div>
             </div>
           </div>
           <ArrowRight className="h-5 w-5 text-yellow-700" />
@@ -94,21 +97,23 @@ export function AdminOverviewPage() {
           hint={`${overview.totalPlayers.toLocaleString()} players · ${overview.totalPartners.toLocaleString()} partners`}
         />
         <MetricCard
-          icon={UserCheck}
-          label="Pending partners"
-          value={overview.pendingPartners}
+          icon={ClipboardCheck}
+          label="Pending listings"
+          value={overview.pendingListings}
           emphasis="warn"
-          hint="Awaiting your approval"
+          hint="Awaiting your review"
         />
         <MetricCard
           icon={Building2}
           label="Venues listed"
           value={overview.totalVenues}
+          hint={`${overview.pendingVenues.toLocaleString()} pending`}
         />
         <MetricCard
           icon={GraduationCap}
           label="Coaches listed"
           value={overview.totalCoaches}
+          hint={`${overview.pendingCoaches.toLocaleString()} pending`}
         />
         <MetricCard
           icon={CalendarDays}

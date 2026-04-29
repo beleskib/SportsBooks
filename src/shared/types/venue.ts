@@ -4,6 +4,13 @@ import { SportType } from '../enums';
 // Venue types
 // ============================================================
 
+/**
+ * Listing-level approval state. New venues start as 'pending' and stay
+ * invisible to the public until an admin approves them. Rejected venues
+ * carry an `approvalRejectionReason` so the partner knows what to fix.
+ */
+export type ListingApprovalStatus = 'pending' | 'approved' | 'rejected';
+
 export interface Venue {
   id: number;
   ownerId: number;
@@ -21,6 +28,10 @@ export interface Venue {
   avgRating: number;
   totalReviews: number;
   isActive: boolean;
+  approvalStatus: ListingApprovalStatus;
+  approvalDecidedAt: string | null;
+  approvalDecidedByUserId: number | null;
+  approvalRejectionReason: string | null;
   images: VenueImage[];
   equipment: VenueEquipment[];
   activeDiscount: Discount | null;

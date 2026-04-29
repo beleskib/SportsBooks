@@ -9,9 +9,6 @@ export interface AuthUser {
   email: string;
   role: string;
   partnerType: string | null;
-  // Partner-approval gate: NULL = unapproved (cannot list venues/coaches yet).
-  // Admins bypass this — see requireApprovedPartner.
-  partnerApprovedAt: string | null;
 }
 
 declare global {
@@ -55,7 +52,7 @@ export async function authenticate(req: Request, _res: Response, next: NextFunct
     }
 
     const result = await query(
-      'SELECT id, firebase_uid, email, role, partner_type, partner_approved_at FROM users WHERE firebase_uid = $1',
+      'SELECT id, firebase_uid, email, role, partner_type FROM users WHERE firebase_uid = $1',
       [firebaseUid]
     );
 
@@ -67,11 +64,6 @@ export async function authenticate(req: Request, _res: Response, next: NextFunct
         email: row.email,
         role: row.role,
         partnerType: row.partner_type,
-        partnerApprovedAt: row.partner_approved_at
-          ? (row.partner_approved_at instanceof Date
-              ? row.partner_approved_at.toISOString()
-              : String(row.partner_approved_at))
-          : null,
       };
     } else {
       // User not yet registered — only firebase_uid is available
@@ -81,7 +73,6 @@ export async function authenticate(req: Request, _res: Response, next: NextFunct
         email: '',
         role: 'player',
         partnerType: null,
-        partnerApprovedAt: null,
       };
     }
 

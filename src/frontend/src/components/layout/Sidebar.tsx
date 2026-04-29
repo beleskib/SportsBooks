@@ -9,7 +9,7 @@ import {
   Sparkles,
   CalendarRange,
   ShieldCheck,
-  UserCheck,
+  ClipboardCheck,
 } from 'lucide-react'
 import { useAuth } from '@/context/AuthContext'
 import { PartnerType } from '@/types'
@@ -47,7 +47,7 @@ export function Sidebar() {
   // Owner-only nav (admin role). Appended at the bottom under a divider.
   const ownerNavItems = [
     { to: '/admin', icon: ShieldCheck, label: 'Owner overview' },
-    { to: '/admin/partners', icon: UserCheck, label: 'Partner approvals' },
+    { to: '/admin/listings', icon: ClipboardCheck, label: 'Listing approvals' },
   ]
 
   const navItems = [...(isAdmin ? adminNavItems : partnerNavItems), ...v2NavItems]

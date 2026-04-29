@@ -24,10 +24,13 @@ export interface BackendUser {
   stripeAccountId: string | null
   stripeOnboardingStatus: string
   stripePayoutsEnabled: boolean
-  // Partner approval gate (NULL = awaiting admin review).
-  partnerApprovedAt: string | null
-  partnerRejectionReason: string | null
 }
+
+/**
+ * Listing-level approval state. New venues/coaches start as 'pending' and
+ * stay invisible to the public until an admin approves. See migration 0054.
+ */
+export type ListingApprovalStatus = 'pending' | 'approved' | 'rejected'
 
 // Time slots
 export interface TimeSlot {
@@ -118,6 +121,10 @@ export interface Venue {
   avgRating: number
   totalReviews: number
   isActive: boolean
+  approvalStatus: ListingApprovalStatus
+  approvalDecidedAt: string | null
+  approvalDecidedByUserId: number | null
+  approvalRejectionReason: string | null
   images: VenueImage[]
   equipment: VenueEquipment[]
   activeDiscount: Discount | null
@@ -189,6 +196,10 @@ export interface Coach {
   avgRating: number
   totalReviews: number
   isActive: boolean
+  approvalStatus: ListingApprovalStatus
+  approvalDecidedAt: string | null
+  approvalDecidedByUserId: number | null
+  approvalRejectionReason: string | null
   images: CoachImage[]
   certifications: CoachCertification[]
   activeDiscount: Discount | null

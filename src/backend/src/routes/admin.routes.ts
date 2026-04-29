@@ -12,10 +12,10 @@ router.use(authenticate, requireAdmin);
 
 router.get('/overview', adminController.getOverview);
 
-router.get('/partners', adminController.getAllPartners);
-router.get('/partners/pending', adminController.getPendingPartners);
-router.get('/partners/:id', adminController.getPartner);
-router.post('/partners/:id/approve', adminController.approvePartner);
-router.post('/partners/:id/reject', adminController.rejectPartner);
+// Listing approval queue (venues + coaches) — see migration 0054.
+router.get('/listings/pending', adminController.getPendingListings);
+router.get('/listings/:type/:id', adminController.getListingDetail);
+router.post('/listings/:type/:id/approve', adminController.approveListing);
+router.post('/listings/:type/:id/reject', adminController.rejectListing);
 
 export default router;

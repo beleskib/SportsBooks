@@ -1,5 +1,6 @@
 package com.example.sportsbook.data.remote.dto
 
+import com.example.sportsbook.domain.enums.ListingApprovalStatus
 import com.example.sportsbook.domain.enums.SportType
 import com.example.sportsbook.domain.model.Coach
 import com.example.sportsbook.domain.model.CoachCertification
@@ -26,6 +27,10 @@ data class CoachDto(
     val avgRating: Double = 0.0,
     val totalReviews: Int = 0,
     val isActive: Boolean = true,
+    val approvalStatus: ListingApprovalStatus = ListingApprovalStatus.APPROVED,
+    val approvalDecidedAt: String? = null,
+    val approvalDecidedByUserId: Long? = null,
+    val approvalRejectionReason: String? = null,
     val images: List<CoachImageDto> = emptyList(),
     val certifications: List<CoachCertificationDto> = emptyList(),
     val activeDiscount: DiscountDto? = null,
@@ -41,6 +46,10 @@ data class CoachDto(
         phoneNumber = phoneNumber, email = email,
         avgRating = avgRating, totalReviews = totalReviews,
         isActive = isActive,
+        approvalStatus = approvalStatus,
+        approvalDecidedAt = approvalDecidedAt,
+        approvalDecidedByUserId = approvalDecidedByUserId,
+        approvalRejectionReason = approvalRejectionReason,
         images = images.map { it.toDomain() },
         certifications = certifications.map { it.toDomain() },
         activeDiscount = activeDiscount?.toDomain(),

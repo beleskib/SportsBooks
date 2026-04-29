@@ -16,9 +16,6 @@ export interface UserRow {
   stripeAccountId: string | null;
   stripeOnboardingStatus: string;
   stripePayoutsEnabled: boolean;
-  // Partner approval gate (NULL = not yet approved by an admin).
-  partnerApprovedAt: string | null;
-  partnerRejectionReason: string | null;
   createdAt: string;
   updatedAt: string;
 }
@@ -36,7 +33,6 @@ export interface SportExpertiseRow {
 const USER_COLUMNS = `id, firebase_uid, email, display_name, photo_url, phone_number,
             bio, date_of_birth, onboarding_completed, role, partner_type, is_active,
             stripe_account_id, stripe_onboarding_status, stripe_payouts_enabled,
-            partner_approved_at, partner_rejection_reason,
             avg_player_skill_rating, avg_player_sportsmanship_rating, avg_player_punctuality_rating,
             total_player_ratings, total_matches_played, created_at, updated_at`;
 
@@ -57,12 +53,6 @@ function mapRow(row: any): UserRow {
     stripeAccountId: row.stripe_account_id ?? null,
     stripeOnboardingStatus: row.stripe_onboarding_status ?? 'not_started',
     stripePayoutsEnabled: row.stripe_payouts_enabled ?? false,
-    partnerApprovedAt: row.partner_approved_at
-      ? (row.partner_approved_at instanceof Date
-          ? row.partner_approved_at.toISOString()
-          : String(row.partner_approved_at))
-      : null,
-    partnerRejectionReason: row.partner_rejection_reason ?? null,
     createdAt: row.created_at?.toISOString?.() ?? row.created_at,
     updatedAt: row.updated_at?.toISOString?.() ?? row.updated_at,
   };

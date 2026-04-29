@@ -3,6 +3,7 @@ import { success, created } from '../utils/apiResponse';
 import * as venueRepo from '../repositories/venue.repository';
 import { NotFoundError, ValidationError, ForbiddenError } from '../utils/errors';
 import { syncVenueToFirestore, softDeleteVenueInFirestore } from '../services/firestoreSync.service';
+import { notifyAdminListingSubmitted } from '../services/listingApproval.service';
 
 export async function getAll(_req: Request, res: Response, next: NextFunction) {
   try {
@@ -22,6 +23,12 @@ export async function getById(req: Request, res: Response, next: NextFunction) {
   try {
     const venue = await venueRepo.findById(Number(req.params.id));
     if (!venue) throw new NotFoundError('Venue');
+    // Non-approved venues are visible only to the owner and admins.
+    if (venue.approvalStatus !== 'approved') {
+      const isAdmin = req.user?.role === 'admin';
+      const isOwner = req.user?.id === venue.ownerId;
+      if (!isAdmin && !isOwner) throw new NotFoundError('Venue');
+    }
     success(res, venue);
   } catch (e) { next(e); }
 }
@@ -68,6 +75,15 @@ export async function create(req: Request, res: Response, next: NextFunction) {
       email: req.body.email,
     });
     syncVenueToFirestore(venue);
+    // Admins skip review (their listings auto-approve via repo? — no, they
+    // also default to pending; auto-approve admin listings to avoid friction).
+    if (req.user!.role !== 'admin') {
+      // Fire-and-forget: tell the admin reviewer about the new submission.
+      notifyAdminListingSubmitted('venue', venue.id);
+    } else {
+      // Self-approve for admins so internal/test listings don't queue up.
+      await venueRepo.approve(venue.id, req.user!.id);
+    }
     created(res, venue);
   } catch (e) { next(e); }
 }
