@@ -1,0 +1,526 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>Listing approval flow — Android UI/UX deck</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<style>
+  body { background: #f3f4f6; }
+  .label { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 11px; letter-spacing: .04em; }
+  /* Phone bezel — ~360x740 logical px Compose canvas inside a rounded frame */
+  .phone {
+    width: 360px;
+    height: 740px;
+    border-radius: 36px;
+    background: #0b1220;
+    padding: 10px;
+    box-shadow: 0 10px 40px rgba(0,0,0,.18), inset 0 0 0 2px #1f2937;
+    flex-shrink: 0;
+  }
+  .phone-screen {
+    height: 100%;
+    border-radius: 28px;
+    overflow: hidden;
+    background: #ffffff;
+    display: flex;
+    flex-direction: column;
+  }
+  .status-bar {
+    height: 28px;
+    background: #111827;
+    color: #fde047;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 14px;
+    font-size: 11px;
+    font-weight: 600;
+  }
+  .nav-bar {
+    height: 56px;
+    background: #111827;
+    color: #fde047;
+    display: flex;
+    align-items: center;
+    padding: 0 16px;
+    font-weight: 600;
+  }
+  .scroll {
+    flex: 1;
+    overflow: hidden;
+    background: #f9fafb;
+    padding: 16px;
+  }
+  /* bottom nav */
+  .bottom-nav {
+    height: 56px;
+    background: #ffffff;
+    border-top: 1px solid #e5e7eb;
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    align-items: center;
+    text-align: center;
+    font-size: 10px;
+  }
+  .bottom-nav .tab { color: #6b7280; }
+  .bottom-nav .tab.active { color: #111827; font-weight: 700; }
+  .bottom-nav .dot { width: 24px; height: 24px; border-radius: 999px; background:#f3f4f6; margin: 0 auto 2px; }
+  .tab.active .dot { background: #111827; box-shadow: 0 0 0 2px #fde047; }
+  /* compose card */
+  .m3-card { border-radius: 16px; background: #fff; padding: 14px; box-shadow: 0 1px 2px rgba(0,0,0,.04), 0 1px 3px rgba(0,0,0,.04); }
+  .pill { display:inline-flex; align-items:center; gap:4px; border-radius:999px; padding:2px 8px; font-size:11px; font-weight:600; }
+  /* fab */
+  .fab { position:absolute; right:18px; bottom:74px; width:52px; height:52px; border-radius:16px; background:#111827; color:#fde047; display:flex; align-items:center; justify-content:center; font-size:24px; box-shadow:0 6px 16px rgba(0,0,0,.2); }
+</style>
+</head>
+<body class="text-gray-900">
+
+<header class="border-b border-gray-200 bg-white">
+  <div class="mx-auto max-w-6xl px-6 py-8">
+    <div class="flex items-center gap-3">
+      <span class="rounded-md bg-gray-900 px-2 py-1 text-[11px] font-bold uppercase tracking-wider text-yellow-300">SportsBooks · Android</span>
+      <span class="text-sm text-gray-500">Kotlin + Jetpack Compose · Material 3</span>
+    </div>
+    <h1 class="mt-3 text-3xl font-semibold">Listing approval flow — Android</h1>
+    <p class="mt-2 max-w-3xl text-sm text-gray-600">
+      Same listing-level approval gate as the web deck, but on the partner mobile app.
+      Phone frames are roughly 1:1 with the Compose canvas (≈ 360 dp wide). Brand stays
+      Navy 900 + USOpen Gold for top app bar &amp; primary CTAs; status pills mirror the
+      web frontend so partners see the exact same language across surfaces.
+    </p>
+    <p class="mt-2 text-xs text-gray-500">iOS deliberately omitted (per the earlier call). The player-side mobile screen at the bottom shows that pending listings stay hidden from the public feed.</p>
+  </div>
+</header>
+
+<!-- ─── Partner journey (mobile) ─────────────────────────────── -->
+<section class="mx-auto max-w-6xl px-6 py-8">
+  <h2 class="text-xs font-semibold uppercase tracking-wider text-gray-500">Partner journey · Android</h2>
+
+  <div class="mt-5 flex flex-wrap gap-8">
+
+    <!-- 1: Role picker -->
+    <figure>
+      <figcaption class="label mb-2 text-gray-500">1 · Role picker (PartnerSetupScreen)</figcaption>
+      <div class="phone">
+        <div class="phone-screen">
+          <div class="status-bar"><span>9:41</span><span>● ●●● 100%</span></div>
+          <div class="nav-bar text-sm">SportsBooks</div>
+          <div class="scroll">
+            <div class="text-xs uppercase tracking-wide text-gray-500">Welcome</div>
+            <h3 class="mt-1 text-xl font-semibold">How will you use the app?</h3>
+            <div class="mt-4 space-y-3">
+              <div class="m3-card border border-gray-200">
+                <div class="text-sm font-semibold">I'm a player</div>
+                <div class="text-xs text-gray-500">Find venues and coaches, book hourly slots.</div>
+              </div>
+              <div class="m3-card border-2 border-yellow-300 bg-yellow-50">
+                <div class="text-sm font-semibold">I'm a partner</div>
+                <div class="mt-0.5 text-xs text-gray-700">List a venue or offer coaching, manage bookings.</div>
+                <div class="mt-3 grid grid-cols-2 gap-2">
+                  <span class="rounded-md bg-gray-900 px-2 py-1.5 text-center text-[11px] font-semibold text-yellow-300">Venue owner</span>
+                  <span class="rounded-md border border-gray-300 bg-white px-2 py-1.5 text-center text-[11px] font-semibold text-gray-700">Coach</span>
+                </div>
+              </div>
+            </div>
+            <button class="mt-5 w-full rounded-lg bg-gray-900 py-3 text-sm font-semibold text-yellow-300">Continue</button>
+          </div>
+        </div>
+      </div>
+    </figure>
+
+    <!-- 2: Partner home (no banner) -->
+    <figure>
+      <figcaption class="label mb-2 text-gray-500">2 · Partner home — no pending-account banner</figcaption>
+      <div class="phone">
+        <div class="phone-screen">
+          <div class="status-bar"><span>9:41</span><span>● ●●● 100%</span></div>
+          <div class="nav-bar flex items-center justify-between">
+            <span class="text-sm">Home</span>
+            <span class="text-yellow-300">⚙</span>
+          </div>
+          <div class="scroll" style="position:relative;">
+            <div class="text-xl font-semibold">Welcome, Marko</div>
+            <div class="mt-0.5 text-xs text-gray-500">Add your first venue to start receiving bookings.</div>
+
+            <div class="mt-4 grid grid-cols-2 gap-3">
+              <div class="m3-card">
+                <div class="text-[10px] uppercase tracking-wider text-gray-500">Venues</div>
+                <div class="mt-1 text-2xl font-bold tabular-nums">0</div>
+              </div>
+              <div class="m3-card">
+                <div class="text-[10px] uppercase tracking-wider text-gray-500">Bookings</div>
+                <div class="mt-1 text-2xl font-bold tabular-nums">0</div>
+              </div>
+            </div>
+
+            <div class="mt-3 m3-card border-2 border-dashed border-yellow-300 bg-yellow-50">
+              <div class="text-[10px] uppercase tracking-wider text-yellow-800">Next step</div>
+              <div class="mt-1 text-sm font-semibold text-yellow-900">Add your first venue</div>
+              <div class="mt-2 text-xs text-yellow-800">All listings go through a quick admin review (~24 h).</div>
+            </div>
+
+            <div class="mt-3 text-[10px] uppercase tracking-wider text-gray-500">Quick actions</div>
+            <div class="mt-2 grid grid-cols-2 gap-3">
+              <div class="m3-card text-sm">📅 <span class="ml-2">Time slots</span></div>
+              <div class="m3-card text-sm">💳 <span class="ml-2">Payouts</span></div>
+            </div>
+
+            <div class="fab">+</div>
+          </div>
+          <div class="bottom-nav">
+            <div class="tab active"><div class="dot"></div>Home</div>
+            <div class="tab"><div class="dot"></div>Venues</div>
+            <div class="tab"><div class="dot"></div>Slots</div>
+            <div class="tab"><div class="dot"></div>Account</div>
+          </div>
+        </div>
+      </div>
+    </figure>
+
+    <!-- 3: Empty venues -->
+    <figure>
+      <figcaption class="label mb-2 text-gray-500">3 · My Venues — empty state</figcaption>
+      <div class="phone">
+        <div class="phone-screen">
+          <div class="status-bar"><span>9:41</span><span>● ●●● 100%</span></div>
+          <div class="nav-bar flex items-center gap-3 text-sm"><span>←</span><span>My Venues</span></div>
+          <div class="scroll" style="position:relative;">
+            <input class="w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm" placeholder="Search…" />
+            <div class="mt-8 flex flex-col items-center text-center">
+              <div class="h-14 w-14 rounded-full bg-gray-900 flex items-center justify-center text-yellow-300 text-2xl">📍</div>
+              <div class="mt-3 text-sm font-semibold">No venues yet</div>
+              <div class="mt-1 max-w-[220px] text-xs text-gray-500">Tap the + button below to create your first listing. We'll guide you through it.</div>
+            </div>
+            <div class="fab">+</div>
+          </div>
+          <div class="bottom-nav">
+            <div class="tab"><div class="dot"></div>Home</div>
+            <div class="tab active"><div class="dot"></div>Venues</div>
+            <div class="tab"><div class="dot"></div>Slots</div>
+            <div class="tab"><div class="dot"></div>Account</div>
+          </div>
+        </div>
+      </div>
+    </figure>
+
+    <!-- 4: Create form -->
+    <figure>
+      <figcaption class="label mb-2 text-gray-500">4 · Create venue (EditVenueScreen)</figcaption>
+      <div class="phone">
+        <div class="phone-screen">
+          <div class="status-bar"><span>9:41</span><span>● ●●● 100%</span></div>
+          <div class="nav-bar flex items-center gap-3 text-sm"><span>←</span><span>New venue</span></div>
+          <div class="scroll">
+            <div class="text-[11px] text-gray-500">Goes through a quick admin review before it appears to players.</div>
+
+            <div class="mt-3 space-y-3">
+              <div>
+                <div class="text-[10px] uppercase tracking-wider text-gray-500">Name</div>
+                <div class="mt-1 rounded-lg border border-gray-900 bg-white px-3 py-2 text-sm">Skopje Padel Club</div>
+              </div>
+              <div>
+                <div class="text-[10px] uppercase tracking-wider text-gray-500">Sport</div>
+                <div class="mt-1 rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm flex items-center justify-between">Paddle <span class="text-gray-400">▾</span></div>
+              </div>
+              <div>
+                <div class="text-[10px] uppercase tracking-wider text-gray-500">Description</div>
+                <div class="mt-1 rounded-lg border border-gray-300 bg-white px-3 py-2 text-xs h-16">Two indoor courts, locker rooms, café on-site.</div>
+              </div>
+              <div class="grid grid-cols-2 gap-2">
+                <div>
+                  <div class="text-[10px] uppercase tracking-wider text-gray-500">Price/h (ден)</div>
+                  <div class="mt-1 rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm">800</div>
+                </div>
+                <div>
+                  <div class="text-[10px] uppercase tracking-wider text-gray-500">City</div>
+                  <div class="mt-1 rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm">Skopje</div>
+                </div>
+              </div>
+              <div>
+                <div class="text-[10px] uppercase tracking-wider text-gray-500">Photos</div>
+                <div class="mt-1 grid grid-cols-3 gap-2">
+                  <div class="aspect-square rounded-md bg-gradient-to-br from-emerald-200 to-emerald-400"></div>
+                  <div class="aspect-square rounded-md bg-gradient-to-br from-cyan-200 to-blue-400"></div>
+                  <div class="flex aspect-square items-center justify-center rounded-md border-2 border-dashed border-gray-300 text-xs text-gray-400">+</div>
+                </div>
+              </div>
+            </div>
+
+            <button class="mt-4 w-full rounded-lg bg-gray-900 py-3 text-sm font-semibold text-yellow-300">Submit for review</button>
+          </div>
+        </div>
+      </div>
+    </figure>
+
+    <!-- 5: Submitted (snackbar + pending list) -->
+    <figure>
+      <figcaption class="label mb-2 text-gray-500">5 · Submitted — snackbar + pending pill on list</figcaption>
+      <div class="phone">
+        <div class="phone-screen">
+          <div class="status-bar"><span>9:41</span><span>● ●●● 100%</span></div>
+          <div class="nav-bar flex items-center gap-3 text-sm"><span>←</span><span>My Venues</span></div>
+          <div class="scroll" style="position:relative;">
+            <input class="w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm" placeholder="Search…" />
+            <div class="mt-3 m3-card">
+              <div class="flex items-start gap-3">
+                <div class="h-12 w-12 flex-shrink-0 rounded-md bg-gradient-to-br from-emerald-200 to-emerald-400"></div>
+                <div class="flex-1">
+                  <div class="text-sm font-semibold">Skopje Padel Club</div>
+                  <div class="mt-0.5 text-[11px] text-gray-500">Paddle · 800 ден/h</div>
+                  <div class="mt-2">
+                    <span class="pill bg-yellow-100 text-yellow-800">⏱ Pending review</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <!-- Snackbar -->
+            <div style="position:absolute; left:12px; right:12px; bottom:74px;" class="rounded-lg bg-gray-900 p-3 text-xs text-white shadow-lg">
+              <div class="font-semibold text-yellow-300">Submitted for review</div>
+              <div class="mt-0.5">We'll notify you the moment it's approved.</div>
+            </div>
+          </div>
+          <div class="bottom-nav">
+            <div class="tab"><div class="dot"></div>Home</div>
+            <div class="tab active"><div class="dot"></div>Venues</div>
+            <div class="tab"><div class="dot"></div>Slots</div>
+            <div class="tab"><div class="dot"></div>Account</div>
+          </div>
+        </div>
+      </div>
+    </figure>
+
+    <!-- 6: Approved -->
+    <figure>
+      <figcaption class="label mb-2 text-gray-500">6 · Approved — listing is live, pill turns green</figcaption>
+      <div class="phone">
+        <div class="phone-screen">
+          <div class="status-bar"><span>9:41</span><span>● ●●● 100%</span></div>
+          <div class="nav-bar flex items-center gap-3 text-sm"><span>←</span><span>My Venues</span></div>
+          <div class="scroll" style="position:relative;">
+            <div class="m3-card border border-emerald-200 bg-emerald-50">
+              <div class="flex items-start gap-2 text-xs">
+                <span class="inline-flex h-5 w-5 items-center justify-center rounded-full bg-emerald-500 text-white text-[11px]">✓</span>
+                <div>
+                  <div class="font-semibold text-emerald-900">Approved — your venue is live</div>
+                  <div class="text-emerald-800">Players can now find &amp; book Skopje Padel Club.</div>
+                </div>
+              </div>
+            </div>
+            <div class="mt-3 m3-card">
+              <div class="flex items-start gap-3">
+                <div class="h-12 w-12 flex-shrink-0 rounded-md bg-gradient-to-br from-emerald-200 to-emerald-400"></div>
+                <div class="flex-1">
+                  <div class="text-sm font-semibold">Skopje Padel Club</div>
+                  <div class="mt-0.5 text-[11px] text-gray-500">Paddle · Skopje · 800 ден/h</div>
+                  <div class="mt-2 flex gap-1">
+                    <span class="pill bg-emerald-100 text-emerald-700">✓ Approved</span>
+                    <span class="pill bg-green-100 text-green-700">Active</span>
+                  </div>
+                </div>
+              </div>
+              <div class="mt-3 flex gap-2 text-[11px]">
+                <span class="rounded bg-gray-100 px-2 py-1 text-gray-700">📅 Manage slots</span>
+                <span class="rounded bg-gray-100 px-2 py-1 text-gray-700">✏ Edit</span>
+              </div>
+            </div>
+            <div class="fab">+</div>
+          </div>
+          <div class="bottom-nav">
+            <div class="tab"><div class="dot"></div>Home</div>
+            <div class="tab active"><div class="dot"></div>Venues</div>
+            <div class="tab"><div class="dot"></div>Slots</div>
+            <div class="tab"><div class="dot"></div>Account</div>
+          </div>
+        </div>
+      </div>
+    </figure>
+
+    <!-- 7: Rejected -->
+    <figure>
+      <figcaption class="label mb-2 text-gray-500">7 · Needs revision — inline reason, edit &amp; resubmit</figcaption>
+      <div class="phone">
+        <div class="phone-screen">
+          <div class="status-bar"><span>9:41</span><span>● ●●● 100%</span></div>
+          <div class="nav-bar flex items-center gap-3 text-sm"><span>←</span><span>My Venues</span></div>
+          <div class="scroll" style="position:relative;">
+            <div class="m3-card border border-rose-200 bg-rose-50">
+              <div class="flex items-start gap-2 text-xs">
+                <span class="inline-flex h-5 w-5 items-center justify-center rounded-full bg-rose-500 text-white text-[11px]">×</span>
+                <div class="flex-1">
+                  <div class="font-semibold text-rose-900">Asked to revise</div>
+                  <div class="mt-1 rounded-md bg-rose-100 p-2 text-rose-900 leading-snug">
+                    Photos are too dark — please re-upload at least one well-lit shot of the courts during daytime, and add the address number.
+                  </div>
+                  <button class="mt-2 rounded-md bg-rose-600 px-3 py-1.5 text-[11px] font-semibold text-white">Edit &amp; resubmit</button>
+                </div>
+              </div>
+            </div>
+            <div class="mt-3 m3-card">
+              <div class="flex items-start gap-3">
+                <div class="h-12 w-12 flex-shrink-0 rounded-md bg-gradient-to-br from-emerald-200 to-emerald-400 opacity-60"></div>
+                <div class="flex-1">
+                  <div class="text-sm font-semibold">Skopje Padel Club</div>
+                  <div class="mt-0.5 text-[11px] text-gray-500">Paddle · Skopje · 800 ден/h</div>
+                  <div class="mt-2">
+                    <span class="pill bg-rose-100 text-rose-700">× Needs revision</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="bottom-nav">
+            <div class="tab"><div class="dot"></div>Home</div>
+            <div class="tab active"><div class="dot"></div>Venues</div>
+            <div class="tab"><div class="dot"></div>Slots</div>
+            <div class="tab"><div class="dot"></div>Account</div>
+          </div>
+        </div>
+      </div>
+    </figure>
+
+    <!-- 8: Notification -->
+    <figure>
+      <figcaption class="label mb-2 text-gray-500">8 · Push / in-app notification on decision</figcaption>
+      <div class="phone">
+        <div class="phone-screen">
+          <div class="status-bar"><span>9:41</span><span>● ●●● 100%</span></div>
+          <div class="nav-bar flex items-center gap-3 text-sm"><span>←</span><span>Notifications</span></div>
+          <div class="scroll">
+            <div class="space-y-2">
+              <div class="m3-card border-l-4 border-emerald-500">
+                <div class="flex items-center gap-2">
+                  <span class="text-emerald-600">✓</span>
+                  <span class="text-sm font-semibold">Skopje Padel Club is live</span>
+                </div>
+                <div class="mt-0.5 text-[11px] text-gray-500">Tap to manage time slots → 2m ago</div>
+              </div>
+              <div class="m3-card border-l-4 border-yellow-300">
+                <div class="flex items-center gap-2">
+                  <span class="text-yellow-700">⏱</span>
+                  <span class="text-sm font-semibold">Submitted — under review</span>
+                </div>
+                <div class="mt-0.5 text-[11px] text-gray-500">Vodno Tennis Center · 1h ago</div>
+              </div>
+              <div class="m3-card border-l-4 border-rose-500">
+                <div class="flex items-center gap-2">
+                  <span class="text-rose-600">!</span>
+                  <span class="text-sm font-semibold">Quick changes needed</span>
+                </div>
+                <div class="mt-0.5 text-[11px] text-gray-500">See note from our team → 1d ago</div>
+              </div>
+            </div>
+          </div>
+          <div class="bottom-nav">
+            <div class="tab"><div class="dot"></div>Home</div>
+            <div class="tab"><div class="dot"></div>Venues</div>
+            <div class="tab"><div class="dot"></div>Slots</div>
+            <div class="tab active"><div class="dot"></div>Account</div>
+          </div>
+        </div>
+      </div>
+    </figure>
+
+  </div>
+</section>
+
+<!-- ─── Player-side proof: only approved listings show ──────── -->
+<section class="mx-auto max-w-6xl px-6 py-8">
+  <h2 class="text-xs font-semibold uppercase tracking-wider text-gray-500">Player-side · proof the gate works</h2>
+  <p class="mt-1 text-sm text-gray-600">Same Android app, player role. The public search/feed only returns rows where <code>approval_status = 'approved'</code>, so pending and rejected listings stay invisible.</p>
+
+  <div class="mt-5 flex flex-wrap gap-8">
+    <!-- Player feed -->
+    <figure>
+      <figcaption class="label mb-2 text-gray-500">P1 · Player venue search — only approved venues</figcaption>
+      <div class="phone">
+        <div class="phone-screen">
+          <div class="status-bar"><span>9:41</span><span>● ●●● 100%</span></div>
+          <div class="nav-bar flex items-center gap-3 text-sm"><span>📍 Skopje</span><span class="ml-auto text-yellow-300">🔔</span></div>
+          <div class="scroll">
+            <input class="w-full rounded-full border border-gray-300 bg-white px-4 py-2 text-sm" placeholder="Search venues, coaches…" />
+            <div class="mt-3 flex gap-2 text-[11px]">
+              <span class="rounded-full bg-gray-900 px-2.5 py-1 text-yellow-300">All</span>
+              <span class="rounded-full border border-gray-300 bg-white px-2.5 py-1 text-gray-700">Tennis</span>
+              <span class="rounded-full border border-gray-300 bg-white px-2.5 py-1 text-gray-700">Paddle</span>
+              <span class="rounded-full border border-gray-300 bg-white px-2.5 py-1 text-gray-700">Football</span>
+            </div>
+
+            <div class="mt-3 text-[10px] uppercase tracking-wider text-gray-500">Top picks near you</div>
+            <div class="mt-2 space-y-2">
+              <div class="m3-card flex gap-3">
+                <div class="h-14 w-14 flex-shrink-0 rounded-md bg-gradient-to-br from-orange-300 to-rose-400"></div>
+                <div class="flex-1">
+                  <div class="text-sm font-semibold">Vodno Tennis Center</div>
+                  <div class="text-[11px] text-gray-500">Tennis · 2.4 km · ⭐ 4.7</div>
+                  <div class="text-[11px] text-gray-700">600 ден/h</div>
+                </div>
+              </div>
+              <div class="m3-card flex gap-3">
+                <div class="h-14 w-14 flex-shrink-0 rounded-md bg-gradient-to-br from-cyan-200 to-blue-400"></div>
+                <div class="flex-1">
+                  <div class="text-sm font-semibold">Aurora Sports Hub</div>
+                  <div class="text-[11px] text-gray-500">Football · 3.1 km · ⭐ 4.5</div>
+                  <div class="text-[11px] text-gray-700">1,200 ден/h</div>
+                </div>
+              </div>
+              <div class="m3-card flex gap-3 opacity-60">
+                <div class="h-14 w-14 flex-shrink-0 rounded-md bg-gradient-to-br from-emerald-200 to-emerald-400"></div>
+                <div class="flex-1">
+                  <div class="text-sm font-semibold">Skopje Padel Club</div>
+                  <div class="text-[11px] text-gray-500">Paddle · 1.8 km</div>
+                  <div class="text-[11px] text-gray-400 italic">↑ won't appear here until admin approves it</div>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="bottom-nav">
+            <div class="tab active"><div class="dot"></div>Discover</div>
+            <div class="tab"><div class="dot"></div>Bookings</div>
+            <div class="tab"><div class="dot"></div>Play</div>
+            <div class="tab"><div class="dot"></div>Profile</div>
+          </div>
+        </div>
+      </div>
+    </figure>
+
+    <!-- Push notification toast -->
+    <figure>
+      <figcaption class="label mb-2 text-gray-500">P2 · Push notifications fired by backend</figcaption>
+      <div class="phone">
+        <div class="phone-screen">
+          <div class="status-bar"><span>9:41</span><span>● ●●● 100%</span></div>
+          <div class="flex-1 bg-gradient-to-b from-gray-900 to-gray-700 p-4">
+            <div class="text-yellow-300 text-xs font-semibold tracking-wider">Mon, Apr 29</div>
+            <div class="text-white text-5xl font-extralight mt-1">9:41</div>
+            <div class="mt-6 space-y-2">
+              <div class="rounded-2xl bg-white/95 p-3 shadow-lg backdrop-blur">
+                <div class="flex items-center gap-2">
+                  <span class="rounded-md bg-gray-900 px-1.5 py-0.5 text-[10px] font-bold text-yellow-300">SportsBooks</span>
+                  <span class="ml-auto text-[10px] text-gray-500">now</span>
+                </div>
+                <div class="mt-1 text-sm font-semibold">Your venue is live ✓</div>
+                <div class="text-xs text-gray-700">Skopje Padel Club is now visible to players. Tap to set up time slots.</div>
+              </div>
+              <div class="rounded-2xl bg-white/95 p-3 shadow-lg backdrop-blur">
+                <div class="flex items-center gap-2">
+                  <span class="rounded-md bg-gray-900 px-1.5 py-0.5 text-[10px] font-bold text-yellow-300">SportsBooks</span>
+                  <span class="ml-auto text-[10px] text-gray-500">2m ago</span>
+                </div>
+                <div class="mt-1 text-sm font-semibold">Submission received</div>
+                <div class="text-xs text-gray-700">We're reviewing Vodno Tennis Center — usually under 24 h.</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </figure>
+  </div>
+</section>
+
+<footer class="border-t border-gray-200 bg-white py-8 text-center text-xs text-gray-500">
+  Android mockups · open this file in any browser. Pair with <code>listing-approval-flow.html</code> for the web side.
+</footer>
+
+</body>
+</html>

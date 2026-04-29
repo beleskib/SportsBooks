@@ -1,0 +1,592 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>Listing approval flow — UI/UX deck</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<style>
+  body { background: #f3f4f6; }
+  .frame { box-shadow: 0 8px 30px rgba(0,0,0,.08); border-radius: 12px; overflow: hidden; background: white; }
+  .label { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 11px; letter-spacing: .04em; }
+  .step-num { width:28px;height:28px;border-radius:9999px;background:#111827;color:#fde047;display:inline-flex;align-items:center;justify-content:center;font-weight:700;font-size:13px; }
+  /* fake icons */
+  .ico { display:inline-block;width:1em;height:1em;background-color:currentColor;mask-size:contain;mask-repeat:no-repeat;mask-position:center;-webkit-mask-size:contain;-webkit-mask-repeat:no-repeat;-webkit-mask-position:center;vertical-align:-2px; }
+</style>
+</head>
+<body class="text-gray-900">
+
+<header class="border-b border-gray-200 bg-white">
+  <div class="mx-auto max-w-5xl px-6 py-8">
+    <div class="flex items-center gap-3">
+      <span class="rounded-md bg-gray-900 px-2 py-1 text-[11px] font-bold uppercase tracking-wider text-yellow-300">SportsBooks</span>
+      <span class="text-sm text-gray-500">v2-practical-ux · listing-level approval gate</span>
+    </div>
+    <h1 class="mt-3 text-3xl font-semibold">Listing approval flow — UI/UX</h1>
+    <p class="mt-2 max-w-2xl text-sm text-gray-600">
+      Mockups for the post-pivot flow: partners no longer hit a “pending account” wall at signup. They get
+      into the dashboard immediately and approval moves to each individual venue/coach listing. Admin gets
+      an email + dashboard alert per submission and reviews each one in full before it goes live.
+    </p>
+    <nav class="mt-5 flex flex-wrap gap-x-5 gap-y-1 text-sm text-gray-700">
+      <a href="#flow" class="underline-offset-2 hover:underline">Flow at a glance</a>
+      <a href="#partner" class="underline-offset-2 hover:underline">Partner journey</a>
+      <a href="#admin" class="underline-offset-2 hover:underline">Admin journey</a>
+      <a href="#emails" class="underline-offset-2 hover:underline">Emails</a>
+      <a href="#brand" class="underline-offset-2 hover:underline">Brand notes</a>
+    </nav>
+  </div>
+</header>
+
+<!-- ============================================================ -->
+<section id="flow" class="mx-auto max-w-5xl px-6 py-10">
+  <h2 class="text-xs font-semibold uppercase tracking-wider text-gray-500">Flow at a glance</h2>
+  <div class="mt-3 rounded-xl border border-gray-200 bg-white p-6 shadow-sm">
+    <ol class="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
+      <li class="rounded-lg bg-gray-50 p-4">
+        <div class="flex items-center gap-2"><span class="step-num">1</span><span class="text-sm font-semibold">Sign up</span></div>
+        <p class="mt-2 text-xs text-gray-600">Firebase auth + role pick (player / partner). No approval gate at this step.</p>
+      </li>
+      <li class="rounded-lg bg-gray-50 p-4">
+        <div class="flex items-center gap-2"><span class="step-num">2</span><span class="text-sm font-semibold">Submit listing</span></div>
+        <p class="mt-2 text-xs text-gray-600">Partner fills out venue/coach with photos, price, equipment, location. Listing saved as <code>pending</code>.</p>
+      </li>
+      <li class="rounded-lg bg-gray-50 p-4">
+        <div class="flex items-center gap-2"><span class="step-num">3</span><span class="text-sm font-semibold">Admin reviews</span></div>
+        <p class="mt-2 text-xs text-gray-600">Owner gets an email + an in-app alert. Opens the queue, sees full overview, approves or rejects with a reason.</p>
+      </li>
+      <li class="rounded-lg bg-gray-50 p-4">
+        <div class="flex items-center gap-2"><span class="step-num">4</span><span class="text-sm font-semibold">Live or rework</span></div>
+        <p class="mt-2 text-xs text-gray-600">Approved → public. Rejected → private to owner with a feedback note; partner edits and resubmits.</p>
+      </li>
+    </ol>
+  </div>
+</section>
+
+<!-- ============================================================ -->
+<section id="partner" class="mx-auto max-w-5xl px-6 py-6">
+  <h2 class="text-xs font-semibold uppercase tracking-wider text-gray-500">Partner journey</h2>
+
+  <!-- ─── 2.1 Role pick ──────────────────────────────────────── -->
+  <figure class="mt-4">
+    <figcaption class="label mb-2 text-gray-500">2.1 · Sign-up role picker (Android/web — already exists, kept as-is)</figcaption>
+    <div class="frame">
+      <div class="bg-gradient-to-b from-gray-900 to-gray-700 px-10 py-12">
+        <div class="mx-auto max-w-md rounded-xl bg-white p-6 shadow-xl">
+          <div class="text-xs font-semibold uppercase tracking-wide text-gray-500">Welcome to SportsBooks</div>
+          <h3 class="mt-1 text-xl font-semibold">How will you use the app?</h3>
+          <div class="mt-4 grid grid-cols-1 gap-3">
+            <button class="rounded-lg border-2 border-gray-200 p-4 text-left hover:border-gray-900">
+              <div class="text-sm font-semibold">I'm a player</div>
+              <div class="text-xs text-gray-500">Find venues and coaches, book hourly slots.</div>
+            </button>
+            <button class="rounded-lg border-2 border-yellow-300 bg-yellow-50 p-4 text-left">
+              <div class="text-sm font-semibold">I'm a partner</div>
+              <div class="text-xs text-gray-700">List a venue or offer coaching, manage bookings.</div>
+              <div class="mt-3 grid grid-cols-2 gap-2">
+                <span class="rounded-md bg-gray-900 px-2 py-1 text-center text-[11px] font-medium text-yellow-300">Venue owner</span>
+                <span class="rounded-md border border-gray-300 px-2 py-1 text-center text-[11px] font-medium text-gray-700">Coach</span>
+              </div>
+            </button>
+          </div>
+          <button class="mt-5 w-full rounded-lg bg-gray-900 py-2.5 text-sm font-semibold text-yellow-300">Continue</button>
+        </div>
+      </div>
+    </div>
+  </figure>
+
+  <!-- ─── 2.2 First-login dashboard ──────────────────────────── -->
+  <figure class="mt-10">
+    <figcaption class="label mb-2 text-gray-500">2.2 · First login — full dashboard, no pending banner (the behavior change)</figcaption>
+    <div class="frame flex">
+      <!-- Sidebar -->
+      <aside class="flex w-56 flex-col bg-gray-900 p-3 text-white">
+        <div class="px-2 py-2 text-base font-bold">SportsBooks</div>
+        <nav class="mt-4 space-y-1 text-sm">
+          <div class="rounded bg-gray-700 px-3 py-2">Dashboard</div>
+          <div class="px-3 py-2 text-gray-300">My Venues</div>
+          <div class="px-3 py-2 text-gray-300">Time Slots</div>
+          <div class="px-3 py-2 text-gray-300">Earnings</div>
+          <div class="px-3 py-2 text-gray-300">Payment Setup</div>
+        </nav>
+      </aside>
+      <!-- Main -->
+      <div class="flex-1">
+        <div class="flex h-12 items-center justify-end border-b border-gray-200 px-4 text-sm text-gray-600">marko@example.com</div>
+        <main class="bg-gray-50 p-6">
+          <h3 class="text-2xl font-semibold">Welcome, Marko</h3>
+          <p class="mt-1 text-sm text-gray-500">Get started by adding your first venue.</p>
+          <div class="mt-5 grid grid-cols-3 gap-4">
+            <div class="rounded-xl border border-gray-200 bg-white p-5">
+              <div class="text-xs uppercase tracking-wide text-gray-500">Venues</div>
+              <div class="mt-2 text-3xl font-semibold tabular-nums">0</div>
+            </div>
+            <div class="rounded-xl border border-gray-200 bg-white p-5">
+              <div class="text-xs uppercase tracking-wide text-gray-500">Bookings (30d)</div>
+              <div class="mt-2 text-3xl font-semibold tabular-nums">0</div>
+            </div>
+            <div class="rounded-xl border-2 border-dashed border-yellow-300 bg-yellow-50 p-5">
+              <div class="text-xs uppercase tracking-wide text-yellow-800">Next step</div>
+              <div class="mt-2 text-sm font-semibold text-yellow-900">Add your first venue</div>
+              <button class="mt-3 rounded-md bg-gray-900 px-3 py-1.5 text-xs font-semibold text-yellow-300">Add venue →</button>
+            </div>
+          </div>
+          <div class="mt-3 rounded-md border border-gray-200 bg-white px-4 py-3 text-xs text-gray-600">
+            ✱ Note: there's no “awaiting approval” banner anymore. Partners go straight in.
+          </div>
+        </main>
+      </div>
+    </div>
+  </figure>
+
+  <!-- ─── 2.3 Empty state with CTA ───────────────────────────── -->
+  <figure class="mt-10">
+    <figcaption class="label mb-2 text-gray-500">2.3 · My Venues — empty state, primary CTA</figcaption>
+    <div class="frame bg-gray-50 p-8">
+      <div class="flex items-center justify-between">
+        <h3 class="text-2xl font-bold">Venues</h3>
+        <button class="inline-flex items-center gap-2 rounded-md bg-blue-600 px-4 py-2 text-sm font-medium text-white">+ Add Venue</button>
+      </div>
+      <input class="mt-4 w-full max-w-sm rounded-md border border-gray-300 px-3 py-2 shadow-sm" placeholder="Search by name or city..." />
+      <div class="mt-6 rounded-lg bg-white p-12 text-center text-gray-500 shadow">
+        <div class="mx-auto mb-3 h-10 w-10 rounded-full bg-gray-100"></div>
+        No venues yet — click <span class="font-semibold text-gray-700">Add Venue</span> to create your first listing.
+      </div>
+    </div>
+  </figure>
+
+  <!-- ─── 2.4 Create form ────────────────────────────────────── -->
+  <figure class="mt-10">
+    <figcaption class="label mb-2 text-gray-500">2.4 · Create venue — full data captured up front</figcaption>
+    <div class="frame bg-white p-8">
+      <h3 class="text-2xl font-bold">New venue</h3>
+      <p class="mt-1 text-sm text-gray-500">All listings go through admin review before they're visible to players.</p>
+      <div class="mt-6 grid grid-cols-2 gap-4">
+        <div>
+          <label class="text-xs font-semibold text-gray-700">Name</label>
+          <input class="mt-1 w-full rounded-md border border-gray-300 px-3 py-2 text-sm" value="Skopje Padel Club" />
+        </div>
+        <div>
+          <label class="text-xs font-semibold text-gray-700">Sport</label>
+          <select class="mt-1 w-full rounded-md border border-gray-300 px-3 py-2 text-sm"><option>Paddle</option></select>
+        </div>
+        <div class="col-span-2">
+          <label class="text-xs font-semibold text-gray-700">Description</label>
+          <textarea rows="3" class="mt-1 w-full rounded-md border border-gray-300 px-3 py-2 text-sm">Two indoor padel courts, professional turf, locker rooms, café on-site.</textarea>
+        </div>
+        <div>
+          <label class="text-xs font-semibold text-gray-700">Price / hour (ден)</label>
+          <input class="mt-1 w-full rounded-md border border-gray-300 px-3 py-2 text-sm" value="800" />
+        </div>
+        <div>
+          <label class="text-xs font-semibold text-gray-700">City</label>
+          <input class="mt-1 w-full rounded-md border border-gray-300 px-3 py-2 text-sm" value="Skopje" />
+        </div>
+        <div class="col-span-2">
+          <label class="text-xs font-semibold text-gray-700">Photos</label>
+          <div class="mt-1 grid grid-cols-4 gap-2">
+            <div class="aspect-square rounded-md bg-gradient-to-br from-emerald-200 to-emerald-400"></div>
+            <div class="aspect-square rounded-md bg-gradient-to-br from-emerald-300 to-teal-500"></div>
+            <div class="aspect-square rounded-md bg-gradient-to-br from-cyan-200 to-blue-400"></div>
+            <div class="flex aspect-square items-center justify-center rounded-md border-2 border-dashed border-gray-300 text-xs text-gray-400">+ add</div>
+          </div>
+        </div>
+        <div class="col-span-2">
+          <label class="text-xs font-semibold text-gray-700">Equipment</label>
+          <div class="mt-1 flex flex-wrap gap-2 rounded-md border border-gray-300 bg-gray-50 p-3 text-xs">
+            <span class="rounded bg-white px-2 py-1">Rackets (included)</span>
+            <span class="rounded bg-white px-2 py-1">Balls (included)</span>
+            <span class="rounded bg-white px-2 py-1">Lockers (included)</span>
+            <span class="rounded bg-gray-900 px-2 py-1 text-yellow-300">+ Add</span>
+          </div>
+        </div>
+      </div>
+      <div class="mt-6 flex items-center justify-end gap-2">
+        <button class="rounded-md border border-gray-300 px-4 py-2 text-sm">Cancel</button>
+        <button class="rounded-md bg-gray-900 px-4 py-2 text-sm font-semibold text-yellow-300">Submit for review</button>
+      </div>
+    </div>
+  </figure>
+
+  <!-- ─── 2.5 Submitted toast + pending pill ─────────────────── -->
+  <figure class="mt-10">
+    <figcaption class="label mb-2 text-gray-500">2.5 · Just submitted — confirmation + pending pill (yellow)</figcaption>
+    <div class="frame bg-gray-50 p-8">
+      <div class="mb-4 flex items-start gap-3 rounded-lg border border-yellow-300 bg-yellow-50 p-3 text-sm">
+        <span class="mt-0.5 inline-flex h-5 w-5 items-center justify-center rounded-full bg-yellow-300 text-xs font-bold text-gray-900">!</span>
+        <div>
+          <div class="font-semibold text-yellow-900">Submitted for review</div>
+          <div class="text-yellow-800">We'll email you the moment our team approves <em>Skopje Padel Club</em>. It usually takes under 24 hours.</div>
+        </div>
+      </div>
+      <div class="flex items-center justify-between">
+        <h3 class="text-2xl font-bold">Venues</h3>
+        <button class="inline-flex items-center gap-2 rounded-md bg-blue-600 px-4 py-2 text-sm font-medium text-white">+ Add Venue</button>
+      </div>
+      <div class="mt-4 overflow-hidden rounded-lg bg-white shadow">
+        <table class="min-w-full divide-y divide-gray-200 text-sm">
+          <thead class="bg-gray-50 text-xs uppercase tracking-wider text-gray-500">
+            <tr>
+              <th class="px-4 py-3 text-left">Name</th>
+              <th class="px-4 py-3 text-left">Sport</th>
+              <th class="px-4 py-3 text-left">Price</th>
+              <th class="px-4 py-3 text-left">Review</th>
+              <th class="px-4 py-3 text-left">Active</th>
+            </tr>
+          </thead>
+          <tbody class="divide-y divide-gray-200">
+            <tr>
+              <td class="px-4 py-3 font-medium">Skopje Padel Club</td>
+              <td class="px-4 py-3 text-gray-600">Paddle</td>
+              <td class="px-4 py-3 text-gray-600">800.00 ден</td>
+              <td class="px-4 py-3">
+                <span class="inline-flex items-center gap-1 rounded-full bg-yellow-100 px-2 py-0.5 text-xs font-medium text-yellow-800">⏱ Pending review</span>
+              </td>
+              <td class="px-4 py-3">
+                <span class="rounded-full bg-green-100 px-2 py-0.5 text-xs font-medium text-green-700">Active</span>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </figure>
+
+  <!-- ─── 2.6 Approved ───────────────────────────────────────── -->
+  <figure class="mt-10">
+    <figcaption class="label mb-2 text-gray-500">2.6 · After admin approves — pill flips green, listing is public</figcaption>
+    <div class="frame bg-gray-50 p-8">
+      <div class="mb-4 flex items-start gap-3 rounded-lg border border-emerald-300 bg-emerald-50 p-3 text-sm">
+        <span class="mt-0.5 inline-flex h-5 w-5 items-center justify-center rounded-full bg-emerald-500 text-xs font-bold text-white">✓</span>
+        <div>
+          <div class="font-semibold text-emerald-900">Approved — your venue is live</div>
+          <div class="text-emerald-800">Players can now find <em>Skopje Padel Club</em> and book hourly slots.</div>
+        </div>
+      </div>
+      <div class="overflow-hidden rounded-lg bg-white shadow">
+        <table class="min-w-full divide-y divide-gray-200 text-sm">
+          <tbody class="divide-y divide-gray-200">
+            <tr>
+              <td class="px-4 py-3 font-medium">Skopje Padel Club</td>
+              <td class="px-4 py-3 text-gray-600">Paddle · Skopje</td>
+              <td class="px-4 py-3 text-gray-600">800.00 ден</td>
+              <td class="px-4 py-3">
+                <span class="inline-flex items-center gap-1 rounded-full bg-emerald-100 px-2 py-0.5 text-xs font-medium text-emerald-700">✓ Approved</span>
+              </td>
+              <td class="px-4 py-3">
+                <span class="rounded-full bg-green-100 px-2 py-0.5 text-xs font-medium text-green-700">Active</span>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </figure>
+
+  <!-- ─── 2.7 Rejected ───────────────────────────────────────── -->
+  <figure class="mt-10">
+    <figcaption class="label mb-2 text-gray-500">2.7 · Rejected — red pill + inline reason; listing stays private; partner edits & resubmits</figcaption>
+    <div class="frame bg-gray-50 p-8">
+      <div class="mb-4 rounded-lg border border-rose-300 bg-rose-50 p-3 text-sm">
+        <div class="flex items-start gap-3">
+          <span class="mt-0.5 inline-flex h-5 w-5 items-center justify-center rounded-full bg-rose-500 text-xs font-bold text-white">×</span>
+          <div class="flex-1">
+            <div class="font-semibold text-rose-900">Asked to revise — Skopje Padel Club</div>
+            <div class="mt-1 rounded-md bg-rose-100 p-2 text-rose-900">
+              <span class="font-medium">Reason:</span> Photos are too dark — please re-upload at least one well-lit shot of the courts during daytime, and add the address number.
+            </div>
+            <button class="mt-2 rounded-md bg-rose-600 px-3 py-1 text-xs font-semibold text-white">Edit & resubmit</button>
+          </div>
+        </div>
+      </div>
+      <div class="overflow-hidden rounded-lg bg-white shadow">
+        <table class="min-w-full divide-y divide-gray-200 text-sm">
+          <tbody class="divide-y divide-gray-200">
+            <tr>
+              <td class="px-4 py-3 font-medium">Skopje Padel Club</td>
+              <td class="px-4 py-3 text-gray-600">Paddle</td>
+              <td class="px-4 py-3 text-gray-600">800.00 ден</td>
+              <td class="px-4 py-3">
+                <span class="inline-flex items-center gap-1 rounded-full bg-rose-100 px-2 py-0.5 text-xs font-medium text-rose-700" title="Photos are too dark...">× Needs revision</span>
+              </td>
+              <td class="px-4 py-3">
+                <span class="rounded-full bg-green-100 px-2 py-0.5 text-xs font-medium text-green-700">Active</span>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </figure>
+</section>
+
+<!-- ============================================================ -->
+<section id="admin" class="mx-auto max-w-5xl px-6 py-10">
+  <h2 class="text-xs font-semibold uppercase tracking-wider text-gray-500">Admin journey</h2>
+
+  <!-- ─── 3.1 Owner overview ─────────────────────────────────── -->
+  <figure class="mt-4">
+    <figcaption class="label mb-2 text-gray-500">3.1 · Owner overview — yellow alert when listings are queued</figcaption>
+    <div class="frame bg-gray-50 p-8">
+      <h3 class="text-2xl font-semibold">Owner overview</h3>
+      <p class="mt-1 text-sm text-gray-500">Platform-wide health at a glance.</p>
+
+      <a class="mt-5 flex items-center justify-between rounded-xl border border-yellow-300 bg-yellow-50 p-4">
+        <div class="flex items-center gap-3">
+          <span class="inline-flex h-8 w-8 items-center justify-center rounded-full bg-yellow-200 text-yellow-800">!</span>
+          <div>
+            <div class="text-sm font-semibold text-yellow-900">3 listings awaiting review</div>
+            <div class="text-xs text-yellow-800">2 venues · 1 coach need your decision before going live.</div>
+          </div>
+        </div>
+        <span class="text-yellow-700">→</span>
+      </a>
+
+      <div class="mt-5 grid grid-cols-3 gap-4">
+        <div class="rounded-xl border border-gray-200 bg-white p-5">
+          <div class="text-xs uppercase tracking-wide text-gray-500">Total users</div>
+          <div class="mt-2 text-3xl font-semibold tabular-nums">1,284</div>
+          <div class="mt-1 text-xs text-gray-500">1,107 players · 177 partners</div>
+        </div>
+        <div class="rounded-xl border border-gray-200 bg-white p-5 ring-2 ring-yellow-300/60">
+          <div class="text-xs uppercase tracking-wide text-gray-500">Pending listings</div>
+          <div class="mt-2 text-3xl font-semibold tabular-nums">3</div>
+          <div class="mt-1 text-xs text-gray-500">Awaiting your review</div>
+        </div>
+        <div class="rounded-xl border border-gray-200 bg-white p-5">
+          <div class="text-xs uppercase tracking-wide text-gray-500">Bookings (30d)</div>
+          <div class="mt-2 text-3xl font-semibold tabular-nums">412</div>
+          <div class="mt-1 text-xs text-gray-500">8,941 all-time</div>
+        </div>
+      </div>
+    </div>
+  </figure>
+
+  <!-- ─── 3.2 Queue ──────────────────────────────────────────── -->
+  <figure class="mt-10">
+    <figcaption class="label mb-2 text-gray-500">3.2 · Listing approvals — queue ordered oldest → newest</figcaption>
+    <div class="frame bg-gray-50 p-8">
+      <h3 class="text-2xl font-semibold">Listing approvals</h3>
+      <p class="mt-1 text-sm text-gray-500">Review each venue or coach before it goes live. Open one to see full details, then approve or send back with feedback.</p>
+
+      <div class="mt-5 space-y-3">
+        <!-- Row 1: venue with photo -->
+        <a class="flex items-center gap-4 rounded-xl border border-gray-200 bg-white p-4 shadow-sm">
+          <div class="h-16 w-16 flex-shrink-0 rounded-lg bg-gradient-to-br from-emerald-300 to-teal-500"></div>
+          <div class="min-w-0 flex-1">
+            <div class="flex items-center gap-2">
+              <span class="rounded-full bg-gray-900 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-yellow-300">VENUE</span>
+              <span class="text-base font-semibold">Skopje Padel Club</span>
+            </div>
+            <div class="mt-0.5 truncate text-sm text-gray-500">paddle · Skopje · 800 ден/h</div>
+            <div class="mt-1 flex items-center gap-3 text-xs text-gray-500">
+              <span>by Marko Petrov</span><span>⏱ 12m ago</span>
+            </div>
+          </div>
+          <span class="text-gray-400">→</span>
+        </a>
+        <!-- Row 2: coach without photo -->
+        <a class="flex items-center gap-4 rounded-xl border border-gray-200 bg-white p-4 shadow-sm">
+          <div class="flex h-16 w-16 flex-shrink-0 items-center justify-center rounded-lg bg-gray-900 text-yellow-300">🎓</div>
+          <div class="min-w-0 flex-1">
+            <div class="flex items-center gap-2">
+              <span class="rounded-full bg-gray-900 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-yellow-300">COACH</span>
+              <span class="text-base font-semibold">Ana Trajkovska</span>
+            </div>
+            <div class="mt-0.5 truncate text-sm text-gray-500">tennis · Skopje · 1,200 ден/h</div>
+            <div class="mt-1 flex items-center gap-3 text-xs text-gray-500">
+              <span>by ana.t@example.com</span><span>⏱ 3h ago</span>
+            </div>
+          </div>
+          <span class="text-gray-400">→</span>
+        </a>
+        <!-- Row 3 -->
+        <a class="flex items-center gap-4 rounded-xl border border-gray-200 bg-white p-4 shadow-sm">
+          <div class="h-16 w-16 flex-shrink-0 rounded-lg bg-gradient-to-br from-orange-300 to-rose-400"></div>
+          <div class="min-w-0 flex-1">
+            <div class="flex items-center gap-2">
+              <span class="rounded-full bg-gray-900 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-yellow-300">VENUE</span>
+              <span class="text-base font-semibold">Vodno Tennis Center</span>
+            </div>
+            <div class="mt-0.5 truncate text-sm text-gray-500">tennis · Skopje · 600 ден/h</div>
+            <div class="mt-1 flex items-center gap-3 text-xs text-gray-500">
+              <span>by Stefan Ilievski</span><span>⏱ 1d ago</span>
+            </div>
+          </div>
+          <span class="text-gray-400">→</span>
+        </a>
+      </div>
+    </div>
+  </figure>
+
+  <!-- ─── 3.3 Detail review ──────────────────────────────────── -->
+  <figure class="mt-10">
+    <figcaption class="label mb-2 text-gray-500">3.3 · Review detail — full overview, then decide</figcaption>
+    <div class="frame bg-gray-50 p-8">
+      <!-- header -->
+      <div class="flex items-start justify-between">
+        <div>
+          <div class="flex items-center gap-2">
+            <span class="rounded-full bg-gray-900 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-yellow-300">VENUE</span>
+            <span class="rounded-full bg-yellow-100 px-2 py-0.5 text-xs font-medium text-yellow-800">⏱ Pending review</span>
+          </div>
+          <h3 class="mt-2 text-2xl font-semibold">Skopje Padel Club</h3>
+          <div class="text-sm text-gray-500">paddle · 800 ден/hour · submitted 12 minutes ago</div>
+        </div>
+        <a class="text-sm text-gray-500 underline-offset-2 hover:underline">← Back to queue</a>
+      </div>
+
+      <!-- photos -->
+      <div class="mt-5 grid grid-cols-4 gap-2">
+        <div class="aspect-[4/3] rounded-md bg-gradient-to-br from-emerald-200 to-emerald-400"></div>
+        <div class="aspect-[4/3] rounded-md bg-gradient-to-br from-emerald-300 to-teal-500"></div>
+        <div class="aspect-[4/3] rounded-md bg-gradient-to-br from-cyan-200 to-blue-400"></div>
+        <div class="aspect-[4/3] rounded-md bg-gradient-to-br from-yellow-200 to-amber-400"></div>
+      </div>
+
+      <div class="mt-6 grid grid-cols-3 gap-6">
+        <!-- left: details -->
+        <div class="col-span-2 space-y-6">
+          <div>
+            <div class="mb-2 text-xs font-semibold uppercase tracking-wide text-gray-500">Description</div>
+            <p class="text-sm text-gray-700">Two indoor padel courts, professional turf, locker rooms, café on-site. Open 9–22 weekdays, 9–20 weekends.</p>
+          </div>
+          <div>
+            <div class="mb-2 text-xs font-semibold uppercase tracking-wide text-gray-500">Location</div>
+            <p class="text-sm text-gray-700">Бул. Партизански Одреди 14, Skopje, Macedonia</p>
+            <a class="text-xs text-blue-600 underline-offset-2 hover:underline">Open in Google Maps →</a>
+          </div>
+          <div>
+            <div class="mb-2 text-xs font-semibold uppercase tracking-wide text-gray-500">Equipment</div>
+            <ul class="grid grid-cols-2 gap-2 text-sm text-gray-700">
+              <li class="rounded-md bg-white p-2 ring-1 ring-gray-200">Rackets <span class="text-emerald-700">(included)</span></li>
+              <li class="rounded-md bg-white p-2 ring-1 ring-gray-200">Balls <span class="text-emerald-700">(included)</span></li>
+              <li class="rounded-md bg-white p-2 ring-1 ring-gray-200">Lockers <span class="text-emerald-700">(included)</span></li>
+              <li class="rounded-md bg-white p-2 ring-1 ring-gray-200">Coaching <span class="text-gray-500">(not included)</span></li>
+            </ul>
+          </div>
+        </div>
+        <!-- right: owner + actions -->
+        <div class="space-y-4">
+          <div class="rounded-xl border border-gray-200 bg-white p-4">
+            <div class="text-xs font-semibold uppercase tracking-wide text-gray-500">Owner</div>
+            <div class="mt-2 flex items-center gap-3">
+              <div class="h-10 w-10 rounded-full bg-gradient-to-br from-gray-300 to-gray-500"></div>
+              <div>
+                <div class="text-sm font-semibold">Marko Petrov</div>
+                <div class="text-xs text-gray-500">marko@example.com</div>
+              </div>
+            </div>
+            <div class="mt-3 grid grid-cols-2 gap-2 text-xs text-gray-600">
+              <div><span class="text-gray-400">Phone</span><br/>+389 70 123 456</div>
+              <div><span class="text-gray-400">Joined</span><br/>3 days ago</div>
+            </div>
+          </div>
+          <div class="rounded-xl border border-gray-200 bg-white p-4">
+            <button class="w-full rounded-md bg-emerald-600 py-2 text-sm font-semibold text-white hover:bg-emerald-700">✓ Approve & publish</button>
+            <details class="mt-3">
+              <summary class="cursor-pointer text-sm font-medium text-rose-700">Send back with feedback</summary>
+              <textarea rows="3" class="mt-2 w-full rounded-md border border-gray-300 p-2 text-xs" placeholder="What needs to change?">Photos are too dark — please re-upload at least one well-lit shot of the courts.</textarea>
+              <button class="mt-2 w-full rounded-md bg-rose-600 py-2 text-sm font-semibold text-white">Reject with reason</button>
+            </details>
+          </div>
+        </div>
+      </div>
+    </div>
+  </figure>
+</section>
+
+<!-- ============================================================ -->
+<section id="emails" class="mx-auto max-w-5xl px-6 py-10">
+  <h2 class="text-xs font-semibold uppercase tracking-wider text-gray-500">Transactional emails</h2>
+  <p class="mt-1 text-sm text-gray-600">Sent from <code>listingApproval.service.ts</code>. Brand shell: Navy900 + USOpenGold to match the rest of the system.</p>
+
+  <div class="mt-5 grid grid-cols-1 gap-6 lg:grid-cols-3">
+
+    <!-- Email 1: admin notify -->
+    <figure>
+      <figcaption class="label mb-2 text-gray-500">4.1 · Admin → New listing submitted</figcaption>
+      <div class="frame bg-white">
+        <div class="bg-gray-900 px-5 py-4 text-yellow-300">
+          <div class="text-sm font-bold tracking-wide">SportsBooks</div>
+          <div class="text-xs">Owner alert</div>
+        </div>
+        <div class="p-5 text-sm leading-relaxed text-gray-800">
+          <p class="font-semibold">A new venue is waiting for your review.</p>
+          <p class="mt-2"><strong>Skopje Padel Club</strong> — paddle, 800 ден/h, Skopje.</p>
+          <p class="mt-2 text-xs text-gray-500">Submitted by Marko Petrov · marko@example.com · 12 minutes ago</p>
+          <a class="mt-4 inline-block rounded-md bg-gray-900 px-4 py-2 text-xs font-semibold text-yellow-300">Review listing →</a>
+          <p class="mt-4 border-t border-gray-200 pt-3 text-xs text-gray-500">You're getting this because you're the SportsBooks owner.</p>
+        </div>
+      </div>
+    </figure>
+
+    <!-- Email 2: partner approved -->
+    <figure>
+      <figcaption class="label mb-2 text-gray-500">4.2 · Partner → Listing approved</figcaption>
+      <div class="frame bg-white">
+        <div class="bg-gray-900 px-5 py-4 text-yellow-300">
+          <div class="text-sm font-bold tracking-wide">SportsBooks</div>
+          <div class="text-xs">Your listing is live</div>
+        </div>
+        <div class="p-5 text-sm leading-relaxed text-gray-800">
+          <p class="font-semibold">Good news, Marko — Skopje Padel Club is approved.</p>
+          <p class="mt-2">Players can now find your venue and book hourly slots. Make sure your time-slot calendar is up to date so bookings come in fast.</p>
+          <a class="mt-4 inline-block rounded-md bg-gray-900 px-4 py-2 text-xs font-semibold text-yellow-300">Open my dashboard →</a>
+          <p class="mt-4 border-t border-gray-200 pt-3 text-xs text-gray-500">Thanks for listing with SportsBooks.</p>
+        </div>
+      </div>
+    </figure>
+
+    <!-- Email 3: partner rejected -->
+    <figure>
+      <figcaption class="label mb-2 text-gray-500">4.3 · Partner → Listing needs revision</figcaption>
+      <div class="frame bg-white">
+        <div class="bg-gray-900 px-5 py-4 text-yellow-300">
+          <div class="text-sm font-bold tracking-wide">SportsBooks</div>
+          <div class="text-xs">Quick changes needed</div>
+        </div>
+        <div class="p-5 text-sm leading-relaxed text-gray-800">
+          <p class="font-semibold">Marko — a small revision before we publish.</p>
+          <p class="mt-2">We took a look at <strong>Skopje Padel Club</strong> and we're almost ready to make it live. One thing to address:</p>
+          <blockquote class="mt-2 rounded-md border-l-4 border-yellow-300 bg-yellow-50 p-3 text-xs text-gray-700">
+            Photos are too dark — please re-upload at least one well-lit shot of the courts during daytime, and add the address number.
+          </blockquote>
+          <a class="mt-4 inline-block rounded-md bg-gray-900 px-4 py-2 text-xs font-semibold text-yellow-300">Edit & resubmit →</a>
+          <p class="mt-4 border-t border-gray-200 pt-3 text-xs text-gray-500">No need to start over — your draft is saved.</p>
+        </div>
+      </div>
+    </figure>
+
+  </div>
+</section>
+
+<!-- ============================================================ -->
+<section id="brand" class="mx-auto max-w-5xl px-6 py-10">
+  <h2 class="text-xs font-semibold uppercase tracking-wider text-gray-500">Brand notes</h2>
+  <div class="mt-3 grid grid-cols-1 gap-4 sm:grid-cols-3">
+    <div class="rounded-xl border border-gray-200 bg-white p-5">
+      <div class="h-10 rounded-md bg-gray-900"></div>
+      <div class="mt-2 text-xs text-gray-500">Navy 900 · <code>#111827</code> · primary surface</div>
+    </div>
+    <div class="rounded-xl border border-gray-200 bg-white p-5">
+      <div class="h-10 rounded-md bg-yellow-300"></div>
+      <div class="mt-2 text-xs text-gray-500">USOpen Gold · <code>#fde047</code> · accent / CTA-on-dark</div>
+    </div>
+    <div class="rounded-xl border border-gray-200 bg-white p-5">
+      <div class="flex h-10 items-center gap-1 rounded-md bg-gray-50 px-2">
+        <span class="rounded-full bg-yellow-100 px-2 py-0.5 text-[10px] text-yellow-800">Pending</span>
+        <span class="rounded-full bg-emerald-100 px-2 py-0.5 text-[10px] text-emerald-700">Approved</span>
+        <span class="rounded-full bg-rose-100 px-2 py-0.5 text-[10px] text-rose-700">Needs revision</span>
+      </div>
+      <div class="mt-2 text-xs text-gray-500">Status pills · used everywhere a listing is shown to its owner</div>
+    </div>
+  </div>
+</section>
+
+<footer class="border-t border-gray-200 bg-white py-8 text-center text-xs text-gray-500">
+  Mockups generated for the listing-approval pivot · open this file in any browser
+</footer>
+
+</body>
+</html>

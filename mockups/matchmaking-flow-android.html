@@ -1,0 +1,952 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>Matchmaking — Android UI/UX deck</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<style>
+  body { background: #f3f4f6; }
+  .label { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 11px; letter-spacing: .04em; }
+  /* phone */
+  .phone { width: 360px; height: 740px; border-radius: 36px; background: #0b1220; padding: 10px;
+    box-shadow: 0 10px 40px rgba(0,0,0,.18), inset 0 0 0 2px #1f2937; flex-shrink: 0; }
+  .phone-screen { height: 100%; border-radius: 28px; overflow: hidden; background: #fff; display: flex; flex-direction: column; position: relative; }
+  .status-bar { height: 28px; background:#111827; color:#fde047; display:flex; align-items:center; justify-content:space-between; padding:0 14px; font-size:11px; font-weight:600; }
+  .nav-bar { height: 56px; background:#111827; color:#fde047; display:flex; align-items:center; padding:0 16px; font-weight:600; gap:12px; }
+  .scroll { flex:1; overflow:hidden; background:#f9fafb; padding:16px; position:relative; }
+  .bottom-nav { height:56px; background:#fff; border-top:1px solid #e5e7eb; display:grid; grid-template-columns:repeat(4,1fr); align-items:center; text-align:center; font-size:10px; }
+  .bottom-nav .tab { color:#6b7280; }
+  .bottom-nav .tab.active { color:#111827; font-weight:700; }
+  .bottom-nav .dot { width:24px; height:24px; border-radius:999px; background:#f3f4f6; margin:0 auto 2px; }
+  .tab.active .dot { background:#111827; box-shadow:0 0 0 2px #fde047; }
+  .m3-card { border-radius:16px; background:#fff; padding:14px; box-shadow:0 1px 2px rgba(0,0,0,.04), 0 1px 3px rgba(0,0,0,.04); }
+  .pill { display:inline-flex; align-items:center; gap:4px; border-radius:999px; padding:2px 8px; font-size:11px; font-weight:600; }
+  .chip { display:inline-flex; align-items:center; gap:4px; border-radius:999px; padding:6px 10px; font-size:11px; font-weight:600; background:#fff; border:1px solid #e5e7eb; color:#374151; white-space:nowrap; }
+  .chip.active { background:#111827; color:#fde047; border-color:#111827; }
+  .avatar { display:inline-block; border-radius:999px; box-shadow: inset 0 0 0 2px #fff; }
+  .avatar-placeholder { display:inline-flex; align-items:center; justify-content:center; border-radius:999px; border:2px dashed #cbd5e1; color:#94a3b8; }
+  .skill-dot { display:inline-block; width:6px; height:6px; border-radius:999px; margin-right:2px; background:#cbd5e1; }
+  .skill-dot.on { background:#fde047; box-shadow:0 0 0 1px #111827; }
+  .court-cell { aspect-ratio:1; border-radius:6px; background:#f1f5f9; }
+</style>
+</head>
+<body class="text-gray-900">
+
+<header class="border-b border-gray-200 bg-white">
+  <div class="mx-auto max-w-6xl px-6 py-8">
+    <div class="flex items-center gap-3">
+      <span class="rounded-md bg-gray-900 px-2 py-1 text-[11px] font-bold uppercase tracking-wider text-yellow-300">SportsBooks · Matchmaking</span>
+      <span class="text-sm text-gray-500">Kotlin + Jetpack Compose · Material 3</span>
+    </div>
+    <h1 class="mt-3 text-3xl font-semibold">Matchmaking — UI/UX</h1>
+    <p class="mt-2 max-w-3xl text-sm text-gray-600">
+      The “find someone to play with” surface. Built on top of the existing booking system: every match
+      runs at an approved venue (or with an approved coach) at a real, hourly time slot. Player-side
+      ratings (skill / sportsmanship / punctuality — already on <code>UserDto</code>) feed back into who
+      shows up in your match feed.
+    </p>
+    <p class="mt-2 text-xs text-gray-500">
+      Domain pieces already in place: <code>MatchDto</code>, <code>MatchStatus</code>,
+      <code>MatchType</code>, <code>MatchVisibility</code>, <code>SkillLevel</code>,
+      <code>ParticipantRole</code>, <code>ParticipantStatus</code>, <code>LobbyDto</code>,
+      <code>BookingParticipantDto</code>, <code>SplitPaymentDto</code>, <code>PlayHomeScreen</code>.
+    </p>
+  </div>
+</header>
+
+<!-- ============================================================ -->
+<section class="mx-auto max-w-6xl px-6 py-8">
+  <h2 class="text-xs font-semibold uppercase tracking-wider text-gray-500">1 · Find a match</h2>
+
+  <div class="mt-5 flex flex-wrap gap-8">
+
+    <!-- 1.1 Play tab home -->
+    <figure>
+      <figcaption class="label mb-2 text-gray-500">1.1 · Play tab — Quick match + nearby openings</figcaption>
+      <div class="phone">
+        <div class="phone-screen">
+          <div class="status-bar"><span>9:41</span><span>● ●●● 100%</span></div>
+          <div class="nav-bar flex items-center text-sm"><span>Play</span><span class="ml-auto text-yellow-300 text-xs">Filters</span></div>
+          <div class="scroll">
+            <!-- Quick match hero -->
+            <div class="rounded-2xl bg-gradient-to-br from-gray-900 to-gray-700 p-4 text-white relative overflow-hidden">
+              <div class="absolute -right-6 -top-6 h-24 w-24 rounded-full bg-yellow-300/20"></div>
+              <div class="text-[10px] uppercase tracking-wider text-yellow-300">Quick match</div>
+              <div class="mt-1 text-base font-bold">Find me a paddle game tonight</div>
+              <div class="mt-1 text-[11px] text-gray-300">Skill: intermediate · within 5 km · 1h slot</div>
+              <button class="mt-3 rounded-lg bg-yellow-300 px-4 py-2 text-xs font-bold text-gray-900">Match me ⚡</button>
+            </div>
+
+            <div class="mt-4 flex items-center justify-between">
+              <div class="text-[10px] uppercase tracking-wider text-gray-500">Open near you · 2 km</div>
+              <span class="text-[11px] text-blue-600">See all →</span>
+            </div>
+
+            <div class="mt-2 space-y-2">
+              <!-- match card -->
+              <div class="m3-card">
+                <div class="flex items-center gap-2">
+                  <span class="pill bg-purple-100 text-purple-700">🎾 Tennis 1v1</span>
+                  <span class="pill bg-yellow-100 text-yellow-800">2 spots open</span>
+                  <span class="ml-auto text-[10px] text-gray-500">Today 19:00</span>
+                </div>
+                <div class="mt-2 text-sm font-semibold">Vodno Tennis Center · Court 2</div>
+                <div class="mt-0.5 text-[11px] text-gray-500">Hosted by Ana · ⭐ 4.8 sportsmanship</div>
+                <div class="mt-2 flex items-center gap-1">
+                  <div class="avatar h-7 w-7" style="background:linear-gradient(135deg,#a78bfa,#7c3aed);"></div>
+                  <div class="avatar-placeholder h-7 w-7 text-[10px]">+</div>
+                  <div class="avatar-placeholder h-7 w-7 text-[10px]">+</div>
+                  <span class="ml-auto text-[11px] font-semibold">300 ден / player</span>
+                </div>
+              </div>
+
+              <div class="m3-card">
+                <div class="flex items-center gap-2">
+                  <span class="pill bg-emerald-100 text-emerald-700">⚽ Football 5v5</span>
+                  <span class="pill bg-yellow-100 text-yellow-800">3 spots open</span>
+                  <span class="ml-auto text-[10px] text-gray-500">Tomorrow 20:00</span>
+                </div>
+                <div class="mt-2 text-sm font-semibold">Aurora Sports Hub · Field A</div>
+                <div class="mt-0.5 text-[11px] text-gray-500">Skill: intermediate · 1 hour</div>
+                <div class="mt-2 flex items-center gap-1">
+                  <div class="avatar h-7 w-7" style="background:linear-gradient(135deg,#34d399,#059669);"></div>
+                  <div class="avatar h-7 w-7" style="background:linear-gradient(135deg,#f97316,#ea580c);"></div>
+                  <div class="avatar h-7 w-7" style="background:linear-gradient(135deg,#fbbf24,#d97706);"></div>
+                  <div class="avatar h-7 w-7" style="background:linear-gradient(135deg,#60a5fa,#2563eb);"></div>
+                  <div class="avatar h-7 w-7" style="background:linear-gradient(135deg,#f472b6,#db2777);"></div>
+                  <div class="avatar h-7 w-7" style="background:linear-gradient(135deg,#22d3ee,#0891b2);"></div>
+                  <div class="avatar h-7 w-7" style="background:linear-gradient(135deg,#a3e635,#65a30d);"></div>
+                  <div class="avatar-placeholder h-7 w-7 text-[10px]">+3</div>
+                </div>
+                <div class="mt-2 flex items-center gap-2 text-[11px] text-gray-500">
+                  <span>👥 7 of 10</span>
+                  <span class="ml-auto font-semibold text-gray-900">120 ден / player</span>
+                </div>
+              </div>
+            </div>
+
+            <div class="mt-4 text-[10px] uppercase tracking-wider text-gray-500">Friends playing this week</div>
+            <div class="mt-2 m3-card flex items-center gap-3">
+              <div class="avatar h-10 w-10" style="background:linear-gradient(135deg,#22d3ee,#0891b2);"></div>
+              <div class="flex-1">
+                <div class="text-sm font-semibold">Marko + 3 friends</div>
+                <div class="text-[11px] text-gray-500">5-a-side · Sat 18:00 · Aurora</div>
+              </div>
+              <button class="rounded-md bg-gray-900 px-3 py-1.5 text-[11px] font-semibold text-yellow-300">Join</button>
+            </div>
+          </div>
+          <div class="bottom-nav">
+            <div class="tab"><div class="dot"></div>Discover</div>
+            <div class="tab"><div class="dot"></div>Bookings</div>
+            <div class="tab active"><div class="dot"></div>Play</div>
+            <div class="tab"><div class="dot"></div>Profile</div>
+          </div>
+        </div>
+      </div>
+    </figure>
+
+    <!-- 1.2 Quick match -->
+    <figure>
+      <figcaption class="label mb-2 text-gray-500">1.2 · Quick match — set the brief, hit Match me ⚡</figcaption>
+      <div class="phone">
+        <div class="phone-screen">
+          <div class="status-bar"><span>9:41</span><span>● ●●● 100%</span></div>
+          <div class="nav-bar flex items-center text-sm"><span>←</span><span>Quick match</span></div>
+          <div class="scroll">
+            <div class="text-[10px] uppercase tracking-wider text-gray-500">Sport</div>
+            <div class="mt-1 flex flex-wrap gap-2">
+              <span class="chip">🏀 Basketball</span>
+              <span class="chip">⚽ Football</span>
+              <span class="chip active">🏓 Paddle</span>
+              <span class="chip">🎾 Tennis</span>
+              <span class="chip">🏐 Volleyball</span>
+            </div>
+
+            <div class="mt-4 text-[10px] uppercase tracking-wider text-gray-500">When</div>
+            <div class="mt-1 flex gap-2">
+              <span class="chip">In 1h</span>
+              <span class="chip active">Tonight</span>
+              <span class="chip">Tomorrow</span>
+              <span class="chip">This week</span>
+            </div>
+
+            <div class="mt-4 text-[10px] uppercase tracking-wider text-gray-500">Skill level</div>
+            <div class="mt-1 m3-card !p-3">
+              <div class="flex items-center justify-between text-sm">
+                <span>Intermediate</span>
+                <span>
+                  <span class="skill-dot on"></span><span class="skill-dot on"></span><span class="skill-dot on"></span><span class="skill-dot"></span><span class="skill-dot"></span>
+                </span>
+              </div>
+              <div class="mt-2 h-1 rounded-full bg-gray-200">
+                <div class="h-1 w-3/5 rounded-full bg-yellow-300"></div>
+              </div>
+              <div class="mt-1 text-[10px] text-gray-500">Pulled from your profile · tap to override</div>
+            </div>
+
+            <div class="mt-4 text-[10px] uppercase tracking-wider text-gray-500">Distance</div>
+            <div class="mt-1 m3-card !p-3 text-sm">Within <span class="font-semibold">5 km</span> of you · 12 venues</div>
+
+            <div class="mt-4 text-[10px] uppercase tracking-wider text-gray-500">Match type</div>
+            <div class="mt-1 flex gap-2">
+              <span class="chip">1v1</span>
+              <span class="chip active">2v2</span>
+              <span class="chip">Open practice</span>
+            </div>
+          </div>
+          <div class="bg-white p-3 border-t border-gray-200">
+            <button class="w-full rounded-lg bg-gray-900 py-3 text-sm font-semibold text-yellow-300">Match me ⚡</button>
+          </div>
+        </div>
+      </div>
+    </figure>
+
+    <!-- 1.3 Searching animation -->
+    <figure>
+      <figcaption class="label mb-2 text-gray-500">1.3 · Searching — live results stream in</figcaption>
+      <div class="phone">
+        <div class="phone-screen">
+          <div class="status-bar"><span>9:41</span><span>● ●●● 100%</span></div>
+          <div class="flex-1 bg-gradient-to-b from-gray-900 to-gray-800 text-white px-6 py-8 flex flex-col items-center text-center">
+            <div class="relative mt-2 h-32 w-32">
+              <div class="absolute inset-0 rounded-full border-4 border-yellow-300/30"></div>
+              <div class="absolute inset-2 rounded-full border-4 border-yellow-300/60"></div>
+              <div class="absolute inset-4 rounded-full border-4 border-yellow-300 animate-pulse"></div>
+              <div class="absolute inset-0 flex items-center justify-center text-3xl">🏓</div>
+            </div>
+            <div class="mt-6 text-base font-semibold">Looking for paddle players nearby…</div>
+            <div class="mt-1 text-[12px] text-gray-300">Intermediate · Tonight · 2v2</div>
+
+            <div class="mt-6 w-full text-left space-y-2">
+              <div class="rounded-xl bg-white/10 p-3 text-[12px]">
+                <div class="flex items-center gap-2">
+                  <div class="avatar h-7 w-7" style="background:linear-gradient(135deg,#a78bfa,#7c3aed);"></div>
+                  <span class="font-semibold">Ana hosting at Vodno</span>
+                  <span class="ml-auto text-[10px] text-emerald-300">98% match</span>
+                </div>
+                <div class="mt-1 text-[11px] text-gray-300">19:00 · 2 spots · 300 ден each</div>
+              </div>
+              <div class="rounded-xl bg-white/10 p-3 text-[12px]">
+                <div class="flex items-center gap-2">
+                  <div class="avatar h-7 w-7" style="background:linear-gradient(135deg,#34d399,#059669);"></div>
+                  <span class="font-semibold">Stefan hosting at Aerodrom</span>
+                  <span class="ml-auto text-[10px] text-yellow-300">87% match</span>
+                </div>
+                <div class="mt-1 text-[11px] text-gray-300">20:30 · 1 spot · 280 ден</div>
+              </div>
+              <div class="rounded-xl bg-white/5 p-3 text-[11px] text-gray-400 italic">Looking for more…</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </figure>
+
+  </div>
+</section>
+
+<!-- ============================================================ -->
+<section class="mx-auto max-w-6xl px-6 py-8">
+  <h2 class="text-xs font-semibold uppercase tracking-wider text-gray-500">2 · Match detail &amp; join</h2>
+
+  <div class="mt-5 flex flex-wrap gap-8">
+
+    <!-- 2.1 Match detail -->
+    <figure>
+      <figcaption class="label mb-2 text-gray-500">2.1 · Match detail — who's in, your share, the rules</figcaption>
+      <div class="phone">
+        <div class="phone-screen">
+          <div class="status-bar"><span>9:41</span><span>● ●●● 100%</span></div>
+          <div class="flex-1 overflow-hidden bg-gray-50">
+            <div class="relative h-32 bg-gradient-to-br from-purple-400 to-fuchsia-500">
+              <div class="absolute top-2 left-2 rounded-full bg-black/40 px-2 py-1 text-xs text-white">←</div>
+              <div class="absolute bottom-3 left-4 right-4 text-white">
+                <div class="flex items-center gap-2 text-[10px]">
+                  <span class="rounded-full bg-white/20 px-2 py-0.5">🎾 Tennis · 1v1</span>
+                  <span class="rounded-full bg-yellow-300 px-2 py-0.5 text-gray-900 font-bold">2 spots</span>
+                </div>
+                <div class="mt-1 text-base font-bold">Tonight at Vodno Tennis Center</div>
+                <div class="text-[11px]">19:00 – 20:00 · Court #2</div>
+              </div>
+            </div>
+
+            <div class="p-4">
+              <div class="m3-card !p-3">
+                <div class="text-[10px] uppercase tracking-wider text-gray-500">Players · 2 of 4</div>
+                <div class="mt-2 grid grid-cols-2 gap-2">
+                  <div class="flex items-center gap-2">
+                    <div class="avatar h-9 w-9" style="background:linear-gradient(135deg,#a78bfa,#7c3aed);"></div>
+                    <div>
+                      <div class="text-[12px] font-semibold flex items-center gap-1">Ana <span class="pill bg-yellow-100 text-yellow-800 text-[9px]">Host</span></div>
+                      <div class="text-[10px] text-gray-500">⭐ 4.8 · intermediate</div>
+                    </div>
+                  </div>
+                  <div class="flex items-center gap-2">
+                    <div class="avatar h-9 w-9" style="background:linear-gradient(135deg,#34d399,#059669);"></div>
+                    <div>
+                      <div class="text-[12px] font-semibold">Marko</div>
+                      <div class="text-[10px] text-gray-500">⭐ 4.6 · intermediate</div>
+                    </div>
+                  </div>
+                  <div class="flex items-center gap-2">
+                    <div class="avatar-placeholder h-9 w-9 text-base">+</div>
+                    <div class="text-[11px] text-gray-500">Empty seat</div>
+                  </div>
+                  <div class="flex items-center gap-2">
+                    <div class="avatar-placeholder h-9 w-9 text-base">+</div>
+                    <div class="text-[11px] text-gray-500">Empty seat</div>
+                  </div>
+                </div>
+              </div>
+
+              <div class="mt-3 m3-card !p-3 text-[12px]">
+                <div class="text-[10px] uppercase tracking-wider text-gray-500">Match brief</div>
+                <ul class="mt-1 space-y-0.5 text-gray-700">
+                  <li>🎯 Skill: intermediate</li>
+                  <li>👀 Visibility: public</li>
+                  <li>💸 300 ден per player (court split 4 ways)</li>
+                  <li>🏓 Rackets &amp; balls included by venue</li>
+                </ul>
+              </div>
+            </div>
+          </div>
+          <div class="bg-white p-3 border-t border-gray-200">
+            <button class="w-full rounded-lg bg-gray-900 py-3 text-sm font-semibold text-yellow-300">Join match · pay 300 ден →</button>
+          </div>
+        </div>
+      </div>
+    </figure>
+
+    <!-- 2.2 Join confirm -->
+    <figure>
+      <figcaption class="label mb-2 text-gray-500">2.2 · Join confirm — split + sportsmanship pledge</figcaption>
+      <div class="phone">
+        <div class="phone-screen">
+          <div class="status-bar"><span>9:41</span><span>● ●●● 100%</span></div>
+          <div class="flex-1 bg-gray-900/40 backdrop-blur relative">
+            <div style="position:absolute;left:0;right:0;bottom:0;" class="rounded-t-3xl bg-white p-5 shadow-2xl">
+              <div class="mx-auto mb-3 h-1 w-10 rounded-full bg-gray-300"></div>
+              <div class="text-base font-bold">You're joining the match</div>
+              <div class="text-[11px] text-gray-500">Tennis 1v1 · Vodno Court #2 · Tonight 19:00</div>
+
+              <div class="mt-4 m3-card !p-3 text-[12px]">
+                <div class="flex justify-between"><span>Court fee</span><span>1,200 ден</span></div>
+                <div class="mt-1 flex justify-between"><span>Split between</span><span>4 players</span></div>
+                <div class="mt-2 flex justify-between border-t border-gray-200 pt-2 text-sm font-bold"><span>Your share</span><span>300 ден</span></div>
+                <div class="mt-1 text-[10px] text-gray-500">Charged when the host's lobby fills (or 4h before, whichever first).</div>
+              </div>
+
+              <label class="mt-3 flex items-start gap-2 text-[11px] text-gray-700">
+                <input type="checkbox" checked class="mt-0.5"/>
+                <span>I'll show up on time and play it clean. Repeat no-shows lose access to matchmaking.</span>
+              </label>
+
+              <button class="mt-4 w-full rounded-lg bg-gray-900 py-3 text-sm font-semibold text-yellow-300">Confirm &amp; join</button>
+              <button class="mt-2 w-full text-center text-xs text-gray-500">Back</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </figure>
+
+    <!-- 2.3 Joined toast -->
+    <figure>
+      <figcaption class="label mb-2 text-gray-500">2.3 · You're in — heading to the lobby</figcaption>
+      <div class="phone">
+        <div class="phone-screen">
+          <div class="status-bar"><span>9:41</span><span>● ●●● 100%</span></div>
+          <div class="flex-1 flex flex-col items-center justify-center bg-gradient-to-b from-yellow-50 to-white px-6 text-center">
+            <div class="h-20 w-20 rounded-full bg-yellow-300 flex items-center justify-center text-3xl shadow-lg">⚡</div>
+            <h3 class="mt-5 text-xl font-bold">You're in!</h3>
+            <div class="mt-1 text-[12px] text-gray-700">Ana &amp; Marko have been notified.<br/>You'll get a ping when the last seat fills.</div>
+            <div class="mt-4 m3-card w-full text-left text-[11px]">
+              <div class="text-[10px] uppercase tracking-wider text-gray-500">Match brief</div>
+              <ul class="mt-1 space-y-0.5 text-gray-700">
+                <li>📅 Tonight · 19:00 – 20:00</li>
+                <li>📍 Vodno Tennis Center · Court #2</li>
+                <li>👥 3 of 4 confirmed</li>
+                <li>💸 300 ден on hold</li>
+              </ul>
+            </div>
+            <button class="mt-5 w-full rounded-lg bg-gray-900 py-3 text-sm font-semibold text-yellow-300">Open lobby →</button>
+          </div>
+        </div>
+      </div>
+    </figure>
+
+  </div>
+</section>
+
+<!-- ============================================================ -->
+<section class="mx-auto max-w-6xl px-6 py-8">
+  <h2 class="text-xs font-semibold uppercase tracking-wider text-gray-500">3 · Lobby</h2>
+
+  <div class="mt-5 flex flex-wrap gap-8">
+
+    <!-- 3.1 Lobby -->
+    <figure>
+      <figcaption class="label mb-2 text-gray-500">3.1 · Lobby — players, chat, ready check</figcaption>
+      <div class="phone">
+        <div class="phone-screen">
+          <div class="status-bar"><span>9:41</span><span>● ●●● 100%</span></div>
+          <div class="nav-bar flex items-center text-sm"><span>←</span><span>Lobby · Tennis 1v1</span><span class="ml-auto text-yellow-300 text-xs">⋯</span></div>
+          <div class="scroll">
+            <div class="m3-card !p-3">
+              <div class="flex items-center justify-between text-[12px]">
+                <div>
+                  <div class="font-semibold">Vodno · Court #2</div>
+                  <div class="text-[11px] text-gray-500">Tonight · 19:00 – 20:00</div>
+                </div>
+                <span class="pill bg-yellow-100 text-yellow-800">3 of 4 ready</span>
+              </div>
+              <div class="mt-2 h-1.5 rounded-full bg-gray-200">
+                <div class="h-1.5 w-3/4 rounded-full bg-emerald-500"></div>
+              </div>
+            </div>
+
+            <div class="mt-3 text-[10px] uppercase tracking-wider text-gray-500">Players</div>
+            <div class="mt-2 space-y-2">
+              <div class="m3-card !p-3 flex items-center gap-3">
+                <div class="avatar h-9 w-9" style="background:linear-gradient(135deg,#a78bfa,#7c3aed);"></div>
+                <div class="flex-1">
+                  <div class="text-[12px] font-semibold flex items-center gap-1">Ana <span class="pill bg-yellow-100 text-yellow-800 text-[9px]">Host</span></div>
+                  <div class="text-[10px] text-gray-500">⭐ 4.8 · 24 matches</div>
+                </div>
+                <span class="pill bg-emerald-100 text-emerald-700">Ready</span>
+              </div>
+              <div class="m3-card !p-3 flex items-center gap-3">
+                <div class="avatar h-9 w-9" style="background:linear-gradient(135deg,#34d399,#059669);"></div>
+                <div class="flex-1">
+                  <div class="text-[12px] font-semibold">Marko</div>
+                  <div class="text-[10px] text-gray-500">⭐ 4.6 · 11 matches</div>
+                </div>
+                <span class="pill bg-emerald-100 text-emerald-700">Ready</span>
+              </div>
+              <div class="m3-card !p-3 flex items-center gap-3 ring-2 ring-yellow-300">
+                <div class="avatar h-9 w-9" style="background:linear-gradient(135deg,#fde047,#facc15);"></div>
+                <div class="flex-1">
+                  <div class="text-[12px] font-semibold flex items-center gap-1">You</div>
+                  <div class="text-[10px] text-gray-500">⭐ 4.7 · 18 matches</div>
+                </div>
+                <span class="pill bg-emerald-100 text-emerald-700">Ready</span>
+              </div>
+              <div class="m3-card !p-3 flex items-center gap-3 border-2 border-dashed border-gray-300">
+                <div class="avatar-placeholder h-9 w-9 text-base">+</div>
+                <div class="flex-1 text-[12px] text-gray-500">Waiting on 1 more player…</div>
+                <button class="rounded-md border border-gray-300 px-2 py-1 text-[10px]">Invite</button>
+              </div>
+            </div>
+
+            <div class="mt-3 text-[10px] uppercase tracking-wider text-gray-500">Chat</div>
+            <div class="mt-2 space-y-1.5">
+              <div class="max-w-[80%] rounded-2xl rounded-bl-sm bg-white px-3 py-2 text-[12px] shadow-sm">
+                Bring your good shoes — the court can be slippy at first.
+                <div class="mt-0.5 text-[10px] text-gray-400">Ana · 17:02</div>
+              </div>
+              <div class="ml-auto max-w-[80%] rounded-2xl rounded-br-sm bg-yellow-300 px-3 py-2 text-[12px]">
+                Will do! See you all there.
+                <div class="mt-0.5 text-[10px] text-gray-700">You · 17:05</div>
+              </div>
+            </div>
+          </div>
+          <div class="bg-white p-2 border-t border-gray-200 flex items-center gap-2">
+            <input class="flex-1 rounded-full border border-gray-300 px-3 py-2 text-[12px]" placeholder="Send a message…" />
+            <span class="rounded-full bg-gray-900 px-3 py-2 text-[12px] text-yellow-300">→</span>
+          </div>
+        </div>
+      </div>
+    </figure>
+
+    <!-- 3.2 Lobby filled / countdown -->
+    <figure>
+      <figcaption class="label mb-2 text-gray-500">3.2 · Lobby is full — countdown to start</figcaption>
+      <div class="phone">
+        <div class="phone-screen">
+          <div class="status-bar"><span>9:41</span><span>● ●●● 100%</span></div>
+          <div class="nav-bar flex items-center text-sm"><span>←</span><span>Lobby · Tennis 1v1</span></div>
+          <div class="flex-1 bg-gradient-to-b from-emerald-50 to-white p-4">
+            <div class="m3-card text-center !p-4">
+              <div class="text-[10px] uppercase tracking-wider text-emerald-600">Lobby full · payment captured</div>
+              <div class="mt-1 text-3xl font-bold tabular-nums text-gray-900">01:42:18</div>
+              <div class="text-[11px] text-gray-500">until match starts</div>
+              <div class="mt-3 grid grid-cols-2 gap-2 text-[11px]">
+                <button class="rounded-md bg-gray-900 py-2 text-yellow-300 font-semibold">Open in maps</button>
+                <button class="rounded-md bg-yellow-300 py-2 text-gray-900 font-semibold">Add to calendar</button>
+              </div>
+            </div>
+            <div class="mt-3 m3-card !p-3 text-[12px]">
+              <div class="text-[10px] uppercase tracking-wider text-gray-500">All confirmed</div>
+              <div class="mt-2 flex -space-x-2">
+                <div class="avatar h-9 w-9" style="background:linear-gradient(135deg,#a78bfa,#7c3aed);"></div>
+                <div class="avatar h-9 w-9" style="background:linear-gradient(135deg,#34d399,#059669);"></div>
+                <div class="avatar h-9 w-9" style="background:linear-gradient(135deg,#fde047,#facc15);"></div>
+                <div class="avatar h-9 w-9" style="background:linear-gradient(135deg,#f472b6,#db2777);"></div>
+              </div>
+            </div>
+            <div class="mt-3 m3-card !p-3 text-[12px] border border-rose-200 bg-rose-50">
+              <div class="font-semibold text-rose-900">Need to back out?</div>
+              <div class="mt-1 text-[11px] text-rose-800">Free cancel up to 4h before. After that, your share is non-refundable so other players don't get burned.</div>
+              <button class="mt-2 rounded-md bg-rose-600 px-3 py-1.5 text-[11px] font-semibold text-white">Leave match</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </figure>
+
+    <!-- 3.3 Host controls -->
+    <figure>
+      <figcaption class="label mb-2 text-gray-500">3.3 · Host controls — kick / promote / close</figcaption>
+      <div class="phone">
+        <div class="phone-screen">
+          <div class="status-bar"><span>9:41</span><span>● ●●● 100%</span></div>
+          <div class="nav-bar flex items-center text-sm"><span>←</span><span>Manage lobby</span></div>
+          <div class="scroll">
+            <div class="text-[10px] uppercase tracking-wider text-gray-500">Players</div>
+            <div class="mt-2 space-y-2">
+              <div class="m3-card !p-3 flex items-center gap-3">
+                <div class="avatar h-9 w-9" style="background:linear-gradient(135deg,#34d399,#059669);"></div>
+                <div class="flex-1">
+                  <div class="text-[12px] font-semibold">Marko</div>
+                  <div class="text-[10px] text-gray-500">Joined 2h ago</div>
+                </div>
+                <button class="rounded-md border border-gray-300 px-2 py-1 text-[10px]">Promote</button>
+                <button class="rounded-md border border-rose-300 bg-rose-50 px-2 py-1 text-[10px] text-rose-700">Kick</button>
+              </div>
+              <div class="m3-card !p-3 flex items-center gap-3">
+                <div class="avatar h-9 w-9" style="background:linear-gradient(135deg,#f472b6,#db2777);"></div>
+                <div class="flex-1">
+                  <div class="text-[12px] font-semibold">Vesna</div>
+                  <div class="text-[10px] text-gray-500">Joined 12m ago · ⭐ 4.9</div>
+                </div>
+                <button class="rounded-md border border-gray-300 px-2 py-1 text-[10px]">Promote</button>
+                <button class="rounded-md border border-rose-300 bg-rose-50 px-2 py-1 text-[10px] text-rose-700">Kick</button>
+              </div>
+            </div>
+
+            <div class="mt-4 text-[10px] uppercase tracking-wider text-gray-500">Visibility</div>
+            <div class="mt-2 m3-card !p-3 text-[12px] flex items-center justify-between">
+              <span>Public — anyone can request to join</span>
+              <span class="rounded-full bg-emerald-500 px-1 w-9 h-5 flex items-center justify-end shadow-inner"><span class="h-4 w-4 rounded-full bg-white"></span></span>
+            </div>
+            <div class="mt-2 m3-card !p-3 text-[12px] flex items-center justify-between">
+              <span>Friends only</span>
+              <span class="rounded-full bg-gray-300 px-1 w-9 h-5 flex items-center shadow-inner"><span class="h-4 w-4 rounded-full bg-white"></span></span>
+            </div>
+
+            <div class="mt-4 m3-card !p-3 border border-rose-200 bg-rose-50 text-[12px]">
+              <div class="font-semibold text-rose-900">Cancel match</div>
+              <div class="mt-1 text-[11px] text-rose-800">Refunds everyone. They keep your no-show count clean.</div>
+              <button class="mt-2 rounded-md bg-rose-600 px-3 py-1.5 text-[11px] font-semibold text-white">Cancel for everyone</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </figure>
+
+  </div>
+</section>
+
+<!-- ============================================================ -->
+<section class="mx-auto max-w-6xl px-6 py-8">
+  <h2 class="text-xs font-semibold uppercase tracking-wider text-gray-500">4 · Create a match</h2>
+
+  <div class="mt-5 flex flex-wrap gap-8">
+
+    <!-- 4.1 Step 1 -->
+    <figure>
+      <figcaption class="label mb-2 text-gray-500">4.1 · Step 1 · Sport &amp; format</figcaption>
+      <div class="phone">
+        <div class="phone-screen">
+          <div class="status-bar"><span>9:41</span><span>● ●●● 100%</span></div>
+          <div class="nav-bar flex items-center text-sm"><span>×</span><span>Host a match · 1 of 3</span></div>
+          <div class="scroll">
+            <div class="text-[10px] uppercase tracking-wider text-gray-500">Sport</div>
+            <div class="mt-2 grid grid-cols-3 gap-2 text-center text-[11px] text-white">
+              <div class="aspect-square rounded-xl flex flex-col items-center justify-center" style="background:linear-gradient(135deg,#fb923c,#f97316);">🏀<div class="mt-1">Basketball</div></div>
+              <div class="aspect-square rounded-xl flex flex-col items-center justify-center" style="background:linear-gradient(135deg,#22c55e,#16a34a);">⚽<div class="mt-1">Football</div></div>
+              <div class="aspect-square rounded-xl flex flex-col items-center justify-center ring-4 ring-yellow-300" style="background:linear-gradient(135deg,#06b6d4,#0891b2);">🏓<div class="mt-1">Paddle</div></div>
+              <div class="aspect-square rounded-xl flex flex-col items-center justify-center" style="background:linear-gradient(135deg,#a855f7,#7c3aed);">🎾<div class="mt-1">Tennis</div></div>
+              <div class="aspect-square rounded-xl flex flex-col items-center justify-center" style="background:linear-gradient(135deg,#f59e0b,#d97706);">🏐<div class="mt-1">Volleyball</div></div>
+              <div class="aspect-square rounded-xl flex flex-col items-center justify-center" style="background:linear-gradient(135deg,#ef4444,#b91c1c);">🥊<div class="mt-1">Boxing</div></div>
+            </div>
+
+            <div class="mt-5 text-[10px] uppercase tracking-wider text-gray-500">Format</div>
+            <div class="mt-2 space-y-2">
+              <div class="m3-card !p-3 flex items-center gap-3">
+                <div class="text-2xl">🆚</div>
+                <div class="flex-1">
+                  <div class="text-[12px] font-semibold">1 vs 1</div>
+                  <div class="text-[10px] text-gray-500">Singles match · 2 players total</div>
+                </div>
+                <span class="h-4 w-4 rounded-full border-2 border-gray-300"></span>
+              </div>
+              <div class="m3-card !p-3 flex items-center gap-3 ring-2 ring-gray-900">
+                <div class="text-2xl">👯‍♂️</div>
+                <div class="flex-1">
+                  <div class="text-[12px] font-semibold">2 vs 2</div>
+                  <div class="text-[10px] text-gray-500">Doubles · 4 players total</div>
+                </div>
+                <span class="h-4 w-4 rounded-full bg-gray-900 ring-2 ring-yellow-300"></span>
+              </div>
+              <div class="m3-card !p-3 flex items-center gap-3">
+                <div class="text-2xl">🎯</div>
+                <div class="flex-1">
+                  <div class="text-[12px] font-semibold">Open practice</div>
+                  <div class="text-[10px] text-gray-500">No score · drop-in friendly</div>
+                </div>
+                <span class="h-4 w-4 rounded-full border-2 border-gray-300"></span>
+              </div>
+            </div>
+          </div>
+          <div class="bg-white p-3 border-t border-gray-200">
+            <button class="w-full rounded-lg bg-gray-900 py-3 text-sm font-semibold text-yellow-300">Continue → when &amp; where</button>
+          </div>
+        </div>
+      </div>
+    </figure>
+
+    <!-- 4.2 Step 2 -->
+    <figure>
+      <figcaption class="label mb-2 text-gray-500">4.2 · Step 2 · When &amp; where</figcaption>
+      <div class="phone">
+        <div class="phone-screen">
+          <div class="status-bar"><span>9:41</span><span>● ●●● 100%</span></div>
+          <div class="nav-bar flex items-center text-sm"><span>←</span><span>Host a match · 2 of 3</span></div>
+          <div class="scroll">
+            <div class="text-[10px] uppercase tracking-wider text-gray-500">Date</div>
+            <div class="mt-1 flex gap-2 overflow-x-hidden">
+              <div class="flex-1 rounded-lg border border-gray-300 bg-white py-2 text-center text-[11px]">Today<br/><span class="font-semibold">29</span></div>
+              <div class="flex-1 rounded-lg border-2 border-gray-900 bg-gray-900 py-2 text-center text-[11px] text-yellow-300">Wed<br/><span class="font-semibold">30</span></div>
+              <div class="flex-1 rounded-lg border border-gray-300 bg-white py-2 text-center text-[11px]">Thu<br/><span class="font-semibold">01</span></div>
+              <div class="flex-1 rounded-lg border border-gray-300 bg-white py-2 text-center text-[11px]">Fri<br/><span class="font-semibold">02</span></div>
+            </div>
+
+            <div class="mt-3 text-[10px] uppercase tracking-wider text-gray-500">Time</div>
+            <div class="mt-1 grid grid-cols-4 gap-2 text-[11px] font-semibold">
+              <div class="rounded-lg bg-white border border-gray-300 py-2 text-center">17:00</div>
+              <div class="rounded-lg bg-white border border-gray-300 py-2 text-center">18:00</div>
+              <div class="rounded-lg bg-yellow-300 border-2 border-gray-900 py-2 text-center">19:00</div>
+              <div class="rounded-lg bg-white border border-gray-300 py-2 text-center">20:00</div>
+            </div>
+
+            <div class="mt-4 text-[10px] uppercase tracking-wider text-gray-500">Venue</div>
+            <input class="mt-1 w-full rounded-full border border-gray-300 bg-white px-3 py-2 text-[12px]" placeholder="Search paddle venues…" />
+            <div class="mt-2 space-y-2">
+              <div class="m3-card !p-3 flex gap-3 ring-2 ring-gray-900">
+                <div class="h-12 w-12 rounded-md bg-gradient-to-br from-emerald-200 to-emerald-400"></div>
+                <div class="flex-1">
+                  <div class="text-[12px] font-semibold">Skopje Padel Club</div>
+                  <div class="text-[10px] text-gray-500">1.8 km · 800 ден/h · Court 1 free</div>
+                </div>
+                <span class="text-xs">✓</span>
+              </div>
+              <div class="m3-card !p-3 flex gap-3">
+                <div class="h-12 w-12 rounded-md bg-gradient-to-br from-yellow-200 to-amber-400"></div>
+                <div class="flex-1">
+                  <div class="text-[12px] font-semibold">Aerodrom Padel</div>
+                  <div class="text-[10px] text-gray-500">5.2 km · 700 ден/h · Court B free</div>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="bg-white p-3 border-t border-gray-200">
+            <button class="w-full rounded-lg bg-gray-900 py-3 text-sm font-semibold text-yellow-300">Continue → who</button>
+          </div>
+        </div>
+      </div>
+    </figure>
+
+    <!-- 4.3 Step 3 -->
+    <figure>
+      <figcaption class="label mb-2 text-gray-500">4.3 · Step 3 · Who can join + cost split</figcaption>
+      <div class="phone">
+        <div class="phone-screen">
+          <div class="status-bar"><span>9:41</span><span>● ●●● 100%</span></div>
+          <div class="nav-bar flex items-center text-sm"><span>←</span><span>Host a match · 3 of 3</span></div>
+          <div class="scroll">
+            <div class="text-[10px] uppercase tracking-wider text-gray-500">Who can see this match</div>
+            <div class="mt-2 space-y-2">
+              <div class="m3-card !p-3 flex items-center gap-3 ring-2 ring-gray-900">
+                <div class="text-xl">🌍</div>
+                <div class="flex-1">
+                  <div class="text-[12px] font-semibold">Public</div>
+                  <div class="text-[10px] text-gray-500">Shows up in everyone's Play feed.</div>
+                </div>
+              </div>
+              <div class="m3-card !p-3 flex items-center gap-3">
+                <div class="text-xl">👥</div>
+                <div class="flex-1">
+                  <div class="text-[12px] font-semibold">Friends only</div>
+                  <div class="text-[10px] text-gray-500">Only people you've played with before.</div>
+                </div>
+              </div>
+              <div class="m3-card !p-3 flex items-center gap-3">
+                <div class="text-xl">🔒</div>
+                <div class="flex-1">
+                  <div class="text-[12px] font-semibold">Invite only</div>
+                  <div class="text-[10px] text-gray-500">Only people with the share link.</div>
+                </div>
+              </div>
+            </div>
+
+            <div class="mt-4 text-[10px] uppercase tracking-wider text-gray-500">Skill range</div>
+            <div class="mt-2 flex gap-2">
+              <span class="chip">Any</span>
+              <span class="chip">Beginner</span>
+              <span class="chip active">Intermediate</span>
+              <span class="chip">Advanced</span>
+            </div>
+
+            <div class="mt-4 text-[10px] uppercase tracking-wider text-gray-500">Cost split</div>
+            <div class="mt-2 m3-card !p-3 text-[12px]">
+              <div class="flex justify-between"><span>Court fee</span><span>1,200 ден</span></div>
+              <div class="mt-1 flex justify-between"><span>Players</span><span>4</span></div>
+              <div class="mt-1 flex justify-between font-semibold border-t border-gray-200 pt-2"><span>Each pays</span><span>300 ден</span></div>
+              <label class="mt-3 flex items-center justify-between text-[11px] text-gray-700">
+                <span>I'll cover the no-shows</span>
+                <span class="rounded-full bg-gray-300 px-1 w-9 h-5 flex items-center shadow-inner"><span class="h-4 w-4 rounded-full bg-white"></span></span>
+              </label>
+            </div>
+          </div>
+          <div class="bg-white p-3 border-t border-gray-200">
+            <button class="w-full rounded-lg bg-gray-900 py-3 text-sm font-semibold text-yellow-300">Publish match →</button>
+          </div>
+        </div>
+      </div>
+    </figure>
+
+    <!-- 4.4 Created -->
+    <figure>
+      <figcaption class="label mb-2 text-gray-500">4.4 · Match published — invite friends or wait</figcaption>
+      <div class="phone">
+        <div class="phone-screen">
+          <div class="status-bar"><span>9:41</span><span>● ●●● 100%</span></div>
+          <div class="flex-1 flex flex-col items-center justify-center bg-gradient-to-b from-yellow-50 to-white px-6 text-center">
+            <div class="h-20 w-20 rounded-full bg-yellow-300 flex items-center justify-center text-3xl shadow-lg">🚀</div>
+            <h3 class="mt-4 text-xl font-bold">Your match is live</h3>
+            <div class="mt-1 text-[12px] text-gray-700">Tennis 2v2 · Wed Apr 30 · 19:00<br/>Skopje Padel Club · Court #1</div>
+
+            <div class="mt-4 m3-card w-full text-left text-[11px]">
+              <div class="text-[10px] uppercase tracking-wider text-gray-500">Invite friends</div>
+              <div class="mt-2 flex flex-wrap gap-2">
+                <button class="rounded-full bg-gray-100 px-3 py-1.5 text-xs">📱 SMS</button>
+                <button class="rounded-full bg-gray-100 px-3 py-1.5 text-xs">💬 WhatsApp</button>
+                <button class="rounded-full bg-gray-100 px-3 py-1.5 text-xs">🔗 Copy link</button>
+              </div>
+              <div class="mt-3 rounded-md bg-gray-50 px-3 py-2 font-mono text-[11px] text-gray-600">sportsbooks.app/m/T7K-9F2</div>
+            </div>
+
+            <button class="mt-5 w-full rounded-lg bg-gray-900 py-3 text-sm font-semibold text-yellow-300">Open lobby</button>
+            <button class="mt-2 w-full text-center text-xs text-gray-500">Done</button>
+          </div>
+        </div>
+      </div>
+    </figure>
+
+  </div>
+</section>
+
+<!-- ============================================================ -->
+<section class="mx-auto max-w-6xl px-6 py-8">
+  <h2 class="text-xs font-semibold uppercase tracking-wider text-gray-500">5 · After the match · player-on-player ratings</h2>
+
+  <div class="mt-5 flex flex-wrap gap-8">
+
+    <!-- 5.1 Rate teammates -->
+    <figure>
+      <figcaption class="label mb-2 text-gray-500">5.1 · Rate teammates — feeds into matchmaking</figcaption>
+      <div class="phone">
+        <div class="phone-screen">
+          <div class="status-bar"><span>9:41</span><span>● ●●● 100%</span></div>
+          <div class="nav-bar flex items-center text-sm"><span>×</span><span>How was the match?</span></div>
+          <div class="scroll">
+            <div class="text-[11px] text-gray-600">Rate the players you just played with. We use this to match you with people who actually show up and play it clean.</div>
+
+            <!-- player 1 -->
+            <div class="mt-3 m3-card !p-3">
+              <div class="flex items-center gap-3">
+                <div class="avatar h-10 w-10" style="background:linear-gradient(135deg,#a78bfa,#7c3aed);"></div>
+                <div>
+                  <div class="text-[13px] font-semibold">Ana</div>
+                  <div class="text-[10px] text-gray-500">Host · 4.8 ⭐</div>
+                </div>
+              </div>
+              <div class="mt-3 space-y-2 text-[12px]">
+                <div class="flex items-center justify-between">
+                  <span class="text-gray-700">Skill match</span>
+                  <span class="text-base">⭐⭐⭐⭐⭐</span>
+                </div>
+                <div class="flex items-center justify-between">
+                  <span class="text-gray-700">Sportsmanship</span>
+                  <span class="text-base">⭐⭐⭐⭐⭐</span>
+                </div>
+                <div class="flex items-center justify-between">
+                  <span class="text-gray-700">Punctuality</span>
+                  <span class="text-base">⭐⭐⭐⭐⭐</span>
+                </div>
+              </div>
+              <div class="mt-2 flex flex-wrap gap-1.5">
+                <span class="chip active text-[10px]">Punctual</span>
+                <span class="chip active text-[10px]">Fun to play</span>
+                <span class="chip text-[10px]">Brought spare balls</span>
+              </div>
+            </div>
+
+            <!-- player 2 -->
+            <div class="mt-3 m3-card !p-3">
+              <div class="flex items-center gap-3">
+                <div class="avatar h-10 w-10" style="background:linear-gradient(135deg,#34d399,#059669);"></div>
+                <div>
+                  <div class="text-[13px] font-semibold">Marko</div>
+                  <div class="text-[10px] text-gray-500">4.6 ⭐</div>
+                </div>
+              </div>
+              <div class="mt-3 space-y-2 text-[12px]">
+                <div class="flex items-center justify-between">
+                  <span class="text-gray-700">Skill match</span>
+                  <span class="text-base">⭐⭐⭐⭐<span class="text-gray-300">⭐</span></span>
+                </div>
+                <div class="flex items-center justify-between">
+                  <span class="text-gray-700">Sportsmanship</span>
+                  <span class="text-base">⭐⭐⭐⭐⭐</span>
+                </div>
+                <div class="flex items-center justify-between">
+                  <span class="text-gray-700">Punctuality</span>
+                  <span class="text-base">⭐⭐⭐<span class="text-gray-300">⭐⭐</span></span>
+                </div>
+              </div>
+              <div class="mt-2 text-[10px] text-gray-500 italic">Optional note (private to him): try to arrive 5 min earlier next time 😊</div>
+            </div>
+          </div>
+          <div class="bg-white p-3 border-t border-gray-200">
+            <button class="w-full rounded-lg bg-gray-900 py-3 text-sm font-semibold text-yellow-300">Submit ratings</button>
+          </div>
+        </div>
+      </div>
+    </figure>
+
+    <!-- 5.2 Profile reputation -->
+    <figure>
+      <figcaption class="label mb-2 text-gray-500">5.2 · Your profile — reputation visible to hosts</figcaption>
+      <div class="phone">
+        <div class="phone-screen">
+          <div class="status-bar"><span>9:41</span><span>● ●●● 100%</span></div>
+          <div class="nav-bar flex items-center text-sm"><span>←</span><span>Profile</span></div>
+          <div class="scroll">
+            <div class="m3-card !p-4 flex items-center gap-3">
+              <div class="avatar h-14 w-14" style="background:linear-gradient(135deg,#fde047,#facc15);"></div>
+              <div>
+                <div class="text-base font-semibold">You</div>
+                <div class="text-[11px] text-gray-500">@bojanb · joined Apr 2026</div>
+              </div>
+            </div>
+
+            <div class="mt-3 grid grid-cols-3 gap-2 text-center text-[11px]">
+              <div class="m3-card !p-3">
+                <div class="text-[10px] uppercase tracking-wider text-gray-500">Skill</div>
+                <div class="mt-0.5 font-semibold">4.7</div>
+                <div class="text-[10px] text-gray-500">avg</div>
+              </div>
+              <div class="m3-card !p-3">
+                <div class="text-[10px] uppercase tracking-wider text-gray-500">Sportsmanship</div>
+                <div class="mt-0.5 font-semibold">4.9</div>
+                <div class="text-[10px] text-gray-500">avg</div>
+              </div>
+              <div class="m3-card !p-3">
+                <div class="text-[10px] uppercase tracking-wider text-gray-500">Punctuality</div>
+                <div class="mt-0.5 font-semibold">5.0</div>
+                <div class="text-[10px] text-gray-500">avg</div>
+              </div>
+            </div>
+
+            <div class="mt-3 m3-card !p-3 text-[12px]">
+              <div class="text-[10px] uppercase tracking-wider text-gray-500">Sport expertise</div>
+              <div class="mt-2 space-y-2">
+                <div>
+                  <div class="flex items-center justify-between">
+                    <span>🏓 Paddle</span>
+                    <span class="text-[11px] text-gray-500">intermediate</span>
+                  </div>
+                  <div class="mt-1 h-1 rounded-full bg-gray-200"><div class="h-1 w-3/5 rounded-full bg-yellow-300"></div></div>
+                </div>
+                <div>
+                  <div class="flex items-center justify-between">
+                    <span>🎾 Tennis</span>
+                    <span class="text-[11px] text-gray-500">beginner</span>
+                  </div>
+                  <div class="mt-1 h-1 rounded-full bg-gray-200"><div class="h-1 w-1/4 rounded-full bg-yellow-300"></div></div>
+                </div>
+              </div>
+            </div>
+
+            <div class="mt-3 m3-card !p-3 text-[12px]">
+              <div class="flex items-center justify-between">
+                <span class="font-semibold">Reliability streak</span>
+                <span class="pill bg-emerald-100 text-emerald-700">12 in a row 🔥</span>
+              </div>
+              <div class="mt-1 text-[11px] text-gray-500">No-shows reduce visibility in match feeds.</div>
+            </div>
+          </div>
+          <div class="bottom-nav">
+            <div class="tab"><div class="dot"></div>Discover</div>
+            <div class="tab"><div class="dot"></div>Bookings</div>
+            <div class="tab"><div class="dot"></div>Play</div>
+            <div class="tab active"><div class="dot"></div>Profile</div>
+          </div>
+        </div>
+      </div>
+    </figure>
+
+  </div>
+</section>
+
+<!-- ============================================================ -->
+<section class="mx-auto max-w-6xl px-6 py-8">
+  <h2 class="text-xs font-semibold uppercase tracking-wider text-gray-500">6 · Notes for engineering</h2>
+  <div class="mt-3 grid grid-cols-1 gap-4 sm:grid-cols-2">
+    <div class="rounded-xl border border-gray-200 bg-white p-5 text-[12px] leading-relaxed text-gray-700">
+      <div class="mb-2 text-[10px] font-semibold uppercase tracking-wider text-gray-500">State machine</div>
+      <p>
+        <code>Match.status</code> = <code>open</code> → <code>filling</code> → <code>locked</code> →
+        <code>in_progress</code> → <code>completed</code> · or <code>cancelled</code>. Transitions:
+        <code>open→filling</code> on first join · <code>filling→locked</code> when last seat fills
+        OR 4h before start (whichever first; charges everyone) · <code>locked→in_progress</code>
+        at slot start · <code>in_progress→completed</code> at slot end (triggers rating prompt).
+      </p>
+    </div>
+    <div class="rounded-xl border border-gray-200 bg-white p-5 text-[12px] leading-relaxed text-gray-700">
+      <div class="mb-2 text-[10px] font-semibold uppercase tracking-wider text-gray-500">Trust gate</div>
+      <p>
+        Matches can only be hosted at venues / coaches with
+        <code>approval_status = 'approved'</code>. The "Find venue" search in step 4.2 reuses the
+        same public read path the discover feed uses, so pending listings are invisible. Player
+        reputation (skill / sportsmanship / punctuality) is already on <code>UserDto</code> and ranks
+        candidates in the matchmaking algorithm.
+      </p>
+    </div>
+    <div class="rounded-xl border border-gray-200 bg-white p-5 text-[12px] leading-relaxed text-gray-700">
+      <div class="mb-2 text-[10px] font-semibold uppercase tracking-wider text-gray-500">Cost split</div>
+      <p>
+        Use <code>SplitPaymentDto</code>. On join, capture an authorization for the player's share.
+        Charge all authorizations when state hits <code>locked</code>. Free cancel up to 4h before
+        start; after that, refund the leaver only if a backfill joins, otherwise their share covers
+        the seat.
+      </p>
+    </div>
+    <div class="rounded-xl border border-gray-200 bg-white p-5 text-[12px] leading-relaxed text-gray-700">
+      <div class="mb-2 text-[10px] font-semibold uppercase tracking-wider text-gray-500">Visibility</div>
+      <p>
+        <code>MatchVisibility</code> already supports <code>public / friends / private</code>.
+        Friends-only feed needs a <code>has_played_with(user_a, user_b)</code> check (we have the
+        booking participants table) — public feed query stays as-is plus a visibility filter.
+      </p>
+    </div>
+  </div>
+</section>
+
+<footer class="border-t border-gray-200 bg-white py-8 text-center text-xs text-gray-500">
+  Matchmaking mockups · open this file in any browser. Pair with the player, partner, and admin decks.
+</footer>
+
+</body>
+</html>

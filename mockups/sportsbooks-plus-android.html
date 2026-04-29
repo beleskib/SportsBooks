@@ -1,0 +1,341 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>SportsBooks+ — parked deck</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<style>
+  body { background: #f3f4f6; }
+  .label { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 11px; letter-spacing: .04em; }
+  .phone { width: 360px; height: 740px; border-radius: 36px; background: #0b1220; padding: 10px;
+    box-shadow: 0 10px 40px rgba(0,0,0,.18), inset 0 0 0 2px #1f2937; flex-shrink: 0; }
+  .phone-screen { height: 100%; border-radius: 28px; overflow: hidden; background: #fff; display: flex; flex-direction: column; position: relative; }
+  .status-bar { height: 28px; background:#111827; color:#fde047; display:flex; align-items:center; justify-content:space-between; padding:0 14px; font-size:11px; font-weight:600; }
+  .nav-bar { height: 56px; background:#111827; color:#fde047; display:flex; align-items:center; padding:0 16px; font-weight:600; gap:12px; }
+  .scroll { flex:1; overflow:hidden; background:#f9fafb; padding:16px; position:relative; }
+  .m3-card { border-radius:16px; background:#fff; padding:14px; box-shadow:0 1px 2px rgba(0,0,0,.04), 0 1px 3px rgba(0,0,0,.04); }
+  .pill { display:inline-flex; align-items:center; gap:4px; border-radius:999px; padding:2px 8px; font-size:11px; font-weight:600; }
+  .avatar { display:inline-block; border-radius:999px; box-shadow: inset 0 0 0 2px #fff; }
+  .gold { background: linear-gradient(135deg,#fde047 0%,#facc15 50%,#eab308 100%); }
+  .gold-text { background: linear-gradient(135deg,#facc15,#ca8a04); -webkit-background-clip:text; background-clip:text; color:transparent; }
+</style>
+</head>
+<body class="text-gray-900">
+
+<!-- ── Parked banner ───────────────────────────────────────────── -->
+<div class="bg-rose-50 border-b-2 border-rose-300 px-6 py-4">
+  <div class="mx-auto max-w-6xl flex items-start gap-3">
+    <span class="mt-0.5 inline-flex h-7 w-7 flex-shrink-0 items-center justify-center rounded-full bg-rose-500 text-sm font-bold text-white">!</span>
+    <div class="text-sm text-rose-900 leading-relaxed">
+      <div class="font-bold">PARKED — not in scope yet.</div>
+      This is the SportsBooks+ premium tier deck. Carved out of the main profile mockups so the rest can ship without
+      committing to a real subscription product. Building Plus means: a <code>subscriptions</code> table, a
+      <code>users.is_plus</code> flag, Stripe products + a <code>customer.subscription.*</code> webhook, and gating
+      logic in service-fee, matchmaking ranking, and the cancel window. Several days of real work — don't start
+      until the rest of the v2-practical-ux roadmap lands and we explicitly green-light Plus.
+    </div>
+  </div>
+</div>
+
+<header class="border-b border-gray-200 bg-white">
+  <div class="mx-auto max-w-6xl px-6 py-8">
+    <div class="flex items-center gap-3">
+      <span class="rounded-md bg-gray-900 px-2 py-1 text-[11px] font-bold uppercase tracking-wider text-yellow-300">SportsBooks+</span>
+      <span class="text-sm text-gray-500">premium tier · parked</span>
+    </div>
+    <h1 class="mt-3 text-3xl font-semibold">SportsBooks+ — premium tier</h1>
+    <p class="mt-2 max-w-3xl text-sm text-gray-600">
+      A subscription on top of the free product. Aimed at the 5–10% of power users who play multiple times a week —
+      they pay a flat monthly fee and get fee waivers, priority matchmaking, and richer stats. Surfaces a small
+      "+ Member" badge on profile and in lobby cards.
+    </p>
+  </div>
+</header>
+
+<!-- ============================================================ -->
+<section class="mx-auto max-w-6xl px-6 py-8">
+  <h2 class="text-xs font-semibold uppercase tracking-wider text-gray-500">Screens</h2>
+
+  <div class="mt-5 flex flex-wrap gap-8">
+
+    <!-- 1 Upsell -->
+    <figure>
+      <figcaption class="label mb-2 text-gray-500">1 · Upsell — what you get</figcaption>
+      <div class="phone">
+        <div class="phone-screen">
+          <div class="status-bar"><span>9:41</span><span>● ●●● 100%</span></div>
+          <div class="flex-1 overflow-hidden bg-gradient-to-b from-gray-900 via-gray-900 to-yellow-300/10">
+            <div class="px-6 py-7 text-white">
+              <div class="text-yellow-300 text-xs uppercase tracking-wider">SportsBooks</div>
+              <div class="text-4xl font-extrabold tracking-tight"><span class="text-white">Plus</span><span class="ml-2 text-yellow-300">+</span></div>
+              <div class="mt-2 text-sm text-gray-300">Play more, pay less. Match faster.</div>
+            </div>
+
+            <div class="mx-4 rounded-2xl bg-white p-4 text-[13px] shadow-2xl">
+              <div class="space-y-3">
+                <div class="flex items-start gap-3">
+                  <div class="h-9 w-9 rounded-lg bg-yellow-300/30 flex items-center justify-center text-yellow-700">⚡</div>
+                  <div>
+                    <div class="font-semibold">Priority matchmaking</div>
+                    <div class="text-[11px] text-gray-600">Hosts see you first when they have an open spot.</div>
+                  </div>
+                </div>
+                <div class="flex items-start gap-3">
+                  <div class="h-9 w-9 rounded-lg bg-emerald-100 flex items-center justify-center text-emerald-700">💸</div>
+                  <div>
+                    <div class="font-semibold">Zero service fees</div>
+                    <div class="text-[11px] text-gray-600">No 5% fee on bookings or match joins.</div>
+                  </div>
+                </div>
+                <div class="flex items-start gap-3">
+                  <div class="h-9 w-9 rounded-lg bg-purple-100 flex items-center justify-center text-purple-700">📊</div>
+                  <div>
+                    <div class="font-semibold">Advanced stats</div>
+                    <div class="text-[11px] text-gray-600">Win-rate by sport, partner, time of day.</div>
+                  </div>
+                </div>
+                <div class="flex items-start gap-3">
+                  <div class="h-9 w-9 rounded-lg bg-blue-100 flex items-center justify-center text-blue-700">🎟</div>
+                  <div>
+                    <div class="font-semibold">Free cancel up to 1h</div>
+                    <div class="text-[11px] text-gray-600">Vs. 4h for free accounts.</div>
+                  </div>
+                </div>
+                <div class="flex items-start gap-3">
+                  <div class="h-9 w-9 rounded-lg gold flex items-center justify-center text-gray-900">+</div>
+                  <div>
+                    <div class="font-semibold">"+ Member" badge</div>
+                    <div class="text-[11px] text-gray-600">Stand out in lobby and match cards.</div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="bg-gray-900 p-3">
+            <button class="w-full rounded-lg gold py-3 text-sm font-bold text-gray-900">Try free for 7 days →</button>
+          </div>
+        </div>
+      </div>
+    </figure>
+
+    <!-- 2 Pricing -->
+    <figure>
+      <figcaption class="label mb-2 text-gray-500">2 · Pricing — monthly vs annual</figcaption>
+      <div class="phone">
+        <div class="phone-screen">
+          <div class="status-bar"><span>9:41</span><span>● ●●● 100%</span></div>
+          <div class="nav-bar flex items-center text-sm"><span>×</span><span>Choose a plan</span></div>
+          <div class="scroll">
+            <div class="text-[11px] text-gray-600">Cancel anytime. First 7 days free.</div>
+
+            <div class="mt-3 space-y-3">
+              <div class="m3-card !p-4 ring-2 ring-gray-900">
+                <div class="flex items-center justify-between">
+                  <div>
+                    <div class="text-[10px] uppercase tracking-wider text-gray-500">Monthly</div>
+                    <div class="mt-1 text-2xl font-extrabold">499 <span class="text-base font-normal text-gray-500">ден/mo</span></div>
+                  </div>
+                  <span class="h-4 w-4 rounded-full bg-gray-900 ring-2 ring-yellow-300"></span>
+                </div>
+                <div class="mt-2 text-[11px] text-gray-500">Billed monthly · cancel anytime</div>
+              </div>
+              <div class="m3-card !p-4">
+                <div class="flex items-center justify-between">
+                  <div>
+                    <div class="flex items-center gap-2">
+                      <div class="text-[10px] uppercase tracking-wider text-gray-500">Annual</div>
+                      <span class="pill bg-emerald-100 text-emerald-700 text-[9px]">Save 25%</span>
+                    </div>
+                    <div class="mt-1 text-2xl font-extrabold">4,499 <span class="text-base font-normal text-gray-500">ден/yr</span></div>
+                  </div>
+                  <span class="h-4 w-4 rounded-full border-2 border-gray-300"></span>
+                </div>
+                <div class="mt-2 text-[11px] text-gray-500">~375 ден/mo · billed once a year</div>
+              </div>
+            </div>
+
+            <div class="mt-4 m3-card !p-3 text-[11px] text-gray-700 leading-relaxed">
+              <div class="font-semibold mb-1">Break-even calculator</div>
+              You play <span class="font-semibold">~4 matches/week</span>. At ~50 ден in saved fees per match,
+              you'd save <span class="font-semibold">~800 ден/mo</span> — Plus pays for itself.
+            </div>
+          </div>
+          <div class="bg-white p-3 border-t border-gray-200">
+            <button class="w-full rounded-lg bg-gray-900 py-3 text-sm font-semibold text-yellow-300">Start 7-day free trial</button>
+            <div class="mt-1 text-center text-[10px] text-gray-500">Then 499 ден/month. Cancel anytime.</div>
+          </div>
+        </div>
+      </div>
+    </figure>
+
+    <!-- 3 Subscribed -->
+    <figure>
+      <figcaption class="label mb-2 text-gray-500">3 · You're a + Member</figcaption>
+      <div class="phone">
+        <div class="phone-screen">
+          <div class="status-bar"><span>9:41</span><span>● ●●● 100%</span></div>
+          <div class="flex-1 overflow-hidden bg-gradient-to-b from-yellow-50 to-white">
+            <div class="px-6 py-8 text-center">
+              <div class="mx-auto h-20 w-20 rounded-2xl gold flex items-center justify-center text-3xl shadow-lg">+</div>
+              <h3 class="mt-4 text-xl font-extrabold gold-text">Welcome to Plus</h3>
+              <div class="mt-1 text-[12px] text-gray-700">Your fees are gone, your priority is up, your trial ends May 6.</div>
+            </div>
+
+            <div class="mx-4 m3-card !p-4 text-[13px]">
+              <div class="text-[10px] uppercase tracking-wider text-gray-500">Plan</div>
+              <div class="mt-1 flex items-center justify-between">
+                <div>
+                  <div class="font-semibold">Monthly · 499 ден</div>
+                  <div class="text-[11px] text-gray-500">Free until May 6 · then renews monthly</div>
+                </div>
+                <span class="pill gold text-gray-900">Active</span>
+              </div>
+              <div class="mt-3 grid grid-cols-2 gap-2 text-[11px]">
+                <button class="rounded-md border border-gray-300 py-2">Switch to annual</button>
+                <button class="rounded-md border border-rose-200 bg-rose-50 py-2 text-rose-700">Cancel renewal</button>
+              </div>
+            </div>
+
+            <div class="mx-4 mt-3 m3-card !p-4 text-[12px]">
+              <div class="text-[10px] uppercase tracking-wider text-gray-500">Active perks</div>
+              <ul class="mt-1.5 space-y-1 text-gray-700">
+                <li>⚡ Priority matchmaking</li>
+                <li>💸 0% service fees</li>
+                <li>📊 Advanced stats unlocked in profile</li>
+                <li>🎟 1-hour cancel window</li>
+                <li>+ "+ Member" badge visible everywhere</li>
+              </ul>
+            </div>
+          </div>
+        </div>
+      </div>
+    </figure>
+
+    <!-- 4 Plus profile w/ stats -->
+    <figure>
+      <figcaption class="label mb-2 text-gray-500">4 · Plus profile — with advanced stats unlocked</figcaption>
+      <div class="phone">
+        <div class="phone-screen">
+          <div class="status-bar"><span>9:41</span><span>● ●●● 100%</span></div>
+          <div class="flex-1 bg-gray-50 overflow-hidden">
+            <div class="relative h-24 bg-gradient-to-br from-gray-900 via-gray-800 to-yellow-700/40">
+              <div class="absolute top-2 right-2 text-yellow-300 text-xs">⚙</div>
+            </div>
+            <div class="-mt-10 px-4">
+              <div class="avatar h-20 w-20 ring-4 ring-yellow-300" style="background:linear-gradient(135deg,#fde047,#facc15);"></div>
+              <div class="mt-2 flex items-end justify-between">
+                <div>
+                  <div class="text-base font-semibold flex items-center gap-1">Bojan B. <span class="pill gold text-gray-900 text-[9px]">+ Member</span></div>
+                  <div class="text-[11px] text-gray-500">@bojanb · Skopje · joined Apr 2026</div>
+                </div>
+              </div>
+
+              <div class="mt-3 m3-card !p-3 text-[12px]">
+                <div class="flex items-center justify-between">
+                  <span class="text-[10px] uppercase tracking-wider text-gray-500">Win-rate by sport</span>
+                  <span class="pill gold text-gray-900 text-[9px]">+ unlocked</span>
+                </div>
+                <div class="mt-2 space-y-1.5">
+                  <div class="flex items-center gap-2">
+                    <span class="w-20 text-[11px]">🏓 Paddle</span>
+                    <div class="flex-1 h-2 rounded-full bg-gray-200"><div class="h-2 w-[72%] rounded-full bg-emerald-400"></div></div>
+                    <span class="text-[11px] font-semibold">72%</span>
+                  </div>
+                  <div class="flex items-center gap-2">
+                    <span class="w-20 text-[11px]">🎾 Tennis</span>
+                    <div class="flex-1 h-2 rounded-full bg-gray-200"><div class="h-2 w-[58%] rounded-full bg-emerald-400"></div></div>
+                    <span class="text-[11px] font-semibold">58%</span>
+                  </div>
+                  <div class="flex items-center gap-2">
+                    <span class="w-20 text-[11px]">⚽ Football</span>
+                    <div class="flex-1 h-2 rounded-full bg-gray-200"><div class="h-2 w-[45%] rounded-full bg-rose-400"></div></div>
+                    <span class="text-[11px] font-semibold">45%</span>
+                  </div>
+                </div>
+              </div>
+
+              <div class="mt-3 m3-card !p-3 text-[12px]">
+                <div class="flex items-center justify-between">
+                  <span class="text-[10px] uppercase tracking-wider text-gray-500">Best time of day</span>
+                  <span class="pill gold text-gray-900 text-[9px]">+ unlocked</span>
+                </div>
+                <div class="mt-2 grid grid-cols-7 gap-1 text-center text-[9px]">
+                  <div><div class="h-8 rounded-md bg-emerald-200" style="opacity:.4;"></div>9</div>
+                  <div><div class="h-8 rounded-md bg-emerald-200" style="opacity:.6;"></div>11</div>
+                  <div><div class="h-8 rounded-md bg-emerald-300" style="opacity:.7;"></div>13</div>
+                  <div><div class="h-8 rounded-md bg-emerald-400" style="opacity:.8;"></div>15</div>
+                  <div><div class="h-8 rounded-md bg-emerald-500" style="opacity:1;"></div>17</div>
+                  <div><div class="h-8 rounded-md bg-emerald-600" style="opacity:1;"></div>19</div>
+                  <div><div class="h-8 rounded-md bg-emerald-300" style="opacity:.6;"></div>21</div>
+                </div>
+                <div class="mt-1 text-[10px] text-gray-500 text-center">You win most matches around 19:00.</div>
+              </div>
+
+              <div class="mt-3 m3-card !p-3 text-[12px]">
+                <div class="text-[10px] uppercase tracking-wider text-gray-500">Best partner</div>
+                <div class="mt-2 flex items-center gap-2">
+                  <div class="avatar h-9 w-9" style="background:linear-gradient(135deg,#a78bfa,#7c3aed);"></div>
+                  <div>
+                    <div class="text-[12px] font-semibold">Ana Trajkovska</div>
+                    <div class="text-[10px] text-gray-500">88% win rate together · 8 matches</div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </figure>
+
+  </div>
+</section>
+
+<!-- ============================================================ -->
+<section class="mx-auto max-w-6xl px-6 py-8">
+  <h2 class="text-xs font-semibold uppercase tracking-wider text-gray-500">When we revisit, here's the engineering footprint</h2>
+  <div class="mt-3 grid grid-cols-1 gap-4 sm:grid-cols-2">
+    <div class="rounded-xl border border-gray-200 bg-white p-5 text-[12px] leading-relaxed text-gray-700">
+      <div class="mb-2 text-[10px] font-semibold uppercase tracking-wider text-gray-500">+ tier model</div>
+      <p>
+        New table <code>subscriptions</code> (<code>id, user_id, plan, status, started_at,
+        renews_at, cancels_at</code>) keyed off Stripe. Add <code>users.is_plus</code> denormalized
+        flag, refreshed by webhook. Service-fee logic checks <code>is_plus</code> before applying
+        the 5%. Priority-matchmaking ranking adds a small boost when <code>is_plus = true</code>.
+      </p>
+    </div>
+    <div class="rounded-xl border border-gray-200 bg-white p-5 text-[12px] leading-relaxed text-gray-700">
+      <div class="mb-2 text-[10px] font-semibold uppercase tracking-wider text-gray-500">Plus-gated stats</div>
+      <p>
+        Win-rate by sport, best time of day, and best partner are all derivable from existing
+        <code>matches</code> + <code>match_participants</code> + <code>match_results</code> tables.
+        Materialize them in a per-user nightly job and serve from a small read-model table —
+        keeps the profile screen snappy and the queries simple.
+      </p>
+    </div>
+    <div class="rounded-xl border border-gray-200 bg-white p-5 text-[12px] leading-relaxed text-gray-700">
+      <div class="mb-2 text-[10px] font-semibold uppercase tracking-wider text-gray-500">Stripe wiring</div>
+      <p>
+        Two products (Monthly / Annual) with their Prices, a webhook endpoint handling
+        <code>customer.subscription.{created,updated,deleted}</code>, and a customer-portal link for
+        plan changes. Connect uses are unaffected — Plus is a B2C subscription on the platform
+        account, not the partner's Connect account.
+      </p>
+    </div>
+    <div class="rounded-xl border border-gray-200 bg-white p-5 text-[12px] leading-relaxed text-gray-700">
+      <div class="mb-2 text-[10px] font-semibold uppercase tracking-wider text-gray-500">Surfaces to update once Plus ships</div>
+      <p>
+        Profile self &amp; public ("+ Member" badge), lobby cards (badge next to avatar), match-detail
+        host card, settings root (subscription row), cancel-window logic (1h vs 4h), matchmaking
+        ranker (small score bump). Everything reads <code>is_plus</code> — no scattered Stripe checks.
+      </p>
+    </div>
+  </div>
+</section>
+
+<footer class="border-t border-gray-200 bg-white py-8 text-center text-xs text-gray-500">
+  Parked SportsBooks+ deck · open in any browser when we're ready to revisit.
+</footer>
+
+</body>
+</html>
