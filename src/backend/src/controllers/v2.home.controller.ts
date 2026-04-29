@@ -50,6 +50,18 @@ export async function getHomeFeed(req: Request, res: Response, next: NextFunctio
   try {
     const userId = req.user!.id;
 
+    // Personalize the feed by the user's followed sports (Settings → Sports I follow).
+    // Empty list = no filter, so users who never picked sports still see everything
+    // and the screen doesn't go silently empty.
+    const interestedRes = await query(
+      `SELECT sport_type FROM user_interested_sports WHERE user_id = $1`,
+      [userId],
+    );
+    const interestedSports: string[] = interestedRes.rows.map((r: any) => r.sport_type);
+    const interestedSportsSqlList = interestedSports.length > 0
+      ? interestedSports.map((s) => `'${s.replace(/'/g, "''")}'`).join(',')
+      : null;
+
     // ----- Run all four queries in parallel; one round trip is 5x faster than sequential -----
     const [greetingRes, rebookRes, suggestedRes, friendsRes, upcomingRes] = await Promise.all([
       // Greeting block: user name + reliability score
@@ -111,6 +123,7 @@ export async function getHomeFeed(req: Request, res: Response, next: NextFunctio
                 OR cl.skill_level_min IS NULL
                 OR cl.skill_level_max IS NULL
                 OR u.skill_level BETWEEN cl.skill_level_min AND cl.skill_level_max)
+           ${interestedSportsSqlList ? `AND cl.sport_type IN (${interestedSportsSqlList})` : ''}
          ORDER BY start_at ASC
          LIMIT 5`,
         [userId],
@@ -132,6 +145,7 @@ export async function getHomeFeed(req: Request, res: Response, next: NextFunctio
             OR (f.user_id_b = $1 AND f.user_id_a = ap.user_id))
          WHERE f.status = 'accepted'
            AND (ap.available_until IS NULL OR ap.available_until > NOW())
+           ${interestedSportsSqlList ? `AND ap.sport_type IN (${interestedSportsSqlList})` : ''}
          ORDER BY ap.created_at DESC
          LIMIT 10`,
         [userId],

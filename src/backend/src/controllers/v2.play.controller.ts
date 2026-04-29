@@ -25,6 +25,26 @@ export async function searchPlay(req: Request, res: Response, next: NextFunction
     const skillMax = req.query.skillLevelMax ? Number(req.query.skillLevelMax) : null;
     const onlyEligible = req.query.onlyEligible === 'true';
 
+    // If the caller didn't pick an explicit sport, fall back to their followed
+    // sports (Settings → Sports I follow). When they have explicit filters or
+    // no follow list, behavior is unchanged.
+    let interestedSports: string[] = [];
+    if (!sportType) {
+      const interestedRes = await query(
+        `SELECT sport_type FROM user_interested_sports WHERE user_id = $1`,
+        [userId],
+      );
+      interestedSports = interestedRes.rows.map((r: any) => r.sport_type);
+    }
+    const interestedSportsSqlList = interestedSports.length > 0
+      ? interestedSports.map((s) => `'${s.replace(/'/g, "''")}'`).join(',')
+      : null;
+    const sportFilterSql = (col: string): string => {
+      if (sportType) return `AND ${col} = '${sportType.replace(/'/g, "''")}'`;
+      if (interestedSportsSqlList) return `AND ${col} IN (${interestedSportsSqlList})`;
+      return '';
+    };
+
     // Distance formula uses haversine approximation via earthdistance extension.
     // Falls back to NULL when user didn't provide lat/lng — no distance filter applied.
     const distanceCol = (lat !== null && lng !== null)
@@ -62,7 +82,7 @@ export async function searchPlay(req: Request, res: Response, next: NextFunction
        WHERE cl.status = 'open'
          AND (cl.scheduled_date::TIMESTAMP + cl.scheduled_time::TIME)
              BETWEEN $${fromIdx}::TIMESTAMP AND $${toIdx}::TIMESTAMP
-         ${sportType ? `AND cl.sport_type = '${sportType.replace(/'/g, "''")}'` : ''}
+         ${sportFilterSql('cl.sport_type')}
          ${skillMin !== null ? `AND (cl.skill_level_max IS NULL OR cl.skill_level_max >= ${skillMin})` : ''}
          ${skillMax !== null ? `AND (cl.skill_level_min IS NULL OR cl.skill_level_min <= ${skillMax})` : ''}
          ${onlyEligible ? `AND (me.skill_level IS NULL OR cl.skill_level_min IS NULL OR cl.skill_level_max IS NULL
@@ -94,7 +114,7 @@ export async function searchPlay(req: Request, res: Response, next: NextFunction
            WHERE b.time_slot_id = ts.id AND b.status IN ('pending','approved','confirmed','completed')
          )
          AND (ts.slot_date::TIMESTAMP + ts.start_time::TIME) BETWEEN $${fromIdx}::TIMESTAMP AND $${toIdx}::TIMESTAMP
-         ${sportType ? `AND v.sport_type = '${sportType.replace(/'/g, "''")}'` : ''}
+         ${sportFilterSql('v.sport_type')}
        ORDER BY start_at ASC
        LIMIT 50`,
       params,
@@ -105,7 +125,7 @@ export async function searchPlay(req: Request, res: Response, next: NextFunction
       `SELECT COUNT(*)::INT AS cnt
        FROM available_players ap
        WHERE (ap.available_until IS NULL OR ap.available_until > NOW())
-         ${sportType ? `AND ap.sport_type = '${sportType.replace(/'/g, "''")}'` : ''}`,
+         ${sportFilterSql('ap.sport_type')}`,
     );
 
     const mapLobby = (r: any) => ({
