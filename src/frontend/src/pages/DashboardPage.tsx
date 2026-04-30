@@ -9,6 +9,7 @@ import {
   Star,
   CreditCard,
   Plus,
+  AlertCircle,
 } from 'lucide-react'
 import { venueApi } from '@/api/venues'
 import { coachApi } from '@/api/coaches'
@@ -222,9 +223,56 @@ function PartnerDashboard() {
 
   const isStripeConnected = stripeStatus?.onboardingStatus === 'complete' && stripeStatus.payoutsEnabled
 
+  // Listing-approval roll-up: how many of this partner's listings are awaiting
+  // admin review or were sent back for revision. Surfaces at the top of their
+  // dashboard so they see status at a glance without opening each listing.
+  const allListings: Array<{ approvalStatus: string }> = [
+    ...venues,
+    ...(coach ? [coach] : []),
+  ]
+  const pendingCount = allListings.filter((l) => l.approvalStatus === 'pending').length
+  const rejectedCount = allListings.filter((l) => l.approvalStatus === 'rejected').length
+  const listingsCtaPath =
+    partnerType === PartnerType.COACH
+      ? coach
+        ? `/coaches/${coach.id}/edit`
+        : '/coaches'
+      : '/venues'
+
   return (
     <div>
       <h2 className="mb-6 text-2xl font-bold text-gray-900">Dashboard</h2>
+
+      {/* Listing-approval status callout — only when something needs the partner's eyes */}
+      {(pendingCount > 0 || rejectedCount > 0) && (
+        <div className="mb-6 flex items-start justify-between gap-4 rounded-xl border border-yellow-300 bg-yellow-50 p-4">
+          <div className="flex items-start gap-3">
+            <AlertCircle className="mt-0.5 h-5 w-5 flex-shrink-0 text-yellow-700" />
+            <div className="text-sm">
+              {pendingCount > 0 && (
+                <div className="font-semibold text-yellow-900">
+                  {pendingCount} listing{pendingCount === 1 ? '' : 's'} awaiting admin review
+                </div>
+              )}
+              {rejectedCount > 0 && (
+                <div className={pendingCount > 0 ? 'mt-0.5 font-semibold text-rose-900' : 'font-semibold text-rose-900'}>
+                  {rejectedCount} listing{rejectedCount === 1 ? '' : 's'} need{rejectedCount === 1 ? 's' : ''} revision
+                </div>
+              )}
+              <div className="mt-0.5 text-xs text-yellow-800">
+                {pendingCount > 0 && rejectedCount === 0 && 'We\'ll email you the moment our team approves.'}
+                {rejectedCount > 0 && 'Open the listing to read the feedback and resubmit.'}
+              </div>
+            </div>
+          </div>
+          <Link
+            to={listingsCtaPath}
+            className="rounded-md bg-gray-900 px-3 py-1.5 text-xs font-semibold text-yellow-300 hover:bg-gray-800"
+          >
+            Review →
+          </Link>
+        </div>
+      )}
 
       {/* Stripe connection banner */}
       {!isStripeConnected && (

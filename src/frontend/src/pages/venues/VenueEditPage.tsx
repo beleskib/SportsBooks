@@ -1,7 +1,8 @@
 import { useEffect, useState, useCallback } from 'react'
 import { useNavigate, useParams, Link } from 'react-router-dom'
-import { ArrowLeft } from 'lucide-react'
+import { ArrowLeft, AlertTriangle } from 'lucide-react'
 import { VenueForm } from '@/components/venues/VenueForm'
+import { ApprovalStatusPill } from '@/components/ui/ApprovalStatusPill'
 import { LoadingSpinner } from '@/components/ui/LoadingSpinner'
 import { Toast } from '@/components/ui/Toast'
 import { venueApi } from '@/api/venues'
@@ -83,8 +84,53 @@ export function VenueEditPage() {
     )
   }
 
+  const isNonApproved = venue.approvalStatus !== 'approved'
+
   return (
     <>
+      {isNonApproved && (
+        <div className="mb-4 flex items-center justify-between rounded-xl border border-gray-200 bg-white px-4 py-3 shadow-sm">
+          <div className="flex items-center gap-3">
+            <AlertTriangle className="h-5 w-5 flex-shrink-0 text-yellow-600" />
+            <div>
+              <div className="flex items-center gap-2">
+                <span className="text-sm font-medium text-gray-900">Listing status:</span>
+                <ApprovalStatusPill
+                  status={venue.approvalStatus}
+                  rejectionReason={venue.approvalRejectionReason}
+                />
+              </div>
+              {venue.approvalStatus === 'pending' && (
+                <p className="mt-0.5 text-xs text-gray-500">
+                  This venue is awaiting admin review and is not yet visible to players.
+                </p>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {venue.approvalStatus === 'rejected' && venue.approvalRejectionReason && (
+        <div className="mb-4 rounded-xl border border-rose-200 bg-rose-50 p-4">
+          <div className="flex items-start gap-3">
+            <span className="inline-flex h-5 w-5 flex-shrink-0 items-center justify-center rounded-full bg-rose-500 text-xs font-bold text-white">
+              ×
+            </span>
+            <div className="flex-1 text-sm">
+              <div className="font-semibold text-rose-900">
+                Asked to revise — {venue.name}
+              </div>
+              <div className="mt-1 rounded-md bg-rose-100 p-2 text-rose-900">
+                <span className="font-medium">Reason:</span> {venue.approvalRejectionReason}
+              </div>
+              <p className="mt-2 text-xs text-rose-700">
+                Update the details below and save to resubmit for review.
+              </p>
+            </div>
+          </div>
+        </div>
+      )}
+
       <VenueForm initialData={venue} onSubmit={handleSubmit} loading={saving} />
       {toast && (
         <Toast
