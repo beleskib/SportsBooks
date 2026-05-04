@@ -65,6 +65,7 @@ import com.example.sportsbook.domain.model.v2.HomeFeedSnapshot
 import com.example.sportsbook.domain.model.v2.PlaySearchResult
 import com.example.sportsbook.domain.model.v2.PlaySuggestion
 import com.example.sportsbook.domain.model.v2.RebookSuggestion
+import com.example.sportsbook.domain.model.v2.UpcomingBooking
 import com.example.sportsbook.ui.theme.CoolGray
 import com.example.sportsbook.ui.theme.Navy600
 import com.example.sportsbook.ui.theme.Navy700
@@ -251,7 +252,16 @@ fun PlayHomeScreen(
                     }
                 }
 
-                // ---- 5. Friends available ----
+                // ---- 5. Upcoming bookings ----
+                val upcoming = state.feed?.upcoming.orEmpty()
+                if (upcoming.isNotEmpty()) {
+                    item { SectionHeader(title = "Upcoming this week") }
+                    items(upcoming, key = { "upcoming-${it.id}" }) { booking ->
+                        UpcomingBookingCard(booking = booking)
+                    }
+                }
+
+                // ---- 6. Friends available ----
                 val friends = state.feed?.friendsAvailable.orEmpty()
                 if (friends.isNotEmpty()) {
                     item { SectionHeader(title = "Friends available now") }
@@ -669,6 +679,83 @@ fun PlaySuggestionCard(suggestion: PlaySuggestion) {
                     text = if (suggestion.type == "lobby") "Join lobby" else "Book this slot",
                     style = MaterialTheme.typography.labelMedium
                 )
+            }
+        }
+    }
+}
+
+@Composable
+private fun UpcomingBookingCard(booking: UpcomingBooking) {
+    val target = booking.venueName ?: booking.coachName ?: "Booking"
+    val statusColor = when (booking.status) {
+        "confirmed" -> SportGreen
+        "approved" -> Color(0xFF3B82F6)
+        else -> USOpenGold // pending
+    }
+    Card(
+        modifier = Modifier.fillMaxWidth(),
+        colors = CardDefaults.cardColors(containerColor = Navy800),
+        shape = RoundedCornerShape(10.dp)
+    ) {
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(14.dp),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            // Date badge
+            Column(
+                modifier = Modifier
+                    .clip(RoundedCornerShape(8.dp))
+                    .background(Navy700)
+                    .padding(horizontal = 12.dp, vertical = 8.dp),
+                horizontalAlignment = Alignment.CenterHorizontally
+            ) {
+                Text(
+                    text = booking.slotDate.takeLast(2), // day
+                    style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold),
+                    color = WarmWhite
+                )
+                Text(
+                    text = booking.slotDate.substring(5, 7), // month
+                    style = MaterialTheme.typography.labelSmall,
+                    color = CoolGray
+                )
+            }
+            Spacer(Modifier.width(14.dp))
+            Column(modifier = Modifier.weight(1f)) {
+                Text(
+                    text = target,
+                    style = MaterialTheme.typography.bodyMedium.copy(fontWeight = FontWeight.SemiBold),
+                    color = WarmWhite,
+                    maxLines = 1
+                )
+                Text(
+                    text = "${booking.startTime.take(5)} – ${booking.endTime.take(5)}",
+                    style = MaterialTheme.typography.bodySmall,
+                    color = CoolGray
+                )
+            }
+            Column(horizontalAlignment = Alignment.End) {
+                Surface(
+                    color = statusColor.copy(alpha = 0.15f),
+                    shape = RoundedCornerShape(4.dp)
+                ) {
+                    Text(
+                        text = booking.status.replaceFirstChar { it.uppercase() },
+                        modifier = Modifier.padding(horizontal = 8.dp, vertical = 2.dp),
+                        style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.SemiBold),
+                        color = statusColor
+                    )
+                }
+                if (booking.totalPrice > 0) {
+                    Spacer(Modifier.height(4.dp))
+                    Text(
+                        text = "€${booking.totalPrice.toLong()}",
+                        style = MaterialTheme.typography.labelSmall,
+                        color = CoolGray
+                    )
+                }
             }
         }
     }
