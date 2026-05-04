@@ -27,6 +27,7 @@ import androidx.compose.material.icons.filled.Payment
 import androidx.compose.material.icons.filled.Person
 import androidx.compose.material.icons.filled.Save
 import androidx.compose.material.icons.filled.Schedule
+import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material.icons.filled.Star
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
@@ -77,6 +78,7 @@ fun PlayerProfileScreen(
     onNavigateToStats: () -> Unit = {},
     onNavigateToPayments: () -> Unit = {},
     onNavigateToFriends: () -> Unit = {},
+    onNavigateToSettings: () -> Unit = {},
     viewModel: PlayerProfileViewModel = hiltViewModel()
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
@@ -314,6 +316,14 @@ fun PlayerProfileScreen(
                             icon = Icons.Default.BarChart,
                             label = "Player Stats",
                             onClick = onNavigateToStats
+                        )
+                    }
+
+                    item {
+                        ProfileMenuButton(
+                            icon = Icons.Default.Settings,
+                            label = "Settings",
+                            onClick = onNavigateToSettings
                         )
                     }
 

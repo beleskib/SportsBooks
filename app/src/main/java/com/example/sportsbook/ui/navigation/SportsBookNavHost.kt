@@ -40,6 +40,7 @@ import com.example.sportsbook.ui.screens.player.notifications.NotificationsScree
 import com.example.sportsbook.ui.screens.player.onboarding.PlayerOnboardingScreen
 import com.example.sportsbook.ui.screens.player.profile.PlayerProfileScreen
 import com.example.sportsbook.ui.screens.player.settings.SettingsScreen
+import com.example.sportsbook.ui.screens.player.settings.SportsIFollowScreen
 import com.example.sportsbook.ui.screens.player.mybookings.BookingDetailScreen
 import com.example.sportsbook.ui.screens.player.mybookings.MyBookingsScreen
 import com.example.sportsbook.ui.screens.player.review.WriteReviewScreen
@@ -484,6 +485,9 @@ fun SportsBookNavHost(
                     },
                     onNavigateToFriends = {
                         navController.navigate(Route.FriendsList)
+                    },
+                    onNavigateToSettings = {
+                        navController.navigate(Route.Settings)
                     }
                 )
             }
@@ -525,7 +529,25 @@ fun SportsBookNavHost(
 
             composable<Route.Settings> {
                 SettingsScreen(
-                    onBack = { navController.popBackStack() }
+                    onBack = { navController.popBackStack() },
+                    onNavigateToSportsIFollow = {
+                        navController.navigate(Route.SportsIFollow)
+                    },
+                    onNavigateToEditProfile = {
+                        navController.navigate(Route.PlayerProfile)
+                    },
+                    onSignOut = {
+                        navController.navigate(Route.Login) {
+                            popUpTo(0) { inclusive = true }
+                        }
+                    }
+                )
+            }
+
+            composable<Route.SportsIFollow> {
+                SportsIFollowScreen(
+                    onBack = { navController.popBackStack() },
+                    onSaved = { navController.popBackStack() }
                 )
             }
 

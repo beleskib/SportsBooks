@@ -113,4 +113,5 @@ sealed interface Route {
     // v2-practical-ux
     @Serializable data object V2PlayHome : Route
     @Serializable data object V2WeeklyCalendar : Route
+    @Serializable data object SportsIFollow : Route
 }
