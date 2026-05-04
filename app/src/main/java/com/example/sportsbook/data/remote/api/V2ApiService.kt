@@ -10,11 +10,15 @@ import com.example.sportsbook.data.remote.dto.v2.PaySplitShareRequestDto
 import com.example.sportsbook.data.remote.dto.v2.PlaySearchResponseDto
 import com.example.sportsbook.data.remote.dto.v2.RebookRequestDto
 import com.example.sportsbook.data.remote.dto.v2.RespondToInviteRequestDto
+import com.example.sportsbook.data.remote.dto.v2.SetVisibilityRequestDto
 import com.example.sportsbook.data.remote.dto.v2.SplitPaymentSummaryDto
+import com.example.sportsbook.data.remote.dto.v2.SubscriptionStatusDto
+import com.example.sportsbook.data.remote.dto.v2.CheckoutResponseDto
 import kotlinx.serialization.Serializable
 import retrofit2.http.Body
 import retrofit2.http.GET
 import retrofit2.http.POST
+import retrofit2.http.PUT
 import retrofit2.http.Path
 import retrofit2.http.Query
 
@@ -102,4 +106,23 @@ interface V2ApiService {
     suspend fun listParticipants(
         @Path("id") bookingId: Long
     ): ApiResponseDto<List<BookingParticipantDto>>
+
+    // ---- SportsBooks+ Subscription ----
+
+    @GET("api/subscription")
+    suspend fun getSubscriptionStatus(): ApiResponseDto<SubscriptionStatusDto>
+
+    @POST("api/subscription/checkout")
+    suspend fun createSubscriptionCheckout(): ApiResponseDto<CheckoutResponseDto>
+
+    @POST("api/subscription/cancel")
+    suspend fun cancelSubscription(): ApiResponseDto<Unit>
+
+    @POST("api/subscription/reactivate")
+    suspend fun reactivateSubscription(): ApiResponseDto<Unit>
+
+    @PUT("api/subscription/visibility")
+    suspend fun setProfileVisibility(
+        @Body request: SetVisibilityRequestDto
+    ): ApiResponseDto<Unit>
 }

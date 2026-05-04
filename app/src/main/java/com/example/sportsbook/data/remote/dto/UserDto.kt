@@ -27,6 +27,8 @@ data class UserDto(
     val avgPlayerPunctualityRating: Double = 0.0,
     val totalPlayerRatings: Int = 0,
     val totalMatchesPlayed: Int = 0,
+    val isPlus: Boolean = false,
+    val profileVisibility: String = "public",
     val createdAt: String? = null,
     val updatedAt: String? = null
 ) {
@@ -50,6 +52,8 @@ data class UserDto(
         avgPlayerPunctualityRating = avgPlayerPunctualityRating,
         totalPlayerRatings = totalPlayerRatings,
         totalMatchesPlayed = totalMatchesPlayed,
+        isPlus = isPlus,
+        profileVisibility = profileVisibility,
         createdAt = createdAt,
         updatedAt = updatedAt
     )

@@ -8,10 +8,15 @@ import com.example.sportsbook.data.remote.dto.v2.MarkAttendanceRequestDto
 import com.example.sportsbook.data.remote.dto.v2.PaySplitShareRequestDto
 import com.example.sportsbook.data.remote.dto.v2.RebookRequestDto
 import com.example.sportsbook.data.remote.dto.v2.RespondToInviteRequestDto
+import com.example.sportsbook.data.remote.dto.v2.SetVisibilityRequestDto
 import com.example.sportsbook.domain.model.v2.BookingParticipant
 import com.example.sportsbook.domain.model.v2.HomeFeedSnapshot
 import com.example.sportsbook.domain.model.v2.PlaySearchResult
+import com.example.sportsbook.domain.model.v2.ProfileVisibility
 import com.example.sportsbook.domain.model.v2.SplitPaymentSummary
+import com.example.sportsbook.domain.model.v2.SubscriptionInfo
+import com.example.sportsbook.domain.model.v2.SubscriptionState
+import com.example.sportsbook.domain.model.v2.SubscriptionStatus
 import com.example.sportsbook.domain.repository.V2Repository
 import javax.inject.Inject
 import javax.inject.Singleton
@@ -116,5 +121,43 @@ class V2RepositoryImpl @Inject constructor(
 
     override suspend fun listParticipants(bookingId: Long): Result<List<BookingParticipant>> = runCatching {
         v2ApiService.listParticipants(bookingId).data.map { it.toDomain() }
+    }
+
+    // ---- SportsBooks+ Subscription ----
+
+    override suspend fun getSubscriptionStatus(): Result<SubscriptionState> = runCatching {
+        val dto = v2ApiService.getSubscriptionStatus().data
+        SubscriptionState(
+            isPlus = dto.isPlus,
+            subscription = dto.subscription?.let { sub ->
+                SubscriptionInfo(
+                    id = sub.id,
+                    status = SubscriptionStatus.fromString(sub.status),
+                    currentPeriodEnd = sub.currentPeriodEnd,
+                    cancelAtPeriodEnd = sub.cancelAtPeriodEnd,
+                    trialEnd = sub.trialEnd
+                )
+            },
+            profileVisibility = ProfileVisibility.fromString(dto.profileVisibility)
+        )
+    }
+
+    override suspend fun createCheckout(): Result<String> = runCatching {
+        v2ApiService.createSubscriptionCheckout().data.checkoutUrl
+    }
+
+    override suspend fun cancelSubscription(): Result<Unit> = runCatching {
+        v2ApiService.cancelSubscription()
+        Unit
+    }
+
+    override suspend fun reactivateSubscription(): Result<Unit> = runCatching {
+        v2ApiService.reactivateSubscription()
+        Unit
+    }
+
+    override suspend fun setProfileVisibility(visibility: ProfileVisibility): Result<Unit> = runCatching {
+        v2ApiService.setProfileVisibility(SetVisibilityRequestDto(visibility = visibility.apiValue))
+        Unit
     }
 }

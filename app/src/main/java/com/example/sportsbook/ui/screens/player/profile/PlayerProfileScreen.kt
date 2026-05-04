@@ -61,6 +61,7 @@ import com.example.sportsbook.domain.enums.PartnerType
 import com.example.sportsbook.domain.enums.UserRole
 import com.example.sportsbook.ui.common.ErrorView
 import com.example.sportsbook.ui.common.LoadingIndicator
+import com.example.sportsbook.ui.screens.player.settings.PlusBadge
 import com.example.sportsbook.ui.theme.Navy600
 import com.example.sportsbook.ui.theme.Navy700
 import com.example.sportsbook.ui.theme.Navy900
@@ -168,13 +169,19 @@ fun PlayerProfileScreen(
                                 .fillMaxWidth()
                                 .padding(horizontal = 16.dp)
                         ) {
-                            Text(
-                                text = user.displayName ?: "No name set",
-                                style = MaterialTheme.typography.titleMedium.copy(
-                                    fontWeight = FontWeight.Bold
-                                ),
-                                color = WarmWhite
-                            )
+                            Row(verticalAlignment = Alignment.CenterVertically) {
+                                Text(
+                                    text = user.displayName ?: "No name set",
+                                    style = MaterialTheme.typography.titleMedium.copy(
+                                        fontWeight = FontWeight.Bold
+                                    ),
+                                    color = WarmWhite
+                                )
+                                if (user.isPlus) {
+                                    Spacer(modifier = Modifier.width(8.dp))
+                                    PlusBadge()
+                                }
+                            }
                             Text(
                                 text = user.email,
                                 style = MaterialTheme.typography.bodySmall,

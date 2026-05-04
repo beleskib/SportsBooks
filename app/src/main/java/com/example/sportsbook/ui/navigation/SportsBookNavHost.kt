@@ -540,6 +540,10 @@ fun SportsBookNavHost(
                         navController.navigate(Route.Login) {
                             popUpTo(0) { inclusive = true }
                         }
+                    },
+                    onOpenCheckoutUrl = { url ->
+                        val intent = Intent(Intent.ACTION_VIEW, Uri.parse(url))
+                        context.startActivity(intent)
                     }
                 )
             }

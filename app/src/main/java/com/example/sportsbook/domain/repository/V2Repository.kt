@@ -3,7 +3,9 @@ package com.example.sportsbook.domain.repository
 import com.example.sportsbook.domain.model.v2.BookingParticipant
 import com.example.sportsbook.domain.model.v2.HomeFeedSnapshot
 import com.example.sportsbook.domain.model.v2.PlaySearchResult
+import com.example.sportsbook.domain.model.v2.ProfileVisibility
 import com.example.sportsbook.domain.model.v2.SplitPaymentSummary
+import com.example.sportsbook.domain.model.v2.SubscriptionState
 
 // ============================================================
 // v2-practical-ux: Single repository interface for all 11 v2 endpoints.
@@ -66,4 +68,11 @@ interface V2Repository {
     ): Result<Unit>
 
     suspend fun listParticipants(bookingId: Long): Result<List<BookingParticipant>>
+
+    // ---- SportsBooks+ Subscription ----
+    suspend fun getSubscriptionStatus(): Result<SubscriptionState>
+    suspend fun createCheckout(): Result<String> // returns checkout URL
+    suspend fun cancelSubscription(): Result<Unit>
+    suspend fun reactivateSubscription(): Result<Unit>
+    suspend fun setProfileVisibility(visibility: ProfileVisibility): Result<Unit>
 }

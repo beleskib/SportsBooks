@@ -24,6 +24,8 @@ data class User(
     val avgPlayerPunctualityRating: Double = 0.0,
     val totalPlayerRatings: Int = 0,
     val totalMatchesPlayed: Int = 0,
+    val isPlus: Boolean = false,
+    val profileVisibility: String = "public",
     val createdAt: String? = null,
     val updatedAt: String? = null
 )
