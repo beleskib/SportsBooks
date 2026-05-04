@@ -10,6 +10,7 @@ import {
   CalendarRange,
   ShieldCheck,
   ClipboardCheck,
+  Settings,
 } from 'lucide-react'
 import { useAuth } from '@/context/AuthContext'
 import { PartnerType } from '@/types'
@@ -42,6 +43,7 @@ export function Sidebar() {
   const v2NavItems = [
     { to: '/v2/calendar', icon: CalendarRange, label: 'Calendar (v2)' },
     { to: '/v2/play', icon: Sparkles, label: 'Play (v2)' },
+    { to: '/settings', icon: Settings, label: 'Settings' },
   ]
 
   // Owner-only nav (admin role). Appended at the bottom under a divider.

@@ -16,6 +16,7 @@ import { TimeSlotPage } from '@/pages/TimeSlotPage'
 // v2-practical-ux: parallel "Option 2" pages (master pages above remain Option 1)
 import { WeeklyCalendarPage } from '@/pages/v2/WeeklyCalendarPage'
 import { PlayHomePage } from '@/pages/v2/PlayHomePage'
+import { SettingsPage } from '@/pages/v2/SettingsPage'
 // Partner reservation detail (landing page for partner-approval emails)
 import { PartnerReservationDetailPage } from '@/pages/partner/PartnerReservationDetailPage'
 // Owner-only admin dashboard (gated below by AdminRoute)
@@ -71,6 +72,7 @@ function AppRoutes() {
         {/* v2-practical-ux: Option 2 redesign routes (parallel to master pages above) */}
         <Route path="v2/calendar" element={<WeeklyCalendarPage />} />
         <Route path="v2/play" element={<PlayHomePage />} />
+        <Route path="settings" element={<SettingsPage />} />
         {/* Partner approval flow: landing page from email links. Login is enforced by ProtectedRoute. */}
         <Route path="partner/reservations/:id" element={<PartnerReservationDetailPage />} />
         {/* Owner-only admin dashboard (admins review listings + see platform metrics). */}
