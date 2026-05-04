@@ -129,19 +129,43 @@ export async function getPublicProfile(req: Request, res: Response, next: NextFu
       throw new ValidationError('Invalid user ID');
     }
 
-    const profile = await userRepo.findPublicProfile(userId);
-    if (!profile) throw new NotFoundError('User');
+    // Check profile visibility before fetching full profile
+    const visibility = await userRepo.getProfileVisibility(userId);
+    const viewerId = req.user?.id;
+    const isSelf = viewerId === userId;
 
-    // Check friendship status between viewer and this user
+    if (!isSelf && visibility === 'private') {
+      throw new NotFoundError('User profile is private');
+    }
+
+    // Check friendship for friends_only visibility and for the status badge
     let friendshipStatus: string | null = null;
     let friendshipId: number | null = null;
-    if (req.user?.id && req.user.id !== userId) {
-      const friendship = await friendshipRepo.findFriendship(req.user.id, userId);
+    if (viewerId && viewerId !== userId) {
+      const friendship = await friendshipRepo.findFriendship(viewerId, userId);
       if (friendship) {
         friendshipStatus = friendship.status;
         friendshipId = friendship.id;
       }
     }
+
+    if (!isSelf && visibility === 'friends_only' && friendshipStatus !== 'accepted') {
+      // Return a minimal stub — don't reveal full profile
+      success(res, {
+        id: userId,
+        displayName: null,
+        photoUrl: null,
+        bio: null,
+        role: null,
+        profileRestricted: true,
+        friendshipStatus,
+        friendshipId,
+      });
+      return;
+    }
+
+    const profile = await userRepo.findPublicProfile(userId);
+    if (!profile) throw new NotFoundError('User');
 
     success(res, {
       ...profile,

@@ -16,6 +16,8 @@ export interface UserRow {
   stripeAccountId: string | null;
   stripeOnboardingStatus: string;
   stripePayoutsEnabled: boolean;
+  isPlus: boolean;
+  profileVisibility: string;
   createdAt: string;
   updatedAt: string;
 }
@@ -34,7 +36,9 @@ const USER_COLUMNS = `id, firebase_uid, email, display_name, photo_url, phone_nu
             bio, date_of_birth, onboarding_completed, role, partner_type, is_active,
             stripe_account_id, stripe_onboarding_status, stripe_payouts_enabled,
             avg_player_skill_rating, avg_player_sportsmanship_rating, avg_player_punctuality_rating,
-            total_player_ratings, total_matches_played, created_at, updated_at`;
+            total_player_ratings, total_matches_played,
+            is_plus, profile_visibility,
+            created_at, updated_at`;
 
 function mapRow(row: any): UserRow {
   return {
@@ -53,6 +57,8 @@ function mapRow(row: any): UserRow {
     stripeAccountId: row.stripe_account_id ?? null,
     stripeOnboardingStatus: row.stripe_onboarding_status ?? 'not_started',
     stripePayoutsEnabled: row.stripe_payouts_enabled ?? false,
+    isPlus: row.is_plus ?? false,
+    profileVisibility: row.profile_visibility ?? 'public',
     createdAt: row.created_at?.toISOString?.() ?? row.created_at,
     updatedAt: row.updated_at?.toISOString?.() ?? row.updated_at,
   };
@@ -279,6 +285,11 @@ function mapRecentMatchRow(row: any): RecentMatchRow {
     matchDate: row.match_date instanceof Date ? row.match_date.toISOString().split('T')[0] : row.match_date,
     status: row.status,
   };
+}
+
+export async function getProfileVisibility(userId: number): Promise<string> {
+  const result = await query(`SELECT profile_visibility FROM users WHERE id = $1`, [userId]);
+  return result.rows[0]?.profile_visibility ?? 'public';
 }
 
 export async function findPublicProfile(userId: number): Promise<PublicProfileRow | null> {
