@@ -24,6 +24,8 @@ export interface BackendUser {
   stripeAccountId: string | null
   stripeOnboardingStatus: string
   stripePayoutsEnabled: boolean
+  isPlus: boolean
+  profileVisibility: 'public' | 'friends_only' | 'private'
 }
 
 /**

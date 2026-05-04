@@ -220,6 +220,15 @@ export type {
   PlaySearchResponse,
 } from './types/playSearch';
 
+export type {
+  SubscriptionStatus,
+  ProfileVisibility,
+  SubscriptionInfo,
+  SubscriptionStatusResponse,
+  CheckoutResponse,
+  SetVisibilityRequest,
+} from './types/subscription';
+
 // API Endpoints
 export {
   AUTH_ENDPOINTS,
@@ -246,4 +255,5 @@ export {
   REBOOK_ENDPOINTS,
   SPLIT_PAYMENT_ENDPOINTS,
   BOOKING_PARTICIPANT_ENDPOINTS,
+  SUBSCRIPTION_ENDPOINTS,
 } from './api/endpoints';

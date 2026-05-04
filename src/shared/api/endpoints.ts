@@ -169,3 +169,15 @@ export const BOOKING_PARTICIPANT_ENDPOINTS = {
   RESPOND: (bookingId: number) => `${API_PREFIX}/bookings/${bookingId}/respond`,
   MARK_ATTENDANCE: (bookingId: number) => `${API_PREFIX}/bookings/${bookingId}/attendance`,
 } as const;
+
+// ============================================================
+// SportsBooks+ subscription management
+// ============================================================
+
+export const SUBSCRIPTION_ENDPOINTS = {
+  STATUS: `${API_PREFIX}/subscription`,
+  CHECKOUT: `${API_PREFIX}/subscription/checkout`,
+  CANCEL: `${API_PREFIX}/subscription/cancel`,
+  REACTIVATE: `${API_PREFIX}/subscription/reactivate`,
+  VISIBILITY: `${API_PREFIX}/subscription/visibility`,
+} as const;

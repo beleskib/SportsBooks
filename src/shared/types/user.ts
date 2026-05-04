@@ -20,6 +20,8 @@ export interface UserProfile {
   stripeAccountId: string | null;
   stripeOnboardingStatus: StripeOnboardingStatus;
   stripePayoutsEnabled: boolean;
+  isPlus: boolean;
+  profileVisibility: 'public' | 'friends_only' | 'private';
   interestedSports: SportType[];
   sportExpertise: UserSportExpertise[];
   avgPlayerSkillRating: number;
