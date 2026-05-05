@@ -150,7 +150,7 @@ fun SportsBookNavHost(
     }
 
     Scaffold(
-        containerColor = com.example.sportsbook.ui.theme.Navy900,
+        containerColor = com.example.sportsbook.ui.theme.LightBg,
         bottomBar = {
             when {
                 showPlayerBottomBar -> BottomNavBar(

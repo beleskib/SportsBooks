@@ -67,12 +67,12 @@ import com.example.sportsbook.domain.model.PublicPlayerProfile
 import com.example.sportsbook.ui.common.ErrorView
 import com.example.sportsbook.ui.common.LoadingIndicator
 import com.example.sportsbook.ui.screens.player.match.components.PlayerRatingStars
-import com.example.sportsbook.ui.theme.Navy600
-import com.example.sportsbook.ui.theme.Navy700
-import com.example.sportsbook.ui.theme.Navy900
+import com.example.sportsbook.ui.theme.BorderGray
+import com.example.sportsbook.ui.theme.LightBg
+import com.example.sportsbook.ui.theme.NavBarBg
 import com.example.sportsbook.ui.theme.SportsBookTheme
-import com.example.sportsbook.ui.theme.USOpenGold
-import com.example.sportsbook.ui.theme.WarmWhite
+import com.example.sportsbook.ui.theme.GoldAccent
+import com.example.sportsbook.ui.theme.TextPrimary
 
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalLayoutApi::class)
 @Composable
@@ -102,19 +102,19 @@ fun PublicPlayerProfileScreen(
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text("Player Profile", color = WarmWhite) },
+                title = { Text("Player Profile", color = TextPrimary) },
                 navigationIcon = {
                     IconButton(onClick = onBack) {
-                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back", tint = WarmWhite)
+                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back", tint = TextPrimary)
                     }
                 },
                 colors = TopAppBarDefaults.topAppBarColors(
-                    containerColor = Navy900
+                    containerColor = NavBarBg
                 )
             )
         },
         snackbarHost = { SnackbarHost(snackbarHostState) },
-        containerColor = Navy900
+        containerColor = NavBarBg
     ) { padding ->
         Box(
             modifier = Modifier
@@ -174,14 +174,14 @@ private fun PublicPlayerProfileContent(
                         modifier = Modifier
                             .size(110.dp)
                             .clip(CircleShape)
-                            .background(Navy600),
+                            .background(BorderGray),
                         contentAlignment = Alignment.Center
                     ) {
                         Icon(
                             imageVector = Icons.Default.Person,
                             contentDescription = "Player avatar",
                             modifier = Modifier.size(56.dp),
-                            tint = USOpenGold
+                            tint = GoldAccent
                         )
                     }
                 }
@@ -192,7 +192,7 @@ private fun PublicPlayerProfileContent(
                 Text(
                     text = profile.displayName ?: "Unknown Player",
                     style = MaterialTheme.typography.headlineSmall.copy(fontWeight = FontWeight.Bold),
-                    color = WarmWhite
+                    color = TextPrimary
                 )
 
                 // Bio
@@ -201,7 +201,7 @@ private fun PublicPlayerProfileContent(
                     Text(
                         text = profile.bio,
                         style = MaterialTheme.typography.bodyMedium,
-                        color = WarmWhite.copy(alpha = 0.7f),
+                        color = TextPrimary.copy(alpha = 0.7f),
                         textAlign = TextAlign.Center,
                         modifier = Modifier.padding(horizontal = 24.dp)
                     )
@@ -218,7 +218,7 @@ private fun PublicPlayerProfileContent(
                     Text(
                         text = "Member since $memberSince",
                         style = MaterialTheme.typography.bodySmall,
-                        color = WarmWhite.copy(alpha = 0.4f)
+                        color = TextPrimary.copy(alpha = 0.4f)
                     )
                 }
 
@@ -239,7 +239,7 @@ private fun PublicPlayerProfileContent(
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .background(Navy700.copy(alpha = 0.5f))
+                    .background(LightBg.copy(alpha = 0.5f))
                     .padding(vertical = 16.dp),
                 horizontalArrangement = Arrangement.SpaceEvenly
             ) {
@@ -271,7 +271,7 @@ private fun PublicPlayerProfileContent(
                     modifier = Modifier
                         .fillMaxWidth()
                         .padding(horizontal = 16.dp),
-                    colors = CardDefaults.cardColors(containerColor = Navy700.copy(alpha = 0.5f)),
+                    colors = CardDefaults.cardColors(containerColor = LightBg.copy(alpha = 0.5f)),
                     shape = RoundedCornerShape(12.dp)
                 ) {
                     Column(modifier = Modifier.padding(16.dp)) {
@@ -304,7 +304,7 @@ private fun PublicPlayerProfileContent(
                             label = {
                                 Text(
                                     sport.displayName,
-                                    color = WarmWhite
+                                    color = TextPrimary
                                 )
                             },
                             leadingIcon = {
@@ -312,7 +312,7 @@ private fun PublicPlayerProfileContent(
                                     imageVector = Icons.Default.SportsSoccer,
                                     contentDescription = null,
                                     modifier = Modifier.size(16.dp),
-                                    tint = USOpenGold
+                                    tint = GoldAccent
                                 )
                             }
                         )
@@ -356,16 +356,16 @@ private fun FriendActionButton(
                 modifier = modifier.fillMaxWidth(0.6f),
                 shape = RoundedCornerShape(12.dp),
                 colors = ButtonDefaults.buttonColors(
-                    disabledContainerColor = Navy600
+                    disabledContainerColor = BorderGray
                 )
             ) {
                 CircularProgressIndicator(
                     modifier = Modifier.size(18.dp),
                     strokeWidth = 2.dp,
-                    color = WarmWhite
+                    color = TextPrimary
                 )
                 Spacer(modifier = Modifier.width(8.dp))
-                Text("Loading...", color = WarmWhite.copy(alpha = 0.6f))
+                Text("Loading...", color = TextPrimary.copy(alpha = 0.6f))
             }
         }
         friendshipStatus == null -> {
@@ -375,17 +375,17 @@ private fun FriendActionButton(
                 modifier = modifier.fillMaxWidth(0.6f),
                 shape = RoundedCornerShape(12.dp),
                 colors = ButtonDefaults.buttonColors(
-                    containerColor = USOpenGold
+                    containerColor = GoldAccent
                 )
             ) {
                 Icon(
                     Icons.Default.PersonAdd,
                     contentDescription = null,
                     modifier = Modifier.size(18.dp),
-                    tint = Navy900
+                    tint = NavBarBg
                 )
                 Spacer(modifier = Modifier.width(8.dp))
-                Text("Add Friend", color = Navy900, fontWeight = FontWeight.Bold)
+                Text("Add Friend", color = NavBarBg, fontWeight = FontWeight.Bold)
             }
         }
         friendshipStatus == "pending" -> {
@@ -400,10 +400,10 @@ private fun FriendActionButton(
                     Icons.Default.HourglassTop,
                     contentDescription = null,
                     modifier = Modifier.size(18.dp),
-                    tint = USOpenGold
+                    tint = GoldAccent
                 )
                 Spacer(modifier = Modifier.width(8.dp))
-                Text("Request Pending", color = USOpenGold)
+                Text("Request Pending", color = GoldAccent)
             }
         }
         friendshipStatus == "accepted" -> {
@@ -457,17 +457,17 @@ private fun FriendActionButton(
                 modifier = modifier.fillMaxWidth(0.6f),
                 shape = RoundedCornerShape(12.dp),
                 colors = ButtonDefaults.buttonColors(
-                    containerColor = USOpenGold
+                    containerColor = GoldAccent
                 )
             ) {
                 Icon(
                     Icons.Default.PersonAdd,
                     contentDescription = null,
                     modifier = Modifier.size(18.dp),
-                    tint = Navy900
+                    tint = NavBarBg
                 )
                 Spacer(modifier = Modifier.width(8.dp))
-                Text("Add Friend", color = Navy900, fontWeight = FontWeight.Bold)
+                Text("Add Friend", color = NavBarBg, fontWeight = FontWeight.Bold)
             }
         }
     }
@@ -486,12 +486,12 @@ private fun ProfileStatItem(
         Text(
             text = value,
             style = MaterialTheme.typography.headlineSmall.copy(fontWeight = FontWeight.Bold),
-            color = USOpenGold
+            color = GoldAccent
         )
         Text(
             text = label,
             style = MaterialTheme.typography.labelMedium,
-            color = WarmWhite.copy(alpha = 0.6f)
+            color = TextPrimary.copy(alpha = 0.6f)
         )
     }
 }
@@ -504,7 +504,7 @@ private fun SectionTitle(
     Text(
         text = title,
         style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.SemiBold),
-        color = WarmWhite,
+        color = TextPrimary,
         modifier = modifier
             .fillMaxWidth()
             .padding(horizontal = 16.dp)
@@ -525,7 +525,7 @@ private fun RatingRow(
         Text(
             text = label,
             style = MaterialTheme.typography.bodyMedium,
-            color = WarmWhite.copy(alpha = 0.8f),
+            color = TextPrimary.copy(alpha = 0.8f),
             modifier = Modifier.width(120.dp)
         )
         Row(
@@ -536,7 +536,7 @@ private fun RatingRow(
             Text(
                 text = String.format("%.1f", rating),
                 style = MaterialTheme.typography.bodySmall,
-                color = USOpenGold
+                color = GoldAccent
             )
         }
     }
@@ -552,7 +552,7 @@ private fun RecentMatchItem(
             .fillMaxWidth()
             .padding(horizontal = 16.dp),
         colors = CardDefaults.cardColors(
-            containerColor = Navy700.copy(alpha = 0.5f)
+            containerColor = LightBg.copy(alpha = 0.5f)
         ),
         shape = RoundedCornerShape(12.dp)
     ) {
@@ -571,19 +571,19 @@ private fun RecentMatchItem(
                     imageVector = Icons.Default.CalendarMonth,
                     contentDescription = null,
                     modifier = Modifier.size(20.dp),
-                    tint = USOpenGold
+                    tint = GoldAccent
                 )
                 Spacer(modifier = Modifier.width(12.dp))
                 Column {
                     Text(
                         text = match.title,
                         style = MaterialTheme.typography.bodyMedium.copy(fontWeight = FontWeight.Medium),
-                        color = WarmWhite
+                        color = TextPrimary
                     )
                     Text(
                         text = "${match.sportType.displayName} • ${match.matchDate}",
                         style = MaterialTheme.typography.bodySmall,
-                        color = WarmWhite.copy(alpha = 0.5f)
+                        color = TextPrimary.copy(alpha = 0.5f)
                     )
                 }
             }
@@ -593,8 +593,8 @@ private fun RecentMatchItem(
                     .background(
                         when (match.status.lowercase()) {
                             "completed" -> Color(0xFF2E7D32).copy(alpha = 0.2f)
-                            "in_progress" -> USOpenGold.copy(alpha = 0.2f)
-                            else -> Navy600.copy(alpha = 0.3f)
+                            "in_progress" -> GoldAccent.copy(alpha = 0.2f)
+                            else -> BorderGray.copy(alpha = 0.3f)
                         }
                     )
                     .padding(horizontal = 8.dp, vertical = 4.dp)
@@ -604,8 +604,8 @@ private fun RecentMatchItem(
                     style = MaterialTheme.typography.labelSmall,
                     color = when (match.status.lowercase()) {
                         "completed" -> Color(0xFF66BB6A)
-                        "in_progress" -> USOpenGold
-                        else -> WarmWhite.copy(alpha = 0.6f)
+                        "in_progress" -> GoldAccent
+                        else -> TextPrimary.copy(alpha = 0.6f)
                     }
                 )
             }

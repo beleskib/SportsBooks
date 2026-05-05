@@ -82,12 +82,12 @@ import com.example.sportsbook.ui.common.toDisplayDate
 import com.example.sportsbook.ui.common.toDisplayTime
 import com.example.sportsbook.ui.navigation.Route
 import com.example.sportsbook.ui.theme.CoralRed
-import com.example.sportsbook.ui.theme.Navy700
-import com.example.sportsbook.ui.theme.Navy800
-import com.example.sportsbook.ui.theme.Navy900
+import com.example.sportsbook.ui.theme.LightBg
+import com.example.sportsbook.ui.theme.CardWhite
+import com.example.sportsbook.ui.theme.NavBarBg
 import com.example.sportsbook.ui.theme.SportGreen
-import com.example.sportsbook.ui.theme.USOpenGold
-import com.example.sportsbook.ui.theme.WarmWhite
+import com.example.sportsbook.ui.theme.GoldAccent
+import com.example.sportsbook.ui.theme.TextPrimary
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -432,14 +432,14 @@ fun VenueBookingLobbyDetailScreen(
     }
 
     Scaffold(
-        containerColor = Navy900,
+        containerColor = NavBarBg,
         snackbarHost = { SnackbarHost(hostState = snackbarHostState) },
         topBar = {
             TopAppBar(
                 title = {
                     Text(
                         text = uiState.lobby?.title ?: "Lobby",
-                        color = WarmWhite
+                        color = TextPrimary
                     )
                 },
                 navigationIcon = {
@@ -447,7 +447,7 @@ fun VenueBookingLobbyDetailScreen(
                         Icon(
                             imageVector = Icons.AutoMirrored.Filled.ArrowBack,
                             contentDescription = "Back",
-                            tint = WarmWhite
+                            tint = TextPrimary
                         )
                     }
                 },
@@ -457,12 +457,12 @@ fun VenueBookingLobbyDetailScreen(
                             Icon(
                                 imageVector = Icons.Default.Edit,
                                 contentDescription = "Edit Lobby",
-                                tint = USOpenGold
+                                tint = GoldAccent
                             )
                         }
                     }
                 },
-                colors = TopAppBarDefaults.topAppBarColors(containerColor = Navy800)
+                colors = TopAppBarDefaults.topAppBarColors(containerColor = CardWhite)
             )
         }
     ) { paddingValues ->
@@ -474,7 +474,7 @@ fun VenueBookingLobbyDetailScreen(
                         .padding(paddingValues),
                     contentAlignment = Alignment.Center
                 ) {
-                    CircularProgressIndicator(color = USOpenGold)
+                    CircularProgressIndicator(color = GoldAccent)
                 }
             }
 
@@ -536,7 +536,7 @@ fun VenueBookingLobbyDetailScreen(
                         Text(
                             text = "Members (${lobby.currentPlayers}/${lobby.maxPlayers})",
                             style = MaterialTheme.typography.titleSmall,
-                            color = WarmWhite.copy(alpha = 0.8f),
+                            color = TextPrimary.copy(alpha = 0.8f),
                             fontWeight = FontWeight.SemiBold,
                             modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp)
                         )
@@ -547,7 +547,7 @@ fun VenueBookingLobbyDetailScreen(
                             Text(
                                 text = "No members yet",
                                 style = MaterialTheme.typography.bodyMedium,
-                                color = WarmWhite.copy(alpha = 0.4f),
+                                color = TextPrimary.copy(alpha = 0.4f),
                                 modifier = Modifier.padding(horizontal = 16.dp)
                             )
                         }
@@ -574,7 +574,7 @@ private fun LobbyDetailHeader(lobby: VenueBookingLobbyDto) {
     Column(
         modifier = Modifier
             .fillMaxWidth()
-            .background(Navy800)
+            .background(CardWhite)
             .padding(16.dp)
     ) {
         // Title + badge row
@@ -586,7 +586,7 @@ private fun LobbyDetailHeader(lobby: VenueBookingLobbyDto) {
             Text(
                 text = lobby.title,
                 style = MaterialTheme.typography.titleLarge,
-                color = WarmWhite,
+                color = TextPrimary,
                 fontWeight = FontWeight.Bold,
                 modifier = Modifier.weight(1f)
             )
@@ -599,7 +599,7 @@ private fun LobbyDetailHeader(lobby: VenueBookingLobbyDto) {
         // Venue
         if (!lobby.venueName.isNullOrBlank()) {
             DetailInfoRow(
-                icon = { Icon(Icons.Default.LocationOn, contentDescription = null, tint = USOpenGold, modifier = Modifier.size(14.dp)) },
+                icon = { Icon(Icons.Default.LocationOn, contentDescription = null, tint = GoldAccent, modifier = Modifier.size(14.dp)) },
                 text = lobby.venueName
             )
             Spacer(modifier = Modifier.height(4.dp))
@@ -616,7 +616,7 @@ private fun LobbyDetailHeader(lobby: VenueBookingLobbyDto) {
         }
         if (dateText.isNotBlank()) {
             DetailInfoRow(
-                icon = { Icon(Icons.Default.CalendarToday, contentDescription = null, tint = USOpenGold, modifier = Modifier.size(14.dp)) },
+                icon = { Icon(Icons.Default.CalendarToday, contentDescription = null, tint = GoldAccent, modifier = Modifier.size(14.dp)) },
                 text = dateText
             )
             Spacer(modifier = Modifier.height(4.dp))
@@ -632,7 +632,7 @@ private fun LobbyDetailHeader(lobby: VenueBookingLobbyDto) {
             else -> "Creator pays all"
         }
         DetailInfoRow(
-            icon = { Icon(Icons.Default.AttachMoney, contentDescription = null, tint = USOpenGold, modifier = Modifier.size(14.dp)) },
+            icon = { Icon(Icons.Default.AttachMoney, contentDescription = null, tint = GoldAccent, modifier = Modifier.size(14.dp)) },
             text = "Total: ${"%.0f".format(lobby.totalPrice)} ${lobby.currency}  |  $priceDetail"
         )
 
@@ -646,12 +646,12 @@ private fun LobbyDetailHeader(lobby: VenueBookingLobbyDto) {
             verticalAlignment = Alignment.CenterVertically
         ) {
             Row(verticalAlignment = Alignment.CenterVertically) {
-                Icon(Icons.Default.Group, contentDescription = null, tint = USOpenGold, modifier = Modifier.size(14.dp))
+                Icon(Icons.Default.Group, contentDescription = null, tint = GoldAccent, modifier = Modifier.size(14.dp))
                 Spacer(modifier = Modifier.width(4.dp))
                 Text(
                     text = "${lobby.currentPlayers}/${lobby.maxPlayers} players",
                     style = MaterialTheme.typography.labelMedium,
-                    color = USOpenGold,
+                    color = GoldAccent,
                     fontWeight = FontWeight.Bold
                 )
             }
@@ -664,8 +664,8 @@ private fun LobbyDetailHeader(lobby: VenueBookingLobbyDto) {
                 .fillMaxWidth()
                 .height(6.dp)
                 .clip(RoundedCornerShape(3.dp)),
-            color = USOpenGold,
-            trackColor = Navy700
+            color = GoldAccent,
+            trackColor = LightBg
         )
 
         // Description
@@ -674,7 +674,7 @@ private fun LobbyDetailHeader(lobby: VenueBookingLobbyDto) {
             Text(
                 text = lobby.description,
                 style = MaterialTheme.typography.bodySmall,
-                color = WarmWhite.copy(alpha = 0.7f)
+                color = TextPrimary.copy(alpha = 0.7f)
             )
         }
     }
@@ -688,7 +688,7 @@ private fun DetailInfoRow(icon: @Composable () -> Unit, text: String) {
         Text(
             text = text,
             style = MaterialTheme.typography.bodySmall,
-            color = WarmWhite.copy(alpha = 0.8f)
+            color = TextPrimary.copy(alpha = 0.8f)
         )
     }
 }
@@ -697,13 +697,13 @@ private fun DetailInfoRow(icon: @Composable () -> Unit, text: String) {
 private fun LobbyStatusChip(status: String) {
     val (label, color) = when (status) {
         "open" -> "Open" to SportGreen
-        "full" -> "Full" to USOpenGold
-        "booking_pending" -> "Pending Approval" to USOpenGold
+        "full" -> "Full" to GoldAccent
+        "booking_pending" -> "Pending Approval" to GoldAccent
         "booking_approved" -> "Approved" to SportGreen
-        "payment_in_progress" -> "Payment Phase" to USOpenGold
+        "payment_in_progress" -> "Payment Phase" to GoldAccent
         "confirmed" -> "Confirmed" to SportGreen
         "cancelled" -> "Cancelled" to CoralRed
-        else -> status.replaceFirstChar { it.uppercase() } to WarmWhite.copy(alpha = 0.5f)
+        else -> status.replaceFirstChar { it.uppercase() } to TextPrimary.copy(alpha = 0.5f)
     }
     Box(
         modifier = Modifier
@@ -778,7 +778,7 @@ private fun LobbyStatusSection(
 
         if (uiState.isActioning || uiState.paymentProcessing) {
             Box(modifier = Modifier.fillMaxWidth(), contentAlignment = Alignment.Center) {
-                CircularProgressIndicator(color = USOpenGold, modifier = Modifier.size(28.dp))
+                CircularProgressIndicator(color = GoldAccent, modifier = Modifier.size(28.dp))
             }
         }
     }
@@ -797,12 +797,12 @@ private fun OpenLobbyActions(
             onClick = onJoin,
             modifier = Modifier.fillMaxWidth(),
             enabled = !uiState.isActioning,
-            colors = ButtonDefaults.buttonColors(containerColor = USOpenGold),
+            colors = ButtonDefaults.buttonColors(containerColor = GoldAccent),
             shape = RoundedCornerShape(8.dp)
         ) {
-            Icon(Icons.Default.Group, contentDescription = null, modifier = Modifier.size(18.dp), tint = Navy900)
+            Icon(Icons.Default.Group, contentDescription = null, modifier = Modifier.size(18.dp), tint = NavBarBg)
             Spacer(modifier = Modifier.width(6.dp))
-            Text("Join Lobby", color = Navy900, fontWeight = FontWeight.SemiBold)
+            Text("Join Lobby", color = NavBarBg, fontWeight = FontWeight.SemiBold)
         }
     }
 
@@ -827,15 +827,15 @@ private fun OpenLobbyActions(
                 colors = ButtonDefaults.buttonColors(containerColor = SportGreen),
                 shape = RoundedCornerShape(8.dp)
             ) {
-                Icon(Icons.Default.Check, contentDescription = null, modifier = Modifier.size(18.dp), tint = Navy900)
+                Icon(Icons.Default.Check, contentDescription = null, modifier = Modifier.size(18.dp), tint = NavBarBg)
                 Spacer(modifier = Modifier.width(6.dp))
-                Text("Submit Booking", color = Navy900, fontWeight = FontWeight.SemiBold)
+                Text("Submit Booking", color = NavBarBg, fontWeight = FontWeight.SemiBold)
             }
         } else if (uiState.lobby?.status == "open") {
             Text(
                 text = "Need at least 2 players to submit booking",
                 style = MaterialTheme.typography.bodySmall,
-                color = WarmWhite.copy(alpha = 0.5f),
+                color = TextPrimary.copy(alpha = 0.5f),
                 textAlign = TextAlign.Center,
                 modifier = Modifier.fillMaxWidth()
             )
@@ -862,7 +862,7 @@ private fun PendingApprovalSection() {
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
         CircularProgressIndicator(
-            color = USOpenGold,
+            color = GoldAccent,
             modifier = Modifier.size(40.dp),
             strokeWidth = 3.dp
         )
@@ -870,21 +870,21 @@ private fun PendingApprovalSection() {
         Icon(
             imageVector = Icons.Default.HourglassTop,
             contentDescription = null,
-            tint = USOpenGold,
+            tint = GoldAccent,
             modifier = Modifier.size(24.dp)
         )
         Spacer(modifier = Modifier.height(6.dp))
         Text(
             text = "Waiting for venue approval...",
             style = MaterialTheme.typography.titleSmall,
-            color = USOpenGold,
+            color = GoldAccent,
             fontWeight = FontWeight.SemiBold,
             textAlign = TextAlign.Center
         )
         Text(
             text = "The venue partner will review and approve your booking request.",
             style = MaterialTheme.typography.bodySmall,
-            color = WarmWhite.copy(alpha = 0.6f),
+            color = TextPrimary.copy(alpha = 0.6f),
             textAlign = TextAlign.Center
         )
     }
@@ -922,7 +922,7 @@ private fun PaymentSection(
                 else -> "The creator needs to pay the full amount to confirm the booking."
             },
             style = MaterialTheme.typography.bodySmall,
-            color = WarmWhite.copy(alpha = 0.7f)
+            color = TextPrimary.copy(alpha = 0.7f)
         )
     }
 
@@ -944,15 +944,15 @@ private fun PaymentSection(
             onClick = onPay,
             modifier = Modifier.fillMaxWidth(),
             enabled = !uiState.paymentProcessing,
-            colors = ButtonDefaults.buttonColors(containerColor = USOpenGold),
+            colors = ButtonDefaults.buttonColors(containerColor = GoldAccent),
             shape = RoundedCornerShape(8.dp)
         ) {
             if (uiState.paymentProcessing) {
-                CircularProgressIndicator(color = Navy900, modifier = Modifier.size(20.dp))
+                CircularProgressIndicator(color = NavBarBg, modifier = Modifier.size(20.dp))
             } else {
-                Icon(Icons.Default.AttachMoney, contentDescription = null, modifier = Modifier.size(18.dp), tint = Navy900)
+                Icon(Icons.Default.AttachMoney, contentDescription = null, modifier = Modifier.size(18.dp), tint = NavBarBg)
                 Spacer(modifier = Modifier.width(6.dp))
-                Text(payLabel, color = Navy900, fontWeight = FontWeight.SemiBold)
+                Text(payLabel, color = NavBarBg, fontWeight = FontWeight.SemiBold)
             }
         }
     }
@@ -990,7 +990,7 @@ private fun ConfirmedSection() {
         Text(
             text = "Booking confirmed. See you at the venue!",
             style = MaterialTheme.typography.bodyMedium,
-            color = WarmWhite.copy(alpha = 0.7f),
+            color = TextPrimary.copy(alpha = 0.7f),
             textAlign = TextAlign.Center
         )
     }
@@ -1021,7 +1021,7 @@ private fun TeamsSection(
             Text(
                 text = "Teams (${teams.size})",
                 style = MaterialTheme.typography.titleSmall,
-                color = WarmWhite.copy(alpha = 0.8f),
+                color = TextPrimary.copy(alpha = 0.8f),
                 fontWeight = FontWeight.SemiBold
             )
 
@@ -1030,13 +1030,13 @@ private fun TeamsSection(
                 var showAddTeamDialog by remember { androidx.compose.runtime.mutableStateOf(false) }
                 Button(
                     onClick = { showAddTeamDialog = true },
-                    colors = ButtonDefaults.buttonColors(containerColor = USOpenGold.copy(alpha = 0.2f)),
+                    colors = ButtonDefaults.buttonColors(containerColor = GoldAccent.copy(alpha = 0.2f)),
                     contentPadding = PaddingValues(horizontal = 12.dp, vertical = 4.dp),
                     shape = RoundedCornerShape(6.dp)
                 ) {
-                    Icon(Icons.Default.Add, contentDescription = null, tint = USOpenGold, modifier = Modifier.size(16.dp))
+                    Icon(Icons.Default.Add, contentDescription = null, tint = GoldAccent, modifier = Modifier.size(16.dp))
                     Spacer(modifier = Modifier.width(4.dp))
-                    Text("Add Team", color = USOpenGold, style = MaterialTheme.typography.labelSmall)
+                    Text("Add Team", color = GoldAccent, style = MaterialTheme.typography.labelSmall)
                 }
 
                 if (showAddTeamDialog) {
@@ -1089,8 +1089,8 @@ private fun TeamCard(
     modifier: Modifier = Modifier
 ) {
     val isMyTeam = uiState.currentTeam?.id == team.id
-    val borderColor = if (isMyTeam) USOpenGold else WarmWhite.copy(alpha = 0.15f)
-    val bgColor = if (isMyTeam) USOpenGold.copy(alpha = 0.08f) else Navy800
+    val borderColor = if (isMyTeam) GoldAccent else TextPrimary.copy(alpha = 0.15f)
+    val bgColor = if (isMyTeam) GoldAccent.copy(alpha = 0.08f) else CardWhite
 
     Column(
         modifier = modifier
@@ -1112,20 +1112,20 @@ private fun TeamCard(
             Text(
                 text = team.teamName,
                 style = MaterialTheme.typography.labelLarge,
-                color = if (isMyTeam) USOpenGold else WarmWhite,
+                color = if (isMyTeam) GoldAccent else TextPrimary,
                 fontWeight = FontWeight.Bold
             )
             if (isMyTeam) {
                 Box(
                     modifier = Modifier
                         .clip(RoundedCornerShape(3.dp))
-                        .background(USOpenGold.copy(alpha = 0.2f))
+                        .background(GoldAccent.copy(alpha = 0.2f))
                         .padding(horizontal = 5.dp, vertical = 1.dp)
                 ) {
                     Text(
                         text = "YOUR TEAM",
                         style = MaterialTheme.typography.labelSmall,
-                        color = USOpenGold,
+                        color = GoldAccent,
                         fontWeight = FontWeight.Bold,
                         modifier = Modifier.padding(0.dp)
                     )
@@ -1139,7 +1139,7 @@ private fun TeamCard(
             Text(
                 text = "${"%.0f".format(team.shareAmount)} MKD",
                 style = MaterialTheme.typography.labelSmall,
-                color = USOpenGold.copy(alpha = 0.8f),
+                color = GoldAccent.copy(alpha = 0.8f),
                 fontWeight = FontWeight.SemiBold
             )
         }
@@ -1151,7 +1151,7 @@ private fun TeamCard(
             Text(
                 text = "No members yet",
                 style = MaterialTheme.typography.labelSmall,
-                color = WarmWhite.copy(alpha = 0.3f)
+                color = TextPrimary.copy(alpha = 0.3f)
             )
         } else {
             team.members.forEach { member ->
@@ -1169,7 +1169,7 @@ private fun TeamCard(
                             modifier = Modifier
                                 .size(20.dp)
                                 .clip(CircleShape)
-                                .background(Navy700),
+                                .background(LightBg),
                             contentScale = ContentScale.Crop
                         )
                     } else {
@@ -1177,13 +1177,13 @@ private fun TeamCard(
                             modifier = Modifier
                                 .size(20.dp)
                                 .clip(CircleShape)
-                                .background(Navy700),
+                                .background(LightBg),
                             contentAlignment = Alignment.Center
                         ) {
                             Icon(
                                 imageVector = Icons.Default.Person,
                                 contentDescription = null,
-                                tint = WarmWhite.copy(alpha = 0.4f),
+                                tint = TextPrimary.copy(alpha = 0.4f),
                                 modifier = Modifier.size(12.dp)
                             )
                         }
@@ -1192,7 +1192,7 @@ private fun TeamCard(
                     Text(
                         text = member.displayName ?: "Player",
                         style = MaterialTheme.typography.labelSmall,
-                        color = WarmWhite.copy(alpha = 0.8f),
+                        color = TextPrimary.copy(alpha = 0.8f),
                         modifier = Modifier.weight(1f)
                     )
                     // Leader badge
@@ -1200,7 +1200,7 @@ private fun TeamCard(
                         Text(
                             text = "Leader",
                             style = MaterialTheme.typography.labelSmall,
-                            color = USOpenGold,
+                            color = GoldAccent,
                             fontWeight = FontWeight.SemiBold
                         )
                     }
@@ -1230,11 +1230,11 @@ private fun TeamCard(
                     onClick = onJoinTeam,
                     modifier = Modifier.fillMaxWidth(),
                     enabled = !uiState.isActioning,
-                    colors = ButtonDefaults.buttonColors(containerColor = USOpenGold),
+                    colors = ButtonDefaults.buttonColors(containerColor = GoldAccent),
                     shape = RoundedCornerShape(6.dp),
                     contentPadding = PaddingValues(vertical = 6.dp)
                 ) {
-                    Text("Join", color = Navy900, style = MaterialTheme.typography.labelSmall, fontWeight = FontWeight.SemiBold)
+                    Text("Join", color = NavBarBg, style = MaterialTheme.typography.labelSmall, fontWeight = FontWeight.SemiBold)
                 }
             }
         }
@@ -1255,17 +1255,17 @@ private fun AddTeamDialog(
             Button(
                 onClick = { onConfirm(teamName.trim()) },
                 enabled = teamName.isNotBlank(),
-                colors = ButtonDefaults.buttonColors(containerColor = USOpenGold)
+                colors = ButtonDefaults.buttonColors(containerColor = GoldAccent)
             ) {
-                Text("Add", color = Navy900)
+                Text("Add", color = NavBarBg)
             }
         },
         dismissButton = {
             OutlinedButton(onClick = onDismiss) {
-                Text("Cancel", color = WarmWhite)
+                Text("Cancel", color = TextPrimary)
             }
         },
-        title = { Text("Add Team", color = WarmWhite) },
+        title = { Text("Add Team", color = TextPrimary) },
         text = {
             OutlinedTextField(
                 value = teamName,
@@ -1273,17 +1273,17 @@ private fun AddTeamDialog(
                 label = { Text("Team Name") },
                 singleLine = true,
                 colors = OutlinedTextFieldDefaults.colors(
-                    focusedBorderColor = USOpenGold,
-                    unfocusedBorderColor = WarmWhite.copy(alpha = 0.3f),
-                    focusedLabelColor = USOpenGold,
-                    unfocusedLabelColor = WarmWhite.copy(alpha = 0.6f),
-                    focusedTextColor = WarmWhite,
-                    unfocusedTextColor = WarmWhite,
-                    cursorColor = USOpenGold
+                    focusedBorderColor = GoldAccent,
+                    unfocusedBorderColor = TextPrimary.copy(alpha = 0.3f),
+                    focusedLabelColor = GoldAccent,
+                    unfocusedLabelColor = TextPrimary.copy(alpha = 0.6f),
+                    focusedTextColor = TextPrimary,
+                    unfocusedTextColor = TextPrimary,
+                    cursorColor = GoldAccent
                 )
             )
         },
-        containerColor = Navy800
+        containerColor = CardWhite
     )
 }
 
@@ -1301,13 +1301,13 @@ private fun EditLobbyDialog(
     var paymentType by remember { androidx.compose.runtime.mutableStateOf(lobby.paymentType) }
 
     val fieldColors = OutlinedTextFieldDefaults.colors(
-        focusedBorderColor = USOpenGold,
-        unfocusedBorderColor = WarmWhite.copy(alpha = 0.3f),
-        focusedLabelColor = USOpenGold,
-        unfocusedLabelColor = WarmWhite.copy(alpha = 0.6f),
-        focusedTextColor = WarmWhite,
-        unfocusedTextColor = WarmWhite,
-        cursorColor = USOpenGold
+        focusedBorderColor = GoldAccent,
+        unfocusedBorderColor = TextPrimary.copy(alpha = 0.3f),
+        focusedLabelColor = GoldAccent,
+        unfocusedLabelColor = TextPrimary.copy(alpha = 0.6f),
+        focusedTextColor = TextPrimary,
+        unfocusedTextColor = TextPrimary,
+        cursorColor = GoldAccent
     )
 
     val hasChanges = title != lobby.title ||
@@ -1328,17 +1328,17 @@ private fun EditLobbyDialog(
                     )
                 },
                 enabled = hasChanges && title.isNotBlank(),
-                colors = ButtonDefaults.buttonColors(containerColor = USOpenGold)
+                colors = ButtonDefaults.buttonColors(containerColor = GoldAccent)
             ) {
-                Text("Save", color = Navy900)
+                Text("Save", color = NavBarBg)
             }
         },
         dismissButton = {
             OutlinedButton(onClick = onDismiss) {
-                Text("Cancel", color = WarmWhite)
+                Text("Cancel", color = TextPrimary)
             }
         },
-        title = { Text("Edit Lobby", color = WarmWhite, fontWeight = FontWeight.Bold) },
+        title = { Text("Edit Lobby", color = TextPrimary, fontWeight = FontWeight.Bold) },
         text = {
             Column(
                 modifier = Modifier.verticalScroll(rememberScrollState()),
@@ -1367,7 +1367,7 @@ private fun EditLobbyDialog(
                 Text(
                     text = "Payment Type",
                     style = MaterialTheme.typography.labelLarge,
-                    color = WarmWhite.copy(alpha = 0.85f),
+                    color = TextPrimary.copy(alpha = 0.85f),
                     fontWeight = FontWeight.SemiBold
                 )
                 Row(
@@ -1377,7 +1377,7 @@ private fun EditLobbyDialog(
                     EditPaymentChip(
                         label = "Split",
                         isSelected = paymentType == "split",
-                        color = USOpenGold,
+                        color = GoldAccent,
                         onClick = { paymentType = "split" },
                         modifier = Modifier.weight(1f)
                     )
@@ -1407,12 +1407,12 @@ private fun EditLobbyDialog(
                         Text(
                             text = "Max Players",
                             style = MaterialTheme.typography.labelLarge,
-                            color = WarmWhite.copy(alpha = 0.85f)
+                            color = TextPrimary.copy(alpha = 0.85f)
                         )
                         Text(
                             text = "Current: ${lobby.currentPlayers}",
                             style = MaterialTheme.typography.labelSmall,
-                            color = WarmWhite.copy(alpha = 0.5f)
+                            color = TextPrimary.copy(alpha = 0.5f)
                         )
                     }
                     Row(
@@ -1426,13 +1426,13 @@ private fun EditLobbyDialog(
                             Icon(
                                 imageVector = Icons.Default.Remove,
                                 contentDescription = "Decrease",
-                                tint = if (maxPlayers > lobby.currentPlayers.coerceAtLeast(2)) USOpenGold else WarmWhite.copy(alpha = 0.3f)
+                                tint = if (maxPlayers > lobby.currentPlayers.coerceAtLeast(2)) GoldAccent else TextPrimary.copy(alpha = 0.3f)
                             )
                         }
                         Text(
                             text = maxPlayers.toString(),
                             style = MaterialTheme.typography.titleLarge,
-                            color = WarmWhite,
+                            color = TextPrimary,
                             fontWeight = FontWeight.Bold
                         )
                         IconButton(
@@ -1442,14 +1442,14 @@ private fun EditLobbyDialog(
                             Icon(
                                 imageVector = Icons.Default.Add,
                                 contentDescription = "Increase",
-                                tint = if (maxPlayers < 10) USOpenGold else WarmWhite.copy(alpha = 0.3f)
+                                tint = if (maxPlayers < 10) GoldAccent else TextPrimary.copy(alpha = 0.3f)
                             )
                         }
                     }
                 }
             }
         },
-        containerColor = Navy800
+        containerColor = CardWhite
     )
 }
 
@@ -1461,8 +1461,8 @@ private fun EditPaymentChip(
     onClick: () -> Unit,
     modifier: Modifier = Modifier
 ) {
-    val borderColor = if (isSelected) color else WarmWhite.copy(alpha = 0.2f)
-    val bgColor = if (isSelected) color.copy(alpha = 0.15f) else Navy700
+    val borderColor = if (isSelected) color else TextPrimary.copy(alpha = 0.2f)
+    val bgColor = if (isSelected) color.copy(alpha = 0.15f) else LightBg
 
     Box(
         modifier = modifier
@@ -1480,7 +1480,7 @@ private fun EditPaymentChip(
         Text(
             text = label,
             style = MaterialTheme.typography.labelMedium,
-            color = if (isSelected) color else WarmWhite.copy(alpha = 0.7f),
+            color = if (isSelected) color else TextPrimary.copy(alpha = 0.7f),
             fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Normal
         )
     }
@@ -1507,7 +1507,7 @@ private fun MemberRow(
                 modifier = Modifier
                     .size(36.dp)
                     .clip(CircleShape)
-                    .background(Navy700),
+                    .background(LightBg),
                 contentScale = ContentScale.Crop
             )
         } else {
@@ -1515,13 +1515,13 @@ private fun MemberRow(
                 modifier = Modifier
                     .size(36.dp)
                     .clip(CircleShape)
-                    .background(Navy700),
+                    .background(LightBg),
                 contentAlignment = Alignment.Center
             ) {
                 Icon(
                     imageVector = Icons.Default.Person,
                     contentDescription = null,
-                    tint = WarmWhite.copy(alpha = 0.5f),
+                    tint = TextPrimary.copy(alpha = 0.5f),
                     modifier = Modifier.size(20.dp)
                 )
             }
@@ -1533,14 +1533,14 @@ private fun MemberRow(
             Text(
                 text = member.displayName ?: "Player #${member.userId}",
                 style = MaterialTheme.typography.bodyMedium,
-                color = WarmWhite,
+                color = TextPrimary,
                 fontWeight = FontWeight.Medium
             )
             if (showPaymentStatus && member.shareAmount != null) {
                 Text(
                     text = "${"%.0f".format(member.shareAmount)} MKD",
                     style = MaterialTheme.typography.labelSmall,
-                    color = WarmWhite.copy(alpha = 0.5f)
+                    color = TextPrimary.copy(alpha = 0.5f)
                 )
             }
         }
@@ -1565,7 +1565,7 @@ private fun MemberRow(
                 Text(
                     text = "Pending",
                     style = MaterialTheme.typography.labelSmall,
-                    color = USOpenGold
+                    color = GoldAccent
                 )
             }
         }
@@ -1605,11 +1605,11 @@ private fun VenueBookingLobbyDetailScreenPreview() {
         )
     )
     Scaffold(
-        containerColor = Navy900,
+        containerColor = NavBarBg,
         topBar = {
             TopAppBar(
-                title = { Text(lobby.title, color = WarmWhite) },
-                colors = TopAppBarDefaults.topAppBarColors(containerColor = Navy800)
+                title = { Text(lobby.title, color = TextPrimary) },
+                colors = TopAppBarDefaults.topAppBarColors(containerColor = CardWhite)
             )
         }
     ) { padding ->
@@ -1622,7 +1622,7 @@ private fun VenueBookingLobbyDetailScreenPreview() {
                 Column(
                     modifier = Modifier.padding(horizontal = 16.dp, vertical = 12.dp)
                 ) {
-                    Text("Members", style = MaterialTheme.typography.titleSmall, color = WarmWhite.copy(alpha = 0.8f))
+                    Text("Members", style = MaterialTheme.typography.titleSmall, color = TextPrimary.copy(alpha = 0.8f))
                 }
             }
             items(lobby.members) { member ->

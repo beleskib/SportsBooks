@@ -54,14 +54,14 @@ import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.example.sportsbook.domain.model.TimeSlot
-import com.example.sportsbook.ui.theme.CoolGray
-import com.example.sportsbook.ui.theme.Navy600
-import com.example.sportsbook.ui.theme.Navy700
-import com.example.sportsbook.ui.theme.Navy800
-import com.example.sportsbook.ui.theme.Navy900
+import com.example.sportsbook.ui.theme.TextSecondary
+import com.example.sportsbook.ui.theme.BorderGray
+import com.example.sportsbook.ui.theme.LightBg
+import com.example.sportsbook.ui.theme.CardWhite
+import com.example.sportsbook.ui.theme.NavBarBg
 import com.example.sportsbook.ui.theme.SportsBookTheme
-import com.example.sportsbook.ui.theme.USOpenGold
-import com.example.sportsbook.ui.theme.WarmWhite
+import com.example.sportsbook.ui.theme.GoldAccent
+import com.example.sportsbook.ui.theme.TextPrimary
 import java.time.LocalDate
 import java.time.format.DateTimeFormatter
 
@@ -84,8 +84,8 @@ private val ColorAvailable = Color(0xFF166534) // deep green
 private val ColorAvailableBg = Color(0xFFDCFCE7)
 private val ColorBooked = Color(0xFF92400E)
 private val ColorBookedBg = Color(0xFFFEF3C7)
-private val ColorEmpty = Navy700
-private val ColorEmptyBorder = Navy600
+private val ColorEmpty = LightBg
+private val ColorEmptyBorder = BorderGray
 private val ColorToday = Color(0xFF1D4ED8)
 
 private enum class CellState { EMPTY, AVAILABLE, BOOKED }
@@ -114,22 +114,22 @@ fun WeeklyCalendarScreen(
     }
 
     Scaffold(
-        containerColor = Navy900,
+        containerColor = NavBarBg,
         snackbarHost = { SnackbarHost(snackbarHostState) },
         topBar = {
             TopAppBar(
                 title = {
                     Text(
                         "Weekly Calendar",
-                        color = WarmWhite,
+                        color = TextPrimary,
                         style = MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.Bold)
                     )
                 },
-                colors = TopAppBarDefaults.topAppBarColors(containerColor = Navy900),
+                colors = TopAppBarDefaults.topAppBarColors(containerColor = NavBarBg),
                 navigationIcon = if (onBack != null) {
                     {
                         IconButton(onClick = onBack) {
-                            Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back", tint = WarmWhite)
+                            Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back", tint = TextPrimary)
                         }
                     }
                 } else ({})
@@ -143,7 +143,7 @@ fun WeeklyCalendarScreen(
                     .padding(innerPadding),
                 contentAlignment = Alignment.Center
             ) {
-                CircularProgressIndicator(color = USOpenGold)
+                CircularProgressIndicator(color = GoldAccent)
             }
             return@Scaffold
         }
@@ -160,7 +160,7 @@ fun WeeklyCalendarScreen(
             Text(
                 text = "Tap an empty cell to mark it available. Tap an available cell to remove it.",
                 style = MaterialTheme.typography.bodySmall,
-                color = CoolGray
+                color = TextSecondary
             )
 
             // ---- Entity selector row ----
@@ -228,26 +228,26 @@ private fun EntitySelectorRow(
                     modifier = Modifier
                         .width(120.dp)
                         .menuAnchor(),
-                    textStyle = MaterialTheme.typography.bodySmall.copy(color = WarmWhite),
+                    textStyle = MaterialTheme.typography.bodySmall.copy(color = TextPrimary),
                     colors = OutlinedTextFieldDefaults.colors(
-                        focusedBorderColor = USOpenGold,
-                        unfocusedBorderColor = Navy600
+                        focusedBorderColor = GoldAccent,
+                        unfocusedBorderColor = BorderGray
                     )
                 )
                 ExposedDropdownMenu(
                     expanded = expanded,
                     onDismissRequest = { expanded = false },
-                    modifier = Modifier.background(Navy700)
+                    modifier = Modifier.background(LightBg)
                 ) {
                     if (hasVenues) {
                         DropdownMenuItem(
-                            text = { Text("Venue", color = WarmWhite) },
+                            text = { Text("Venue", color = TextPrimary) },
                             onClick = { onEntityTypeSelected(V2EntityType.VENUE); expanded = false }
                         )
                     }
                     if (hasCoach) {
                         DropdownMenuItem(
-                            text = { Text("Coach", color = WarmWhite) },
+                            text = { Text("Coach", color = TextPrimary) },
                             onClick = { onEntityTypeSelected(V2EntityType.COACH); expanded = false }
                         )
                     }
@@ -272,20 +272,20 @@ private fun EntitySelectorRow(
                     modifier = Modifier
                         .weight(1f)
                         .menuAnchor(),
-                    textStyle = MaterialTheme.typography.bodySmall.copy(color = WarmWhite),
+                    textStyle = MaterialTheme.typography.bodySmall.copy(color = TextPrimary),
                     colors = OutlinedTextFieldDefaults.colors(
-                        focusedBorderColor = USOpenGold,
-                        unfocusedBorderColor = Navy600
+                        focusedBorderColor = GoldAccent,
+                        unfocusedBorderColor = BorderGray
                     )
                 )
                 ExposedDropdownMenu(
                     expanded = expanded,
                     onDismissRequest = { expanded = false },
-                    modifier = Modifier.background(Navy700)
+                    modifier = Modifier.background(LightBg)
                 ) {
                     entityOptions.forEach { option ->
                         DropdownMenuItem(
-                            text = { Text(option.label, color = WarmWhite) },
+                            text = { Text(option.label, color = TextPrimary) },
                             onClick = { onEntitySelected(option.id); expanded = false }
                         )
                     }
@@ -317,28 +317,28 @@ private fun WeekNavigationRow(
             Text(
                 text = "${weekStart.format(displayDateFmt)} – ${weekEnd.format(displayDateFmt)}",
                 style = MaterialTheme.typography.titleSmall.copy(fontWeight = FontWeight.Medium),
-                color = WarmWhite
+                color = TextPrimary
             )
             if (busy) {
                 Spacer(Modifier.width(8.dp))
-                CircularProgressIndicator(modifier = Modifier.size(14.dp), color = USOpenGold, strokeWidth = 2.dp)
+                CircularProgressIndicator(modifier = Modifier.size(14.dp), color = GoldAccent, strokeWidth = 2.dp)
             }
         }
         Row(horizontalArrangement = Arrangement.spacedBy(4.dp)) {
             IconButton(onClick = onPrev, modifier = Modifier.size(32.dp)) {
-                Icon(Icons.Default.ChevronLeft, contentDescription = "Previous week", tint = WarmWhite)
+                Icon(Icons.Default.ChevronLeft, contentDescription = "Previous week", tint = TextPrimary)
             }
             OutlinedButton(
                 onClick = onToday,
                 shape = RoundedCornerShape(6.dp),
                 modifier = Modifier.height(32.dp),
-                border = androidx.compose.foundation.BorderStroke(1.dp, Navy600),
+                border = androidx.compose.foundation.BorderStroke(1.dp, BorderGray),
                 contentPadding = androidx.compose.foundation.layout.PaddingValues(horizontal = 10.dp, vertical = 0.dp)
             ) {
-                Text("Today", color = WarmWhite, style = MaterialTheme.typography.labelMedium)
+                Text("Today", color = TextPrimary, style = MaterialTheme.typography.labelMedium)
             }
             IconButton(onClick = onNext, modifier = Modifier.size(32.dp)) {
-                Icon(Icons.Default.ChevronRight, contentDescription = "Next week", tint = WarmWhite)
+                Icon(Icons.Default.ChevronRight, contentDescription = "Next week", tint = TextPrimary)
             }
         }
     }
@@ -393,11 +393,11 @@ private fun CalendarGrid(
                 modifier = Modifier
                     .width(hourColWidth)
                     .height(40.dp)
-                    .background(Navy800)
-                    .border(0.5.dp, Navy600),
+                    .background(CardWhite)
+                    .border(0.5.dp, BorderGray),
                 contentAlignment = Alignment.Center
             ) {
-                Text("Hr", style = MaterialTheme.typography.labelSmall, color = CoolGray)
+                Text("Hr", style = MaterialTheme.typography.labelSmall, color = TextSecondary)
             }
             DAY_LABELS.mapIndexed { idx, label ->
                 val date = weekStart.plusDays(idx.toLong()).format(dateFmt)
@@ -406,20 +406,20 @@ private fun CalendarGrid(
                     modifier = Modifier
                         .width(dayColWidth)
                         .height(40.dp)
-                        .background(if (isToday) Color(0xFF1E3A8A) else Navy800)
-                        .border(0.5.dp, Navy600),
+                        .background(if (isToday) Color(0xFF1E3A8A) else CardWhite)
+                        .border(0.5.dp, BorderGray),
                     contentAlignment = Alignment.Center
                 ) {
                     Column(horizontalAlignment = Alignment.CenterHorizontally) {
                         Text(
                             text = label,
                             style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Medium),
-                            color = if (isToday) Color(0xFF93C5FD) else WarmWhite
+                            color = if (isToday) Color(0xFF93C5FD) else TextPrimary
                         )
                         Text(
                             text = weekStart.plusDays(idx.toLong()).format(displayDateFmt),
                             style = MaterialTheme.typography.labelSmall,
-                            color = CoolGray
+                            color = TextSecondary
                         )
                     }
                 }
@@ -434,14 +434,14 @@ private fun CalendarGrid(
                     modifier = Modifier
                         .width(hourColWidth)
                         .height(36.dp)
-                        .background(Navy800)
-                        .border(0.5.dp, Navy600),
+                        .background(CardWhite)
+                        .border(0.5.dp, BorderGray),
                     contentAlignment = Alignment.Center
                 ) {
                     Text(
                         text = "${hour.toString().padStart(2, '0')}:00",
                         style = MaterialTheme.typography.labelSmall,
-                        color = CoolGray
+                        color = TextSecondary
                     )
                 }
                 // Day cells
@@ -484,13 +484,13 @@ private fun Legend(busy: Boolean) {
     ) {
         LegendItem(color = Color(0xFF16A34A), label = "Available")
         LegendItem(color = Color(0xFFD97706), label = "Booked")
-        LegendItem(color = Navy700, label = "Empty")
+        LegendItem(color = LightBg, label = "Empty")
         if (busy) {
             Spacer(Modifier.weight(1f))
             Text(
                 text = "Saving\u2026",
                 style = MaterialTheme.typography.labelSmall,
-                color = USOpenGold
+                color = GoldAccent
             )
         }
     }
@@ -505,7 +505,7 @@ private fun LegendItem(color: Color, label: String) {
             shape = RoundedCornerShape(2.dp),
             border = androidx.compose.foundation.BorderStroke(1.dp, color.copy(alpha = 0.5f))
         ) {}
-        Text(label, style = MaterialTheme.typography.labelSmall, color = CoolGray)
+        Text(label, style = MaterialTheme.typography.labelSmall, color = TextSecondary)
     }
 }
 
@@ -526,7 +526,7 @@ private fun WeeklyCalendarScreenPreview() {
             Text(
                 "Weekly Calendar",
                 style = MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.Bold),
-                color = WarmWhite
+                color = TextPrimary
             )
             WeekNavigationRow(
                 weekStart = LocalDate.of(2026, 4, 20),

@@ -67,11 +67,16 @@ import com.example.sportsbook.domain.repository.GamificationRepository
 import com.example.sportsbook.ui.common.ErrorView
 import com.example.sportsbook.ui.common.LoadingIndicator
 import com.example.sportsbook.ui.common.toDisplayDateTime
+import com.example.sportsbook.ui.theme.BorderGray
+import com.example.sportsbook.ui.theme.CardWhite
+import com.example.sportsbook.ui.theme.GoldAccent
 import com.example.sportsbook.ui.theme.GoldDark
-import com.example.sportsbook.ui.theme.Navy900
+import com.example.sportsbook.ui.theme.LightBg
+import com.example.sportsbook.ui.theme.NavBarBg
 import com.example.sportsbook.ui.theme.SportGreen
-import com.example.sportsbook.ui.theme.USOpenGold
-import com.example.sportsbook.ui.theme.WarmWhite
+import com.example.sportsbook.ui.theme.TextPrimary
+import com.example.sportsbook.ui.theme.TextSecondary
+import com.example.sportsbook.ui.theme.TextTertiary
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -173,13 +178,13 @@ fun PlayerAchievementsScreen(
     }
 
     Scaffold(
-        containerColor = Navy900,
+        containerColor = LightBg,
         topBar = {
             TopAppBar(
                 title = {
                     Text(
                         text = "Achievements",
-                        color = WarmWhite,
+                        color = GoldAccent,
                         fontWeight = FontWeight.Bold
                     )
                 },
@@ -188,7 +193,7 @@ fun PlayerAchievementsScreen(
                         Icon(
                             imageVector = Icons.AutoMirrored.Filled.ArrowBack,
                             contentDescription = "Back",
-                            tint = WarmWhite
+                            tint = androidx.compose.ui.graphics.Color.White
                         )
                     }
                 },
@@ -200,11 +205,11 @@ fun PlayerAchievementsScreen(
                         Icon(
                             imageVector = Icons.Default.Refresh,
                             contentDescription = "Check new achievements",
-                            tint = if (uiState.isChecking) WarmWhite.copy(alpha = 0.4f) else USOpenGold
+                            tint = if (uiState.isChecking) androidx.compose.ui.graphics.Color.White.copy(alpha = 0.4f) else GoldAccent
                         )
                     }
                 },
-                colors = TopAppBarDefaults.topAppBarColors(containerColor = Navy900)
+                colors = TopAppBarDefaults.topAppBarColors(containerColor = NavBarBg)
             )
         },
         snackbarHost = { SnackbarHost(snackbarHostState) }
@@ -255,10 +260,10 @@ fun PlayerAchievementsScreen(
                                     )
                                 },
                                 colors = FilterChipDefaults.filterChipColors(
-                                    selectedContainerColor = USOpenGold,
-                                    selectedLabelColor = Navy900,
-                                    containerColor = WarmWhite.copy(alpha = 0.08f),
-                                    labelColor = WarmWhite.copy(alpha = 0.8f)
+                                    selectedContainerColor = GoldAccent,
+                                    selectedLabelColor = NavBarBg,
+                                    containerColor = BorderGray,
+                                    labelColor = TextSecondary
                                 )
                             )
                         }
@@ -276,7 +281,7 @@ fun PlayerAchievementsScreen(
                             Text(
                                 text = "No achievements in this category",
                                 style = MaterialTheme.typography.bodyMedium,
-                                color = WarmWhite.copy(alpha = 0.5f),
+                                color = TextTertiary,
                                 textAlign = TextAlign.Center
                             )
                         }
@@ -322,9 +327,9 @@ private fun AchievementSummaryCard(
     Card(
         modifier = modifier.fillMaxWidth(),
         colors = CardDefaults.cardColors(
-            containerColor = MaterialTheme.colorScheme.surface.copy(alpha = 0.08f)
+            containerColor = CardWhite
         ),
-        elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)
+        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
     ) {
         Column(modifier = Modifier.padding(16.dp)) {
             Row(
@@ -334,13 +339,13 @@ private fun AchievementSummaryCard(
                 Icon(
                     imageVector = Icons.Default.EmojiEvents,
                     contentDescription = null,
-                    tint = USOpenGold,
+                    tint = GoldAccent,
                     modifier = Modifier.size(24.dp)
                 )
                 Text(
                     text = "$earned of $total Achievements Earned",
                     style = MaterialTheme.typography.titleSmall.copy(fontWeight = FontWeight.Bold),
-                    color = WarmWhite
+                    color = TextPrimary
                 )
             }
             Spacer(modifier = Modifier.height(8.dp))
@@ -350,14 +355,14 @@ private fun AchievementSummaryCard(
                     .fillMaxWidth()
                     .height(8.dp)
                     .clip(RoundedCornerShape(4.dp)),
-                color = USOpenGold,
-                trackColor = WarmWhite.copy(alpha = 0.15f)
+                color = GoldAccent,
+                trackColor = BorderGray
             )
             Spacer(modifier = Modifier.height(4.dp))
             Text(
                 text = "${(progress * 100).toInt()}% complete",
                 style = MaterialTheme.typography.labelSmall,
-                color = WarmWhite.copy(alpha = 0.6f)
+                color = TextSecondary
             )
         }
     }
@@ -371,8 +376,8 @@ private fun AchievementCard(
     modifier: Modifier = Modifier
 ) {
     val cardAlpha = if (isEarned) 1f else 0.5f
-    val borderColor = if (isEarned) USOpenGold else WarmWhite.copy(alpha = 0.1f)
-    val iconTint = if (isEarned) USOpenGold else WarmWhite.copy(alpha = 0.4f)
+    val borderColor = if (isEarned) GoldAccent else BorderGray
+    val iconTint = if (isEarned) GoldAccent else TextTertiary
 
     Card(
         modifier = modifier
@@ -386,9 +391,9 @@ private fun AchievementCard(
         shape = RoundedCornerShape(12.dp),
         colors = CardDefaults.cardColors(
             containerColor = if (isEarned)
-                GoldDark.copy(alpha = 0.12f)
+                GoldDark.copy(alpha = 0.08f)
             else
-                MaterialTheme.colorScheme.surface.copy(alpha = 0.06f)
+                CardWhite
         ),
         elevation = CardDefaults.cardElevation(defaultElevation = if (isEarned) 2.dp else 0.dp)
     ) {
@@ -413,13 +418,13 @@ private fun AchievementCard(
                         modifier = Modifier
                             .size(16.dp)
                             .align(Alignment.TopEnd)
-                            .background(Navy900, shape = RoundedCornerShape(50))
+                            .background(CardWhite, shape = RoundedCornerShape(50))
                     )
                 } else {
                     Icon(
                         imageVector = Icons.Default.Lock,
                         contentDescription = "Locked",
-                        tint = WarmWhite.copy(alpha = 0.3f),
+                        tint = TextTertiary,
                         modifier = Modifier
                             .size(16.dp)
                             .align(Alignment.TopEnd)
@@ -430,7 +435,7 @@ private fun AchievementCard(
             Text(
                 text = achievement.name,
                 style = MaterialTheme.typography.labelMedium.copy(fontWeight = FontWeight.Bold),
-                color = if (isEarned) WarmWhite else WarmWhite.copy(alpha = 0.6f),
+                color = if (isEarned) TextPrimary else TextSecondary,
                 textAlign = TextAlign.Center,
                 maxLines = 2,
                 overflow = TextOverflow.Ellipsis
@@ -439,7 +444,7 @@ private fun AchievementCard(
             Text(
                 text = achievement.description,
                 style = MaterialTheme.typography.bodySmall,
-                color = WarmWhite.copy(alpha = 0.5f),
+                color = TextTertiary,
                 textAlign = TextAlign.Center,
                 maxLines = 3,
                 overflow = TextOverflow.Ellipsis
@@ -450,15 +455,15 @@ private fun AchievementCard(
                 modifier = Modifier
                     .clip(RoundedCornerShape(8.dp))
                     .background(
-                        if (isEarned) USOpenGold.copy(alpha = 0.2f)
-                        else WarmWhite.copy(alpha = 0.05f)
+                        if (isEarned) GoldAccent.copy(alpha = 0.2f)
+                        else BorderGray
                     )
                     .padding(horizontal = 8.dp, vertical = 3.dp)
             ) {
                 Text(
                     text = "+${achievement.xpReward} XP",
                     style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Bold),
-                    color = if (isEarned) USOpenGold else WarmWhite.copy(alpha = 0.4f)
+                    color = if (isEarned) GoldDark else TextTertiary
                 )
             }
             if (isEarned && !earnedAt.isNullOrBlank()) {
@@ -466,7 +471,7 @@ private fun AchievementCard(
                 Text(
                     text = earnedAt.toDisplayDateTime(),
                     style = MaterialTheme.typography.labelSmall,
-                    color = WarmWhite.copy(alpha = 0.45f),
+                    color = TextTertiary,
                     textAlign = TextAlign.Center
                 )
             }
@@ -487,7 +492,7 @@ private fun achievementIcon(iconName: String): ImageVector {
 
 // ─── Preview ─────────────────────────────────────────────────────────────────
 
-@Preview(showBackground = true, backgroundColor = 0xFF0A1628)
+@Preview(showBackground = true, backgroundColor = 0xFFF9FAFB)
 @Composable
 private fun PlayerAchievementsScreenPreview() {
     MaterialTheme {

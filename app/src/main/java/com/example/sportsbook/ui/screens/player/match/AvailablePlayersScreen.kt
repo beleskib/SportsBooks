@@ -77,12 +77,12 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import coil.compose.AsyncImage
 import com.example.sportsbook.domain.enums.SportType
 import com.example.sportsbook.domain.model.AvailablePlayer
-import com.example.sportsbook.ui.theme.Navy600
-import com.example.sportsbook.ui.theme.Navy700
-import com.example.sportsbook.ui.theme.Navy900
+import com.example.sportsbook.ui.theme.BorderGray
+import com.example.sportsbook.ui.theme.LightBg
+import com.example.sportsbook.ui.theme.NavBarBg
 import com.example.sportsbook.ui.theme.SportGreen
-import com.example.sportsbook.ui.theme.USOpenGold
-import com.example.sportsbook.ui.theme.WarmWhite
+import com.example.sportsbook.ui.theme.GoldAccent
+import com.example.sportsbook.ui.theme.TextPrimary
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -112,14 +112,14 @@ fun AvailablePlayersScreen(
     }
 
     Scaffold(
-        containerColor = Navy900,
+        containerColor = NavBarBg,
         snackbarHost = { SnackbarHost(snackbarHostState) },
         topBar = {
             TopAppBar(
                 title = {
                     Text(
                         text = "Available Players",
-                        color = WarmWhite,
+                        color = TextPrimary,
                         fontWeight = FontWeight.Bold
                     )
                 },
@@ -128,11 +128,11 @@ fun AvailablePlayersScreen(
                         Icon(
                             imageVector = Icons.AutoMirrored.Filled.ArrowBack,
                             contentDescription = "Back",
-                            tint = WarmWhite
+                            tint = TextPrimary
                         )
                     }
                 },
-                colors = TopAppBarDefaults.topAppBarColors(containerColor = Navy700)
+                colors = TopAppBarDefaults.topAppBarColors(containerColor = LightBg)
             )
         }
     ) { padding ->
@@ -167,12 +167,12 @@ fun AvailablePlayersScreen(
                             label = {
                                 Text(
                                     text = sport.displayName,
-                                    color = if (uiState.selectedSport == sport) Navy900 else WarmWhite
+                                    color = if (uiState.selectedSport == sport) NavBarBg else TextPrimary
                                 )
                             },
                             colors = FilterChipDefaults.filterChipColors(
-                                selectedContainerColor = USOpenGold,
-                                containerColor = Navy600
+                                selectedContainerColor = GoldAccent,
+                                containerColor = BorderGray
                             )
                         )
                     }
@@ -217,13 +217,13 @@ fun AvailablePlayersScreen(
                         Text(
                             text = "${uiState.availablePlayers.size} player${if (uiState.availablePlayers.size != 1) "s" else ""} found",
                             style = MaterialTheme.typography.labelLarge,
-                            color = WarmWhite.copy(alpha = 0.7f)
+                            color = TextPrimary.copy(alpha = 0.7f)
                         )
                         if (uiState.skillFilterEnabled) {
                             Text(
                                 text = "Skill ${uiState.filterMinSkill}–${uiState.filterMaxSkill}",
                                 style = MaterialTheme.typography.labelMedium,
-                                color = USOpenGold
+                                color = GoldAccent
                             )
                         }
                     }
@@ -240,7 +240,7 @@ fun AvailablePlayersScreen(
                                 .height(200.dp),
                             contentAlignment = Alignment.Center
                         ) {
-                            CircularProgressIndicator(color = USOpenGold)
+                            CircularProgressIndicator(color = GoldAccent)
                         }
                     }
                 }
@@ -256,7 +256,7 @@ fun AvailablePlayersScreen(
                                 Icon(
                                     imageVector = Icons.Default.Person,
                                     contentDescription = null,
-                                    tint = WarmWhite.copy(alpha = 0.4f),
+                                    tint = TextPrimary.copy(alpha = 0.4f),
                                     modifier = Modifier.size(48.dp)
                                 )
                                 Spacer(modifier = Modifier.height(12.dp))
@@ -266,13 +266,13 @@ fun AvailablePlayersScreen(
                                     else
                                         "No players available for this sport yet",
                                     style = MaterialTheme.typography.bodyMedium,
-                                    color = WarmWhite.copy(alpha = 0.6f),
+                                    color = TextPrimary.copy(alpha = 0.6f),
                                     textAlign = TextAlign.Center
                                 )
                                 if (uiState.skillFilterEnabled) {
                                     Spacer(modifier = Modifier.height(8.dp))
                                     TextButton(onClick = { viewModel.clearSkillFilter() }) {
-                                        Text("Clear Skill Filter", color = USOpenGold)
+                                        Text("Clear Skill Filter", color = GoldAccent)
                                     }
                                 }
                             }
@@ -306,10 +306,10 @@ private fun MatchRequirementsBanner(
     Card(
         modifier = Modifier.fillMaxWidth(),
         colors = CardDefaults.cardColors(
-            containerColor = if (isApplied) SportGreen.copy(alpha = 0.15f) else USOpenGold.copy(alpha = 0.1f)
+            containerColor = if (isApplied) SportGreen.copy(alpha = 0.15f) else GoldAccent.copy(alpha = 0.1f)
         ),
         shape = RoundedCornerShape(12.dp),
-        border = BorderStroke(1.dp, if (isApplied) SportGreen.copy(alpha = 0.4f) else USOpenGold.copy(alpha = 0.3f))
+        border = BorderStroke(1.dp, if (isApplied) SportGreen.copy(alpha = 0.4f) else GoldAccent.copy(alpha = 0.3f))
     ) {
         Row(
             modifier = Modifier
@@ -321,7 +321,7 @@ private fun MatchRequirementsBanner(
             Icon(
                 imageVector = Icons.Default.Info,
                 contentDescription = null,
-                tint = if (isApplied) SportGreen else USOpenGold,
+                tint = if (isApplied) SportGreen else GoldAccent,
                 modifier = Modifier.size(20.dp)
             )
 
@@ -329,7 +329,7 @@ private fun MatchRequirementsBanner(
                 Text(
                     text = "Match Requirements",
                     style = MaterialTheme.typography.labelLarge,
-                    color = WarmWhite,
+                    color = TextPrimary,
                     fontWeight = FontWeight.SemiBold
                 )
                 Row(
@@ -339,7 +339,7 @@ private fun MatchRequirementsBanner(
                     Text(
                         text = "Skill level ${minSkill ?: 1} – ${maxSkill ?: 5}",
                         style = MaterialTheme.typography.bodySmall,
-                        color = WarmWhite.copy(alpha = 0.7f)
+                        color = TextPrimary.copy(alpha = 0.7f)
                     )
                     Row(horizontalArrangement = Arrangement.spacedBy(1.dp)) {
                         repeat(5) { i ->
@@ -348,7 +348,7 @@ private fun MatchRequirementsBanner(
                             Icon(
                                 imageVector = if (inRange) Icons.Default.Star else Icons.Default.StarBorder,
                                 contentDescription = null,
-                                tint = if (inRange) USOpenGold else WarmWhite.copy(alpha = 0.3f),
+                                tint = if (inRange) GoldAccent else TextPrimary.copy(alpha = 0.3f),
                                 modifier = Modifier.size(12.dp)
                             )
                         }
@@ -358,14 +358,14 @@ private fun MatchRequirementsBanner(
 
             if (isApplied) {
                 TextButton(onClick = onClear) {
-                    Text("Clear", color = WarmWhite.copy(alpha = 0.7f), style = MaterialTheme.typography.labelMedium)
+                    Text("Clear", color = TextPrimary.copy(alpha = 0.7f), style = MaterialTheme.typography.labelMedium)
                 }
             } else {
                 Button(
                     onClick = onApply,
                     colors = ButtonDefaults.buttonColors(
-                        containerColor = USOpenGold,
-                        contentColor = Navy900
+                        containerColor = GoldAccent,
+                        contentColor = NavBarBg
                     ),
                     contentPadding = PaddingValues(horizontal = 12.dp, vertical = 4.dp)
                 ) {
@@ -387,7 +387,7 @@ private fun SkillFilterCard(
 ) {
     Card(
         modifier = Modifier.fillMaxWidth(),
-        colors = CardDefaults.cardColors(containerColor = Navy700),
+        colors = CardDefaults.cardColors(containerColor = LightBg),
         shape = RoundedCornerShape(12.dp)
     ) {
         Column(modifier = Modifier.padding(12.dp)) {
@@ -404,13 +404,13 @@ private fun SkillFilterCard(
                     Icon(
                         imageVector = Icons.Default.Tune,
                         contentDescription = null,
-                        tint = USOpenGold,
+                        tint = GoldAccent,
                         modifier = Modifier.size(18.dp)
                     )
                     Text(
                         text = "Skill Filter",
                         style = MaterialTheme.typography.titleSmall,
-                        color = WarmWhite,
+                        color = TextPrimary,
                         fontWeight = FontWeight.SemiBold
                     )
                 }
@@ -418,10 +418,10 @@ private fun SkillFilterCard(
                     checked = isEnabled,
                     onCheckedChange = onToggle,
                     colors = SwitchDefaults.colors(
-                        checkedThumbColor = Navy900,
-                        checkedTrackColor = USOpenGold,
-                        uncheckedThumbColor = WarmWhite.copy(alpha = 0.6f),
-                        uncheckedTrackColor = Navy600
+                        checkedThumbColor = NavBarBg,
+                        checkedTrackColor = GoldAccent,
+                        uncheckedThumbColor = TextPrimary.copy(alpha = 0.6f),
+                        uncheckedTrackColor = BorderGray
                     )
                 )
             }
@@ -436,13 +436,13 @@ private fun SkillFilterCard(
                     modifier = Modifier.padding(top = 12.dp),
                     verticalArrangement = Arrangement.spacedBy(12.dp)
                 ) {
-                    HorizontalDivider(color = WarmWhite.copy(alpha = 0.1f))
+                    HorizontalDivider(color = TextPrimary.copy(alpha = 0.1f))
 
                     // Min skill
                     Text(
                         text = "Minimum Skill",
                         style = MaterialTheme.typography.labelMedium,
-                        color = WarmWhite.copy(alpha = 0.7f)
+                        color = TextPrimary.copy(alpha = 0.7f)
                     )
                     Row(
                         horizontalArrangement = Arrangement.spacedBy(4.dp),
@@ -456,13 +456,13 @@ private fun SkillFilterCard(
                                     .size(40.dp)
                                     .clip(RoundedCornerShape(8.dp))
                                     .background(
-                                        if (isSelected) USOpenGold.copy(alpha = 0.2f)
-                                        else Navy600
+                                        if (isSelected) GoldAccent.copy(alpha = 0.2f)
+                                        else BorderGray
                                     )
                                     .then(
                                         if (isSelected) Modifier.border(
                                             1.dp,
-                                            USOpenGold.copy(alpha = 0.5f),
+                                            GoldAccent.copy(alpha = 0.5f),
                                             RoundedCornerShape(8.dp)
                                         )
                                         else Modifier
@@ -473,7 +473,7 @@ private fun SkillFilterCard(
                                 Icon(
                                     imageVector = if (isSelected) Icons.Default.Star else Icons.Default.StarBorder,
                                     contentDescription = "Skill $starIndex",
-                                    tint = if (isSelected) USOpenGold else WarmWhite.copy(alpha = 0.4f),
+                                    tint = if (isSelected) GoldAccent else TextPrimary.copy(alpha = 0.4f),
                                     modifier = Modifier.size(22.dp)
                                 )
                             }
@@ -482,7 +482,7 @@ private fun SkillFilterCard(
                         Text(
                             text = "$minSkill",
                             style = MaterialTheme.typography.titleMedium,
-                            color = USOpenGold,
+                            color = GoldAccent,
                             fontWeight = FontWeight.Bold
                         )
                     }
@@ -491,7 +491,7 @@ private fun SkillFilterCard(
                     Text(
                         text = "Maximum Skill",
                         style = MaterialTheme.typography.labelMedium,
-                        color = WarmWhite.copy(alpha = 0.7f)
+                        color = TextPrimary.copy(alpha = 0.7f)
                     )
                     Row(
                         horizontalArrangement = Arrangement.spacedBy(4.dp),
@@ -505,13 +505,13 @@ private fun SkillFilterCard(
                                     .size(40.dp)
                                     .clip(RoundedCornerShape(8.dp))
                                     .background(
-                                        if (isSelected) USOpenGold.copy(alpha = 0.2f)
-                                        else Navy600
+                                        if (isSelected) GoldAccent.copy(alpha = 0.2f)
+                                        else BorderGray
                                     )
                                     .then(
                                         if (isSelected) Modifier.border(
                                             1.dp,
-                                            USOpenGold.copy(alpha = 0.5f),
+                                            GoldAccent.copy(alpha = 0.5f),
                                             RoundedCornerShape(8.dp)
                                         )
                                         else Modifier
@@ -522,7 +522,7 @@ private fun SkillFilterCard(
                                 Icon(
                                     imageVector = if (isSelected) Icons.Default.Star else Icons.Default.StarBorder,
                                     contentDescription = "Skill $starIndex",
-                                    tint = if (isSelected) USOpenGold else WarmWhite.copy(alpha = 0.4f),
+                                    tint = if (isSelected) GoldAccent else TextPrimary.copy(alpha = 0.4f),
                                     modifier = Modifier.size(22.dp)
                                 )
                             }
@@ -531,7 +531,7 @@ private fun SkillFilterCard(
                         Text(
                             text = "$maxSkill",
                             style = MaterialTheme.typography.titleMedium,
-                            color = USOpenGold,
+                            color = GoldAccent,
                             fontWeight = FontWeight.Bold
                         )
                     }
@@ -540,7 +540,7 @@ private fun SkillFilterCard(
                     Text(
                         text = "Showing players with skill level $minSkill – $maxSkill",
                         style = MaterialTheme.typography.bodySmall,
-                        color = WarmWhite.copy(alpha = 0.5f)
+                        color = TextPrimary.copy(alpha = 0.5f)
                     )
                 }
             }
@@ -565,7 +565,7 @@ private fun AvailabilityToggleCard(
 
     Card(
         modifier = Modifier.fillMaxWidth(),
-        colors = CardDefaults.cardColors(containerColor = Navy700),
+        colors = CardDefaults.cardColors(containerColor = LightBg),
         shape = RoundedCornerShape(12.dp)
     ) {
         Column(
@@ -575,7 +575,7 @@ private fun AvailabilityToggleCard(
             Text(
                 text = "Your Availability",
                 style = MaterialTheme.typography.titleMedium,
-                color = USOpenGold,
+                color = GoldAccent,
                 fontWeight = FontWeight.Bold
             )
 
@@ -604,8 +604,8 @@ private fun AvailabilityToggleCard(
                     }
                     OutlinedButton(
                         onClick = { onUnregister(uiState.selectedSport.name.lowercase()) },
-                        colors = ButtonDefaults.outlinedButtonColors(contentColor = WarmWhite),
-                        border = BorderStroke(1.dp, WarmWhite.copy(alpha = 0.4f))
+                        colors = ButtonDefaults.outlinedButtonColors(contentColor = TextPrimary),
+                        border = BorderStroke(1.dp, TextPrimary.copy(alpha = 0.4f))
                     ) {
                         Text("Remove")
                     }
@@ -616,8 +616,8 @@ private fun AvailabilityToggleCard(
                         onClick = { showRegisterForm = true },
                         modifier = Modifier.fillMaxWidth(),
                         colors = ButtonDefaults.buttonColors(
-                            containerColor = USOpenGold,
-                            contentColor = Navy900
+                            containerColor = GoldAccent,
+                            contentColor = NavBarBg
                         )
                     ) {
                         Icon(Icons.Default.PersonAdd, contentDescription = null)
@@ -629,7 +629,7 @@ private fun AvailabilityToggleCard(
                     Text(
                         text = "Skill Level",
                         style = MaterialTheme.typography.labelMedium,
-                        color = WarmWhite.copy(alpha = 0.7f)
+                        color = TextPrimary.copy(alpha = 0.7f)
                     )
                     Row(
                         horizontalArrangement = Arrangement.spacedBy(4.dp),
@@ -647,7 +647,7 @@ private fun AvailabilityToggleCard(
                                     else
                                         Icons.Default.StarBorder,
                                     contentDescription = "Skill level $starIndex",
-                                    tint = USOpenGold,
+                                    tint = GoldAccent,
                                     modifier = Modifier.size(28.dp)
                                 )
                             }
@@ -656,7 +656,7 @@ private fun AvailabilityToggleCard(
                         Text(
                             text = "${uiState.registerSkillLevel}/5",
                             style = MaterialTheme.typography.bodySmall,
-                            color = WarmWhite.copy(alpha = 0.7f)
+                            color = TextPrimary.copy(alpha = 0.7f)
                         )
                     }
 
@@ -667,22 +667,22 @@ private fun AvailabilityToggleCard(
                         label = {
                             Text(
                                 "Note (optional)",
-                                color = WarmWhite.copy(alpha = 0.6f)
+                                color = TextPrimary.copy(alpha = 0.6f)
                             )
                         },
                         placeholder = {
                             Text(
                                 "e.g. Available for 2 hours, intermediate level",
-                                color = WarmWhite.copy(alpha = 0.4f)
+                                color = TextPrimary.copy(alpha = 0.4f)
                             )
                         },
                         modifier = Modifier.fillMaxWidth(),
                         colors = OutlinedTextFieldDefaults.colors(
-                            focusedTextColor = WarmWhite,
-                            unfocusedTextColor = WarmWhite,
-                            focusedBorderColor = USOpenGold,
-                            unfocusedBorderColor = WarmWhite.copy(alpha = 0.3f),
-                            cursorColor = USOpenGold
+                            focusedTextColor = TextPrimary,
+                            unfocusedTextColor = TextPrimary,
+                            focusedBorderColor = GoldAccent,
+                            unfocusedBorderColor = TextPrimary.copy(alpha = 0.3f),
+                            cursorColor = GoldAccent
                         ),
                         maxLines = 3
                     )
@@ -694,8 +694,8 @@ private fun AvailabilityToggleCard(
                         OutlinedButton(
                             onClick = { showRegisterForm = false },
                             modifier = Modifier.weight(1f),
-                            colors = ButtonDefaults.outlinedButtonColors(contentColor = WarmWhite),
-                            border = BorderStroke(1.dp, WarmWhite.copy(alpha = 0.4f))
+                            colors = ButtonDefaults.outlinedButtonColors(contentColor = TextPrimary),
+                            border = BorderStroke(1.dp, TextPrimary.copy(alpha = 0.4f))
                         ) {
                             Text("Cancel")
                         }
@@ -707,8 +707,8 @@ private fun AvailabilityToggleCard(
                             modifier = Modifier.weight(1f),
                             enabled = !uiState.isRegistering,
                             colors = ButtonDefaults.buttonColors(
-                                containerColor = USOpenGold,
-                                contentColor = Navy900
+                                containerColor = GoldAccent,
+                                contentColor = NavBarBg
                             )
                         ) {
                             Text(
@@ -745,12 +745,12 @@ private fun AvailablePlayerCard(
     val borderColor = when (meetsRequirements) {
         true -> SportGreen.copy(alpha = 0.6f)
         false -> MaterialTheme.colorScheme.error.copy(alpha = 0.4f)
-        null -> Navy600
+        null -> BorderGray
     }
 
     Card(
         modifier = modifier.fillMaxWidth(),
-        colors = CardDefaults.cardColors(containerColor = Navy600),
+        colors = CardDefaults.cardColors(containerColor = BorderGray),
         shape = RoundedCornerShape(12.dp),
         border = if (meetsRequirements != null) BorderStroke(1.dp, borderColor) else null
     ) {
@@ -776,14 +776,14 @@ private fun AvailablePlayerCard(
                     modifier = Modifier
                         .size(48.dp)
                         .clip(CircleShape)
-                        .background(Navy700),
+                        .background(LightBg),
                     contentAlignment = Alignment.Center
                 ) {
                     val initial = player.displayName?.firstOrNull()?.uppercaseChar()?.toString() ?: "?"
                     Text(
                         text = initial,
                         style = MaterialTheme.typography.titleMedium,
-                        color = USOpenGold,
+                        color = GoldAccent,
                         fontWeight = FontWeight.Bold
                     )
                 }
@@ -798,7 +798,7 @@ private fun AvailablePlayerCard(
                     Text(
                         text = player.displayName ?: "Anonymous",
                         style = MaterialTheme.typography.bodyLarge,
-                        color = WarmWhite,
+                        color = TextPrimary,
                         fontWeight = FontWeight.SemiBold,
                         maxLines = 1,
                         overflow = TextOverflow.Ellipsis,
@@ -834,10 +834,10 @@ private fun AvailablePlayerCard(
                                     Icons.Default.StarBorder,
                                 contentDescription = null,
                                 tint = if (index < player.skillLevel) {
-                                    if (inMatchRange || matchMinSkill == null) USOpenGold
+                                    if (inMatchRange || matchMinSkill == null) GoldAccent
                                     else MaterialTheme.colorScheme.error.copy(alpha = 0.7f)
                                 } else {
-                                    WarmWhite.copy(alpha = 0.2f)
+                                    TextPrimary.copy(alpha = 0.2f)
                                 },
                                 modifier = Modifier.size(14.dp)
                             )
@@ -846,7 +846,7 @@ private fun AvailablePlayerCard(
                         Text(
                             text = "${player.skillLevel}/5",
                             style = MaterialTheme.typography.labelSmall,
-                            color = WarmWhite.copy(alpha = 0.5f)
+                            color = TextPrimary.copy(alpha = 0.5f)
                         )
                     }
                 }
@@ -856,7 +856,7 @@ private fun AvailablePlayerCard(
                     Text(
                         text = player.note,
                         style = MaterialTheme.typography.bodySmall,
-                        color = WarmWhite.copy(alpha = 0.6f),
+                        color = TextPrimary.copy(alpha = 0.6f),
                         maxLines = 2,
                         overflow = TextOverflow.Ellipsis,
                         modifier = Modifier.padding(top = 4.dp)
@@ -871,12 +871,12 @@ private fun AvailablePlayerCard(
                     modifier = Modifier
                         .size(40.dp)
                         .clip(CircleShape)
-                        .background(USOpenGold)
+                        .background(GoldAccent)
                 ) {
                     Icon(
                         imageVector = Icons.Default.PersonAdd,
                         contentDescription = "Invite to match",
-                        tint = Navy900,
+                        tint = NavBarBg,
                         modifier = Modifier.size(20.dp)
                     )
                 }
@@ -922,13 +922,13 @@ private fun AvailablePlayersScreenPreview() {
         )
     )
     Scaffold(
-        containerColor = Navy900,
+        containerColor = NavBarBg,
         topBar = {
             TopAppBar(
                 title = {
                     Text(
                         text = "Available Players",
-                        color = WarmWhite,
+                        color = TextPrimary,
                         fontWeight = FontWeight.Bold
                     )
                 },
@@ -937,11 +937,11 @@ private fun AvailablePlayersScreenPreview() {
                         Icon(
                             imageVector = Icons.AutoMirrored.Filled.ArrowBack,
                             contentDescription = "Back",
-                            tint = WarmWhite
+                            tint = TextPrimary
                         )
                     }
                 },
-                colors = TopAppBarDefaults.topAppBarColors(containerColor = Navy700)
+                colors = TopAppBarDefaults.topAppBarColors(containerColor = LightBg)
             )
         }
     ) { padding ->

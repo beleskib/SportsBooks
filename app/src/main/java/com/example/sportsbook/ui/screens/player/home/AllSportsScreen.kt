@@ -42,12 +42,12 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.example.sportsbook.domain.enums.SportType
 import com.example.sportsbook.domain.model.Sport
-import com.example.sportsbook.ui.theme.Navy600
-import com.example.sportsbook.ui.theme.Navy700
-import com.example.sportsbook.ui.theme.Navy900
+import com.example.sportsbook.ui.theme.BorderGray
+import com.example.sportsbook.ui.theme.LightBg
+import com.example.sportsbook.ui.theme.NavBarBg
 import com.example.sportsbook.ui.theme.SportsBookTheme
-import com.example.sportsbook.ui.theme.USOpenGold
-import com.example.sportsbook.ui.theme.WarmWhite
+import com.example.sportsbook.ui.theme.GoldAccent
+import com.example.sportsbook.ui.theme.TextPrimary
 import com.example.sportsbook.ui.theme.SportBasketball
 import com.example.sportsbook.ui.theme.SportFootball
 import com.example.sportsbook.ui.theme.SportTennis
@@ -102,20 +102,20 @@ fun AllSportsScreen(
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
 
     Scaffold(
-        containerColor = Navy900,
+        containerColor = NavBarBg,
         topBar = {
             TopAppBar(
-                title = { Text("All Sports", color = WarmWhite) },
+                title = { Text("All Sports", color = TextPrimary) },
                 navigationIcon = {
                     IconButton(onClick = onBack) {
                         Icon(
                             Icons.AutoMirrored.Filled.ArrowBack,
                             contentDescription = "Back",
-                            tint = WarmWhite
+                            tint = TextPrimary
                         )
                     }
                 },
-                colors = TopAppBarDefaults.topAppBarColors(containerColor = Navy900)
+                colors = TopAppBarDefaults.topAppBarColors(containerColor = NavBarBg)
             )
         }
     ) { paddingValues ->
@@ -138,7 +138,7 @@ private fun AllSportsContent(
     LazyColumn(
         modifier = modifier
             .fillMaxSize()
-            .background(Navy900),
+            .background(NavBarBg),
         contentPadding = PaddingValues(horizontal = 16.dp, vertical = 8.dp),
         verticalArrangement = Arrangement.spacedBy(10.dp)
     ) {
@@ -186,7 +186,7 @@ private fun AllSportsCategoryCard(
                     Brush.linearGradient(
                         colors = listOf(
                             visual.color.copy(alpha = 0.35f),
-                            Navy700
+                            LightBg
                         )
                     )
                 )
@@ -214,7 +214,7 @@ private fun AllSportsCategoryCard(
                         style = MaterialTheme.typography.titleSmall.copy(
                             fontWeight = FontWeight.Bold
                         ),
-                        color = WarmWhite,
+                        color = TextPrimary,
                         maxLines = 1,
                         overflow = TextOverflow.Ellipsis
                     )

@@ -53,11 +53,14 @@ import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.example.sportsbook.domain.enums.SportType
-import com.example.sportsbook.ui.theme.Navy700
-import com.example.sportsbook.ui.theme.Navy800
-import com.example.sportsbook.ui.theme.Navy900
-import com.example.sportsbook.ui.theme.USOpenGold
-import com.example.sportsbook.ui.theme.WarmWhite
+import com.example.sportsbook.ui.theme.BorderGray
+import com.example.sportsbook.ui.theme.CardWhite
+import com.example.sportsbook.ui.theme.GoldAccent
+import com.example.sportsbook.ui.theme.LightBg
+import com.example.sportsbook.ui.theme.NavBarBg
+import com.example.sportsbook.ui.theme.TextPrimary
+import com.example.sportsbook.ui.theme.TextSecondary
+import com.example.sportsbook.ui.theme.TextTertiary
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -73,20 +76,20 @@ fun CreateCommunityScreen(
     }
 
     Scaffold(
-        containerColor = Navy900,
+        containerColor = LightBg,
         topBar = {
             TopAppBar(
-                title = { Text("Create Community", color = WarmWhite) },
+                title = { Text("Create Community", color = GoldAccent) },
                 navigationIcon = {
                     IconButton(onClick = onBack) {
                         Icon(
                             Icons.AutoMirrored.Filled.ArrowBack,
                             contentDescription = "Back",
-                            tint = WarmWhite
+                            tint = GoldAccent
                         )
                     }
                 },
-                colors = TopAppBarDefaults.topAppBarColors(containerColor = Navy800)
+                colors = TopAppBarDefaults.topAppBarColors(containerColor = NavBarBg)
             )
         }
     ) { padding ->
@@ -100,13 +103,13 @@ fun CreateCommunityScreen(
             verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
             val fieldColors = OutlinedTextFieldDefaults.colors(
-                focusedBorderColor = USOpenGold,
-                unfocusedBorderColor = WarmWhite.copy(alpha = 0.3f),
-                focusedLabelColor = USOpenGold,
-                unfocusedLabelColor = WarmWhite.copy(alpha = 0.6f),
-                focusedTextColor = WarmWhite,
-                unfocusedTextColor = WarmWhite,
-                cursorColor = USOpenGold
+                focusedBorderColor = GoldAccent,
+                unfocusedBorderColor = BorderGray,
+                focusedLabelColor = GoldAccent,
+                unfocusedLabelColor = TextTertiary,
+                focusedTextColor = TextPrimary,
+                unfocusedTextColor = TextPrimary,
+                cursorColor = GoldAccent
             )
 
             // Name
@@ -153,10 +156,10 @@ fun CreateCommunityScreen(
                 ExposedDropdownMenu(
                     expanded = sportDropdownExpanded,
                     onDismissRequest = { sportDropdownExpanded = false },
-                    containerColor = Navy700
+                    containerColor = CardWhite
                 ) {
                     DropdownMenuItem(
-                        text = { Text("None", color = WarmWhite.copy(alpha = 0.6f)) },
+                        text = { Text("None", color = TextTertiary) },
                         onClick = {
                             viewModel.onSportTypeChange("")
                             sportDropdownExpanded = false
@@ -164,7 +167,7 @@ fun CreateCommunityScreen(
                     )
                     SportType.entries.forEach { sport ->
                         DropdownMenuItem(
-                            text = { Text(sport.displayName, color = WarmWhite) },
+                            text = { Text(sport.displayName, color = TextPrimary) },
                             onClick = {
                                 viewModel.onSportTypeChange(sport.name.lowercase())
                                 sportDropdownExpanded = false
@@ -191,7 +194,7 @@ fun CreateCommunityScreen(
             Text(
                 text = "Invite Policy",
                 style = MaterialTheme.typography.titleSmall,
-                color = WarmWhite.copy(alpha = 0.8f),
+                color = TextSecondary,
                 fontWeight = FontWeight.Medium
             )
             listOf("friends_only" to "Friends Only", "invite_only" to "Invite Only", "open" to "Open to All")
@@ -211,14 +214,14 @@ fun CreateCommunityScreen(
                             selected = uiState.invitePolicy == value,
                             onClick = null,
                             colors = RadioButtonDefaults.colors(
-                                selectedColor = USOpenGold,
-                                unselectedColor = WarmWhite.copy(alpha = 0.5f)
+                                selectedColor = GoldAccent,
+                                unselectedColor = TextTertiary
                             )
                         )
                         Text(
                             text = label,
                             style = MaterialTheme.typography.bodyMedium,
-                            color = WarmWhite,
+                            color = TextPrimary,
                             modifier = Modifier.padding(start = 8.dp)
                         )
                     }
@@ -234,20 +237,20 @@ fun CreateCommunityScreen(
                     Text(
                         text = "Public Community",
                         style = MaterialTheme.typography.bodyLarge,
-                        color = WarmWhite
+                        color = TextPrimary
                     )
                     Text(
                         text = "Visible to everyone in Discover",
                         style = MaterialTheme.typography.bodySmall,
-                        color = WarmWhite.copy(alpha = 0.5f)
+                        color = TextTertiary
                     )
                 }
                 Switch(
                     checked = uiState.isPublic,
                     onCheckedChange = viewModel::onIsPublicChange,
                     colors = SwitchDefaults.colors(
-                        checkedThumbColor = Navy900,
-                        checkedTrackColor = USOpenGold
+                        checkedThumbColor = NavBarBg,
+                        checkedTrackColor = GoldAccent
                     )
                 )
             }
@@ -266,15 +269,15 @@ fun CreateCommunityScreen(
                 onClick = viewModel::create,
                 modifier = Modifier.fillMaxWidth(),
                 enabled = uiState.isValid && !uiState.isLoading,
-                colors = ButtonDefaults.buttonColors(containerColor = USOpenGold)
+                colors = ButtonDefaults.buttonColors(containerColor = GoldAccent)
             ) {
                 if (uiState.isLoading) {
                     CircularProgressIndicator(
-                        color = Navy900,
+                        color = NavBarBg,
                         modifier = Modifier.height(20.dp)
                     )
                 } else {
-                    Text("Create Community", color = Navy900, fontWeight = FontWeight.SemiBold)
+                    Text("Create Community", color = NavBarBg, fontWeight = FontWeight.SemiBold)
                 }
             }
         }
@@ -286,16 +289,16 @@ fun CreateCommunityScreen(
 @Composable
 private fun CreateCommunityScreenPreview() {
     Scaffold(
-        containerColor = Navy900,
+        containerColor = LightBg,
         topBar = {
             TopAppBar(
-                title = { Text("Create Community", color = WarmWhite) },
-                colors = TopAppBarDefaults.topAppBarColors(containerColor = Navy800)
+                title = { Text("Create Community", color = GoldAccent) },
+                colors = TopAppBarDefaults.topAppBarColors(containerColor = NavBarBg)
             )
         }
     ) { padding ->
         Box(modifier = Modifier.fillMaxSize().padding(padding)) {
-            Text("Form preview", color = WarmWhite, modifier = Modifier.align(Alignment.Center))
+            Text("Form preview", color = TextPrimary, modifier = Modifier.align(Alignment.Center))
         }
     }
 }

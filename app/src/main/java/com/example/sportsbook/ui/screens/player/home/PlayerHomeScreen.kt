@@ -59,9 +59,9 @@ import com.example.sportsbook.ui.common.DiscountBadge
 import com.example.sportsbook.ui.common.ErrorView
 import com.example.sportsbook.ui.common.LoadingIndicator
 import com.example.sportsbook.ui.common.PriceTag
-import com.example.sportsbook.ui.theme.Navy900
+import com.example.sportsbook.ui.theme.NavBarBg
 import com.example.sportsbook.ui.theme.SportsBookTheme
-import com.example.sportsbook.ui.theme.USOpenGold
+import com.example.sportsbook.ui.theme.GoldAccent
 import com.example.sportsbook.ui.theme.SportBasketball
 import com.example.sportsbook.ui.theme.SportFootball
 import com.example.sportsbook.ui.theme.SportTennis

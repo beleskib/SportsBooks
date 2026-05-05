@@ -69,7 +69,7 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.example.sportsbook.ui.theme.GoldDark
 import com.example.sportsbook.ui.theme.GoldLight
-import com.example.sportsbook.ui.theme.USOpenGold
+import com.example.sportsbook.ui.theme.GoldAccent
 import com.stripe.android.paymentsheet.PaymentSheet
 import com.stripe.android.paymentsheet.rememberPaymentSheet
 import kotlin.math.roundToInt
@@ -288,7 +288,7 @@ private fun BookingDetailsCard(
                 Icon(
                     imageVector = entityIcon,
                     contentDescription = null,
-                    tint = USOpenGold,
+                    tint = GoldAccent,
                     modifier = Modifier.size(24.dp)
                 )
                 Spacer(modifier = Modifier.width(8.dp))
@@ -377,7 +377,7 @@ private fun XpSpendSection(
                     brush = Brush.linearGradient(
                         colors = listOf(
                             GoldDark.copy(alpha = 0.15f),
-                            USOpenGold.copy(alpha = 0.08f),
+                            GoldAccent.copy(alpha = 0.08f),
                             GoldLight.copy(alpha = 0.05f)
                         )
                     )
@@ -385,7 +385,7 @@ private fun XpSpendSection(
                 .border(
                     width = 1.dp,
                     brush = Brush.linearGradient(
-                        colors = listOf(USOpenGold.copy(alpha = 0.5f), GoldLight.copy(alpha = 0.3f))
+                        colors = listOf(GoldAccent.copy(alpha = 0.5f), GoldLight.copy(alpha = 0.3f))
                     ),
                     shape = RoundedCornerShape(16.dp)
                 )
@@ -405,7 +405,7 @@ private fun XpSpendSection(
                                 .clip(CircleShape)
                                 .background(
                                     brush = Brush.radialGradient(
-                                        colors = listOf(USOpenGold, GoldDark)
+                                        colors = listOf(GoldAccent, GoldDark)
                                     )
                                 ),
                             contentAlignment = Alignment.Center
@@ -435,14 +435,14 @@ private fun XpSpendSection(
                     Box(
                         modifier = Modifier
                             .clip(RoundedCornerShape(20.dp))
-                            .background(USOpenGold.copy(alpha = 0.2f))
+                            .background(GoldAccent.copy(alpha = 0.2f))
                             .padding(horizontal = 12.dp, vertical = 6.dp)
                     ) {
                         Text(
                             text = "$availableXp XP",
                             fontWeight = FontWeight.Bold,
                             fontSize = 13.sp,
-                            color = USOpenGold
+                            color = GoldAccent
                         )
                     }
                 }
@@ -548,9 +548,9 @@ private fun XpSpendSection(
                                 valueRange = 0f..maxRedeemable.toFloat(),
                                 steps = ((maxRedeemable / 100) - 1).coerceAtLeast(0),
                                 colors = SliderDefaults.colors(
-                                    thumbColor = USOpenGold,
-                                    activeTrackColor = USOpenGold,
-                                    inactiveTrackColor = USOpenGold.copy(alpha = 0.2f)
+                                    thumbColor = GoldAccent,
+                                    activeTrackColor = GoldAccent,
+                                    inactiveTrackColor = GoldAccent.copy(alpha = 0.2f)
                                 ),
                                 modifier = Modifier.fillMaxWidth()
                             )
@@ -573,7 +573,7 @@ private fun XpSpendSection(
                                     },
                                     style = MaterialTheme.typography.labelSmall,
                                     fontWeight = if (xpToRedeem > 0) FontWeight.Bold else FontWeight.Normal,
-                                    color = if (xpToRedeem > 0) USOpenGold else MaterialTheme.colorScheme.onSurfaceVariant
+                                    color = if (xpToRedeem > 0) GoldAccent else MaterialTheme.colorScheme.onSurfaceVariant
                                 )
                                 Text(
                                     text = "$maxRedeemable XP",
@@ -592,9 +592,9 @@ private fun XpSpendSection(
                                     .fillMaxWidth()
                                     .height(48.dp),
                                 colors = ButtonDefaults.buttonColors(
-                                    containerColor = USOpenGold,
+                                    containerColor = GoldAccent,
                                     contentColor = Color.Black,
-                                    disabledContainerColor = USOpenGold.copy(alpha = 0.3f)
+                                    disabledContainerColor = GoldAccent.copy(alpha = 0.3f)
                                 ),
                                 shape = RoundedCornerShape(12.dp)
                             ) {
@@ -655,9 +655,9 @@ private fun QuickPickChip(
     onClick: () -> Unit,
     modifier: Modifier = Modifier
 ) {
-    val bgColor = if (isSelected) USOpenGold.copy(alpha = 0.25f) else Color.Transparent
-    val borderColor = if (isSelected) USOpenGold else MaterialTheme.colorScheme.outline.copy(alpha = 0.4f)
-    val textColor = if (isSelected) USOpenGold else MaterialTheme.colorScheme.onSurface
+    val bgColor = if (isSelected) GoldAccent.copy(alpha = 0.25f) else Color.Transparent
+    val borderColor = if (isSelected) GoldAccent else MaterialTheme.colorScheme.outline.copy(alpha = 0.4f)
+    val textColor = if (isSelected) GoldAccent else MaterialTheme.colorScheme.onSurface
 
     Box(
         modifier = modifier
@@ -763,7 +763,7 @@ private fun PriceBreakdownCard(
                         Icon(
                             imageVector = Icons.Default.Star,
                             contentDescription = null,
-                            tint = USOpenGold,
+                            tint = GoldAccent,
                             modifier = Modifier.size(18.dp)
                         )
                         Spacer(modifier = Modifier.width(4.dp))

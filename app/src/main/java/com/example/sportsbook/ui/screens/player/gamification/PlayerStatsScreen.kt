@@ -65,10 +65,14 @@ import com.example.sportsbook.domain.model.PlayerStats
 import com.example.sportsbook.domain.repository.GamificationRepository
 import com.example.sportsbook.ui.common.ErrorView
 import com.example.sportsbook.ui.common.LoadingIndicator
+import com.example.sportsbook.ui.theme.BorderGray
+import com.example.sportsbook.ui.theme.CardWhite
+import com.example.sportsbook.ui.theme.GoldAccent
 import com.example.sportsbook.ui.theme.GoldDark
-import com.example.sportsbook.ui.theme.Navy900
-import com.example.sportsbook.ui.theme.USOpenGold
-import com.example.sportsbook.ui.theme.WarmWhite
+import com.example.sportsbook.ui.theme.LightBg
+import com.example.sportsbook.ui.theme.NavBarBg
+import com.example.sportsbook.ui.theme.TextPrimary
+import com.example.sportsbook.ui.theme.TextSecondary
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.async
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -163,13 +167,13 @@ fun PlayerStatsScreen(
     }
 
     Scaffold(
-        containerColor = Navy900,
+        containerColor = LightBg,
         topBar = {
             TopAppBar(
                 title = {
                     Text(
                         text = "Player Stats",
-                        color = WarmWhite,
+                        color = GoldAccent,
                         fontWeight = FontWeight.Bold
                     )
                 },
@@ -178,11 +182,11 @@ fun PlayerStatsScreen(
                         Icon(
                             imageVector = Icons.AutoMirrored.Filled.ArrowBack,
                             contentDescription = "Back",
-                            tint = WarmWhite
+                            tint = androidx.compose.ui.graphics.Color.White
                         )
                     }
                 },
-                colors = TopAppBarDefaults.topAppBarColors(containerColor = Navy900)
+                colors = TopAppBarDefaults.topAppBarColors(containerColor = NavBarBg)
             )
         },
         snackbarHost = { SnackbarHost(snackbarHostState) }
@@ -224,8 +228,8 @@ fun PlayerStatsScreen(
                             .fillMaxWidth()
                             .height(52.dp),
                         colors = ButtonDefaults.buttonColors(
-                            containerColor = USOpenGold,
-                            contentColor = Navy900
+                            containerColor = NavBarBg,
+                            contentColor = GoldAccent
                         ),
                         shape = RoundedCornerShape(12.dp)
                     ) {
@@ -277,19 +281,19 @@ private fun LevelSummaryBanner(level: PlayerLevel) {
             Icon(
                 imageVector = Icons.Default.BarChart,
                 contentDescription = null,
-                tint = USOpenGold,
+                tint = GoldAccent,
                 modifier = Modifier.size(32.dp)
             )
             Column {
                 Text(
                     text = "Level ${level.currentLevel}",
                     style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold),
-                    color = USOpenGold
+                    color = GoldAccent
                 )
                 Text(
                     text = "${level.totalXp} XP total  •  ${level.xpToNextLevel} XP to next level",
                     style = MaterialTheme.typography.bodySmall,
-                    color = WarmWhite.copy(alpha = 0.7f)
+                    color = TextPrimary.copy(alpha = 0.7f)
                 )
             }
         }
@@ -393,19 +397,19 @@ private fun StatCard(
             Icon(
                 imageVector = item.icon,
                 contentDescription = null,
-                tint = USOpenGold,
+                tint = GoldAccent,
                 modifier = Modifier.size(28.dp)
             )
             Text(
                 text = item.value,
                 style = MaterialTheme.typography.headlineSmall.copy(fontWeight = FontWeight.ExtraBold),
-                color = WarmWhite,
+                color = TextPrimary,
                 textAlign = TextAlign.Center
             )
             Text(
                 text = item.label,
                 style = MaterialTheme.typography.labelSmall,
-                color = WarmWhite.copy(alpha = 0.6f),
+                color = TextPrimary.copy(alpha = 0.6f),
                 textAlign = TextAlign.Center
             )
         }

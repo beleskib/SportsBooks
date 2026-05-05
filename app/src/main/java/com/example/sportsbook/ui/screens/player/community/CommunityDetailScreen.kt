@@ -61,12 +61,15 @@ import coil.compose.AsyncImage
 import com.example.sportsbook.domain.model.Community
 import com.example.sportsbook.domain.model.CommunityMember
 import com.example.sportsbook.domain.model.Lobby
-import com.example.sportsbook.ui.theme.Navy700
-import com.example.sportsbook.ui.theme.Navy800
-import com.example.sportsbook.ui.theme.Navy900
+import com.example.sportsbook.ui.theme.BorderGray
+import com.example.sportsbook.ui.theme.CardWhite
+import com.example.sportsbook.ui.theme.GoldAccent
+import com.example.sportsbook.ui.theme.LightBg
+import com.example.sportsbook.ui.theme.NavBarBg
 import com.example.sportsbook.ui.theme.SportGreen
-import com.example.sportsbook.ui.theme.USOpenGold
-import com.example.sportsbook.ui.theme.WarmWhite
+import com.example.sportsbook.ui.theme.TextPrimary
+import com.example.sportsbook.ui.theme.TextSecondary
+import com.example.sportsbook.ui.theme.TextTertiary
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -81,13 +84,13 @@ fun CommunityDetailScreen(
     val community = uiState.community
 
     Scaffold(
-        containerColor = Navy900,
+        containerColor = LightBg,
         topBar = {
             TopAppBar(
                 title = {
                     Text(
                         text = community?.name ?: "Community",
-                        color = WarmWhite,
+                        color = GoldAccent,
                         maxLines = 1,
                         overflow = TextOverflow.Ellipsis
                     )
@@ -97,27 +100,27 @@ fun CommunityDetailScreen(
                         Icon(
                             Icons.AutoMirrored.Filled.ArrowBack,
                             contentDescription = "Back",
-                            tint = WarmWhite
+                            tint = GoldAccent
                         )
                     }
                 },
                 actions = {
                     if (uiState.isUserAdmin) {
                         IconButton(onClick = { community?.id?.let { onInviteFriends(it) } }) {
-                            Icon(Icons.Default.PersonAdd, contentDescription = "Invite Friends", tint = USOpenGold)
+                            Icon(Icons.Default.PersonAdd, contentDescription = "Invite Friends", tint = GoldAccent)
                         }
                     }
                 },
-                colors = TopAppBarDefaults.topAppBarColors(containerColor = Navy800)
+                colors = TopAppBarDefaults.topAppBarColors(containerColor = NavBarBg)
             )
         },
         floatingActionButton = {
             if (uiState.isUserMember || uiState.isUserAdmin) {
                 FloatingActionButton(
                     onClick = { community?.id?.let { onCreateLobby(it) } },
-                    containerColor = USOpenGold
+                    containerColor = GoldAccent
                 ) {
-                    Icon(Icons.Default.Add, contentDescription = "Create Lobby", tint = Navy900)
+                    Icon(Icons.Default.Add, contentDescription = "Create Lobby", tint = NavBarBg)
                 }
             }
         }
@@ -125,7 +128,7 @@ fun CommunityDetailScreen(
         when {
             uiState.isLoading -> {
                 Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                    CircularProgressIndicator(color = USOpenGold)
+                    CircularProgressIndicator(color = GoldAccent)
                 }
             }
 
@@ -155,9 +158,9 @@ fun CommunityDetailScreen(
                             modifier = Modifier
                                 .fillMaxWidth()
                                 .padding(horizontal = 16.dp, vertical = 8.dp),
-                            colors = ButtonDefaults.buttonColors(containerColor = USOpenGold)
+                            colors = ButtonDefaults.buttonColors(containerColor = GoldAccent)
                         ) {
-                            Text("Join Community", color = Navy900, fontWeight = FontWeight.SemiBold)
+                            Text("Join Community", color = NavBarBg, fontWeight = FontWeight.SemiBold)
                         }
                     }
 
@@ -174,11 +177,11 @@ fun CommunityDetailScreen(
                     val tabTitles = listOf("Lobbies", "Members")
                     TabRow(
                         selectedTabIndex = uiState.selectedTab.ordinal,
-                        containerColor = Navy800,
+                        containerColor = CardWhite,
                         indicator = { tabPositions ->
                             TabRowDefaults.SecondaryIndicator(
                                 modifier = Modifier.tabIndicatorOffset(tabPositions[uiState.selectedTab.ordinal]),
-                                color = USOpenGold
+                                color = GoldAccent
                             )
                         }
                     ) {
@@ -189,8 +192,8 @@ fun CommunityDetailScreen(
                                 text = {
                                     Text(
                                         text = title,
-                                        color = if (uiState.selectedTab.ordinal == index) USOpenGold
-                                        else WarmWhite.copy(alpha = 0.6f)
+                                        color = if (uiState.selectedTab.ordinal == index) GoldAccent
+                                        else TextSecondary
                                     )
                                 }
                             )
@@ -219,7 +222,7 @@ private fun CommunityHeader(community: Community) {
     Column(
         modifier = Modifier
             .fillMaxWidth()
-            .background(Navy800)
+            .background(CardWhite)
             .padding(16.dp)
     ) {
         Row(verticalAlignment = Alignment.CenterVertically) {
@@ -227,7 +230,7 @@ private fun CommunityHeader(community: Community) {
                 modifier = Modifier
                     .size(64.dp)
                     .clip(RoundedCornerShape(10.dp))
-                    .background(Navy900),
+                    .background(LightBg),
                 contentAlignment = Alignment.Center
             ) {
                 if (!community.imageUrl.isNullOrBlank()) {
@@ -241,7 +244,7 @@ private fun CommunityHeader(community: Community) {
                     Icon(
                         Icons.Default.Groups,
                         contentDescription = null,
-                        tint = USOpenGold,
+                        tint = GoldAccent,
                         modifier = Modifier.size(32.dp)
                     )
                 }
@@ -255,7 +258,7 @@ private fun CommunityHeader(community: Community) {
                 Text(
                     text = "${community.memberCount} / ${community.maxMembers} members",
                     style = MaterialTheme.typography.bodySmall,
-                    color = WarmWhite.copy(alpha = 0.7f)
+                    color = TextSecondary
                 )
             }
         }
@@ -264,7 +267,7 @@ private fun CommunityHeader(community: Community) {
             Text(
                 text = community.description,
                 style = MaterialTheme.typography.bodyMedium,
-                color = WarmWhite.copy(alpha = 0.8f)
+                color = TextSecondary
             )
         }
     }
@@ -280,14 +283,14 @@ private fun PendingApprovals(
         modifier = Modifier
             .fillMaxWidth()
             .padding(horizontal = 16.dp, vertical = 8.dp),
-        colors = CardDefaults.cardColors(containerColor = Navy700),
+        colors = CardDefaults.cardColors(containerColor = CardWhite),
         shape = RoundedCornerShape(10.dp)
     ) {
         Column(modifier = Modifier.padding(12.dp)) {
             Text(
                 text = "Pending Requests (${pendingMembers.size})",
                 style = MaterialTheme.typography.titleSmall,
-                color = USOpenGold,
+                color = GoldAccent,
                 fontWeight = FontWeight.SemiBold
             )
             Spacer(modifier = Modifier.height(8.dp))
@@ -303,7 +306,7 @@ private fun PendingApprovals(
                     Text(
                         text = member.displayName,
                         style = MaterialTheme.typography.bodyMedium,
-                        color = WarmWhite,
+                        color = TextPrimary,
                         modifier = Modifier.weight(1f)
                     )
                     IconButton(
@@ -339,7 +342,7 @@ private fun LobbiesTab(
             Text(
                 text = "No lobbies yet. Create one!",
                 style = MaterialTheme.typography.bodyLarge,
-                color = WarmWhite.copy(alpha = 0.5f),
+                color = TextTertiary,
                 textAlign = TextAlign.Center
             )
         }
@@ -364,7 +367,7 @@ internal fun LobbyCard(
     Card(
         modifier = modifier.fillMaxWidth(),
         shape = RoundedCornerShape(10.dp),
-        colors = CardDefaults.cardColors(containerColor = Navy700),
+        colors = CardDefaults.cardColors(containerColor = CardWhite),
         onClick = onClick
     ) {
         Column(modifier = Modifier.padding(14.dp)) {
@@ -377,7 +380,7 @@ internal fun LobbyCard(
                     text = lobby.title,
                     style = MaterialTheme.typography.titleSmall,
                     fontWeight = FontWeight.SemiBold,
-                    color = WarmWhite,
+                    color = TextPrimary,
                     maxLines = 1,
                     overflow = TextOverflow.Ellipsis,
                     modifier = Modifier.weight(1f)
@@ -390,13 +393,13 @@ internal fun LobbyCard(
             Text(
                 text = "${lobby.scheduledDate}  ${lobby.scheduledTime}",
                 style = MaterialTheme.typography.bodySmall,
-                color = WarmWhite.copy(alpha = 0.7f)
+                color = TextSecondary
             )
             if (!lobby.venueName.isNullOrBlank()) {
                 Text(
                     text = lobby.venueName,
                     style = MaterialTheme.typography.bodySmall,
-                    color = WarmWhite.copy(alpha = 0.6f)
+                    color = TextTertiary
                 )
             }
 
@@ -414,14 +417,14 @@ internal fun LobbyCard(
                         .weight(1f)
                         .height(6.dp)
                         .clip(RoundedCornerShape(3.dp)),
-                    color = USOpenGold,
-                    trackColor = Navy900
+                    color = GoldAccent,
+                    trackColor = LightBg
                 )
                 Spacer(modifier = Modifier.width(8.dp))
                 Text(
                     text = "${lobby.currentPlayers}/${lobby.maxPlayers} players",
                     style = MaterialTheme.typography.labelSmall,
-                    color = WarmWhite.copy(alpha = 0.7f)
+                    color = TextSecondary
                 )
             }
         }
@@ -444,7 +447,7 @@ private fun MembersTab(
             Text(
                 text = "No members yet",
                 style = MaterialTheme.typography.bodyLarge,
-                color = WarmWhite.copy(alpha = 0.5f)
+                color = TextTertiary
             )
         }
     } else {
@@ -481,7 +484,7 @@ private fun MemberRow(
             Text(
                 text = member.displayName,
                 style = MaterialTheme.typography.bodyMedium,
-                color = WarmWhite,
+                color = TextPrimary,
                 fontWeight = FontWeight.Medium
             )
             RoleBadge(role = member.role)
@@ -509,7 +512,7 @@ internal fun MemberAvatar(
         modifier = modifier
             .size(size.dp)
             .clip(CircleShape)
-            .background(Navy800),
+            .background(LightBg),
         contentAlignment = Alignment.Center
     ) {
         if (!photoUrl.isNullOrBlank()) {
@@ -523,7 +526,7 @@ internal fun MemberAvatar(
             Text(
                 text = name.firstOrNull()?.uppercaseChar()?.toString() ?: "?",
                 style = MaterialTheme.typography.labelMedium,
-                color = USOpenGold,
+                color = GoldAccent,
                 fontWeight = FontWeight.Bold
             )
         }
@@ -533,7 +536,7 @@ internal fun MemberAvatar(
 @Composable
 private fun RoleBadge(role: String) {
     val (label, color) = when (role) {
-        "owner" -> "Owner" to USOpenGold
+        "owner" -> "Owner" to GoldAccent
         "admin" -> "Admin" to SportGreen
         else -> return
     }
@@ -552,11 +555,11 @@ private fun RoleBadge(role: String) {
 @Composable
 private fun CommunityDetailScreenPreview() {
     Scaffold(
-        containerColor = Navy900,
+        containerColor = LightBg,
         topBar = {
             TopAppBar(
-                title = { Text("Basketball Crew", color = WarmWhite) },
-                colors = TopAppBarDefaults.topAppBarColors(containerColor = Navy800)
+                title = { Text("Basketball Crew", color = GoldAccent) },
+                colors = TopAppBarDefaults.topAppBarColors(containerColor = NavBarBg)
             )
         }
     ) { padding ->
@@ -575,7 +578,7 @@ private fun CommunityDetailScreenPreview() {
                     maxMembers = 30
                 )
             )
-            TabRow(selectedTabIndex = 0, containerColor = Navy800) {
+            TabRow(selectedTabIndex = 0, containerColor = CardWhite) {
                 Tab(selected = true, onClick = {}, text = { Text("Lobbies") })
                 Tab(selected = false, onClick = {}, text = { Text("Members") })
             }

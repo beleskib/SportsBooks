@@ -78,13 +78,16 @@ import com.example.sportsbook.data.remote.dto.CreateFeedPostRequestDto
 import com.example.sportsbook.data.remote.dto.FeedCommentDto
 import com.example.sportsbook.data.remote.dto.FeedPostDto
 import com.example.sportsbook.domain.repository.AuthRepository
-import com.example.sportsbook.ui.theme.Navy600
-import com.example.sportsbook.ui.theme.Navy700
-import com.example.sportsbook.ui.theme.Navy800
-import com.example.sportsbook.ui.theme.Navy900
+import com.example.sportsbook.ui.theme.BorderGray
+import com.example.sportsbook.ui.theme.CardWhite
+import com.example.sportsbook.ui.theme.DividerGray
+import com.example.sportsbook.ui.theme.GoldAccent
+import com.example.sportsbook.ui.theme.LightBg
+import com.example.sportsbook.ui.theme.NavBarBg
 import com.example.sportsbook.ui.theme.SportsBookTheme
-import com.example.sportsbook.ui.theme.USOpenGold
-import com.example.sportsbook.ui.theme.WarmWhite
+import com.example.sportsbook.ui.theme.TextPrimary
+import com.example.sportsbook.ui.theme.TextSecondary
+import com.example.sportsbook.ui.theme.TextTertiary
 import dagger.hilt.android.lifecycle.HiltViewModel
 import com.example.sportsbook.data.remote.api.ApiService
 import kotlinx.coroutines.Job
@@ -277,7 +280,7 @@ fun NewsFeedScreen(
     }
 
     Scaffold(
-        containerColor = Navy900,
+        containerColor = LightBg,
         snackbarHost = { SnackbarHost(hostState = snackbarHostState) },
         topBar = {
             TopAppBar(
@@ -285,10 +288,10 @@ fun NewsFeedScreen(
                     Text(
                         "Feed",
                         style = MaterialTheme.typography.headlineMedium.copy(fontWeight = FontWeight.Bold),
-                        color = WarmWhite
+                        color = Color.White
                     )
                 },
-                colors = TopAppBarDefaults.topAppBarColors(containerColor = Navy900)
+                colors = TopAppBarDefaults.topAppBarColors(containerColor = NavBarBg)
             )
         }
     ) { paddingValues ->
@@ -334,19 +337,19 @@ fun NewsFeedScreen(
                                     Icons.Default.SportsScore,
                                     contentDescription = null,
                                     modifier = Modifier.size(64.dp),
-                                    tint = WarmWhite.copy(alpha = 0.3f)
+                                    tint = TextTertiary
                                 )
                                 Spacer(modifier = Modifier.height(12.dp))
                                 Text(
                                     text = "No posts yet",
                                     style = MaterialTheme.typography.titleMedium,
-                                    color = WarmWhite.copy(alpha = 0.5f)
+                                    color = TextSecondary
                                 )
                                 Spacer(modifier = Modifier.height(4.dp))
                                 Text(
                                     text = "Follow players and partners to see their updates",
                                     style = MaterialTheme.typography.bodySmall,
-                                    color = WarmWhite.copy(alpha = 0.3f)
+                                    color = TextTertiary
                                 )
                             }
                         }
@@ -391,7 +394,7 @@ private fun CommentsBottomSheet(
     ModalBottomSheet(
         onDismissRequest = onDismiss,
         sheetState = sheetState,
-        containerColor = Navy800
+        containerColor = CardWhite
     ) {
         Column(
             modifier = Modifier
@@ -402,7 +405,7 @@ private fun CommentsBottomSheet(
             Text(
                 text = "Comments",
                 style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold),
-                color = WarmWhite,
+                color = TextPrimary,
                 modifier = Modifier.padding(bottom = 12.dp)
             )
 
@@ -418,7 +421,7 @@ private fun CommentsBottomSheet(
                                 .padding(32.dp),
                             contentAlignment = Alignment.Center
                         ) {
-                            CircularProgressIndicator(color = USOpenGold)
+                            CircularProgressIndicator(color = GoldAccent)
                         }
                     }
                 } else if (comments.isEmpty()) {
@@ -431,7 +434,7 @@ private fun CommentsBottomSheet(
                         ) {
                             Text(
                                 "No comments yet. Be the first!",
-                                color = WarmWhite.copy(alpha = 0.5f),
+                                color = TextSecondary,
                                 style = MaterialTheme.typography.bodyMedium
                             )
                         }
@@ -443,7 +446,7 @@ private fun CommentsBottomSheet(
                 }
             }
 
-            HorizontalDivider(color = Navy600.copy(alpha = 0.5f))
+            HorizontalDivider(color = DividerGray)
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -453,14 +456,14 @@ private fun CommentsBottomSheet(
                 TextField(
                     value = commentText,
                     onValueChange = { commentText = it },
-                    placeholder = { Text("Write a comment...", color = WarmWhite.copy(alpha = 0.35f)) },
+                    placeholder = { Text("Write a comment...", color = TextTertiary) },
                     modifier = Modifier.weight(1f),
                     colors = TextFieldDefaults.colors(
-                        focusedContainerColor = Navy700.copy(alpha = 0.5f),
-                        unfocusedContainerColor = Navy700.copy(alpha = 0.3f),
-                        focusedTextColor = WarmWhite,
-                        unfocusedTextColor = WarmWhite,
-                        cursorColor = USOpenGold,
+                        focusedContainerColor = LightBg,
+                        unfocusedContainerColor = LightBg,
+                        focusedTextColor = TextPrimary,
+                        unfocusedTextColor = TextPrimary,
+                        cursorColor = GoldAccent,
                         focusedIndicatorColor = Color.Transparent,
                         unfocusedIndicatorColor = Color.Transparent
                     ),
@@ -478,14 +481,14 @@ private fun CommentsBottomSheet(
                     if (isPosting) {
                         CircularProgressIndicator(
                             modifier = Modifier.size(20.dp),
-                            color = USOpenGold,
+                            color = GoldAccent,
                             strokeWidth = 2.dp
                         )
                     } else {
                         Icon(
                             Icons.AutoMirrored.Filled.Send,
                             contentDescription = "Send",
-                            tint = if (commentText.isNotBlank()) USOpenGold else WarmWhite.copy(alpha = 0.3f)
+                            tint = if (commentText.isNotBlank()) GoldAccent else TextTertiary
                         )
                     }
                 }
@@ -512,14 +515,14 @@ private fun CommentItem(comment: FeedCommentDto) {
                 modifier = Modifier
                     .size(32.dp)
                     .clip(CircleShape)
-                    .background(Navy600),
+                    .background(BorderGray),
                 contentAlignment = Alignment.Center
             ) {
                 Icon(
                     Icons.Default.Person,
                     contentDescription = null,
                     modifier = Modifier.size(16.dp),
-                    tint = USOpenGold
+                    tint = GoldAccent
                 )
             }
         }
@@ -529,19 +532,19 @@ private fun CommentItem(comment: FeedCommentDto) {
                 Text(
                     text = comment.userName,
                     style = MaterialTheme.typography.labelMedium.copy(fontWeight = FontWeight.Bold),
-                    color = WarmWhite
+                    color = TextPrimary
                 )
                 Spacer(modifier = Modifier.width(8.dp))
                 Text(
                     text = formatTimeAgo(comment.createdAt),
                     style = MaterialTheme.typography.labelSmall,
-                    color = WarmWhite.copy(alpha = 0.4f)
+                    color = TextTertiary
                 )
             }
             Text(
                 text = comment.content,
                 style = MaterialTheme.typography.bodyMedium,
-                color = WarmWhite.copy(alpha = 0.85f)
+                color = TextPrimary
             )
         }
     }
@@ -559,7 +562,7 @@ private fun FeedComposer(
     Column(
         modifier = Modifier
             .fillMaxWidth()
-            .background(Navy800)
+            .background(CardWhite)
             .padding(12.dp)
     ) {
         Row(
@@ -581,14 +584,14 @@ private fun FeedComposer(
                     modifier = Modifier
                         .size(40.dp)
                         .clip(CircleShape)
-                        .background(Navy600),
+                        .background(BorderGray),
                     contentAlignment = Alignment.Center
                 ) {
                     Icon(
                         Icons.Default.Person,
                         contentDescription = null,
                         modifier = Modifier.size(20.dp),
-                        tint = USOpenGold
+                        tint = GoldAccent
                     )
                 }
             }
@@ -602,16 +605,16 @@ private fun FeedComposer(
                 placeholder = {
                     Text(
                         "What's on your mind?",
-                        color = WarmWhite.copy(alpha = 0.35f)
+                        color = TextTertiary
                     )
                 },
                 modifier = Modifier.weight(1f),
                 colors = TextFieldDefaults.colors(
-                    focusedContainerColor = Navy700.copy(alpha = 0.5f),
-                    unfocusedContainerColor = Navy700.copy(alpha = 0.3f),
-                    focusedTextColor = WarmWhite,
-                    unfocusedTextColor = WarmWhite,
-                    cursorColor = USOpenGold,
+                    focusedContainerColor = LightBg,
+                    unfocusedContainerColor = LightBg,
+                    focusedTextColor = TextPrimary,
+                    unfocusedTextColor = TextPrimary,
+                    cursorColor = GoldAccent,
                     focusedIndicatorColor = Color.Transparent,
                     unfocusedIndicatorColor = Color.Transparent
                 ),
@@ -626,14 +629,14 @@ private fun FeedComposer(
                             if (isPosting) {
                                 CircularProgressIndicator(
                                     modifier = Modifier.size(20.dp),
-                                    color = USOpenGold,
+                                    color = GoldAccent,
                                     strokeWidth = 2.dp
                                 )
                             } else {
                                 Icon(
                                     Icons.Default.Send,
                                     contentDescription = "Post",
-                                    tint = USOpenGold
+                                    tint = GoldAccent
                                 )
                             }
                         }
@@ -654,7 +657,7 @@ private fun FeedComposer(
             SuggestionChip(
                 label = "Share a milestone",
                 icon = Icons.Default.EmojiEvents,
-                color = USOpenGold,
+                color = GoldAccent,
                 onClick = { onSuggestionClick("Just hit a new milestone! ") }
             )
             SuggestionChip(
@@ -692,7 +695,7 @@ private fun SuggestionChip(
             Text(
                 text = label,
                 style = MaterialTheme.typography.labelSmall,
-                color = WarmWhite.copy(alpha = 0.8f)
+                color = TextPrimary
             )
         },
         leadingIcon = {
@@ -704,7 +707,7 @@ private fun SuggestionChip(
             )
         },
         colors = AssistChipDefaults.assistChipColors(
-            containerColor = Navy700.copy(alpha = 0.5f)
+            containerColor = LightBg
         ),
         border = AssistChipDefaults.assistChipBorder(
             enabled = true,
@@ -724,7 +727,7 @@ private fun FeedPostCard(
     Card(
         modifier = Modifier.fillMaxWidth(),
         shape = RoundedCornerShape(0.dp),
-        colors = CardDefaults.cardColors(containerColor = Navy700.copy(alpha = 0.5f)),
+        colors = CardDefaults.cardColors(containerColor = CardWhite),
         elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)
     ) {
         Column(modifier = Modifier.padding(16.dp)) {
@@ -747,14 +750,14 @@ private fun FeedPostCard(
                         modifier = Modifier
                             .size(40.dp)
                             .clip(CircleShape)
-                            .background(Navy600),
+                            .background(BorderGray),
                         contentAlignment = Alignment.Center
                     ) {
                         Icon(
                             Icons.Default.Person,
                             contentDescription = null,
                             modifier = Modifier.size(20.dp),
-                            tint = USOpenGold
+                            tint = GoldAccent
                         )
                     }
                 }
@@ -765,7 +768,7 @@ private fun FeedPostCard(
                     Text(
                         text = post.authorName,
                         style = MaterialTheme.typography.titleSmall.copy(fontWeight = FontWeight.Bold),
-                        color = WarmWhite
+                        color = TextPrimary
                     )
                     Row(verticalAlignment = Alignment.CenterVertically) {
                         PostTypeBadge(postType = post.postType)
@@ -773,7 +776,7 @@ private fun FeedPostCard(
                         Text(
                             text = formatTimeAgo(post.createdAt),
                             style = MaterialTheme.typography.bodySmall,
-                            color = WarmWhite.copy(alpha = 0.4f)
+                            color = TextTertiary
                         )
                     }
                 }
@@ -785,7 +788,7 @@ private fun FeedPostCard(
                 Text(
                     text = post.content,
                     style = MaterialTheme.typography.bodyLarge,
-                    color = WarmWhite.copy(alpha = 0.9f)
+                    color = TextPrimary
                 )
             }
 
@@ -809,7 +812,7 @@ private fun FeedPostCard(
                 Card(
                     modifier = Modifier.fillMaxWidth(),
                     shape = RoundedCornerShape(8.dp),
-                    colors = CardDefaults.cardColors(containerColor = Navy600.copy(alpha = 0.5f))
+                    colors = CardDefaults.cardColors(containerColor = LightBg)
                 ) {
                     Column(modifier = Modifier.padding(12.dp), verticalArrangement = Arrangement.spacedBy(4.dp)) {
                         Row(verticalAlignment = Alignment.CenterVertically) {
@@ -823,7 +826,7 @@ private fun FeedPostCard(
                             Text(
                                 text = post.metadata["matchTitle"] ?: "",
                                 style = MaterialTheme.typography.titleSmall.copy(fontWeight = FontWeight.Bold),
-                                color = WarmWhite
+                                color = TextPrimary
                             )
                         }
                         post.metadata["sport"]?.let { sport ->
@@ -835,10 +838,10 @@ private fun FeedPostCard(
                         }
                         Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
                             post.metadata["date"]?.let { date ->
-                                Text(text = date, style = MaterialTheme.typography.bodySmall, color = WarmWhite.copy(alpha = 0.6f))
+                                Text(text = date, style = MaterialTheme.typography.bodySmall, color = TextSecondary)
                             }
                             post.metadata["time"]?.let { time ->
-                                Text(text = time, style = MaterialTheme.typography.bodySmall, color = WarmWhite.copy(alpha = 0.6f))
+                                Text(text = time, style = MaterialTheme.typography.bodySmall, color = TextSecondary)
                             }
                         }
                         post.metadata["location"]?.let { location ->
@@ -847,13 +850,13 @@ private fun FeedPostCard(
                                     Icons.Default.LocationOn,
                                     contentDescription = null,
                                     modifier = Modifier.size(14.dp),
-                                    tint = WarmWhite.copy(alpha = 0.5f)
+                                    tint = TextTertiary
                                 )
                                 Spacer(modifier = Modifier.width(4.dp))
                                 Text(
                                     text = location,
                                     style = MaterialTheme.typography.bodySmall,
-                                    color = WarmWhite.copy(alpha = 0.6f)
+                                    color = TextSecondary
                                 )
                             }
                         }
@@ -861,7 +864,7 @@ private fun FeedPostCard(
                             Text(
                                 text = "Players: $players",
                                 style = MaterialTheme.typography.bodySmall,
-                                color = WarmWhite.copy(alpha = 0.6f)
+                                color = TextSecondary
                             )
                         }
                     }
@@ -879,7 +882,7 @@ private fun FeedPostCard(
                         modifier = Modifier
                             .fillMaxWidth()
                             .clip(RoundedCornerShape(8.dp))
-                            .background(USOpenGold.copy(alpha = 0.08f))
+                            .background(GoldAccent.copy(alpha = 0.08f))
                             .padding(10.dp),
                         verticalAlignment = Alignment.CenterVertically
                     ) {
@@ -887,13 +890,13 @@ private fun FeedPostCard(
                             Icons.Default.EmojiEvents,
                             contentDescription = null,
                             modifier = Modifier.size(20.dp),
-                            tint = USOpenGold
+                            tint = GoldAccent
                         )
                         Spacer(modifier = Modifier.width(8.dp))
                         Text(
                             text = metaTitle,
                             style = MaterialTheme.typography.bodyMedium.copy(fontWeight = FontWeight.SemiBold),
-                            color = USOpenGold
+                            color = GoldAccent
                         )
                     }
                 }
@@ -901,7 +904,7 @@ private fun FeedPostCard(
 
             // Actions: Like & Comment count
             Spacer(modifier = Modifier.height(10.dp))
-            HorizontalDivider(color = Navy600.copy(alpha = 0.3f))
+            HorizontalDivider(color = DividerGray)
             Spacer(modifier = Modifier.height(6.dp))
 
             Row(verticalAlignment = Alignment.CenterVertically) {
@@ -909,14 +912,14 @@ private fun FeedPostCard(
                     Icon(
                         imageVector = if (post.isLikedByMe) Icons.Default.Favorite else Icons.Default.FavoriteBorder,
                         contentDescription = "Like",
-                        tint = if (post.isLikedByMe) Color.Red else WarmWhite.copy(alpha = 0.6f),
+                        tint = if (post.isLikedByMe) Color.Red else TextSecondary,
                         modifier = Modifier.size(20.dp)
                     )
                 }
                 Text(
                     text = "${post.likesCount}",
                     style = MaterialTheme.typography.bodySmall,
-                    color = WarmWhite.copy(alpha = 0.6f)
+                    color = TextSecondary
                 )
 
                 Spacer(modifier = Modifier.width(16.dp))
@@ -929,13 +932,13 @@ private fun FeedPostCard(
                         Icons.Default.ChatBubbleOutline,
                         contentDescription = "Comments",
                         modifier = Modifier.size(18.dp),
-                        tint = WarmWhite.copy(alpha = 0.6f)
+                        tint = TextSecondary
                     )
                     Spacer(modifier = Modifier.width(4.dp))
                     Text(
                         text = "${post.commentsCount}",
                         style = MaterialTheme.typography.bodySmall,
-                        color = WarmWhite.copy(alpha = 0.6f)
+                        color = TextSecondary
                     )
                 }
             }
@@ -946,13 +949,13 @@ private fun FeedPostCard(
 @Composable
 private fun PostTypeBadge(postType: String) {
     val (label, color) = when (postType) {
-        "achievement" -> "Achievement" to USOpenGold
+        "achievement" -> "Achievement" to GoldAccent
         "milestone" -> "Milestone" to Color(0xFF4CAF50)
         "booking_completed" -> "Booking" to Color(0xFF2196F3)
         "match_result" -> "Match" to Color(0xFFFF9800)
         "match_share" -> "Match" to Color(0xFFFF9800)
         "photo" -> "Photo" to Color(0xFFE91E63)
-        else -> "Post" to WarmWhite.copy(alpha = 0.5f)
+        else -> "Post" to TextSecondary
     }
     Text(
         text = label,
@@ -983,7 +986,7 @@ private fun formatTimeAgo(dateString: String): String {
     }
 }
 
-@Preview(showBackground = true, backgroundColor = 0xFF0A1628)
+@Preview(showBackground = true, backgroundColor = 0xFFF9FAFB)
 @Composable
 private fun NewsFeedScreenPreview() {
     val samplePosts = listOf(
@@ -1027,7 +1030,7 @@ private fun NewsFeedScreenPreview() {
         LazyColumn(
             modifier = Modifier
                 .fillMaxSize()
-                .background(Navy900),
+                .background(LightBg),
             contentPadding = PaddingValues(vertical = 0.dp),
             verticalArrangement = Arrangement.spacedBy(2.dp)
         ) {

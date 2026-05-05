@@ -66,15 +66,15 @@ import com.example.sportsbook.domain.model.v2.PlaySearchResult
 import com.example.sportsbook.domain.model.v2.PlaySuggestion
 import com.example.sportsbook.domain.model.v2.RebookSuggestion
 import com.example.sportsbook.domain.model.v2.UpcomingBooking
-import com.example.sportsbook.ui.theme.CoolGray
-import com.example.sportsbook.ui.theme.Navy600
-import com.example.sportsbook.ui.theme.Navy700
-import com.example.sportsbook.ui.theme.Navy800
-import com.example.sportsbook.ui.theme.Navy900
+import com.example.sportsbook.ui.theme.TextSecondary
+import com.example.sportsbook.ui.theme.BorderGray
+import com.example.sportsbook.ui.theme.LightBg
+import com.example.sportsbook.ui.theme.CardWhite
+import com.example.sportsbook.ui.theme.NavBarBg
 import com.example.sportsbook.ui.theme.SportGreen
 import com.example.sportsbook.ui.theme.SportsBookTheme
-import com.example.sportsbook.ui.theme.USOpenGold
-import com.example.sportsbook.ui.theme.WarmWhite
+import com.example.sportsbook.ui.theme.GoldAccent
+import com.example.sportsbook.ui.theme.TextPrimary
 
 // ============================================================
 // v2-practical-ux: Play Home Screen
@@ -120,22 +120,22 @@ fun PlayHomeScreen(
     }
 
     Scaffold(
-        containerColor = Navy900,
+        containerColor = NavBarBg,
         snackbarHost = { SnackbarHost(snackbarHostState) },
         topBar = {
             TopAppBar(
                 title = {
                     Text(
                         "Play",
-                        color = WarmWhite,
+                        color = TextPrimary,
                         style = MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.Bold)
                     )
                 },
-                colors = TopAppBarDefaults.topAppBarColors(containerColor = Navy900),
+                colors = TopAppBarDefaults.topAppBarColors(containerColor = NavBarBg),
                 navigationIcon = if (onBack != null) {
                     {
                         androidx.compose.material3.IconButton(onClick = onBack) {
-                            Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back", tint = WarmWhite)
+                            Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back", tint = TextPrimary)
                         }
                     }
                 } else ({})
@@ -162,7 +162,7 @@ fun PlayHomeScreen(
                             .height(88.dp),
                         contentAlignment = Alignment.Center
                     ) {
-                        CircularProgressIndicator(color = USOpenGold)
+                        CircularProgressIndicator(color = GoldAccent)
                     }
                 }
             } else {
@@ -207,11 +207,11 @@ fun PlayHomeScreen(
                         item {
                             Text(
                                 text = "Nothing found for this window. Try a wider time range or another sport.",
-                                color = CoolGray,
+                                color = TextSecondary,
                                 style = MaterialTheme.typography.bodyMedium,
                                 modifier = Modifier
                                     .fillMaxWidth()
-                                    .background(Navy800, RoundedCornerShape(8.dp))
+                                    .background(CardWhite, RoundedCornerShape(8.dp))
                                     .padding(16.dp)
                             )
                         }
@@ -313,7 +313,7 @@ private fun GreetingBar(feed: HomeFeedSnapshot) {
                         Icons.Default.Star,
                         contentDescription = null,
                         modifier = Modifier.size(14.dp),
-                        tint = USOpenGold
+                        tint = GoldAccent
                     )
                     Spacer(Modifier.width(4.dp))
                     Text(
@@ -353,7 +353,7 @@ private fun SearchFormCard(
 
     Card(
         modifier = Modifier.fillMaxWidth(),
-        colors = CardDefaults.cardColors(containerColor = Navy800),
+        colors = CardDefaults.cardColors(containerColor = CardWhite),
         shape = RoundedCornerShape(12.dp)
     ) {
         Column(
@@ -361,12 +361,12 @@ private fun SearchFormCard(
             verticalArrangement = Arrangement.spacedBy(12.dp)
         ) {
             Row(verticalAlignment = Alignment.CenterVertically) {
-                Icon(Icons.Default.Search, contentDescription = null, tint = USOpenGold, modifier = Modifier.size(20.dp))
+                Icon(Icons.Default.Search, contentDescription = null, tint = GoldAccent, modifier = Modifier.size(20.dp))
                 Spacer(Modifier.width(8.dp))
                 Text(
                     text = "I want to play\u2026",
                     style = MaterialTheme.typography.titleSmall.copy(fontWeight = FontWeight.Medium),
-                    color = WarmWhite
+                    color = TextPrimary
                 )
             }
 
@@ -375,27 +375,27 @@ private fun SearchFormCard(
                 OutlinedTextField(
                     value = fromDate.take(16).replace('T', ' '),
                     onValueChange = { onFromDateChanged(it.replace(' ', 'T')) },
-                    label = { Text("From", color = CoolGray, style = MaterialTheme.typography.labelSmall) },
+                    label = { Text("From", color = TextSecondary, style = MaterialTheme.typography.labelSmall) },
                     modifier = Modifier.weight(1f),
                     singleLine = true,
-                    textStyle = MaterialTheme.typography.bodySmall.copy(color = WarmWhite),
+                    textStyle = MaterialTheme.typography.bodySmall.copy(color = TextPrimary),
                     colors = OutlinedTextFieldDefaults.colors(
-                        focusedBorderColor = USOpenGold,
-                        unfocusedBorderColor = Navy600,
-                        cursorColor = USOpenGold
+                        focusedBorderColor = GoldAccent,
+                        unfocusedBorderColor = BorderGray,
+                        cursorColor = GoldAccent
                     )
                 )
                 OutlinedTextField(
                     value = toDate.take(16).replace('T', ' '),
                     onValueChange = { onToDateChanged(it.replace(' ', 'T')) },
-                    label = { Text("To", color = CoolGray, style = MaterialTheme.typography.labelSmall) },
+                    label = { Text("To", color = TextSecondary, style = MaterialTheme.typography.labelSmall) },
                     modifier = Modifier.weight(1f),
                     singleLine = true,
-                    textStyle = MaterialTheme.typography.bodySmall.copy(color = WarmWhite),
+                    textStyle = MaterialTheme.typography.bodySmall.copy(color = TextPrimary),
                     colors = OutlinedTextFieldDefaults.colors(
-                        focusedBorderColor = USOpenGold,
-                        unfocusedBorderColor = Navy600,
-                        cursorColor = USOpenGold
+                        focusedBorderColor = GoldAccent,
+                        unfocusedBorderColor = BorderGray,
+                        cursorColor = GoldAccent
                     )
                 )
             }
@@ -409,26 +409,26 @@ private fun SearchFormCard(
                     value = selectedSportLabel,
                     onValueChange = {},
                     readOnly = true,
-                    label = { Text("Sport", color = CoolGray, style = MaterialTheme.typography.labelSmall) },
+                    label = { Text("Sport", color = TextSecondary, style = MaterialTheme.typography.labelSmall) },
                     trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = sportDropdownExpanded) },
                     modifier = Modifier
                         .fillMaxWidth()
                         .menuAnchor(),
-                    textStyle = MaterialTheme.typography.bodySmall.copy(color = WarmWhite),
+                    textStyle = MaterialTheme.typography.bodySmall.copy(color = TextPrimary),
                     colors = OutlinedTextFieldDefaults.colors(
-                        focusedBorderColor = USOpenGold,
-                        unfocusedBorderColor = Navy600,
-                        cursorColor = USOpenGold
+                        focusedBorderColor = GoldAccent,
+                        unfocusedBorderColor = BorderGray,
+                        cursorColor = GoldAccent
                     )
                 )
                 ExposedDropdownMenu(
                     expanded = sportDropdownExpanded,
                     onDismissRequest = { sportDropdownExpanded = false },
-                    modifier = Modifier.background(Navy700)
+                    modifier = Modifier.background(LightBg)
                 ) {
                     SPORTS.forEach { (value, label) ->
                         DropdownMenuItem(
-                            text = { Text(label, color = WarmWhite, style = MaterialTheme.typography.bodyMedium) },
+                            text = { Text(label, color = TextPrimary, style = MaterialTheme.typography.bodyMedium) },
                             onClick = {
                                 onSportTypeChanged(value)
                                 sportDropdownExpanded = false
@@ -443,27 +443,27 @@ private fun SearchFormCard(
                 OutlinedTextField(
                     value = skillLevelMin?.toString() ?: "",
                     onValueChange = { v -> onSkillMinChanged(v.toIntOrNull()) },
-                    label = { Text("Skill min (1-5)", color = CoolGray, style = MaterialTheme.typography.labelSmall) },
+                    label = { Text("Skill min (1-5)", color = TextSecondary, style = MaterialTheme.typography.labelSmall) },
                     modifier = Modifier.weight(1f),
                     singleLine = true,
-                    textStyle = MaterialTheme.typography.bodySmall.copy(color = WarmWhite),
+                    textStyle = MaterialTheme.typography.bodySmall.copy(color = TextPrimary),
                     colors = OutlinedTextFieldDefaults.colors(
-                        focusedBorderColor = USOpenGold,
-                        unfocusedBorderColor = Navy600,
-                        cursorColor = USOpenGold
+                        focusedBorderColor = GoldAccent,
+                        unfocusedBorderColor = BorderGray,
+                        cursorColor = GoldAccent
                     )
                 )
                 OutlinedTextField(
                     value = skillLevelMax?.toString() ?: "",
                     onValueChange = { v -> onSkillMaxChanged(v.toIntOrNull()) },
-                    label = { Text("Skill max (1-5)", color = CoolGray, style = MaterialTheme.typography.labelSmall) },
+                    label = { Text("Skill max (1-5)", color = TextSecondary, style = MaterialTheme.typography.labelSmall) },
                     modifier = Modifier.weight(1f),
                     singleLine = true,
-                    textStyle = MaterialTheme.typography.bodySmall.copy(color = WarmWhite),
+                    textStyle = MaterialTheme.typography.bodySmall.copy(color = TextPrimary),
                     colors = OutlinedTextFieldDefaults.colors(
-                        focusedBorderColor = USOpenGold,
-                        unfocusedBorderColor = Navy600,
-                        cursorColor = USOpenGold
+                        focusedBorderColor = GoldAccent,
+                        unfocusedBorderColor = BorderGray,
+                        cursorColor = GoldAccent
                     )
                 )
             }
@@ -504,7 +504,7 @@ private fun SearchResultsHeader(result: PlaySearchResult) {
         Text(
             text = "Available now",
             style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.SemiBold),
-            color = WarmWhite
+            color = TextPrimary
         )
         Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
             CountChip("${result.lobbies} lobbies")
@@ -517,14 +517,14 @@ private fun SearchResultsHeader(result: PlaySearchResult) {
 @Composable
 private fun CountChip(label: String) {
     Surface(
-        color = Navy700,
+        color = LightBg,
         shape = RoundedCornerShape(100.dp)
     ) {
         Text(
             text = label,
             modifier = Modifier.padding(horizontal = 8.dp, vertical = 3.dp),
             style = MaterialTheme.typography.labelSmall,
-            color = CoolGray
+            color = TextSecondary
         )
     }
 }
@@ -534,7 +534,7 @@ private fun SectionHeader(title: String) {
     Text(
         text = title,
         style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.SemiBold),
-        color = WarmWhite
+        color = TextPrimary
     )
 }
 
@@ -547,26 +547,26 @@ private fun RebookCard(
     val target = booking.venueName ?: booking.coachName ?: "Booking"
     Card(
         modifier = Modifier.width(220.dp),
-        colors = CardDefaults.cardColors(containerColor = Navy800),
+        colors = CardDefaults.cardColors(containerColor = CardWhite),
         shape = RoundedCornerShape(10.dp)
     ) {
         Column(modifier = Modifier.padding(14.dp)) {
             Text(
                 text = booking.sportType.replaceFirstChar { it.uppercase() },
                 style = MaterialTheme.typography.labelSmall,
-                color = CoolGray
+                color = TextSecondary
             )
             Spacer(Modifier.height(2.dp))
             Text(
                 text = target,
                 style = MaterialTheme.typography.bodyMedium.copy(fontWeight = FontWeight.SemiBold),
-                color = WarmWhite,
+                color = TextPrimary,
                 maxLines = 1
             )
             Text(
                 text = "\u20ac${booking.price.toLong()} · ${booking.lastSlotStart.take(10)}",
                 style = MaterialTheme.typography.bodySmall,
-                color = CoolGray
+                color = TextSecondary
             )
             if (booking.timesBooked > 1) {
                 Text(
@@ -610,7 +610,7 @@ fun PlaySuggestionCard(suggestion: PlaySuggestion) {
     }
     Card(
         modifier = Modifier.fillMaxWidth(),
-        colors = CardDefaults.cardColors(containerColor = Navy800),
+        colors = CardDefaults.cardColors(containerColor = CardWhite),
         shape = RoundedCornerShape(10.dp)
     ) {
         Column(modifier = Modifier.padding(14.dp)) {
@@ -622,20 +622,20 @@ fun PlaySuggestionCard(suggestion: PlaySuggestion) {
                     Text(
                         text = "$typeLabel \u00b7 ${suggestion.sportType.replaceFirstChar { it.uppercase() }}",
                         style = MaterialTheme.typography.labelSmall,
-                        color = CoolGray
+                        color = TextSecondary
                     )
                     Spacer(Modifier.height(2.dp))
                     Text(
                         text = suggestion.title,
                         style = MaterialTheme.typography.bodyMedium.copy(fontWeight = FontWeight.SemiBold),
-                        color = WarmWhite
+                        color = TextPrimary
                     )
                 }
                 suggestion.price?.let { price ->
                     Text(
                         text = "\u20ac${price.toLong()}",
                         style = MaterialTheme.typography.bodyMedium.copy(fontWeight = FontWeight.SemiBold),
-                        color = USOpenGold
+                        color = GoldAccent
                     )
                 }
             }
@@ -643,14 +643,14 @@ fun PlaySuggestionCard(suggestion: PlaySuggestion) {
             Text(
                 text = suggestion.startAt.take(16).replace('T', ' '),
                 style = MaterialTheme.typography.bodySmall,
-                color = CoolGray
+                color = TextSecondary
             )
             suggestion.venueName?.let { venue ->
                 val distStr = suggestion.distanceKm?.let { " \u00b7 ${"%.1f".format(it)} km" } ?: ""
                 Text(
                     text = "$venue$distStr",
                     style = MaterialTheme.typography.bodySmall,
-                    color = CoolGray
+                    color = TextSecondary
                 )
             }
             val hasChips = suggestion.maxPlayers > 1 || (suggestion.skillLevelMin != null && suggestion.skillLevelMax != null)
@@ -690,11 +690,11 @@ private fun UpcomingBookingCard(booking: UpcomingBooking) {
     val statusColor = when (booking.status) {
         "confirmed" -> SportGreen
         "approved" -> Color(0xFF3B82F6)
-        else -> USOpenGold // pending
+        else -> GoldAccent // pending
     }
     Card(
         modifier = Modifier.fillMaxWidth(),
-        colors = CardDefaults.cardColors(containerColor = Navy800),
+        colors = CardDefaults.cardColors(containerColor = CardWhite),
         shape = RoundedCornerShape(10.dp)
     ) {
         Row(
@@ -707,19 +707,19 @@ private fun UpcomingBookingCard(booking: UpcomingBooking) {
             Column(
                 modifier = Modifier
                     .clip(RoundedCornerShape(8.dp))
-                    .background(Navy700)
+                    .background(LightBg)
                     .padding(horizontal = 12.dp, vertical = 8.dp),
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
                 Text(
                     text = booking.slotDate.takeLast(2), // day
                     style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold),
-                    color = WarmWhite
+                    color = TextPrimary
                 )
                 Text(
                     text = booking.slotDate.substring(5, 7), // month
                     style = MaterialTheme.typography.labelSmall,
-                    color = CoolGray
+                    color = TextSecondary
                 )
             }
             Spacer(Modifier.width(14.dp))
@@ -727,13 +727,13 @@ private fun UpcomingBookingCard(booking: UpcomingBooking) {
                 Text(
                     text = target,
                     style = MaterialTheme.typography.bodyMedium.copy(fontWeight = FontWeight.SemiBold),
-                    color = WarmWhite,
+                    color = TextPrimary,
                     maxLines = 1
                 )
                 Text(
                     text = "${booking.startTime.take(5)} – ${booking.endTime.take(5)}",
                     style = MaterialTheme.typography.bodySmall,
-                    color = CoolGray
+                    color = TextSecondary
                 )
             }
             Column(horizontalAlignment = Alignment.End) {
@@ -753,7 +753,7 @@ private fun UpcomingBookingCard(booking: UpcomingBooking) {
                     Text(
                         text = "€${booking.totalPrice.toLong()}",
                         style = MaterialTheme.typography.labelSmall,
-                        color = CoolGray
+                        color = TextSecondary
                     )
                 }
             }
@@ -778,7 +778,7 @@ private fun FriendsRow(friends: List<FriendAvailability>) {
 @Composable
 private fun FriendChip(friend: FriendAvailability) {
     Surface(
-        color = Navy800,
+        color = CardWhite,
         shape = RoundedCornerShape(100.dp),
         tonalElevation = 1.dp
     ) {
@@ -804,12 +804,12 @@ private fun FriendChip(friend: FriendAvailability) {
                 Text(
                     text = friend.displayName ?: "Player",
                     style = MaterialTheme.typography.labelMedium.copy(fontWeight = FontWeight.Medium),
-                    color = WarmWhite
+                    color = TextPrimary
                 )
                 Text(
                     text = friend.sportType,
                     style = MaterialTheme.typography.labelSmall,
-                    color = CoolGray
+                    color = TextSecondary
                 )
             }
         }

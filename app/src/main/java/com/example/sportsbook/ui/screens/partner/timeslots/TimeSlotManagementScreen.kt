@@ -79,10 +79,10 @@ import com.example.sportsbook.domain.repository.TimeSlotRepository
 import com.example.sportsbook.domain.repository.VenueRepository
 import com.example.sportsbook.ui.common.ErrorView
 import com.example.sportsbook.ui.common.LoadingIndicator
-import com.example.sportsbook.ui.theme.Navy700
-import com.example.sportsbook.ui.theme.Navy900
-import com.example.sportsbook.ui.theme.USOpenGold
-import com.example.sportsbook.ui.theme.WarmWhite
+import com.example.sportsbook.ui.theme.LightBg
+import com.example.sportsbook.ui.theme.NavBarBg
+import com.example.sportsbook.ui.theme.GoldAccent
+import com.example.sportsbook.ui.theme.TextPrimary
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -293,16 +293,16 @@ fun TimeSlotManagementScreen(
     var showGenerateSection by remember { mutableStateOf(false) }
 
     Scaffold(
-        containerColor = Navy900,
+        containerColor = NavBarBg,
         topBar = {
             TopAppBar(
-                title = { Text("Time Slots", color = WarmWhite) },
+                title = { Text("Time Slots", color = TextPrimary) },
                 navigationIcon = {
                     IconButton(onClick = onBack) {
-                        Icon(Icons.AutoMirrored.Filled.ArrowBack, "Back", tint = WarmWhite)
+                        Icon(Icons.AutoMirrored.Filled.ArrowBack, "Back", tint = TextPrimary)
                     }
                 },
-                colors = TopAppBarDefaults.topAppBarColors(containerColor = Navy900)
+                colors = TopAppBarDefaults.topAppBarColors(containerColor = NavBarBg)
             )
         }
     ) { paddingValues ->
@@ -323,7 +323,7 @@ fun TimeSlotManagementScreen(
             // ─── Entity Selector ──────────────────
             item {
                 Spacer(Modifier.height(4.dp))
-                Text("Select Venue or Coach", style = MaterialTheme.typography.labelLarge, color = WarmWhite.copy(alpha = 0.7f))
+                Text("Select Venue or Coach", style = MaterialTheme.typography.labelLarge, color = TextPrimary.copy(alpha = 0.7f))
                 Spacer(Modifier.height(8.dp))
 
                 Row(
@@ -336,10 +336,10 @@ fun TimeSlotManagementScreen(
                             onClick = { viewModel.selectEntity("venue", venue.id, venue.name) },
                             label = { Text(venue.name) },
                             colors = FilterChipDefaults.filterChipColors(
-                                selectedContainerColor = USOpenGold,
-                                selectedLabelColor = Navy900,
-                                containerColor = Navy700,
-                                labelColor = WarmWhite
+                                selectedContainerColor = GoldAccent,
+                                selectedLabelColor = NavBarBg,
+                                containerColor = LightBg,
+                                labelColor = TextPrimary
                             )
                         )
                     }
@@ -349,10 +349,10 @@ fun TimeSlotManagementScreen(
                             onClick = { viewModel.selectEntity("coach", coach.id, coach.name) },
                             label = { Text(coach.name) },
                             colors = FilterChipDefaults.filterChipColors(
-                                selectedContainerColor = USOpenGold,
-                                selectedLabelColor = Navy900,
-                                containerColor = Navy700,
-                                labelColor = WarmWhite
+                                selectedContainerColor = GoldAccent,
+                                selectedLabelColor = NavBarBg,
+                                containerColor = LightBg,
+                                labelColor = TextPrimary
                             )
                         )
                     }
@@ -362,10 +362,10 @@ fun TimeSlotManagementScreen(
             // ─── Date Range ───────────────────────
             item {
                 ElevatedCard(
-                    colors = CardDefaults.elevatedCardColors(containerColor = Navy700)
+                    colors = CardDefaults.elevatedCardColors(containerColor = LightBg)
                 ) {
                     Column(modifier = Modifier.padding(16.dp)) {
-                        Text("Date Range", style = MaterialTheme.typography.titleSmall, color = WarmWhite)
+                        Text("Date Range", style = MaterialTheme.typography.titleSmall, color = TextPrimary)
                         Spacer(Modifier.height(8.dp))
                         Row(
                             verticalAlignment = Alignment.CenterVertically,
@@ -376,11 +376,11 @@ fun TimeSlotManagementScreen(
                                 label = {
                                     Text(
                                         "${formatDateShort(uiState.dateFrom)} → ${formatDateShort(uiState.dateTo)}",
-                                        color = WarmWhite
+                                        color = TextPrimary
                                     )
                                 },
                                 leadingIcon = {
-                                    Icon(Icons.Default.CalendarMonth, null, tint = USOpenGold, modifier = Modifier.size(18.dp))
+                                    Icon(Icons.Default.CalendarMonth, null, tint = GoldAccent, modifier = Modifier.size(18.dp))
                                 }
                             )
                         }
@@ -433,8 +433,8 @@ fun TimeSlotManagementScreen(
                     onClick = { showGenerateSection = !showGenerateSection },
                     modifier = Modifier.fillMaxWidth(),
                     colors = ButtonDefaults.buttonColors(
-                        containerColor = if (showGenerateSection) Navy700 else USOpenGold,
-                        contentColor = if (showGenerateSection) WarmWhite else Navy900
+                        containerColor = if (showGenerateSection) LightBg else GoldAccent,
+                        contentColor = if (showGenerateSection) TextPrimary else NavBarBg
                     )
                 ) {
                     Icon(if (showGenerateSection) Icons.Default.Close else Icons.Default.Add, null, modifier = Modifier.size(18.dp))
@@ -446,10 +446,10 @@ fun TimeSlotManagementScreen(
             // ─── Generate Configuration ───────────
             if (showGenerateSection) {
                 item {
-                    ElevatedCard(colors = CardDefaults.elevatedCardColors(containerColor = Navy700)) {
+                    ElevatedCard(colors = CardDefaults.elevatedCardColors(containerColor = LightBg)) {
                         Column(modifier = Modifier.padding(16.dp)) {
                             // Operating Hours
-                            Text("Operating Hours", style = MaterialTheme.typography.titleSmall, color = WarmWhite)
+                            Text("Operating Hours", style = MaterialTheme.typography.titleSmall, color = TextPrimary)
                             Spacer(Modifier.height(8.dp))
                             Row(
                                 verticalAlignment = Alignment.CenterVertically,
@@ -461,7 +461,7 @@ fun TimeSlotManagementScreen(
                                     range = 0 until uiState.endHour,
                                     onValueChange = { viewModel.setStartHour(it) }
                                 )
-                                Text("to", color = WarmWhite.copy(alpha = 0.6f))
+                                Text("to", color = TextPrimary.copy(alpha = 0.6f))
                                 HourPicker(
                                     label = "To",
                                     value = uiState.endHour,
@@ -471,14 +471,14 @@ fun TimeSlotManagementScreen(
                                 Text(
                                     "${uiState.endHour - uiState.startHour}h/day",
                                     style = MaterialTheme.typography.labelSmall,
-                                    color = USOpenGold
+                                    color = GoldAccent
                                 )
                             }
 
                             Spacer(Modifier.height(16.dp))
 
                             // Days of Week
-                            Text("Available Days", style = MaterialTheme.typography.titleSmall, color = WarmWhite)
+                            Text("Available Days", style = MaterialTheme.typography.titleSmall, color = TextPrimary)
                             Spacer(Modifier.height(8.dp))
 
                             val dayLabels = listOf("Mon" to 1, "Tue" to 2, "Wed" to 3, "Thu" to 4, "Fri" to 5, "Sat" to 6, "Sun" to 0)
@@ -489,8 +489,8 @@ fun TimeSlotManagementScreen(
                                     Box(
                                         modifier = Modifier
                                             .clip(RoundedCornerShape(8.dp))
-                                            .background(if (selected) USOpenGold else Navy900.copy(alpha = 0.5f))
-                                            .border(1.dp, if (selected) USOpenGold else WarmWhite.copy(alpha = 0.2f), RoundedCornerShape(8.dp))
+                                            .background(if (selected) GoldAccent else NavBarBg.copy(alpha = 0.5f))
+                                            .border(1.dp, if (selected) GoldAccent else TextPrimary.copy(alpha = 0.2f), RoundedCornerShape(8.dp))
                                             .clickable { viewModel.toggleDay(dayNum) }
                                             .padding(horizontal = 12.dp, vertical = 8.dp),
                                         contentAlignment = Alignment.Center
@@ -498,7 +498,7 @@ fun TimeSlotManagementScreen(
                                         Text(
                                             label,
                                             style = MaterialTheme.typography.labelMedium,
-                                            color = if (selected) Navy900 else WarmWhite.copy(alpha = 0.7f),
+                                            color = if (selected) NavBarBg else TextPrimary.copy(alpha = 0.7f),
                                             fontWeight = if (selected) FontWeight.Bold else FontWeight.Normal
                                         )
                                     }
@@ -508,10 +508,10 @@ fun TimeSlotManagementScreen(
                             Spacer(Modifier.height(4.dp))
                             Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
                                 TextButton(onClick = { viewModel.selectWeekdays() }) {
-                                    Text("Weekdays", color = USOpenGold, style = MaterialTheme.typography.labelSmall)
+                                    Text("Weekdays", color = GoldAccent, style = MaterialTheme.typography.labelSmall)
                                 }
                                 TextButton(onClick = { viewModel.selectAllDays() }) {
-                                    Text("Every day", color = USOpenGold, style = MaterialTheme.typography.labelSmall)
+                                    Text("Every day", color = GoldAccent, style = MaterialTheme.typography.labelSmall)
                                 }
                             }
 
@@ -522,8 +522,8 @@ fun TimeSlotManagementScreen(
                                 modifier = Modifier.fillMaxWidth(),
                                 enabled = !uiState.isGenerating && uiState.selectedEntityId != null,
                                 colors = ButtonDefaults.buttonColors(
-                                    containerColor = USOpenGold,
-                                    contentColor = Navy900
+                                    containerColor = GoldAccent,
+                                    contentColor = NavBarBg
                                 )
                             ) {
                                 Icon(Icons.Default.Schedule, null, modifier = Modifier.size(18.dp))
@@ -544,24 +544,24 @@ fun TimeSlotManagementScreen(
             if (slotsByDate.isEmpty() && uiState.selectedEntityId != null) {
                 item {
                     Card(
-                        colors = CardDefaults.cardColors(containerColor = Navy700),
+                        colors = CardDefaults.cardColors(containerColor = LightBg),
                         modifier = Modifier.fillMaxWidth()
                     ) {
                         Column(
                             modifier = Modifier.padding(32.dp),
                             horizontalAlignment = Alignment.CenterHorizontally
                         ) {
-                            Icon(Icons.Default.CalendarMonth, null, tint = WarmWhite.copy(alpha = 0.3f), modifier = Modifier.size(48.dp))
+                            Icon(Icons.Default.CalendarMonth, null, tint = TextPrimary.copy(alpha = 0.3f), modifier = Modifier.size(48.dp))
                             Spacer(Modifier.height(12.dp))
                             Text(
                                 "No time slots for this range",
-                                color = WarmWhite.copy(alpha = 0.5f),
+                                color = TextPrimary.copy(alpha = 0.5f),
                                 textAlign = TextAlign.Center
                             )
                             Text(
                                 "Generate slots to get started",
                                 style = MaterialTheme.typography.bodySmall,
-                                color = WarmWhite.copy(alpha = 0.3f),
+                                color = TextPrimary.copy(alpha = 0.3f),
                                 textAlign = TextAlign.Center
                             )
                         }
@@ -578,7 +578,7 @@ fun TimeSlotManagementScreen(
                     Text(
                         "$dayName, $formatted",
                         style = MaterialTheme.typography.titleSmall,
-                        color = WarmWhite,
+                        color = TextPrimary,
                         modifier = Modifier.padding(top = 8.dp)
                     )
                 }
@@ -603,7 +603,7 @@ fun TimeSlotManagementScreen(
                                     Text(
                                         slot.startTime.take(5),
                                         style = MaterialTheme.typography.labelMedium,
-                                        color = WarmWhite,
+                                        color = TextPrimary,
                                         fontWeight = FontWeight.Medium
                                     )
                                     if (slot.isAvailable) {
@@ -616,7 +616,7 @@ fun TimeSlotManagementScreen(
                                                 .clickable { viewModel.deleteSlot(slot.id) },
                                             contentAlignment = Alignment.Center
                                         ) {
-                                            Icon(Icons.Default.Close, null, tint = WarmWhite, modifier = Modifier.size(12.dp))
+                                            Icon(Icons.Default.Close, null, tint = TextPrimary, modifier = Modifier.size(12.dp))
                                         }
                                     } else {
                                         Spacer(Modifier.width(6.dp))
@@ -676,9 +676,9 @@ private fun HourPicker(
             value = "%02d:00".format(value),
             onValueChange = {},
             readOnly = true,
-            label = { Text(label, color = WarmWhite.copy(alpha = 0.6f)) },
+            label = { Text(label, color = TextPrimary.copy(alpha = 0.6f)) },
             modifier = Modifier.width(100.dp).menuAnchor(),
-            textStyle = MaterialTheme.typography.bodyMedium.copy(color = WarmWhite),
+            textStyle = MaterialTheme.typography.bodyMedium.copy(color = TextPrimary),
             singleLine = true
         )
         ExposedDropdownMenu(expanded = expanded, onDismissRequest = { expanded = false }) {
@@ -709,17 +709,17 @@ private fun formatDateShort(dateStr: String): String {
 private fun TimeSlotManagementScreenPreview() {
     MaterialTheme {
         Scaffold(
-            containerColor = Navy900,
+            containerColor = NavBarBg,
             topBar = {
                 @OptIn(ExperimentalMaterial3Api::class)
                 TopAppBar(
-                    title = { Text("Time Slots", color = WarmWhite) },
+                    title = { Text("Time Slots", color = TextPrimary) },
                     navigationIcon = {
                         IconButton(onClick = {}) {
-                            Icon(Icons.AutoMirrored.Filled.ArrowBack, "Back", tint = WarmWhite)
+                            Icon(Icons.AutoMirrored.Filled.ArrowBack, "Back", tint = TextPrimary)
                         }
                     },
-                    colors = TopAppBarDefaults.topAppBarColors(containerColor = Navy900)
+                    colors = TopAppBarDefaults.topAppBarColors(containerColor = NavBarBg)
                 )
             }
         ) { paddingValues ->
@@ -735,7 +735,7 @@ private fun TimeSlotManagementScreenPreview() {
                     Text(
                         "Select Venue or Coach",
                         style = MaterialTheme.typography.labelLarge,
-                        color = WarmWhite.copy(alpha = 0.7f)
+                        color = TextPrimary.copy(alpha = 0.7f)
                     )
                     Spacer(Modifier.height(8.dp))
                     Row(
@@ -747,10 +747,10 @@ private fun TimeSlotManagementScreenPreview() {
                             onClick = {},
                             label = { Text("City Sports Hall") },
                             colors = FilterChipDefaults.filterChipColors(
-                                selectedContainerColor = USOpenGold,
-                                selectedLabelColor = Navy900,
-                                containerColor = Navy700,
-                                labelColor = WarmWhite
+                                selectedContainerColor = GoldAccent,
+                                selectedLabelColor = NavBarBg,
+                                containerColor = LightBg,
+                                labelColor = TextPrimary
                             )
                         )
                         FilterChip(
@@ -758,25 +758,25 @@ private fun TimeSlotManagementScreenPreview() {
                             onClick = {},
                             label = { Text("Jane Doe") },
                             colors = FilterChipDefaults.filterChipColors(
-                                selectedContainerColor = USOpenGold,
-                                selectedLabelColor = Navy900,
-                                containerColor = Navy700,
-                                labelColor = WarmWhite
+                                selectedContainerColor = GoldAccent,
+                                selectedLabelColor = NavBarBg,
+                                containerColor = LightBg,
+                                labelColor = TextPrimary
                             )
                         )
                     }
                 }
 
                 item {
-                    ElevatedCard(colors = CardDefaults.elevatedCardColors(containerColor = Navy700)) {
+                    ElevatedCard(colors = CardDefaults.elevatedCardColors(containerColor = LightBg)) {
                         Column(modifier = Modifier.padding(16.dp)) {
-                            Text("Date Range", style = MaterialTheme.typography.titleSmall, color = WarmWhite)
+                            Text("Date Range", style = MaterialTheme.typography.titleSmall, color = TextPrimary)
                             Spacer(Modifier.height(8.dp))
                             AssistChip(
                                 onClick = {},
-                                label = { Text("24-03 → 31-03", color = WarmWhite) },
+                                label = { Text("24-03 → 31-03", color = TextPrimary) },
                                 leadingIcon = {
-                                    Icon(Icons.Default.CalendarMonth, null, tint = USOpenGold, modifier = Modifier.size(18.dp))
+                                    Icon(Icons.Default.CalendarMonth, null, tint = GoldAccent, modifier = Modifier.size(18.dp))
                                 }
                             )
                         }
@@ -787,7 +787,7 @@ private fun TimeSlotManagementScreenPreview() {
                     Button(
                         onClick = {},
                         modifier = Modifier.fillMaxWidth(),
-                        colors = ButtonDefaults.buttonColors(containerColor = USOpenGold, contentColor = Navy900)
+                        colors = ButtonDefaults.buttonColors(containerColor = GoldAccent, contentColor = NavBarBg)
                     ) {
                         Icon(Icons.Default.Add, null, modifier = Modifier.size(18.dp))
                         Spacer(Modifier.width(8.dp))
@@ -797,24 +797,24 @@ private fun TimeSlotManagementScreenPreview() {
 
                 item {
                     Card(
-                        colors = CardDefaults.cardColors(containerColor = Navy700),
+                        colors = CardDefaults.cardColors(containerColor = LightBg),
                         modifier = Modifier.fillMaxWidth()
                     ) {
                         Column(
                             modifier = Modifier.padding(32.dp),
                             horizontalAlignment = Alignment.CenterHorizontally
                         ) {
-                            Icon(Icons.Default.CalendarMonth, null, tint = WarmWhite.copy(alpha = 0.3f), modifier = Modifier.size(48.dp))
+                            Icon(Icons.Default.CalendarMonth, null, tint = TextPrimary.copy(alpha = 0.3f), modifier = Modifier.size(48.dp))
                             Spacer(Modifier.height(12.dp))
                             Text(
                                 "No time slots for this range",
-                                color = WarmWhite.copy(alpha = 0.5f),
+                                color = TextPrimary.copy(alpha = 0.5f),
                                 textAlign = TextAlign.Center
                             )
                             Text(
                                 "Generate slots to get started",
                                 style = MaterialTheme.typography.bodySmall,
-                                color = WarmWhite.copy(alpha = 0.3f),
+                                color = TextPrimary.copy(alpha = 0.3f),
                                 textAlign = TextAlign.Center
                             )
                         }

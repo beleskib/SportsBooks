@@ -55,11 +55,14 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import coil.compose.AsyncImage
 import com.example.sportsbook.domain.model.Community
-import com.example.sportsbook.ui.theme.Navy700
-import com.example.sportsbook.ui.theme.Navy800
-import com.example.sportsbook.ui.theme.Navy900
-import com.example.sportsbook.ui.theme.USOpenGold
-import com.example.sportsbook.ui.theme.WarmWhite
+import com.example.sportsbook.ui.theme.BorderGray
+import com.example.sportsbook.ui.theme.CardWhite
+import com.example.sportsbook.ui.theme.GoldAccent
+import com.example.sportsbook.ui.theme.LightBg
+import com.example.sportsbook.ui.theme.NavBarBg
+import com.example.sportsbook.ui.theme.TextPrimary
+import com.example.sportsbook.ui.theme.TextSecondary
+import com.example.sportsbook.ui.theme.TextTertiary
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -72,28 +75,28 @@ fun CommunityListScreen(
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
 
     Scaffold(
-        containerColor = Navy900,
+        containerColor = LightBg,
         topBar = {
             TopAppBar(
-                title = { Text("Communities", color = WarmWhite) },
+                title = { Text("Communities", color = GoldAccent) },
                 navigationIcon = {
                     IconButton(onClick = onBack) {
                         Icon(
                             Icons.AutoMirrored.Filled.ArrowBack,
                             contentDescription = "Back",
-                            tint = WarmWhite
+                            tint = GoldAccent
                         )
                     }
                 },
-                colors = TopAppBarDefaults.topAppBarColors(containerColor = Navy800)
+                colors = TopAppBarDefaults.topAppBarColors(containerColor = NavBarBg)
             )
         },
         floatingActionButton = {
             FloatingActionButton(
                 onClick = onCreateCommunity,
-                containerColor = USOpenGold
+                containerColor = GoldAccent
             ) {
-                Icon(Icons.Default.Add, contentDescription = "Create Community", tint = Navy900)
+                Icon(Icons.Default.Add, contentDescription = "Create Community", tint = NavBarBg)
             }
         }
     ) { padding ->
@@ -105,12 +108,12 @@ fun CommunityListScreen(
             val tabs = listOf("My Communities", "Discover")
             TabRow(
                 selectedTabIndex = uiState.selectedTab.ordinal,
-                containerColor = Navy800,
-                contentColor = USOpenGold,
+                containerColor = CardWhite,
+                contentColor = GoldAccent,
                 indicator = { tabPositions ->
                     TabRowDefaults.SecondaryIndicator(
                         modifier = Modifier.tabIndicatorOffset(tabPositions[uiState.selectedTab.ordinal]),
-                        color = USOpenGold
+                        color = GoldAccent
                     )
                 }
             ) {
@@ -121,7 +124,7 @@ fun CommunityListScreen(
                         text = {
                             Text(
                                 text = title,
-                                color = if (uiState.selectedTab.ordinal == index) USOpenGold else WarmWhite.copy(alpha = 0.6f)
+                                color = if (uiState.selectedTab.ordinal == index) GoldAccent else TextSecondary
                             )
                         }
                     )
@@ -131,7 +134,7 @@ fun CommunityListScreen(
             when {
                 uiState.isLoading -> {
                     Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                        CircularProgressIndicator(color = USOpenGold)
+                        CircularProgressIndicator(color = GoldAccent)
                     }
                 }
 
@@ -152,7 +155,7 @@ fun CommunityListScreen(
                             Icon(
                                 Icons.Default.Groups,
                                 contentDescription = null,
-                                tint = WarmWhite.copy(alpha = 0.4f),
+                                tint = TextTertiary,
                                 modifier = Modifier.size(64.dp)
                             )
                             Spacer(modifier = Modifier.height(16.dp))
@@ -162,7 +165,7 @@ fun CommunityListScreen(
                                 else
                                     "No public communities found",
                                 style = MaterialTheme.typography.titleMedium,
-                                color = WarmWhite.copy(alpha = 0.7f),
+                                color = TextSecondary,
                                 textAlign = TextAlign.Center,
                                 modifier = Modifier.padding(horizontal = 32.dp)
                             )
@@ -171,7 +174,7 @@ fun CommunityListScreen(
                                 Text(
                                     text = "Create one or discover public communities",
                                     style = MaterialTheme.typography.bodyMedium,
-                                    color = WarmWhite.copy(alpha = 0.5f),
+                                    color = TextTertiary,
                                     textAlign = TextAlign.Center,
                                     modifier = Modifier.padding(horizontal = 32.dp)
                                 )
@@ -209,7 +212,7 @@ private fun CommunityCard(
             .fillMaxWidth()
             .clickable(onClick = onClick),
         shape = RoundedCornerShape(12.dp),
-        colors = CardDefaults.cardColors(containerColor = Navy700),
+        colors = CardDefaults.cardColors(containerColor = CardWhite),
         elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
     ) {
         Row(
@@ -223,7 +226,7 @@ private fun CommunityCard(
                 modifier = Modifier
                     .size(56.dp)
                     .clip(RoundedCornerShape(8.dp))
-                    .background(Navy800),
+                    .background(LightBg),
                 contentAlignment = Alignment.Center
             ) {
                 if (!community.imageUrl.isNullOrBlank()) {
@@ -237,7 +240,7 @@ private fun CommunityCard(
                     Icon(
                         Icons.Default.Groups,
                         contentDescription = null,
-                        tint = USOpenGold,
+                        tint = GoldAccent,
                         modifier = Modifier.size(28.dp)
                     )
                 }
@@ -250,7 +253,7 @@ private fun CommunityCard(
                     text = community.name,
                     style = MaterialTheme.typography.titleSmall,
                     fontWeight = FontWeight.SemiBold,
-                    color = WarmWhite,
+                    color = TextPrimary,
                     maxLines = 1,
                     overflow = TextOverflow.Ellipsis
                 )
@@ -266,19 +269,19 @@ private fun CommunityCard(
                     Text(
                         text = "${community.memberCount} members",
                         style = MaterialTheme.typography.bodySmall,
-                        color = WarmWhite.copy(alpha = 0.6f)
+                        color = TextSecondary
                     )
                     if (community.isPublic) {
                         Icon(
                             Icons.Default.Public,
                             contentDescription = "Public",
-                            tint = USOpenGold.copy(alpha = 0.7f),
+                            tint = GoldAccent,
                             modifier = Modifier.size(12.dp)
                         )
                         Text(
                             text = "Public",
                             style = MaterialTheme.typography.labelSmall,
-                            color = USOpenGold.copy(alpha = 0.7f)
+                            color = GoldAccent
                         )
                     }
                 }
@@ -292,7 +295,7 @@ internal fun SportBadge(sportType: String, modifier: Modifier = Modifier) {
     Box(
         modifier = modifier
             .clip(RoundedCornerShape(4.dp))
-            .background(USOpenGold.copy(alpha = 0.15f))
+            .background(GoldAccent.copy(alpha = 0.15f))
             .padding(horizontal = 6.dp, vertical = 2.dp)
     ) {
         Text(
@@ -300,7 +303,7 @@ internal fun SportBadge(sportType: String, modifier: Modifier = Modifier) {
                 .lowercase()
                 .replaceFirstChar { it.uppercase() },
             style = MaterialTheme.typography.labelSmall,
-            color = USOpenGold
+            color = GoldAccent
         )
     }
 }
@@ -310,11 +313,11 @@ internal fun SportBadge(sportType: String, modifier: Modifier = Modifier) {
 @Composable
 private fun CommunityListScreenPreview() {
     Scaffold(
-        containerColor = Navy900,
+        containerColor = LightBg,
         topBar = {
             TopAppBar(
-                title = { Text("Communities", color = WarmWhite) },
-                colors = TopAppBarDefaults.topAppBarColors(containerColor = Navy800)
+                title = { Text("Communities", color = GoldAccent) },
+                colors = TopAppBarDefaults.topAppBarColors(containerColor = NavBarBg)
             )
         }
     ) { padding ->
@@ -325,7 +328,7 @@ private fun CommunityListScreenPreview() {
         ) {
             TabRow(
                 selectedTabIndex = 0,
-                containerColor = Navy800
+                containerColor = CardWhite
             ) {
                 Tab(selected = true, onClick = {}, text = { Text("My Communities") })
                 Tab(selected = false, onClick = {}, text = { Text("Discover") })

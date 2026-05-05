@@ -46,11 +46,11 @@ import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.example.sportsbook.domain.model.Friendship
-import com.example.sportsbook.ui.theme.Navy700
-import com.example.sportsbook.ui.theme.Navy800
-import com.example.sportsbook.ui.theme.Navy900
-import com.example.sportsbook.ui.theme.USOpenGold
-import com.example.sportsbook.ui.theme.WarmWhite
+import com.example.sportsbook.ui.theme.LightBg
+import com.example.sportsbook.ui.theme.CardWhite
+import com.example.sportsbook.ui.theme.NavBarBg
+import com.example.sportsbook.ui.theme.GoldAccent
+import com.example.sportsbook.ui.theme.TextPrimary
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -73,20 +73,20 @@ fun InviteFriendsScreen(
     }
 
     Scaffold(
-        containerColor = Navy900,
+        containerColor = NavBarBg,
         topBar = {
             TopAppBar(
-                title = { Text("Invite Friends", color = WarmWhite) },
+                title = { Text("Invite Friends", color = TextPrimary) },
                 navigationIcon = {
                     IconButton(onClick = onBack) {
                         Icon(
                             Icons.AutoMirrored.Filled.ArrowBack,
                             contentDescription = "Back",
-                            tint = WarmWhite
+                            tint = TextPrimary
                         )
                     }
                 },
-                colors = TopAppBarDefaults.topAppBarColors(containerColor = Navy800)
+                colors = TopAppBarDefaults.topAppBarColors(containerColor = CardWhite)
             )
         }
     ) { padding ->
@@ -107,13 +107,13 @@ fun InviteFriendsScreen(
                             Icon(
                                 Icons.Default.PersonAdd,
                                 contentDescription = null,
-                                tint = WarmWhite.copy(alpha = 0.3f),
+                                tint = TextPrimary.copy(alpha = 0.3f),
                                 modifier = Modifier.size(56.dp)
                             )
                             Spacer(modifier = Modifier.height(12.dp))
                             Text(
                                 text = "No friends to invite yet",
-                                color = WarmWhite.copy(alpha = 0.6f),
+                                color = TextPrimary.copy(alpha = 0.6f),
                                 style = MaterialTheme.typography.bodyLarge,
                                 textAlign = TextAlign.Center
                             )
@@ -148,7 +148,7 @@ fun InviteFriendsScreen(
             Column(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .background(Navy800)
+                    .background(CardWhite)
                     .padding(horizontal = 16.dp, vertical = 12.dp)
             ) {
                 if (uiState.error != null) {
@@ -165,22 +165,22 @@ fun InviteFriendsScreen(
                     },
                     modifier = Modifier.fillMaxWidth(),
                     enabled = selectedIds.isNotEmpty() && !uiState.isInviteLoading,
-                    colors = ButtonDefaults.buttonColors(containerColor = USOpenGold)
+                    colors = ButtonDefaults.buttonColors(containerColor = GoldAccent)
                 ) {
                     if (uiState.isInviteLoading) {
-                        CircularProgressIndicator(color = Navy900, modifier = Modifier.height(20.dp))
+                        CircularProgressIndicator(color = NavBarBg, modifier = Modifier.height(20.dp))
                     } else {
                         Icon(
                             Icons.Default.Check,
                             contentDescription = null,
-                            tint = Navy900,
+                            tint = NavBarBg,
                             modifier = Modifier.size(18.dp)
                         )
                         Spacer(modifier = Modifier.width(6.dp))
                         Text(
                             text = if (selectedIds.isEmpty()) "Select friends to invite"
                             else "Invite ${selectedIds.size} Friend${if (selectedIds.size > 1) "s" else ""}",
-                            color = Navy900,
+                            color = NavBarBg,
                             fontWeight = FontWeight.SemiBold
                         )
                     }
@@ -211,16 +211,16 @@ private fun FriendInviteRow(
         Text(
             text = friendship.friendName ?: "Unknown",
             style = MaterialTheme.typography.bodyMedium,
-            color = WarmWhite,
+            color = TextPrimary,
             modifier = Modifier.weight(1f)
         )
         Checkbox(
             checked = isSelected,
             onCheckedChange = { onToggle() },
             colors = CheckboxDefaults.colors(
-                checkedColor = USOpenGold,
-                uncheckedColor = WarmWhite.copy(alpha = 0.4f),
-                checkmarkColor = Navy900
+                checkedColor = GoldAccent,
+                uncheckedColor = TextPrimary.copy(alpha = 0.4f),
+                checkmarkColor = NavBarBg
             )
         )
     }
@@ -231,11 +231,11 @@ private fun FriendInviteRow(
 @Composable
 private fun InviteFriendsScreenPreview() {
     Scaffold(
-        containerColor = Navy900,
+        containerColor = NavBarBg,
         topBar = {
             TopAppBar(
-                title = { Text("Invite Friends", color = WarmWhite) },
-                colors = TopAppBarDefaults.topAppBarColors(containerColor = Navy800)
+                title = { Text("Invite Friends", color = TextPrimary) },
+                colors = TopAppBarDefaults.topAppBarColors(containerColor = CardWhite)
             )
         }
     ) { padding ->

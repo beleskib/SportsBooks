@@ -10,14 +10,14 @@ import androidx.compose.material3.TextField
 import androidx.compose.material3.TextFieldDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import com.example.sportsbook.ui.theme.CoolGray
-import com.example.sportsbook.ui.theme.Navy700
+import com.example.sportsbook.ui.theme.BorderGray
+import com.example.sportsbook.ui.theme.CardWhite
+import com.example.sportsbook.ui.theme.GoldAccent
 import com.example.sportsbook.ui.theme.SportsBookTheme
-import com.example.sportsbook.ui.theme.USOpenGold
-import com.example.sportsbook.ui.theme.WarmWhite
+import com.example.sportsbook.ui.theme.TextPrimary
+import com.example.sportsbook.ui.theme.TextSecondary
 
 @Composable
 fun SearchBar(
@@ -31,21 +31,21 @@ fun SearchBar(
         onValueChange = onQueryChange,
         modifier = modifier.fillMaxWidth(),
         placeholder = {
-            Text(placeholder, color = CoolGray)
+            Text(placeholder, color = TextSecondary)
         },
         leadingIcon = {
-            Icon(Icons.Default.Search, contentDescription = "Search", tint = CoolGray)
+            Icon(Icons.Default.Search, contentDescription = "Search", tint = TextSecondary)
         },
         singleLine = true,
         shape = RoundedCornerShape(12.dp),
         colors = TextFieldDefaults.colors(
-            focusedContainerColor = Navy700,
-            unfocusedContainerColor = Navy700,
-            focusedTextColor = WarmWhite,
-            unfocusedTextColor = WarmWhite,
-            cursorColor = USOpenGold,
-            focusedIndicatorColor = Color.Transparent,
-            unfocusedIndicatorColor = Color.Transparent
+            focusedContainerColor = CardWhite,
+            unfocusedContainerColor = CardWhite,
+            focusedTextColor = TextPrimary,
+            unfocusedTextColor = TextPrimary,
+            cursorColor = GoldAccent,
+            focusedIndicatorColor = BorderGray,
+            unfocusedIndicatorColor = BorderGray
         )
     )
 }

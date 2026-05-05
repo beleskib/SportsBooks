@@ -47,14 +47,14 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.example.sportsbook.domain.enums.SportType
 import com.example.sportsbook.ui.common.LoadingIndicator
-import com.example.sportsbook.ui.theme.CoolGray
-import com.example.sportsbook.ui.theme.Navy600
-import com.example.sportsbook.ui.theme.Navy700
-import com.example.sportsbook.ui.theme.Navy800
-import com.example.sportsbook.ui.theme.Navy900
+import com.example.sportsbook.ui.theme.TextSecondary
+import com.example.sportsbook.ui.theme.BorderGray
+import com.example.sportsbook.ui.theme.LightBg
+import com.example.sportsbook.ui.theme.CardWhite
+import com.example.sportsbook.ui.theme.NavBarBg
 import com.example.sportsbook.ui.theme.SportsBookTheme
-import com.example.sportsbook.ui.theme.USOpenGold
-import com.example.sportsbook.ui.theme.WarmWhite
+import com.example.sportsbook.ui.theme.GoldAccent
+import com.example.sportsbook.ui.theme.TextPrimary
 
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalLayoutApi::class)
 @Composable
@@ -81,14 +81,14 @@ fun SportsIFollowScreen(
     }
 
     Scaffold(
-        containerColor = Navy900,
+        containerColor = NavBarBg,
         snackbarHost = { SnackbarHost(snackbarHostState) },
         topBar = {
             TopAppBar(
                 title = {
                     Text(
                         "Sports I Follow",
-                        color = WarmWhite,
+                        color = TextPrimary,
                         fontWeight = FontWeight.Bold
                     )
                 },
@@ -97,12 +97,12 @@ fun SportsIFollowScreen(
                         Icon(
                             Icons.AutoMirrored.Filled.ArrowBack,
                             contentDescription = "Back",
-                            tint = WarmWhite
+                            tint = TextPrimary
                         )
                     }
                 },
                 colors = TopAppBarDefaults.topAppBarColors(
-                    containerColor = Navy900
+                    containerColor = NavBarBg
                 )
             )
         },
@@ -111,7 +111,7 @@ fun SportsIFollowScreen(
                 Box(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .background(Navy800)
+                        .background(CardWhite)
                         .padding(16.dp)
                 ) {
                     Button(
@@ -120,8 +120,8 @@ fun SportsIFollowScreen(
                         enabled = !uiState.isSaving,
                         shape = RoundedCornerShape(12.dp),
                         colors = ButtonDefaults.buttonColors(
-                            containerColor = USOpenGold,
-                            contentColor = Navy900
+                            containerColor = GoldAccent,
+                            contentColor = NavBarBg
                         )
                     ) {
                         Text(
@@ -152,14 +152,14 @@ fun SportsIFollowScreen(
             Text(
                 text = "Choose the sports you're interested in. This personalises your home feed, play suggestions, and friend availability.",
                 style = MaterialTheme.typography.bodyMedium,
-                color = CoolGray,
+                color = TextSecondary,
                 modifier = Modifier.padding(bottom = 20.dp)
             )
 
             Text(
                 text = "${uiState.selectedSports.size} selected",
                 style = MaterialTheme.typography.labelMedium,
-                color = USOpenGold,
+                color = GoldAccent,
                 fontWeight = FontWeight.SemiBold,
                 modifier = Modifier.padding(bottom = 12.dp)
             )
@@ -191,15 +191,15 @@ private fun SportToggleChip(
     onClick: () -> Unit
 ) {
     val bgColor by animateColorAsState(
-        targetValue = if (isSelected) USOpenGold.copy(alpha = 0.15f) else Navy700,
+        targetValue = if (isSelected) GoldAccent.copy(alpha = 0.15f) else LightBg,
         label = "chipBg"
     )
     val borderColor by animateColorAsState(
-        targetValue = if (isSelected) USOpenGold else Navy600,
+        targetValue = if (isSelected) GoldAccent else BorderGray,
         label = "chipBorder"
     )
     val textColor by animateColorAsState(
-        targetValue = if (isSelected) USOpenGold else WarmWhite.copy(alpha = 0.7f),
+        targetValue = if (isSelected) GoldAccent else TextPrimary.copy(alpha = 0.7f),
         label = "chipText"
     )
 
@@ -220,7 +220,7 @@ private fun SportToggleChip(
                     Icons.Default.Check,
                     contentDescription = null,
                     modifier = Modifier.size(16.dp),
-                    tint = USOpenGold
+                    tint = GoldAccent
                 )
                 Text(
                     text = sport.displayName,

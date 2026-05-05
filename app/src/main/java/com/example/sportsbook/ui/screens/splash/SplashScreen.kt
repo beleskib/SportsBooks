@@ -24,10 +24,10 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import com.example.sportsbook.ui.theme.Navy900
+import com.example.sportsbook.ui.theme.CardWhite
+import com.example.sportsbook.ui.theme.GoldAccent
+import com.example.sportsbook.ui.theme.NavBarBg
 import com.example.sportsbook.ui.theme.SportsBookTheme
-import com.example.sportsbook.ui.theme.USOpenGold
-import com.example.sportsbook.ui.theme.WarmWhite
 
 @Composable
 fun SplashScreen(
@@ -62,7 +62,7 @@ private fun SplashScreenContent(
     Box(
         modifier = modifier
             .fillMaxSize()
-            .background(Navy900),
+            .background(NavBarBg),
         contentAlignment = Alignment.Center
     ) {
         Column(
@@ -73,7 +73,7 @@ private fun SplashScreenContent(
                 imageVector = Icons.Default.SportsSoccer,
                 contentDescription = "SportsBook app icon",
                 modifier = Modifier.size(80.dp),
-                tint = USOpenGold
+                tint = GoldAccent
             )
             Spacer(modifier = Modifier.height(16.dp))
             Text(
@@ -81,12 +81,12 @@ private fun SplashScreenContent(
                 style = MaterialTheme.typography.displayMedium.copy(
                     fontWeight = FontWeight.Bold
                 ),
-                color = WarmWhite
+                color = CardWhite
             )
             Spacer(modifier = Modifier.height(32.dp))
             if (isLoading) {
                 CircularProgressIndicator(
-                    color = USOpenGold,
+                    color = GoldAccent,
                     strokeWidth = 3.dp
                 )
             }

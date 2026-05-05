@@ -66,12 +66,12 @@ import com.example.sportsbook.ui.common.toDisplayDate
 import com.example.sportsbook.ui.common.toDisplayTime
 import com.example.sportsbook.ui.navigation.Route
 import com.example.sportsbook.ui.theme.CoralRed
-import com.example.sportsbook.ui.theme.Navy700
-import com.example.sportsbook.ui.theme.Navy800
-import com.example.sportsbook.ui.theme.Navy900
+import com.example.sportsbook.ui.theme.LightBg
+import com.example.sportsbook.ui.theme.CardWhite
+import com.example.sportsbook.ui.theme.NavBarBg
 import com.example.sportsbook.ui.theme.SportGreen
-import com.example.sportsbook.ui.theme.USOpenGold
-import com.example.sportsbook.ui.theme.WarmWhite
+import com.example.sportsbook.ui.theme.GoldAccent
+import com.example.sportsbook.ui.theme.TextPrimary
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -169,28 +169,28 @@ fun BrowseVenueLobbiesScreen(
     }
 
     Scaffold(
-        containerColor = Navy900,
+        containerColor = NavBarBg,
         snackbarHost = { SnackbarHost(hostState = snackbarHostState) },
         topBar = {
             TopAppBar(
-                title = { Text("Open Venue Lobbies", color = WarmWhite) },
+                title = { Text("Open Venue Lobbies", color = TextPrimary) },
                 navigationIcon = {
                     IconButton(onClick = onBack) {
                         Icon(
                             imageVector = Icons.AutoMirrored.Filled.ArrowBack,
                             contentDescription = "Back",
-                            tint = WarmWhite
+                            tint = TextPrimary
                         )
                     }
                 },
-                colors = TopAppBarDefaults.topAppBarColors(containerColor = Navy800)
+                colors = TopAppBarDefaults.topAppBarColors(containerColor = CardWhite)
             )
         },
         floatingActionButton = {
             androidx.compose.material3.FloatingActionButton(
                 onClick = onCreateLobby,
-                containerColor = USOpenGold,
-                contentColor = Navy900
+                containerColor = GoldAccent,
+                contentColor = NavBarBg
             ) {
                 Icon(Icons.Default.Add, contentDescription = "Create Lobby")
             }
@@ -204,7 +204,7 @@ fun BrowseVenueLobbiesScreen(
                         .padding(paddingValues),
                     contentAlignment = Alignment.Center
                 ) {
-                    CircularProgressIndicator(color = USOpenGold)
+                    CircularProgressIndicator(color = GoldAccent)
                 }
             }
 
@@ -219,21 +219,21 @@ fun BrowseVenueLobbiesScreen(
                         Icon(
                             imageVector = Icons.Default.Group,
                             contentDescription = null,
-                            tint = WarmWhite.copy(alpha = 0.3f),
+                            tint = TextPrimary.copy(alpha = 0.3f),
                             modifier = Modifier.size(64.dp)
                         )
                         Spacer(modifier = Modifier.height(12.dp))
                         Text(
                             text = "No open lobbies yet",
                             style = MaterialTheme.typography.titleMedium,
-                            color = WarmWhite.copy(alpha = 0.5f),
+                            color = TextPrimary.copy(alpha = 0.5f),
                             textAlign = TextAlign.Center
                         )
                         Spacer(modifier = Modifier.height(4.dp))
                         Text(
                             text = "Be the first to create one!",
                             style = MaterialTheme.typography.bodyMedium,
-                            color = WarmWhite.copy(alpha = 0.35f),
+                            color = TextPrimary.copy(alpha = 0.35f),
                             textAlign = TextAlign.Center
                         )
                     }
@@ -274,7 +274,7 @@ internal fun VenueBookingLobbyCard(
         modifier = modifier
             .fillMaxWidth()
             .clickable(onClick = onCardClick),
-        colors = CardDefaults.cardColors(containerColor = Navy800),
+        colors = CardDefaults.cardColors(containerColor = CardWhite),
         shape = RoundedCornerShape(12.dp)
     ) {
         Column(modifier = Modifier.padding(16.dp)) {
@@ -288,7 +288,7 @@ internal fun VenueBookingLobbyCard(
                 Text(
                     text = lobby.title,
                     style = MaterialTheme.typography.titleMedium,
-                    color = WarmWhite,
+                    color = TextPrimary,
                     fontWeight = FontWeight.SemiBold,
                     maxLines = 1,
                     overflow = TextOverflow.Ellipsis,
@@ -303,7 +303,7 @@ internal fun VenueBookingLobbyCard(
             // Venue name
             if (!lobby.venueName.isNullOrBlank()) {
                 LobbyInfoRow(
-                    icon = { Icon(Icons.Default.LocationOn, contentDescription = null, tint = USOpenGold, modifier = Modifier.size(14.dp)) },
+                    icon = { Icon(Icons.Default.LocationOn, contentDescription = null, tint = GoldAccent, modifier = Modifier.size(14.dp)) },
                     text = lobby.venueName
                 )
                 Spacer(modifier = Modifier.height(4.dp))
@@ -312,7 +312,7 @@ internal fun VenueBookingLobbyCard(
             // Sport type
             if (!lobby.sportType.isNullOrBlank()) {
                 LobbyInfoRow(
-                    icon = { Icon(Icons.Default.SportsSoccer, contentDescription = null, tint = USOpenGold, modifier = Modifier.size(14.dp)) },
+                    icon = { Icon(Icons.Default.SportsSoccer, contentDescription = null, tint = GoldAccent, modifier = Modifier.size(14.dp)) },
                     text = lobby.sportType.replace("_", " ").lowercase().replaceFirstChar { it.uppercase() }
                 )
                 Spacer(modifier = Modifier.height(4.dp))
@@ -329,7 +329,7 @@ internal fun VenueBookingLobbyCard(
             }
             if (dateText.isNotBlank()) {
                 LobbyInfoRow(
-                    icon = { Icon(Icons.Default.CalendarToday, contentDescription = null, tint = USOpenGold, modifier = Modifier.size(14.dp)) },
+                    icon = { Icon(Icons.Default.CalendarToday, contentDescription = null, tint = GoldAccent, modifier = Modifier.size(14.dp)) },
                     text = dateText
                 )
                 Spacer(modifier = Modifier.height(4.dp))
@@ -338,7 +338,7 @@ internal fun VenueBookingLobbyCard(
             // Creator
             if (!lobby.creatorName.isNullOrBlank()) {
                 LobbyInfoRow(
-                    icon = { Icon(Icons.Default.Person, contentDescription = null, tint = WarmWhite.copy(alpha = 0.6f), modifier = Modifier.size(14.dp)) },
+                    icon = { Icon(Icons.Default.Person, contentDescription = null, tint = TextPrimary.copy(alpha = 0.6f), modifier = Modifier.size(14.dp)) },
                     text = "by ${lobby.creatorName}"
                 )
                 Spacer(modifier = Modifier.height(4.dp))
@@ -354,23 +354,23 @@ internal fun VenueBookingLobbyCard(
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 Row(verticalAlignment = Alignment.CenterVertically) {
-                    Icon(Icons.Default.Group, contentDescription = null, tint = USOpenGold, modifier = Modifier.size(14.dp))
+                    Icon(Icons.Default.Group, contentDescription = null, tint = GoldAccent, modifier = Modifier.size(14.dp))
                     Spacer(modifier = Modifier.width(4.dp))
                     Text(
                         text = "${lobby.currentPlayers}/${lobby.maxPlayers} players",
                         style = MaterialTheme.typography.labelMedium,
-                        color = USOpenGold,
+                        color = GoldAccent,
                         fontWeight = FontWeight.Bold
                     )
                 }
                 // Price info
                 Row(verticalAlignment = Alignment.CenterVertically) {
-                    Icon(Icons.Default.AttachMoney, contentDescription = null, tint = WarmWhite.copy(alpha = 0.7f), modifier = Modifier.size(14.dp))
+                    Icon(Icons.Default.AttachMoney, contentDescription = null, tint = TextPrimary.copy(alpha = 0.7f), modifier = Modifier.size(14.dp))
                     Spacer(modifier = Modifier.width(2.dp))
                     Text(
                         text = "${"%.0f".format(lobby.pricePerPlayer)} ${lobby.currency}/player",
                         style = MaterialTheme.typography.labelMedium,
-                        color = WarmWhite.copy(alpha = 0.8f)
+                        color = TextPrimary.copy(alpha = 0.8f)
                     )
                 }
             }
@@ -382,8 +382,8 @@ internal fun VenueBookingLobbyCard(
                     .fillMaxWidth()
                     .height(6.dp)
                     .clip(RoundedCornerShape(3.dp)),
-                color = USOpenGold,
-                trackColor = Navy700
+                color = GoldAccent,
+                trackColor = LightBg
             )
 
             Spacer(modifier = Modifier.height(12.dp))
@@ -393,12 +393,12 @@ internal fun VenueBookingLobbyCard(
                 Button(
                     onClick = onJoinClick,
                     modifier = Modifier.fillMaxWidth(),
-                    colors = ButtonDefaults.buttonColors(containerColor = USOpenGold),
+                    colors = ButtonDefaults.buttonColors(containerColor = GoldAccent),
                     shape = RoundedCornerShape(8.dp)
                 ) {
                     Text(
                         text = "Join Lobby",
-                        color = Navy900,
+                        color = NavBarBg,
                         fontWeight = FontWeight.SemiBold,
                         style = MaterialTheme.typography.labelLarge
                     )
@@ -427,7 +427,7 @@ private fun LobbyInfoRow(
         Text(
             text = text,
             style = MaterialTheme.typography.bodySmall,
-            color = WarmWhite.copy(alpha = 0.75f),
+            color = TextPrimary.copy(alpha = 0.75f),
             maxLines = 1,
             overflow = TextOverflow.Ellipsis
         )
@@ -439,12 +439,12 @@ internal fun PaymentTypeBadge(paymentType: String, modifier: Modifier = Modifier
     val (label, bgColor) = when (paymentType) {
         "creator_pays" -> "Creator Pays" to SportGreen.copy(alpha = 0.2f)
         "split_to_teams" -> "Team Split" to CoralRed.copy(alpha = 0.2f)
-        else -> "Split" to USOpenGold.copy(alpha = 0.2f)
+        else -> "Split" to GoldAccent.copy(alpha = 0.2f)
     }
     val textColor = when (paymentType) {
         "creator_pays" -> SportGreen
         "split_to_teams" -> CoralRed
-        else -> USOpenGold
+        else -> GoldAccent
     }
     Box(
         modifier = modifier
@@ -510,11 +510,11 @@ private fun BrowseVenueLobbiesScreenPreview() {
         )
     )
     Scaffold(
-        containerColor = Navy900,
+        containerColor = NavBarBg,
         topBar = {
             TopAppBar(
-                title = { Text("Open Venue Lobbies", color = WarmWhite) },
-                colors = TopAppBarDefaults.topAppBarColors(containerColor = Navy800)
+                title = { Text("Open Venue Lobbies", color = TextPrimary) },
+                colors = TopAppBarDefaults.topAppBarColors(containerColor = CardWhite)
             )
         }
     ) { padding ->

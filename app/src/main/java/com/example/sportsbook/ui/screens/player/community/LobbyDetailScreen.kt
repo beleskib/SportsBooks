@@ -51,12 +51,12 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.example.sportsbook.domain.model.Lobby
 import com.example.sportsbook.domain.model.LobbyParticipant
 import com.example.sportsbook.ui.theme.CoralRed
-import com.example.sportsbook.ui.theme.Navy700
-import com.example.sportsbook.ui.theme.Navy800
-import com.example.sportsbook.ui.theme.Navy900
+import com.example.sportsbook.ui.theme.LightBg
+import com.example.sportsbook.ui.theme.CardWhite
+import com.example.sportsbook.ui.theme.NavBarBg
 import com.example.sportsbook.ui.theme.SportGreen
-import com.example.sportsbook.ui.theme.USOpenGold
-import com.example.sportsbook.ui.theme.WarmWhite
+import com.example.sportsbook.ui.theme.GoldAccent
+import com.example.sportsbook.ui.theme.TextPrimary
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -69,13 +69,13 @@ fun LobbyDetailScreen(
     val lobby = uiState.lobby
 
     Scaffold(
-        containerColor = Navy900,
+        containerColor = NavBarBg,
         topBar = {
             TopAppBar(
                 title = {
                     Text(
                         text = lobby?.title ?: "Lobby",
-                        color = WarmWhite
+                        color = TextPrimary
                     )
                 },
                 navigationIcon = {
@@ -83,18 +83,18 @@ fun LobbyDetailScreen(
                         Icon(
                             Icons.AutoMirrored.Filled.ArrowBack,
                             contentDescription = "Back",
-                            tint = WarmWhite
+                            tint = TextPrimary
                         )
                     }
                 },
-                colors = TopAppBarDefaults.topAppBarColors(containerColor = Navy800)
+                colors = TopAppBarDefaults.topAppBarColors(containerColor = CardWhite)
             )
         }
     ) { padding ->
         when {
             uiState.isLoading -> {
                 Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                    CircularProgressIndicator(color = USOpenGold)
+                    CircularProgressIndicator(color = GoldAccent)
                 }
             }
 
@@ -131,7 +131,7 @@ fun LobbyDetailScreen(
                         Text(
                             text = "Participants",
                             style = MaterialTheme.typography.titleSmall,
-                            color = WarmWhite.copy(alpha = 0.8f),
+                            color = TextPrimary.copy(alpha = 0.8f),
                             fontWeight = FontWeight.SemiBold,
                             modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp)
                         )
@@ -142,7 +142,7 @@ fun LobbyDetailScreen(
                             Text(
                                 text = "No participants yet — be the first!",
                                 style = MaterialTheme.typography.bodyMedium,
-                                color = WarmWhite.copy(alpha = 0.5f),
+                                color = TextPrimary.copy(alpha = 0.5f),
                                 modifier = Modifier.padding(horizontal = 16.dp)
                             )
                         }
@@ -203,28 +203,28 @@ private fun LobbyHeaderSection(lobby: Lobby) {
     Column(
         modifier = Modifier
             .fillMaxWidth()
-            .background(Navy800)
+            .background(CardWhite)
             .padding(16.dp)
     ) {
         SportBadge(sportType = lobby.sportType)
         Spacer(modifier = Modifier.height(8.dp))
 
         InfoRow(
-            icon = { Icon(Icons.Default.CalendarToday, contentDescription = null, tint = USOpenGold, modifier = Modifier.size(16.dp)) },
+            icon = { Icon(Icons.Default.CalendarToday, contentDescription = null, tint = GoldAccent, modifier = Modifier.size(16.dp)) },
             text = "${lobby.scheduledDate}  ${lobby.scheduledTime}  (${lobby.durationMinutes} min)"
         )
 
         if (!lobby.venueName.isNullOrBlank()) {
             Spacer(modifier = Modifier.height(4.dp))
             InfoRow(
-                icon = { Icon(Icons.Default.LocationOn, contentDescription = null, tint = USOpenGold, modifier = Modifier.size(16.dp)) },
+                icon = { Icon(Icons.Default.LocationOn, contentDescription = null, tint = GoldAccent, modifier = Modifier.size(16.dp)) },
                 text = lobby.venueName
             )
         }
 
         Spacer(modifier = Modifier.height(4.dp))
         InfoRow(
-            icon = { Icon(Icons.Default.SportsSoccer, contentDescription = null, tint = USOpenGold, modifier = Modifier.size(16.dp)) },
+            icon = { Icon(Icons.Default.SportsSoccer, contentDescription = null, tint = GoldAccent, modifier = Modifier.size(16.dp)) },
             text = "Skill level ${lobby.skillLevelMin}–${lobby.skillLevelMax}"
         )
 
@@ -233,7 +233,7 @@ private fun LobbyHeaderSection(lobby: Lobby) {
             Text(
                 text = lobby.description,
                 style = MaterialTheme.typography.bodyMedium,
-                color = WarmWhite.copy(alpha = 0.8f)
+                color = TextPrimary.copy(alpha = 0.8f)
             )
         }
 
@@ -253,7 +253,7 @@ private fun InfoRow(icon: @Composable () -> Unit, text: String) {
     Row(verticalAlignment = Alignment.CenterVertically) {
         icon()
         Spacer(modifier = Modifier.width(6.dp))
-        Text(text = text, style = MaterialTheme.typography.bodySmall, color = WarmWhite.copy(alpha = 0.8f))
+        Text(text = text, style = MaterialTheme.typography.bodySmall, color = TextPrimary.copy(alpha = 0.8f))
     }
 }
 
@@ -268,13 +268,13 @@ private fun PlayerCountSection(currentPlayers: Int, maxPlayers: Int) {
             Text(
                 text = "Players",
                 style = MaterialTheme.typography.titleSmall,
-                color = WarmWhite.copy(alpha = 0.8f),
+                color = TextPrimary.copy(alpha = 0.8f),
                 fontWeight = FontWeight.SemiBold
             )
             Text(
                 text = "$currentPlayers / $maxPlayers",
                 style = MaterialTheme.typography.titleSmall,
-                color = USOpenGold,
+                color = GoldAccent,
                 fontWeight = FontWeight.Bold
             )
         }
@@ -286,8 +286,8 @@ private fun PlayerCountSection(currentPlayers: Int, maxPlayers: Int) {
                 .fillMaxWidth()
                 .height(8.dp)
                 .clip(RoundedCornerShape(4.dp)),
-            color = USOpenGold,
-            trackColor = Navy700
+            color = GoldAccent,
+            trackColor = LightBg
         )
     }
 }
@@ -304,7 +304,7 @@ private fun ParticipantAvatar(participant: LobbyParticipant) {
         Text(
             text = participant.displayName.split(" ").firstOrNull() ?: participant.displayName,
             style = MaterialTheme.typography.labelSmall,
-            color = WarmWhite.copy(alpha = 0.7f)
+            color = TextPrimary.copy(alpha = 0.7f)
         )
     }
 }
@@ -319,36 +319,36 @@ private fun MissingPlayersPrompt(
             .fillMaxWidth()
             .padding(horizontal = 16.dp, vertical = 12.dp)
             .clip(RoundedCornerShape(10.dp))
-            .background(Navy700)
+            .background(LightBg)
             .padding(14.dp)
     ) {
         Text(
             text = "Still need more players?",
             style = MaterialTheme.typography.titleSmall,
-            color = WarmWhite,
+            color = TextPrimary,
             fontWeight = FontWeight.SemiBold
         )
         Spacer(modifier = Modifier.height(6.dp))
         Text(
             text = "Make the lobby public to attract more players, or browse available players directly.",
             style = MaterialTheme.typography.bodySmall,
-            color = WarmWhite.copy(alpha = 0.7f)
+            color = TextPrimary.copy(alpha = 0.7f)
         )
         Spacer(modifier = Modifier.height(10.dp))
         Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
             Button(
                 onClick = onMakePublic,
-                colors = ButtonDefaults.buttonColors(containerColor = USOpenGold),
+                colors = ButtonDefaults.buttonColors(containerColor = GoldAccent),
                 contentPadding = PaddingValues(horizontal = 12.dp, vertical = 6.dp),
                 modifier = Modifier.weight(1f)
             ) {
-                Icon(Icons.Default.Public, contentDescription = null, tint = Navy900, modifier = Modifier.size(16.dp))
+                Icon(Icons.Default.Public, contentDescription = null, tint = NavBarBg, modifier = Modifier.size(16.dp))
                 Spacer(modifier = Modifier.width(4.dp))
-                Text("Make Public", color = Navy900, style = MaterialTheme.typography.labelMedium)
+                Text("Make Public", color = NavBarBg, style = MaterialTheme.typography.labelMedium)
             }
             OutlinedButton(
                 onClick = onBrowsePlayers,
-                colors = ButtonDefaults.outlinedButtonColors(contentColor = WarmWhite),
+                colors = ButtonDefaults.outlinedButtonColors(contentColor = TextPrimary),
                 contentPadding = PaddingValues(horizontal = 12.dp, vertical = 6.dp),
                 modifier = Modifier.weight(1f)
             ) {
@@ -377,7 +377,7 @@ private fun LobbyActionButtons(
             OutlinedButton(
                 onClick = onMakePublic,
                 modifier = Modifier.fillMaxWidth(),
-                colors = ButtonDefaults.outlinedButtonColors(contentColor = USOpenGold)
+                colors = ButtonDefaults.outlinedButtonColors(contentColor = GoldAccent)
             ) {
                 Icon(Icons.Default.Public, contentDescription = null, modifier = Modifier.size(18.dp))
                 Spacer(modifier = Modifier.width(6.dp))
@@ -398,15 +398,15 @@ private fun LobbyActionButtons(
                 Button(
                     onClick = onJoin,
                     modifier = Modifier.fillMaxWidth(),
-                    colors = ButtonDefaults.buttonColors(containerColor = USOpenGold)
+                    colors = ButtonDefaults.buttonColors(containerColor = GoldAccent)
                 ) {
-                    Text("Join Lobby", color = Navy900, fontWeight = FontWeight.SemiBold)
+                    Text("Join Lobby", color = NavBarBg, fontWeight = FontWeight.SemiBold)
                 }
             } else if (lobby.isFull) {
                 Text(
                     text = "Lobby is full",
                     style = MaterialTheme.typography.bodyMedium,
-                    color = WarmWhite.copy(alpha = 0.5f),
+                    color = TextPrimary.copy(alpha = 0.5f),
                     modifier = Modifier.fillMaxWidth(),
                     textAlign = TextAlign.Center
                 )
@@ -439,11 +439,11 @@ private fun LobbyDetailScreenPreview() {
         )
     )
     Scaffold(
-        containerColor = Navy900,
+        containerColor = NavBarBg,
         topBar = {
             TopAppBar(
-                title = { Text(lobby.title, color = WarmWhite) },
-                colors = TopAppBarDefaults.topAppBarColors(containerColor = Navy800)
+                title = { Text(lobby.title, color = TextPrimary) },
+                colors = TopAppBarDefaults.topAppBarColors(containerColor = CardWhite)
             )
         }
     ) { padding ->

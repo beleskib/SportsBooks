@@ -49,11 +49,11 @@ import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.example.sportsbook.domain.enums.SportType
-import com.example.sportsbook.ui.theme.Navy700
-import com.example.sportsbook.ui.theme.Navy800
-import com.example.sportsbook.ui.theme.Navy900
-import com.example.sportsbook.ui.theme.USOpenGold
-import com.example.sportsbook.ui.theme.WarmWhite
+import com.example.sportsbook.ui.theme.LightBg
+import com.example.sportsbook.ui.theme.CardWhite
+import com.example.sportsbook.ui.theme.NavBarBg
+import com.example.sportsbook.ui.theme.GoldAccent
+import com.example.sportsbook.ui.theme.TextPrimary
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -69,20 +69,20 @@ fun CreateLobbyScreen(
     }
 
     Scaffold(
-        containerColor = Navy900,
+        containerColor = NavBarBg,
         topBar = {
             TopAppBar(
-                title = { Text("Create Lobby", color = WarmWhite) },
+                title = { Text("Create Lobby", color = TextPrimary) },
                 navigationIcon = {
                     IconButton(onClick = onBack) {
                         Icon(
                             Icons.AutoMirrored.Filled.ArrowBack,
                             contentDescription = "Back",
-                            tint = WarmWhite
+                            tint = TextPrimary
                         )
                     }
                 },
-                colors = TopAppBarDefaults.topAppBarColors(containerColor = Navy800)
+                colors = TopAppBarDefaults.topAppBarColors(containerColor = CardWhite)
             )
         }
     ) { padding ->
@@ -96,13 +96,13 @@ fun CreateLobbyScreen(
             verticalArrangement = Arrangement.spacedBy(14.dp)
         ) {
             val fieldColors = OutlinedTextFieldDefaults.colors(
-                focusedBorderColor = USOpenGold,
-                unfocusedBorderColor = WarmWhite.copy(alpha = 0.3f),
-                focusedLabelColor = USOpenGold,
-                unfocusedLabelColor = WarmWhite.copy(alpha = 0.6f),
-                focusedTextColor = WarmWhite,
-                unfocusedTextColor = WarmWhite,
-                cursorColor = USOpenGold
+                focusedBorderColor = GoldAccent,
+                unfocusedBorderColor = TextPrimary.copy(alpha = 0.3f),
+                focusedLabelColor = GoldAccent,
+                unfocusedLabelColor = TextPrimary.copy(alpha = 0.6f),
+                focusedTextColor = TextPrimary,
+                unfocusedTextColor = TextPrimary,
+                cursorColor = GoldAccent
             )
 
             // Title
@@ -138,11 +138,11 @@ fun CreateLobbyScreen(
                 ExposedDropdownMenu(
                     expanded = sportExpanded,
                     onDismissRequest = { sportExpanded = false },
-                    containerColor = Navy700
+                    containerColor = LightBg
                 ) {
                     SportType.entries.forEach { sport ->
                         DropdownMenuItem(
-                            text = { Text(sport.displayName, color = WarmWhite) },
+                            text = { Text(sport.displayName, color = TextPrimary) },
                             onClick = {
                                 viewModel.onSportTypeChange(sport.name.lowercase())
                                 sportExpanded = false
@@ -234,19 +234,19 @@ fun CreateLobbyScreen(
                 horizontalArrangement = Arrangement.SpaceBetween
             ) {
                 Column {
-                    Text("Public Lobby", style = MaterialTheme.typography.bodyLarge, color = WarmWhite)
+                    Text("Public Lobby", style = MaterialTheme.typography.bodyLarge, color = TextPrimary)
                     Text(
                         "Visible to all players",
                         style = MaterialTheme.typography.bodySmall,
-                        color = WarmWhite.copy(alpha = 0.5f)
+                        color = TextPrimary.copy(alpha = 0.5f)
                     )
                 }
                 Switch(
                     checked = uiState.isPublic,
                     onCheckedChange = viewModel::onIsPublicChange,
                     colors = SwitchDefaults.colors(
-                        checkedThumbColor = Navy900,
-                        checkedTrackColor = USOpenGold
+                        checkedThumbColor = NavBarBg,
+                        checkedTrackColor = GoldAccent
                     )
                 )
             }
@@ -265,12 +265,12 @@ fun CreateLobbyScreen(
                 onClick = viewModel::create,
                 modifier = Modifier.fillMaxWidth(),
                 enabled = uiState.isValid && !uiState.isLoading,
-                colors = ButtonDefaults.buttonColors(containerColor = USOpenGold)
+                colors = ButtonDefaults.buttonColors(containerColor = GoldAccent)
             ) {
                 if (uiState.isLoading) {
-                    CircularProgressIndicator(color = Navy900, modifier = Modifier.height(20.dp))
+                    CircularProgressIndicator(color = NavBarBg, modifier = Modifier.height(20.dp))
                 } else {
-                    Text("Create Lobby", color = Navy900, fontWeight = FontWeight.SemiBold)
+                    Text("Create Lobby", color = NavBarBg, fontWeight = FontWeight.SemiBold)
                 }
             }
         }
@@ -282,16 +282,16 @@ fun CreateLobbyScreen(
 @Composable
 private fun CreateLobbyScreenPreview() {
     Scaffold(
-        containerColor = Navy900,
+        containerColor = NavBarBg,
         topBar = {
             TopAppBar(
-                title = { Text("Create Lobby", color = WarmWhite) },
-                colors = TopAppBarDefaults.topAppBarColors(containerColor = Navy800)
+                title = { Text("Create Lobby", color = TextPrimary) },
+                colors = TopAppBarDefaults.topAppBarColors(containerColor = CardWhite)
             )
         }
     ) { padding ->
         Box(modifier = Modifier.fillMaxSize().padding(padding)) {
-            Text("Form preview", color = WarmWhite, modifier = Modifier.align(Alignment.Center))
+            Text("Form preview", color = TextPrimary, modifier = Modifier.align(Alignment.Center))
         }
     }
 }

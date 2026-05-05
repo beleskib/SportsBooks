@@ -82,13 +82,13 @@ import com.example.sportsbook.ui.common.toDisplayDate
 import com.example.sportsbook.ui.common.toDisplayTime
 import com.example.sportsbook.ui.navigation.Route
 import com.example.sportsbook.ui.theme.CoralRed
-import com.example.sportsbook.ui.theme.CoolGray
-import com.example.sportsbook.ui.theme.Navy700
-import com.example.sportsbook.ui.theme.Navy800
-import com.example.sportsbook.ui.theme.Navy900
+import com.example.sportsbook.ui.theme.TextSecondary
+import com.example.sportsbook.ui.theme.LightBg
+import com.example.sportsbook.ui.theme.CardWhite
+import com.example.sportsbook.ui.theme.NavBarBg
 import com.example.sportsbook.ui.theme.SportGreen
-import com.example.sportsbook.ui.theme.USOpenGold
-import com.example.sportsbook.ui.theme.WarmWhite
+import com.example.sportsbook.ui.theme.GoldAccent
+import com.example.sportsbook.ui.theme.TextPrimary
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -308,31 +308,31 @@ fun CreateVenueBookingLobbyScreen(
     }
 
     val fieldColors = OutlinedTextFieldDefaults.colors(
-        focusedBorderColor = USOpenGold,
-        unfocusedBorderColor = WarmWhite.copy(alpha = 0.3f),
-        focusedLabelColor = USOpenGold,
-        unfocusedLabelColor = WarmWhite.copy(alpha = 0.6f),
-        focusedTextColor = WarmWhite,
-        unfocusedTextColor = WarmWhite,
-        cursorColor = USOpenGold
+        focusedBorderColor = GoldAccent,
+        unfocusedBorderColor = TextPrimary.copy(alpha = 0.3f),
+        focusedLabelColor = GoldAccent,
+        unfocusedLabelColor = TextPrimary.copy(alpha = 0.6f),
+        focusedTextColor = TextPrimary,
+        unfocusedTextColor = TextPrimary,
+        cursorColor = GoldAccent
     )
 
     Scaffold(
-        containerColor = Navy900,
+        containerColor = NavBarBg,
         snackbarHost = { SnackbarHost(hostState = snackbarHostState) },
         topBar = {
             TopAppBar(
-                title = { Text("Create Venue Lobby", color = WarmWhite) },
+                title = { Text("Create Venue Lobby", color = TextPrimary) },
                 navigationIcon = {
                     IconButton(onClick = onBack) {
                         Icon(
                             imageVector = Icons.AutoMirrored.Filled.ArrowBack,
                             contentDescription = "Back",
-                            tint = WarmWhite
+                            tint = TextPrimary
                         )
                     }
                 },
-                colors = TopAppBarDefaults.topAppBarColors(containerColor = Navy800)
+                colors = TopAppBarDefaults.topAppBarColors(containerColor = CardWhite)
             )
         }
     ) { paddingValues ->
@@ -421,18 +421,18 @@ fun CreateVenueBookingLobbyScreen(
                     onClick = viewModel::createLobby,
                     modifier = Modifier.fillMaxWidth(),
                     enabled = uiState.isValid && !uiState.isCreating,
-                    colors = ButtonDefaults.buttonColors(containerColor = USOpenGold),
+                    colors = ButtonDefaults.buttonColors(containerColor = GoldAccent),
                     shape = RoundedCornerShape(8.dp)
                 ) {
                     if (uiState.isCreating) {
                         CircularProgressIndicator(
-                            color = Navy900,
+                            color = NavBarBg,
                             modifier = Modifier.size(20.dp)
                         )
                     } else {
                         Text(
                             text = "Create Lobby",
-                            color = Navy900,
+                            color = NavBarBg,
                             fontWeight = FontWeight.SemiBold,
                             style = MaterialTheme.typography.labelLarge
                         )
@@ -469,7 +469,7 @@ private fun VenueSelectionCard(
 ) {
     Card(
         modifier = Modifier.fillMaxWidth(),
-        colors = CardDefaults.cardColors(containerColor = Navy800),
+        colors = CardDefaults.cardColors(containerColor = CardWhite),
         shape = RoundedCornerShape(12.dp)
     ) {
         Column(modifier = Modifier.padding(16.dp)) {
@@ -481,7 +481,7 @@ private fun VenueSelectionCard(
                 Text(
                     text = "Venue",
                     style = MaterialTheme.typography.titleSmall,
-                    color = USOpenGold,
+                    color = GoldAccent,
                     fontWeight = FontWeight.SemiBold
                 )
                 if (selectedVenue != null) {
@@ -489,7 +489,7 @@ private fun VenueSelectionCard(
                         Icon(
                             Icons.Default.Close,
                             contentDescription = "Change venue",
-                            tint = WarmWhite.copy(alpha = 0.6f),
+                            tint = TextPrimary.copy(alpha = 0.6f),
                             modifier = Modifier.size(18.dp)
                         )
                     }
@@ -499,14 +499,14 @@ private fun VenueSelectionCard(
 
             if (isLoading) {
                 Box(modifier = Modifier.fillMaxWidth(), contentAlignment = Alignment.Center) {
-                    CircularProgressIndicator(color = USOpenGold, modifier = Modifier.size(24.dp))
+                    CircularProgressIndicator(color = GoldAccent, modifier = Modifier.size(24.dp))
                 }
             } else if (selectedVenue != null) {
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     Icon(
                         Icons.Default.LocationOn,
                         contentDescription = null,
-                        tint = USOpenGold,
+                        tint = GoldAccent,
                         modifier = Modifier.size(20.dp)
                     )
                     Spacer(modifier = Modifier.width(8.dp))
@@ -514,19 +514,19 @@ private fun VenueSelectionCard(
                         Text(
                             text = selectedVenue.name,
                             style = MaterialTheme.typography.bodyLarge,
-                            color = WarmWhite,
+                            color = TextPrimary,
                             fontWeight = FontWeight.SemiBold
                         )
                         Text(
                             text = "${selectedVenue.address} | ${selectedVenue.sportType.name.lowercase().replaceFirstChar { it.uppercase() }}",
                             style = MaterialTheme.typography.bodySmall,
-                            color = WarmWhite.copy(alpha = 0.6f)
+                            color = TextPrimary.copy(alpha = 0.6f)
                         )
                     }
                     Text(
                         text = "${"%.0f".format(selectedVenue.pricePerHour)} MKD/h",
                         style = MaterialTheme.typography.labelLarge,
-                        color = USOpenGold,
+                        color = GoldAccent,
                         fontWeight = FontWeight.Bold
                     )
                 }
@@ -534,12 +534,12 @@ private fun VenueSelectionCard(
                 Button(
                     onClick = onPickVenue,
                     modifier = Modifier.fillMaxWidth(),
-                    colors = ButtonDefaults.buttonColors(containerColor = Navy700),
+                    colors = ButtonDefaults.buttonColors(containerColor = LightBg),
                     shape = RoundedCornerShape(8.dp)
                 ) {
-                    Icon(Icons.Default.LocationOn, contentDescription = null, tint = USOpenGold, modifier = Modifier.size(18.dp))
+                    Icon(Icons.Default.LocationOn, contentDescription = null, tint = GoldAccent, modifier = Modifier.size(18.dp))
                     Spacer(modifier = Modifier.width(8.dp))
-                    Text("Select Venue", color = WarmWhite)
+                    Text("Select Venue", color = TextPrimary)
                 }
             }
         }
@@ -563,7 +563,7 @@ private fun VenuePickerSheet(
     ModalBottomSheet(
         onDismissRequest = onDismiss,
         sheetState = sheetState,
-        containerColor = Navy800,
+        containerColor = CardWhite,
         shape = RoundedCornerShape(topStart = 16.dp, topEnd = 16.dp)
     ) {
         Column(
@@ -575,7 +575,7 @@ private fun VenuePickerSheet(
             Text(
                 text = "Select Venue",
                 style = MaterialTheme.typography.titleMedium,
-                color = WarmWhite,
+                color = TextPrimary,
                 fontWeight = FontWeight.Bold,
                 modifier = Modifier.padding(bottom = 12.dp)
             )
@@ -583,15 +583,15 @@ private fun VenuePickerSheet(
             OutlinedTextField(
                 value = searchQuery,
                 onValueChange = onSearchChange,
-                placeholder = { Text("Search venues...", color = CoolGray) },
-                leadingIcon = { Icon(Icons.Default.Search, contentDescription = null, tint = CoolGray) },
+                placeholder = { Text("Search venues...", color = TextSecondary) },
+                leadingIcon = { Icon(Icons.Default.Search, contentDescription = null, tint = TextSecondary) },
                 modifier = Modifier.fillMaxWidth(),
                 colors = OutlinedTextFieldDefaults.colors(
-                    focusedBorderColor = USOpenGold,
-                    unfocusedBorderColor = WarmWhite.copy(alpha = 0.3f),
-                    focusedTextColor = WarmWhite,
-                    unfocusedTextColor = WarmWhite,
-                    cursorColor = USOpenGold
+                    focusedBorderColor = GoldAccent,
+                    unfocusedBorderColor = TextPrimary.copy(alpha = 0.3f),
+                    focusedTextColor = TextPrimary,
+                    unfocusedTextColor = TextPrimary,
+                    cursorColor = GoldAccent
                 ),
                 singleLine = true,
                 shape = RoundedCornerShape(8.dp)
@@ -606,7 +606,7 @@ private fun VenuePickerSheet(
                         .height(200.dp),
                     contentAlignment = Alignment.Center
                 ) {
-                    CircularProgressIndicator(color = USOpenGold)
+                    CircularProgressIndicator(color = GoldAccent)
                 }
             } else if (venues.isEmpty()) {
                 Box(
@@ -615,7 +615,7 @@ private fun VenuePickerSheet(
                         .height(120.dp),
                     contentAlignment = Alignment.Center
                 ) {
-                    Text("No venues found", color = CoolGray)
+                    Text("No venues found", color = TextSecondary)
                 }
             } else {
                 LazyColumn(
@@ -640,7 +640,7 @@ private fun VenuePickerItem(
         modifier = Modifier
             .fillMaxWidth()
             .clickable(onClick = onClick),
-        colors = CardDefaults.cardColors(containerColor = Navy900),
+        colors = CardDefaults.cardColors(containerColor = NavBarBg),
         shape = RoundedCornerShape(8.dp)
     ) {
         Row(
@@ -653,13 +653,13 @@ private fun VenuePickerItem(
                 modifier = Modifier
                     .size(40.dp)
                     .clip(CircleShape)
-                    .background(USOpenGold.copy(alpha = 0.15f)),
+                    .background(GoldAccent.copy(alpha = 0.15f)),
                 contentAlignment = Alignment.Center
             ) {
                 Icon(
                     Icons.Default.SportsTennis,
                     contentDescription = null,
-                    tint = USOpenGold,
+                    tint = GoldAccent,
                     modifier = Modifier.size(20.dp)
                 )
             }
@@ -668,7 +668,7 @@ private fun VenuePickerItem(
                 Text(
                     text = venue.name,
                     style = MaterialTheme.typography.bodyMedium,
-                    color = WarmWhite,
+                    color = TextPrimary,
                     fontWeight = FontWeight.SemiBold,
                     maxLines = 1,
                     overflow = TextOverflow.Ellipsis
@@ -676,7 +676,7 @@ private fun VenuePickerItem(
                 Text(
                     text = "${venue.sportType.name.lowercase().replaceFirstChar { it.uppercase() }} | ${venue.address}",
                     style = MaterialTheme.typography.bodySmall,
-                    color = CoolGray,
+                    color = TextSecondary,
                     maxLines = 1,
                     overflow = TextOverflow.Ellipsis
                 )
@@ -686,13 +686,13 @@ private fun VenuePickerItem(
                 Text(
                     text = "${"%.0f".format(venue.pricePerHour)} MKD",
                     style = MaterialTheme.typography.labelLarge,
-                    color = USOpenGold,
+                    color = GoldAccent,
                     fontWeight = FontWeight.Bold
                 )
                 Text(
                     text = "per hour",
                     style = MaterialTheme.typography.labelSmall,
-                    color = CoolGray
+                    color = TextSecondary
                 )
             }
         }
@@ -722,7 +722,7 @@ private fun DateSelector(
         Text(
             text = "Select Date",
             style = MaterialTheme.typography.titleSmall,
-            color = WarmWhite.copy(alpha = 0.85f),
+            color = TextPrimary.copy(alpha = 0.85f),
             fontWeight = FontWeight.SemiBold
         )
         Spacer(modifier = Modifier.height(8.dp))
@@ -737,10 +737,10 @@ private fun DateSelector(
                 Box(
                     modifier = Modifier
                         .clip(RoundedCornerShape(8.dp))
-                        .background(if (isSelected) USOpenGold.copy(alpha = 0.15f) else Navy800)
+                        .background(if (isSelected) GoldAccent.copy(alpha = 0.15f) else CardWhite)
                         .border(
                             width = if (isSelected) 1.5.dp else 1.dp,
-                            color = if (isSelected) USOpenGold else WarmWhite.copy(alpha = 0.2f),
+                            color = if (isSelected) GoldAccent else TextPrimary.copy(alpha = 0.2f),
                             shape = RoundedCornerShape(8.dp)
                         )
                         .clickable { onDateSelected(date) }
@@ -749,7 +749,7 @@ private fun DateSelector(
                     Text(
                         text = display,
                         style = MaterialTheme.typography.labelMedium,
-                        color = if (isSelected) USOpenGold else WarmWhite,
+                        color = if (isSelected) GoldAccent else TextPrimary,
                         fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Normal
                     )
                 }
@@ -772,7 +772,7 @@ private fun TimeSlotGrid(
         Text(
             text = "Available Time Slots",
             style = MaterialTheme.typography.titleSmall,
-            color = WarmWhite.copy(alpha = 0.85f),
+            color = TextPrimary.copy(alpha = 0.85f),
             fontWeight = FontWeight.SemiBold
         )
         Spacer(modifier = Modifier.height(8.dp))
@@ -785,19 +785,19 @@ private fun TimeSlotGrid(
                         .height(100.dp),
                     contentAlignment = Alignment.Center
                 ) {
-                    CircularProgressIndicator(color = USOpenGold, modifier = Modifier.size(24.dp))
+                    CircularProgressIndicator(color = GoldAccent, modifier = Modifier.size(24.dp))
                 }
             }
             slots.isEmpty() -> {
                 Card(
                     modifier = Modifier.fillMaxWidth(),
-                    colors = CardDefaults.cardColors(containerColor = Navy800),
+                    colors = CardDefaults.cardColors(containerColor = CardWhite),
                     shape = RoundedCornerShape(8.dp)
                 ) {
                     Text(
                         text = "No available time slots for this date",
                         style = MaterialTheme.typography.bodySmall,
-                        color = CoolGray,
+                        color = TextSecondary,
                         modifier = Modifier
                             .fillMaxWidth()
                             .padding(24.dp),
@@ -822,12 +822,12 @@ private fun TimeSlotGrid(
                                         .weight(1f)
                                         .clip(RoundedCornerShape(8.dp))
                                         .background(
-                                            if (isSelected) USOpenGold.copy(alpha = 0.15f)
-                                            else Navy800
+                                            if (isSelected) GoldAccent.copy(alpha = 0.15f)
+                                            else CardWhite
                                         )
                                         .border(
                                             width = if (isSelected) 1.5.dp else 1.dp,
-                                            color = if (isSelected) USOpenGold else WarmWhite.copy(alpha = 0.2f),
+                                            color = if (isSelected) GoldAccent else TextPrimary.copy(alpha = 0.2f),
                                             shape = RoundedCornerShape(8.dp)
                                         )
                                         .clickable { onSlotSelected(slot) }
@@ -839,7 +839,7 @@ private fun TimeSlotGrid(
                                             Icon(
                                                 Icons.Default.Check,
                                                 contentDescription = null,
-                                                tint = USOpenGold,
+                                                tint = GoldAccent,
                                                 modifier = Modifier.size(14.dp)
                                             )
                                             Spacer(modifier = Modifier.height(2.dp))
@@ -847,14 +847,14 @@ private fun TimeSlotGrid(
                                         Text(
                                             text = "${slot.startTime.toDisplayTime()} - ${slot.endTime.toDisplayTime()}",
                                             style = MaterialTheme.typography.labelMedium,
-                                            color = if (isSelected) USOpenGold else WarmWhite,
+                                            color = if (isSelected) GoldAccent else TextPrimary,
                                             fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Normal,
                                             textAlign = TextAlign.Center
                                         )
                                         Text(
                                             text = "${"%.0f".format(price)} MKD",
                                             style = MaterialTheme.typography.labelSmall,
-                                            color = if (isSelected) USOpenGold.copy(alpha = 0.8f) else CoolGray,
+                                            color = if (isSelected) GoldAccent.copy(alpha = 0.8f) else TextSecondary,
                                             textAlign = TextAlign.Center
                                         )
                                     }
@@ -883,7 +883,7 @@ private fun PaymentTypeSelector(
         Text(
             text = "Payment Type",
             style = MaterialTheme.typography.titleSmall,
-            color = WarmWhite.copy(alpha = 0.85f),
+            color = TextPrimary.copy(alpha = 0.85f),
             fontWeight = FontWeight.SemiBold
         )
         Spacer(modifier = Modifier.height(8.dp))
@@ -895,7 +895,7 @@ private fun PaymentTypeSelector(
                 label = "Split Equally",
                 description = "Each player pays their share",
                 isSelected = selectedType == "split",
-                color = USOpenGold,
+                color = GoldAccent,
                 onClick = { onTypeSelected("split") },
                 modifier = Modifier.weight(1f)
             )
@@ -929,8 +929,8 @@ private fun PaymentTypeOption(
     onClick: () -> Unit,
     modifier: Modifier = Modifier
 ) {
-    val borderColor = if (isSelected) color else WarmWhite.copy(alpha = 0.2f)
-    val bgColor = if (isSelected) color.copy(alpha = 0.1f) else Navy800
+    val borderColor = if (isSelected) color else TextPrimary.copy(alpha = 0.2f)
+    val bgColor = if (isSelected) color.copy(alpha = 0.1f) else CardWhite
 
     Box(
         modifier = modifier
@@ -948,14 +948,14 @@ private fun PaymentTypeOption(
             Text(
                 text = label,
                 style = MaterialTheme.typography.labelLarge,
-                color = if (isSelected) color else WarmWhite,
+                color = if (isSelected) color else TextPrimary,
                 fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Normal
             )
             Spacer(modifier = Modifier.height(2.dp))
             Text(
                 text = description,
                 style = MaterialTheme.typography.labelSmall,
-                color = if (isSelected) color.copy(alpha = 0.8f) else CoolGray
+                color = if (isSelected) color.copy(alpha = 0.8f) else TextSecondary
             )
         }
     }
@@ -978,13 +978,13 @@ private fun PlayerCountPicker(
             Text(
                 text = "Max Players",
                 style = MaterialTheme.typography.titleSmall,
-                color = WarmWhite.copy(alpha = 0.85f),
+                color = TextPrimary.copy(alpha = 0.85f),
                 fontWeight = FontWeight.SemiBold
             )
             Text(
                 text = "Min 2, max 10",
                 style = MaterialTheme.typography.labelSmall,
-                color = CoolGray
+                color = TextSecondary
             )
         }
         Row(
@@ -998,16 +998,16 @@ private fun PlayerCountPicker(
                 Icon(
                     imageVector = Icons.Default.Remove,
                     contentDescription = "Decrease",
-                    tint = if (count > 2) USOpenGold else WarmWhite.copy(alpha = 0.3f)
+                    tint = if (count > 2) GoldAccent else TextPrimary.copy(alpha = 0.3f)
                 )
             }
             Row(verticalAlignment = Alignment.CenterVertically) {
-                Icon(Icons.Default.Group, contentDescription = null, tint = USOpenGold, modifier = Modifier.size(18.dp))
+                Icon(Icons.Default.Group, contentDescription = null, tint = GoldAccent, modifier = Modifier.size(18.dp))
                 Spacer(modifier = Modifier.width(4.dp))
                 Text(
                     text = count.toString(),
                     style = MaterialTheme.typography.titleLarge,
-                    color = WarmWhite,
+                    color = TextPrimary,
                     fontWeight = FontWeight.Bold
                 )
             }
@@ -1018,7 +1018,7 @@ private fun PlayerCountPicker(
                 Icon(
                     imageVector = Icons.Default.Add,
                     contentDescription = "Increase",
-                    tint = if (count < 10) USOpenGold else WarmWhite.copy(alpha = 0.3f)
+                    tint = if (count < 10) GoldAccent else TextPrimary.copy(alpha = 0.3f)
                 )
             }
         }
@@ -1036,7 +1036,7 @@ private fun PriceBreakdownCard(
 ) {
     Card(
         modifier = Modifier.fillMaxWidth(),
-        colors = CardDefaults.cardColors(containerColor = USOpenGold.copy(alpha = 0.1f)),
+        colors = CardDefaults.cardColors(containerColor = GoldAccent.copy(alpha = 0.1f)),
         shape = RoundedCornerShape(8.dp)
     ) {
         Row(
@@ -1050,12 +1050,12 @@ private fun PriceBreakdownCard(
                 Text(
                     text = "Total Cost",
                     style = MaterialTheme.typography.labelSmall,
-                    color = WarmWhite.copy(alpha = 0.6f)
+                    color = TextPrimary.copy(alpha = 0.6f)
                 )
                 Text(
                     text = "${"%.0f".format(totalPrice)} MKD",
                     style = MaterialTheme.typography.bodyLarge,
-                    color = WarmWhite,
+                    color = TextPrimary,
                     fontWeight = FontWeight.SemiBold
                 )
             }
@@ -1065,12 +1065,12 @@ private fun PriceBreakdownCard(
                         Text(
                             text = "Per Player ($maxPlayers players)",
                             style = MaterialTheme.typography.labelSmall,
-                            color = WarmWhite.copy(alpha = 0.6f)
+                            color = TextPrimary.copy(alpha = 0.6f)
                         )
                         Text(
                             text = "${"%.0f".format(pricePerPlayer)} MKD",
                             style = MaterialTheme.typography.bodyLarge,
-                            color = USOpenGold,
+                            color = GoldAccent,
                             fontWeight = FontWeight.Bold
                         )
                     }
@@ -1080,7 +1080,7 @@ private fun PriceBreakdownCard(
                         Text(
                             text = "Per Team (2 default teams)",
                             style = MaterialTheme.typography.labelSmall,
-                            color = WarmWhite.copy(alpha = 0.6f)
+                            color = TextPrimary.copy(alpha = 0.6f)
                         )
                         Text(
                             text = "${"%.0f".format(totalPrice / 2)} MKD",
@@ -1110,11 +1110,11 @@ private fun PriceBreakdownCard(
 @Composable
 private fun CreateVenueBookingLobbyScreenPreview() {
     Scaffold(
-        containerColor = Navy900,
+        containerColor = NavBarBg,
         topBar = {
             TopAppBar(
-                title = { Text("Create Venue Lobby", color = WarmWhite) },
-                colors = TopAppBarDefaults.topAppBarColors(containerColor = Navy800)
+                title = { Text("Create Venue Lobby", color = TextPrimary) },
+                colors = TopAppBarDefaults.topAppBarColors(containerColor = CardWhite)
             )
         }
     ) { padding ->
@@ -1127,7 +1127,7 @@ private fun CreateVenueBookingLobbyScreenPreview() {
         ) {
             Text(
                 text = "1. Select Venue  >  2. Pick Time Slot  >  3. Fill Details",
-                color = CoolGray,
+                color = TextSecondary,
                 style = MaterialTheme.typography.labelMedium,
                 textAlign = TextAlign.Center,
                 modifier = Modifier.fillMaxWidth()

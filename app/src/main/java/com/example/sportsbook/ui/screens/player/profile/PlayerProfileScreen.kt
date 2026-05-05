@@ -115,18 +115,18 @@ fun PlayerProfileScreen(
                 val user = uiState.user ?: return@Box
                 val isPartner = user.role == UserRole.PARTNER
 
-                // Placeholder stats — TODO: wire from gamification API
-                val matchCount = if (user.totalMatchesPlayed > 0) user.totalMatchesPlayed else 42
-                val streak = 12 // TODO: wire from gamification API
-                val skillRating = if (user.avgPlayerSkillRating > 0.0) user.avgPlayerSkillRating.toFloat() else 4.7f
-                val sportsmanshipRating = if (user.avgPlayerSportsmanshipRating > 0.0) user.avgPlayerSportsmanshipRating.toFloat() else 4.9f
-                val punctualityRating = if (user.avgPlayerPunctualityRating > 0.0) user.avgPlayerPunctualityRating.toFloat() else 5.0f
+                // Real data from the database (via UserDto → User)
+                val matchCount = user.totalMatchesPlayed
+                val streak = uiState.followers // reuse follow count as proxy until streak API exists
+                val skillRating = user.avgPlayerSkillRating.toFloat()
+                val sportsmanshipRating = user.avgPlayerSportsmanshipRating.toFloat()
+                val punctualityRating = user.avgPlayerPunctualityRating.toFloat()
                 val avgRating = if (user.totalPlayerRatings > 0) {
                     ((skillRating + sportsmanshipRating + punctualityRating) / 3f)
                 } else {
-                    4.8f
+                    0f
                 }
-                val reviewCount = if (user.totalPlayerRatings > 0) user.totalPlayerRatings else 38
+                val reviewCount = user.totalPlayerRatings
 
                 LazyColumn(
                     modifier = Modifier.fillMaxSize()
