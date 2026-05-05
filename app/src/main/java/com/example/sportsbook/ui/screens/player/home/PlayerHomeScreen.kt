@@ -5,9 +5,12 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.ExperimentalLayoutApi
+import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -21,38 +24,21 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowForward
-import androidx.compose.material.icons.filled.Favorite
 import androidx.compose.material.icons.filled.Notifications
 import androidx.compose.material.icons.filled.Search
-import androidx.compose.material.icons.filled.SportsBasketball
-import androidx.compose.material.icons.filled.Groups
-import androidx.compose.material.icons.filled.Home
-import androidx.compose.material.icons.filled.Menu
-import androidx.compose.material.icons.filled.People
-import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material.icons.filled.Star
 import androidx.compose.material3.Card
-import androidx.compose.material3.DrawerValue
-import androidx.compose.material3.ModalDrawerSheet
-import androidx.compose.material3.ModalNavigationDrawer
-import androidx.compose.material3.NavigationDrawerItem
-import androidx.compose.material3.NavigationDrawerItemDefaults
-import androidx.compose.material3.rememberDrawerState
 import androidx.compose.material3.CardDefaults
-import androidx.compose.material3.FilterChip
-import androidx.compose.material3.FilterChipDefaults
-import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
-import kotlinx.coroutines.launch
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
@@ -73,13 +59,9 @@ import com.example.sportsbook.ui.common.DiscountBadge
 import com.example.sportsbook.ui.common.ErrorView
 import com.example.sportsbook.ui.common.LoadingIndicator
 import com.example.sportsbook.ui.common.PriceTag
-import com.example.sportsbook.ui.theme.Navy600
-import com.example.sportsbook.ui.theme.Navy700
-import com.example.sportsbook.ui.theme.Navy800
 import com.example.sportsbook.ui.theme.Navy900
 import com.example.sportsbook.ui.theme.SportsBookTheme
 import com.example.sportsbook.ui.theme.USOpenGold
-import com.example.sportsbook.ui.theme.WarmWhite
 import com.example.sportsbook.ui.theme.SportBasketball
 import com.example.sportsbook.ui.theme.SportFootball
 import com.example.sportsbook.ui.theme.SportTennis
@@ -101,38 +83,55 @@ import com.example.sportsbook.ui.theme.SportBaseball
 import com.example.sportsbook.ui.theme.SportCricket
 import java.util.Calendar
 
+// ============================================================
+// PlayerHomeScreen — "Discover" tab
+// Visual direction: light / airy / confident.
+//   Matches mockup profile-flow-android.html screen 1.7:
+//   - Light gray background (gray-50)
+//   - White m3-style cards with subtle elevation
+//   - Dark nav bar with gold accents
+//   - Colorful gradient sport tiles in a grid
+//   - Uppercase section labels in gray-500
+// ============================================================
+
+// ── Design tokens (light theme) ──
+private val LightBg = Color(0xFFF9FAFB)        // gray-50
+private val CardBg = Color.White
+private val CardBorder = Color(0xFFE5E7EB)     // gray-200
+private val TextPrimary = Color(0xFF111827)     // gray-900
+private val TextSecondary = Color(0xFF6B7280)   // gray-500
+private val TextTertiary = Color(0xFF9CA3AF)    // gray-400
+private val NavBarBg = Color(0xFF111827)        // gray-900
+private val GoldAccent = Color(0xFFFDE047)      // yellow-300
+private val ChipBg = Color.White
+private val ChipBorder = Color(0xFFE5E7EB)
+private val ChipActiveBg = Color(0xFF111827)
+private val ChipActiveText = Color(0xFFFDE047)
+
 // ── Sport visual mapping ──
 
-private data class SportVisual(val emoji: String, val color: Color, val tagline: String)
+private data class SportVisual(val emoji: String, val gradientStart: Color, val gradientEnd: Color)
 
 private val sportVisuals = mapOf(
-    SportType.BASKETBALL to SportVisual("\uD83C\uDFC0", SportBasketball, "Courts & coaching"),
-    SportType.FOOTBALL to SportVisual("\u26BD", SportFootball, "Pitches & training"),
-    SportType.TENNIS to SportVisual("\uD83C\uDFBE", SportTennis, "Courts & lessons"),
-    SportType.PADDLE to SportVisual("\uD83C\uDFD3", SportPaddle, "Book sessions"),
-    SportType.VOLLEYBALL to SportVisual("\uD83C\uDFD0", SportVolleyball, "Courts & teams"),
-    SportType.SWIMMING to SportVisual("\uD83C\uDFCA", SportSwimming, "Pools & coaching"),
-    SportType.BOXING to SportVisual("\uD83E\uDD4A", SportBoxing, "Train with pros"),
-    SportType.MMA to SportVisual("\uD83E\uDD4B", SportMMA, "Combat training"),
-    SportType.YOGA to SportVisual("\uD83E\uDDD8", SportYoga, "Studios & classes"),
-    SportType.PILATES to SportVisual("\uD83E\uDD38", SportPilates, "Book sessions"),
-    SportType.CROSSFIT to SportVisual("\uD83C\uDFCB\uFE0F", SportCrossfit, "Find boxes"),
-    SportType.RUNNING to SportVisual("\uD83C\uDFC3", SportRunning, "Groups & coaches"),
-    SportType.CYCLING to SportVisual("\uD83D\uDEB4", SportCycling, "Routes & clubs"),
-    SportType.GOLF to SportVisual("\u26F3", SportGolf, "Book tee times"),
-    SportType.BADMINTON to SportVisual("\uD83C\uDFF8", SportBadminton, "Reserve courts"),
-    SportType.TABLE_TENNIS to SportVisual("\uD83C\uDFD3", SportTableTennis, "Book tables"),
-    SportType.HANDBALL to SportVisual("\uD83E\uDD3E", SportHandball, "Courts & teams"),
-    SportType.BASEBALL to SportVisual("\u26BE", SportBaseball, "Fields & coaching"),
-    SportType.CRICKET to SportVisual("\uD83C\uDFCF", SportCricket, "Pitches & nets"),
-)
-
-// Sports hidden from the category grid (still visible in filter chips)
-private val hiddenFromGrid = setOf(
-    SportType.CRICKET,
-    SportType.HANDBALL,
-    SportType.BASEBALL,
-    SportType.SWIMMING,
+    SportType.BASKETBALL to SportVisual("🏀", Color(0xFFFB923C), Color(0xFFF97316)),
+    SportType.FOOTBALL to SportVisual("⚽", Color(0xFF22C55E), Color(0xFF16A34A)),
+    SportType.TENNIS to SportVisual("🎾", Color(0xFFA855F7), Color(0xFF7C3AED)),
+    SportType.PADDLE to SportVisual("🏓", Color(0xFF06B6D4), Color(0xFF0891B2)),
+    SportType.VOLLEYBALL to SportVisual("🏐", Color(0xFFF59E0B), Color(0xFFD97706)),
+    SportType.SWIMMING to SportVisual("🏊", Color(0xFF0EA5E9), Color(0xFF0369A1)),
+    SportType.BOXING to SportVisual("🥊", Color(0xFFEF4444), Color(0xFFB91C1C)),
+    SportType.MMA to SportVisual("🥋", Color(0xFFDC2626), Color(0xFF991B1B)),
+    SportType.YOGA to SportVisual("🧘", Color(0xFFEC4899), Color(0xFFBE185D)),
+    SportType.PILATES to SportVisual("🤸", Color(0xFFF472B6), Color(0xFFDB2777)),
+    SportType.CROSSFIT to SportVisual("🏋️", Color(0xFFFF4500), Color(0xFFCC3700)),
+    SportType.RUNNING to SportVisual("🏃", Color(0xFF0EA5E9), Color(0xFF0369A1)),
+    SportType.CYCLING to SportVisual("🚴", Color(0xFF14B8A6), Color(0xFF0F766E)),
+    SportType.GOLF to SportVisual("⛳", Color(0xFF22C55E), Color(0xFF15803D)),
+    SportType.BADMINTON to SportVisual("🏸", Color(0xFF80ED99), Color(0xFF38A169)),
+    SportType.TABLE_TENNIS to SportVisual("🏓", Color(0xFFFF5400), Color(0xFFCC4300)),
+    SportType.HANDBALL to SportVisual("🤾", Color(0xFF264653), Color(0xFF1B3A4B)),
+    SportType.BASEBALL to SportVisual("⚾", Color(0xFFBC6C25), Color(0xFF92400E)),
+    SportType.CRICKET to SportVisual("🏏", Color(0xFF606C38), Color(0xFF3F4F24)),
 )
 
 private fun getGreeting(): String {
@@ -176,18 +175,15 @@ fun PlayerHomeScreen(
             onCoachClick = onCoachClick,
             onNavigateToProfile = onNavigateToProfile,
             onNavigateToNotifications = onNavigateToNotifications,
-            onNavigateToSettings = onNavigateToSettings,
             onNavigateToSearch = onNavigateToSearch,
             onNavigateToFavorites = onNavigateToFavorites,
-            onNavigateToFriends = onNavigateToFriends,
             onFindMatch = onFindMatch,
-            onSelectSport = viewModel::selectSport,
-            onBrowseAllSports = onBrowseAllSports,
-            onNavigateToCommunities = onNavigateToCommunities
+            onBrowseAllSports = onBrowseAllSports
         )
     }
 }
 
+@OptIn(ExperimentalLayoutApi::class)
 @Composable
 private fun PlayerHomeContent(
     uiState: PlayerHomeUiState,
@@ -196,139 +192,92 @@ private fun PlayerHomeContent(
     onCoachClick: (Long) -> Unit,
     onNavigateToProfile: () -> Unit,
     onNavigateToNotifications: () -> Unit,
-    onNavigateToSettings: () -> Unit,
     onNavigateToSearch: () -> Unit,
     onNavigateToFavorites: () -> Unit,
-    onNavigateToFriends: () -> Unit,
     onFindMatch: () -> Unit,
-    onSelectSport: (SportType?) -> Unit,
-    onBrowseAllSports: () -> Unit = {},
-    onNavigateToCommunities: () -> Unit = {}
+    onBrowseAllSports: () -> Unit = {}
 ) {
-    val drawerState = rememberDrawerState(DrawerValue.Closed)
-    val scope = rememberCoroutineScope()
-
-    ModalNavigationDrawer(
-        drawerState = drawerState,
-        drawerContent = {
-            PlayerHomeDrawer(
-                user = uiState.user,
-                onNavigateToHome = { scope.launch { drawerState.close() } },
-                onNavigateToCommunities = {
-                    scope.launch { drawerState.close() }
-                    onNavigateToCommunities()
-                },
-                onNavigateToFriends = {
-                    scope.launch { drawerState.close() }
-                    onNavigateToFriends()
-                },
-                onNavigateToSettings = {
-                    scope.launch { drawerState.close() }
-                    onNavigateToSettings()
-                }
-            )
-        }
-    ) {
-    Box(modifier = Modifier.fillMaxSize()) {
     LazyColumn(
         modifier = Modifier
             .fillMaxSize()
-            .background(MaterialTheme.colorScheme.background),
+            .background(LightBg),
         contentPadding = PaddingValues(bottom = 24.dp)
     ) {
-        // ── Greeting Header ──
+        // ── Dark Nav Bar ──
         item {
-            GreetingHeader(
-                userName = uiState.user?.displayName?.split(" ")?.firstOrNull() ?: "Player",
-                userPhotoUrl = uiState.user?.photoUrl,
-                onProfileClick = onNavigateToProfile,
-                onNotificationClick = onNavigateToNotifications,
-                onSearchClick = onNavigateToSearch,
-                onFavoritesClick = onNavigateToFavorites,
-                onMenuClick = { scope.launch { drawerState.open() } }
+            NavBar(
+                location = uiState.user?.let { "Skopje" } ?: "Discover",
+                onNotificationClick = onNavigateToNotifications
             )
         }
 
-        // ── My Sports (LazyRow with same card style) ──
+        // ── Search Bar ──
+        item {
+            SearchBar(onClick = onNavigateToSearch)
+        }
+
+        // ── Your Sports grid ──
         if (uiState.mySports.isNotEmpty()) {
             item {
-                SectionHeader(title = "My Sports")
-            }
-            item {
-                LazyRow(
-                    contentPadding = PaddingValues(horizontal = 16.dp),
-                    horizontalArrangement = Arrangement.spacedBy(10.dp)
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = 16.dp, vertical = 8.dp),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
                 ) {
-                    items(uiState.mySports) { sport ->
-                        SportCategoryCard(
+                    SectionLabel("Your sports · ${uiState.mySports.size}")
+                    Text(
+                        text = "Edit →",
+                        style = MaterialTheme.typography.bodySmall,
+                        color = Color(0xFF2563EB),
+                        modifier = Modifier.clickable(onClick = onBrowseAllSports)
+                    )
+                }
+            }
+
+            item {
+                FlowRow(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = 16.dp),
+                    horizontalArrangement = Arrangement.spacedBy(8.dp),
+                    verticalArrangement = Arrangement.spacedBy(8.dp),
+                    maxItemsInEachRow = 4
+                ) {
+                    uiState.mySports.forEach { sport ->
+                        SportTile(
                             sport = sport,
                             onClick = { onSportClick(sport.sportType.name.lowercase()) },
-                            modifier = Modifier.width(170.dp)
+                            modifier = Modifier.weight(1f)
                         )
                     }
+                    // Fill remaining slots with invisible spacers if needed
+                    val remainder = uiState.mySports.size % 4
+                    if (remainder != 0) {
+                        repeat(4 - remainder) {
+                            Spacer(modifier = Modifier.weight(1f))
+                        }
+                    }
                 }
-                Spacer(modifier = Modifier.height(8.dp))
             }
         }
 
-        // ── Other Sports button ──
-        if (uiState.otherSports.isNotEmpty()) {
-            item {
-                OtherSportsCard(
-                    otherSportsCount = uiState.otherSports.size,
-                    onClick = onBrowseAllSports
-                )
-            }
-        }
-
-        // ── Top Deals ──
-        val dealVenues = if (uiState.selectedSportType != null)
-            uiState.topDealVenues.filter { it.sportType == uiState.selectedSportType }
-        else uiState.topDealVenues
-
-        val dealCoaches = if (uiState.selectedSportType != null)
-            uiState.topDealCoaches.filter { it.sportType == uiState.selectedSportType }
-        else uiState.topDealCoaches
-
-        if (dealVenues.isNotEmpty() || dealCoaches.isNotEmpty()) {
-            item {
-                Spacer(modifier = Modifier.height(8.dp))
-                SectionHeader(title = "Top Deals")
-            }
-            item {
-                DealsRow(
-                    venues = dealVenues,
-                    coaches = dealCoaches,
-                    onVenueClick = onVenueClick,
-                    onCoachClick = onCoachClick
-                )
-            }
-        }
-
-        // ── Find a Match CTA ──
-        item {
-            Spacer(modifier = Modifier.height(8.dp))
-            FindMatchCard(onClick = onFindMatch)
-        }
-
-        // ── Popular Venues ──
+        // ── Tonight in your sports (Popular Venues) ──
         val venues = uiState.filteredVenues
         if (venues.isNotEmpty()) {
             item {
+                Spacer(modifier = Modifier.height(16.dp))
+                SectionLabel(
+                    text = "Tonight in your sports",
+                    modifier = Modifier.padding(horizontal = 16.dp)
+                )
                 Spacer(modifier = Modifier.height(8.dp))
-                SectionHeader(title = "Popular Venues")
             }
-            item {
-                HorizontalCardRow(
-                    items = venues,
-                    getId = { it.id },
-                    getName = { it.name },
-                    getSubtitle = { it.city ?: it.address },
-                    getImageUrl = { it.primaryImageUrl },
-                    getPrice = { it.pricePerHour },
-                    getDiscountedPrice = { it.discountedPrice },
-                    getRating = { it.avgRating },
-                    onClick = { onVenueClick(it.id) }
+            items(venues.take(5), key = { "v-${it.id}" }) { venue ->
+                VenueCard(
+                    venue = venue,
+                    onClick = { onVenueClick(venue.id) }
                 )
             }
         }
@@ -337,413 +286,406 @@ private fun PlayerHomeContent(
         val coaches = uiState.filteredCoaches
         if (coaches.isNotEmpty()) {
             item {
+                Spacer(modifier = Modifier.height(16.dp))
+                SectionLabel(
+                    text = "Top coaches",
+                    modifier = Modifier.padding(horizontal = 16.dp)
+                )
                 Spacer(modifier = Modifier.height(8.dp))
-                SectionHeader(title = "Top Coaches")
             }
             item {
-                HorizontalCardRow(
-                    items = coaches,
-                    getId = { it.id },
-                    getName = { it.name },
-                    getSubtitle = { it.specialization ?: it.sportType.displayName },
-                    getImageUrl = { it.primaryImageUrl },
-                    getPrice = { it.pricePerHour },
-                    getDiscountedPrice = { it.discountedPrice },
-                    getRating = { it.avgRating },
-                    onClick = { onCoachClick(it.id) }
-                )
-            }
-        }
-    }
-
-        // ── Friends FAB (bottom-right) ──
-        FloatingActionButton(
-            onClick = onNavigateToFriends,
-            modifier = Modifier
-                .align(Alignment.BottomEnd)
-                .padding(end = 16.dp, bottom = 16.dp),
-            containerColor = USOpenGold,
-            contentColor = Navy900,
-            shape = CircleShape
-        ) {
-            Icon(
-                Icons.Default.People,
-                contentDescription = "Friends",
-                modifier = Modifier.size(26.dp)
-            )
-        }
-    } // end Box
-    } // end ModalNavigationDrawer content
-}
-
-// ── Navigation Drawer ──
-
-@Composable
-private fun PlayerHomeDrawer(
-    user: com.example.sportsbook.domain.model.User?,
-    onNavigateToHome: () -> Unit,
-    onNavigateToCommunities: () -> Unit,
-    onNavigateToFriends: () -> Unit,
-    onNavigateToSettings: () -> Unit
-) {
-    ModalDrawerSheet(
-        drawerContainerColor = Navy800
-    ) {
-        Spacer(modifier = Modifier.height(24.dp))
-
-        // User profile section
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(horizontal = 16.dp, vertical = 8.dp),
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            Box(
-                modifier = Modifier
-                    .size(48.dp)
-                    .clip(CircleShape)
-                    .background(Navy600),
-                contentAlignment = Alignment.Center
-            ) {
-                val photoUrl = user?.photoUrl
-                val name = user?.displayName ?: "Player"
-                if (!photoUrl.isNullOrBlank()) {
-                    AsyncImage(
-                        model = photoUrl,
-                        contentDescription = "Profile",
-                        modifier = Modifier.fillMaxSize(),
-                        contentScale = ContentScale.Crop
-                    )
-                } else {
-                    Text(
-                        text = name.firstOrNull()?.uppercaseChar()?.toString() ?: "P",
-                        style = MaterialTheme.typography.titleMedium,
-                        color = USOpenGold
-                    )
+                LazyRow(
+                    contentPadding = PaddingValues(horizontal = 16.dp),
+                    horizontalArrangement = Arrangement.spacedBy(12.dp)
+                ) {
+                    items(coaches, key = { "c-${it.id}" }) { coach ->
+                        CoachCard(
+                            coach = coach,
+                            onClick = { onCoachClick(coach.id) }
+                        )
+                    }
                 }
             }
-            Spacer(modifier = Modifier.width(12.dp))
-            Column {
-                Text(
-                    text = user?.displayName ?: "Player",
-                    style = MaterialTheme.typography.titleSmall,
-                    color = WarmWhite,
-                    fontWeight = FontWeight.SemiBold
+        }
+
+        // ── Top Deals ──
+        val dealVenues = uiState.topDealVenues
+        val dealCoaches = uiState.topDealCoaches
+        if (dealVenues.isNotEmpty() || dealCoaches.isNotEmpty()) {
+            item {
+                Spacer(modifier = Modifier.height(16.dp))
+                SectionLabel(
+                    text = "Top deals",
+                    modifier = Modifier.padding(horizontal = 16.dp)
                 )
-                Text(
-                    text = user?.email ?: "",
-                    style = MaterialTheme.typography.bodySmall,
-                    color = WarmWhite.copy(alpha = 0.6f)
-                )
+                Spacer(modifier = Modifier.height(8.dp))
+            }
+            item {
+                LazyRow(
+                    contentPadding = PaddingValues(horizontal = 16.dp),
+                    horizontalArrangement = Arrangement.spacedBy(12.dp)
+                ) {
+                    items(dealVenues, key = { "dv-${it.id}" }) { venue ->
+                        DealCard(
+                            name = venue.name,
+                            subtitle = venue.city ?: venue.address,
+                            imageUrl = venue.primaryImageUrl,
+                            price = venue.pricePerHour,
+                            discountedPrice = venue.discountedPrice,
+                            discountText = venue.activeDiscount?.displayValue,
+                            rating = venue.avgRating,
+                            onClick = { onVenueClick(venue.id) }
+                        )
+                    }
+                    items(dealCoaches, key = { "dc-${it.id}" }) { coach ->
+                        DealCard(
+                            name = coach.name,
+                            subtitle = coach.specialization ?: coach.sportType.displayName,
+                            imageUrl = coach.primaryImageUrl,
+                            price = coach.pricePerHour,
+                            discountedPrice = coach.discountedPrice,
+                            discountText = coach.activeDiscount?.displayValue,
+                            rating = coach.avgRating,
+                            onClick = { onCoachClick(coach.id) }
+                        )
+                    }
+                }
             }
         }
 
-        Spacer(modifier = Modifier.height(8.dp))
+        // ── Find a Match CTA ──
+        item {
+            Spacer(modifier = Modifier.height(16.dp))
+            FindMatchCta(onClick = onFindMatch)
+        }
 
-        NavigationDrawerItem(
-            label = { Text("Home", color = WarmWhite) },
-            icon = { Icon(Icons.Default.Home, contentDescription = null, tint = WarmWhite) },
-            selected = true,
-            onClick = onNavigateToHome,
-            colors = NavigationDrawerItemDefaults.colors(
-                selectedContainerColor = USOpenGold.copy(alpha = 0.15f),
-                unselectedContainerColor = androidx.compose.ui.graphics.Color.Transparent
-            )
-        )
-
-        NavigationDrawerItem(
-            label = { Text("My Communities", color = WarmWhite) },
-            icon = { Icon(Icons.Default.Groups, contentDescription = null, tint = USOpenGold) },
-            selected = false,
-            onClick = onNavigateToCommunities,
-            colors = NavigationDrawerItemDefaults.colors(
-                selectedContainerColor = USOpenGold.copy(alpha = 0.15f),
-                unselectedContainerColor = androidx.compose.ui.graphics.Color.Transparent
-            )
-        )
-
-        NavigationDrawerItem(
-            label = { Text("Find Players", color = WarmWhite) },
-            icon = { Icon(Icons.Default.People, contentDescription = null, tint = WarmWhite) },
-            selected = false,
-            onClick = onNavigateToFriends,
-            colors = NavigationDrawerItemDefaults.colors(
-                unselectedContainerColor = androidx.compose.ui.graphics.Color.Transparent
-            )
-        )
-
-        NavigationDrawerItem(
-            label = { Text("Settings", color = WarmWhite) },
-            icon = { Icon(Icons.Default.Settings, contentDescription = null, tint = WarmWhite) },
-            selected = false,
-            onClick = onNavigateToSettings,
-            colors = NavigationDrawerItemDefaults.colors(
-                unselectedContainerColor = androidx.compose.ui.graphics.Color.Transparent
-            )
-        )
+        // ── "Want to see more sports?" CTA ──
+        if (uiState.otherSports.isNotEmpty()) {
+            item {
+                Spacer(modifier = Modifier.height(12.dp))
+                AddSportCta(onClick = onBrowseAllSports)
+            }
+        }
     }
 }
 
-// ── Greeting Header (Spotify-style) ──
-
+// ── Dark top nav bar (matches mockup) ──
 @Composable
-private fun GreetingHeader(
-    userName: String,
-    userPhotoUrl: String?,
-    onProfileClick: () -> Unit,
-    onNotificationClick: () -> Unit,
-    onSearchClick: () -> Unit,
-    onFavoritesClick: () -> Unit,
-    onMenuClick: () -> Unit = {}
+private fun NavBar(
+    location: String,
+    onNotificationClick: () -> Unit
 ) {
     Row(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(horizontal = 16.dp, vertical = 12.dp),
+            .background(NavBarBg)
+            .padding(horizontal = 16.dp, vertical = 14.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {
-        // Hamburger menu icon
-        IconButton(onClick = onMenuClick) {
-            Icon(Icons.Default.Menu, contentDescription = "Menu", tint = WarmWhite)
+        Text(
+            text = "📍 $location",
+            style = MaterialTheme.typography.titleSmall,
+            color = Color.White,
+            fontWeight = FontWeight.SemiBold
+        )
+        Spacer(modifier = Modifier.weight(1f))
+        IconButton(onClick = onNotificationClick, modifier = Modifier.size(32.dp)) {
+            Icon(
+                Icons.Default.Notifications,
+                contentDescription = "Notifications",
+                tint = GoldAccent,
+                modifier = Modifier.size(22.dp)
+            )
         }
+    }
+}
 
-        // Profile avatar
+// ── Search bar ──
+@Composable
+private fun SearchBar(onClick: () -> Unit) {
+    Box(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(horizontal = 16.dp, vertical = 12.dp)
+            .shadow(1.dp, RoundedCornerShape(24.dp))
+            .clip(RoundedCornerShape(24.dp))
+            .background(CardBg)
+            .clickable(onClick = onClick)
+            .padding(horizontal = 16.dp, vertical = 12.dp)
+    ) {
+        Row(verticalAlignment = Alignment.CenterVertically) {
+            Icon(
+                Icons.Default.Search,
+                contentDescription = null,
+                modifier = Modifier.size(18.dp),
+                tint = TextSecondary
+            )
+            Spacer(modifier = Modifier.width(10.dp))
+            Text(
+                text = "Search venues, coaches…",
+                style = MaterialTheme.typography.bodyMedium,
+                color = TextTertiary
+            )
+        }
+    }
+}
+
+// ── Section label (uppercase, gray-500, small) ──
+@Composable
+private fun SectionLabel(text: String, modifier: Modifier = Modifier) {
+    Text(
+        text = text.uppercase(),
+        style = MaterialTheme.typography.labelSmall,
+        color = TextSecondary,
+        fontWeight = FontWeight.SemiBold,
+        letterSpacing = 0.8.sp,
+        fontSize = 10.sp,
+        modifier = modifier
+    )
+}
+
+// ── Colorful gradient sport tile (matches mockup grid) ──
+@Composable
+private fun SportTile(
+    sport: Sport,
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier
+) {
+    val visual = sportVisuals[sport.sportType]
+        ?: SportVisual("🏀", SportBasketball, SportBasketball)
+
+    Box(
+        modifier = modifier
+            .aspectRatio(1f)
+            .clip(RoundedCornerShape(14.dp))
+            .background(
+                Brush.linearGradient(listOf(visual.gradientStart, visual.gradientEnd))
+            )
+            .clickable(onClick = onClick),
+        contentAlignment = Alignment.Center
+    ) {
+        Column(horizontalAlignment = Alignment.CenterHorizontally) {
+            Text(text = visual.emoji, fontSize = 22.sp)
+            Spacer(modifier = Modifier.height(2.dp))
+            Text(
+                text = sport.sportType.displayName,
+                style = MaterialTheme.typography.labelSmall,
+                color = Color.White,
+                fontWeight = FontWeight.SemiBold,
+                fontSize = 10.sp,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis
+            )
+        }
+    }
+}
+
+// ── Venue card (white m3-card with subtle shadow, matches mockup) ──
+@Composable
+private fun VenueCard(venue: Venue, onClick: () -> Unit) {
+    val visual = sportVisuals[venue.sportType]
+
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(horizontal = 16.dp, vertical = 4.dp)
+            .shadow(1.dp, RoundedCornerShape(16.dp))
+            .clip(RoundedCornerShape(16.dp))
+            .background(CardBg)
+            .clickable(onClick = onClick)
+            .padding(14.dp),
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        // Thumbnail
         Box(
             modifier = Modifier
-                .size(42.dp)
-                .clip(CircleShape)
-                .background(Navy600)
-                .clickable(onClick = onProfileClick),
-            contentAlignment = Alignment.Center
+                .size(56.dp)
+                .clip(RoundedCornerShape(8.dp))
         ) {
-            if (userPhotoUrl != null) {
+            if (venue.primaryImageUrl != null) {
                 AsyncImage(
-                    model = userPhotoUrl,
-                    contentDescription = "Profile",
+                    model = venue.primaryImageUrl,
+                    contentDescription = venue.name,
                     modifier = Modifier.fillMaxSize(),
                     contentScale = ContentScale.Crop
                 )
             } else {
-                Text(
-                    text = userName.firstOrNull()?.uppercase() ?: "P",
-                    style = MaterialTheme.typography.titleMedium,
-                    color = USOpenGold
+                Box(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .background(
+                            Brush.linearGradient(
+                                listOf(
+                                    visual?.gradientStart?.copy(alpha = 0.3f) ?: Color(0xFFA7F3D0),
+                                    visual?.gradientEnd?.copy(alpha = 0.6f) ?: Color(0xFF6EE7B7)
+                                )
+                            )
+                        )
                 )
             }
         }
 
         Spacer(modifier = Modifier.width(12.dp))
 
-        // Greeting
         Column(modifier = Modifier.weight(1f)) {
-            Text(
-                text = getGreeting(),
-                style = MaterialTheme.typography.bodySmall,
-                color = MaterialTheme.colorScheme.onSurfaceVariant
-            )
-            Text(
-                text = userName,
-                style = MaterialTheme.typography.titleLarge,
-                color = WarmWhite
-            )
-        }
-
-        // Action icons
-        IconButton(onClick = onSearchClick) {
-            Icon(Icons.Default.Search, contentDescription = "Search", tint = WarmWhite)
-        }
-        IconButton(onClick = onFavoritesClick) {
-            Icon(Icons.Default.Favorite, contentDescription = "Favorites", tint = WarmWhite)
-        }
-        IconButton(onClick = onNotificationClick) {
-            Icon(Icons.Default.Notifications, contentDescription = "Notifications", tint = WarmWhite)
-        }
-    }
-}
-
-// ── Filter Chips ──
-
-@Composable
-private fun FilterChipsRow(
-    sports: List<Sport>,
-    selectedSportType: SportType?,
-    onSelectSport: (SportType?) -> Unit
-) {
-    LazyRow(
-        contentPadding = PaddingValues(horizontal = 16.dp),
-        horizontalArrangement = Arrangement.spacedBy(8.dp),
-        modifier = Modifier.padding(vertical = 8.dp)
-    ) {
-        item {
-            FilterChip(
-                selected = selectedSportType == null,
-                onClick = { onSelectSport(null) },
-                label = {
-                    Text(
-                        "All",
-                        style = MaterialTheme.typography.labelLarge
-                    )
-                },
-                colors = FilterChipDefaults.filterChipColors(
-                    selectedContainerColor = USOpenGold,
-                    selectedLabelColor = Navy900,
-                    containerColor = Navy700,
-                    labelColor = WarmWhite
-                ),
-                shape = RoundedCornerShape(20.dp)
-            )
-        }
-        items(sports) { sport ->
-            val visual = sportVisuals[sport.sportType]
-            FilterChip(
-                selected = selectedSportType == sport.sportType,
-                onClick = { onSelectSport(sport.sportType) },
-                label = {
-                    Text(
-                        "${visual?.emoji ?: ""} ${sport.sportType.displayName}",
-                        style = MaterialTheme.typography.labelLarge
-                    )
-                },
-                colors = FilterChipDefaults.filterChipColors(
-                    selectedContainerColor = USOpenGold,
-                    selectedLabelColor = Navy900,
-                    containerColor = Navy700,
-                    labelColor = WarmWhite
-                ),
-                shape = RoundedCornerShape(20.dp)
-            )
-        }
-    }
-}
-
-// ── Sport Category Card ──
-
-@Composable
-private fun SportCategoryCard(
-    sport: Sport,
-    onClick: () -> Unit,
-    modifier: Modifier = Modifier
-) {
-    val visual = sportVisuals[sport.sportType]
-        ?: SportVisual("\uD83C\uDFC0", SportBasketball, "Book now")
-
-    Card(
-        onClick = onClick,
-        modifier = modifier.height(96.dp),
-        shape = RoundedCornerShape(14.dp),
-        colors = CardDefaults.cardColors(containerColor = Color.Transparent),
-        elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)
-    ) {
-        Box(
-            modifier = Modifier
-                .fillMaxSize()
-                .background(
-                    Brush.linearGradient(
-                        colors = listOf(
-                            visual.color.copy(alpha = 0.35f),
-                            Navy700
-                        )
-                    )
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Text(
+                    text = venue.name,
+                    style = MaterialTheme.typography.titleSmall,
+                    color = TextPrimary,
+                    fontWeight = FontWeight.SemiBold,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis,
+                    modifier = Modifier.weight(1f, fill = false)
                 )
-        ) {
-            // Large faded emoji in background (top-right)
+                Spacer(modifier = Modifier.width(6.dp))
+                // Sport pill
+                SportPill(
+                    emoji = visual?.emoji ?: "",
+                    label = venue.sportType.displayName
+                )
+            }
+            Spacer(modifier = Modifier.height(2.dp))
             Text(
-                text = visual.emoji,
-                fontSize = 52.sp,
-                modifier = Modifier
-                    .align(Alignment.TopEnd)
-                    .padding(end = 8.dp, top = 2.dp),
-                color = Color.White.copy(alpha = 0.12f)
+                text = "${venue.city ?: venue.address} · ${venue.pricePerHour.toInt()} den/h",
+                style = MaterialTheme.typography.bodySmall,
+                color = TextSecondary,
+                fontSize = 11.sp
             )
-
-            // Content
-            Column(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .padding(14.dp),
-                verticalArrangement = Arrangement.SpaceBetween
-            ) {
-                // Emoji + name row
-                Row(verticalAlignment = Alignment.CenterVertically) {
-                    Text(text = visual.emoji, fontSize = 24.sp)
-                    Spacer(modifier = Modifier.width(8.dp))
+            if (venue.avgRating > 0) {
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    modifier = Modifier.padding(top = 2.dp)
+                ) {
+                    Icon(
+                        Icons.Default.Star,
+                        contentDescription = null,
+                        modifier = Modifier.size(12.dp),
+                        tint = Color(0xFFFBBF24)
+                    )
+                    Spacer(modifier = Modifier.width(2.dp))
                     Text(
-                        text = sport.sportType.displayName,
-                        style = MaterialTheme.typography.titleSmall.copy(
-                            fontWeight = FontWeight.Bold
-                        ),
-                        color = WarmWhite,
-                        maxLines = 1,
-                        overflow = TextOverflow.Ellipsis
+                        text = String.format("%.1f", venue.avgRating),
+                        style = MaterialTheme.typography.labelSmall,
+                        color = TextPrimary,
+                        fontWeight = FontWeight.SemiBold
                     )
                 }
-
-                // Tagline
-                Text(
-                    text = visual.tagline,
-                    style = MaterialTheme.typography.bodySmall,
-                    color = visual.color.copy(alpha = 0.8f)
-                )
             }
         }
     }
 }
 
-// ── Section Header ──
-
+// ── Sport pill (small colored chip) ──
 @Composable
-private fun SectionHeader(
-    title: String,
-    modifier: Modifier = Modifier
-) {
-    Text(
-        text = title,
-        style = MaterialTheme.typography.headlineMedium,
-        color = WarmWhite,
-        modifier = modifier.padding(horizontal = 16.dp, vertical = 12.dp)
-    )
+private fun SportPill(emoji: String, label: String) {
+    val visual = sportVisuals.entries.find { it.value.emoji == emoji }?.value
+    val bgColor = visual?.gradientStart?.copy(alpha = 0.12f) ?: Color(0xFFE0E7FF)
+    val textColor = visual?.gradientEnd ?: Color(0xFF4338CA)
+
+    Box(
+        modifier = Modifier
+            .clip(RoundedCornerShape(999.dp))
+            .background(bgColor)
+            .padding(horizontal = 6.dp, vertical = 2.dp)
+    ) {
+        Text(
+            text = "$emoji $label",
+            style = MaterialTheme.typography.labelSmall,
+            color = textColor,
+            fontSize = 10.sp,
+            fontWeight = FontWeight.SemiBold
+        )
+    }
 }
 
-// ── Top Deals Horizontal Row ──
-
+// ── Coach card (horizontal scroll) ──
 @Composable
-private fun DealsRow(
-    venues: List<Venue>,
-    coaches: List<Coach>,
-    onVenueClick: (Long) -> Unit,
-    onCoachClick: (Long) -> Unit
-) {
-    LazyRow(
-        contentPadding = PaddingValues(horizontal = 16.dp),
-        horizontalArrangement = Arrangement.spacedBy(12.dp)
+private fun CoachCard(coach: Coach, onClick: () -> Unit) {
+    Card(
+        onClick = onClick,
+        modifier = Modifier.width(160.dp),
+        shape = RoundedCornerShape(16.dp),
+        colors = CardDefaults.cardColors(containerColor = CardBg),
+        elevation = CardDefaults.cardElevation(defaultElevation = 1.dp)
     ) {
-        items(venues, key = { "v-${it.id}" }) { venue ->
-            DealCard(
-                name = venue.name,
-                subtitle = venue.city ?: venue.address,
-                imageUrl = venue.primaryImageUrl,
-                price = venue.pricePerHour,
-                discountedPrice = venue.discountedPrice,
-                discountText = venue.activeDiscount?.displayValue,
-                sportColor = sportVisuals[venue.sportType]?.color ?: USOpenGold,
-                onClick = { onVenueClick(venue.id) }
-            )
-        }
-        items(coaches, key = { "c-${it.id}" }) { coach ->
-            DealCard(
-                name = coach.name,
-                subtitle = coach.specialization ?: "",
-                imageUrl = coach.primaryImageUrl,
-                price = coach.pricePerHour,
-                discountedPrice = coach.discountedPrice,
-                discountText = coach.activeDiscount?.displayValue,
-                sportColor = sportVisuals[coach.sportType]?.color ?: USOpenGold,
-                onClick = { onCoachClick(coach.id) }
-            )
+        Column {
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(100.dp)
+            ) {
+                if (coach.primaryImageUrl != null) {
+                    AsyncImage(
+                        model = coach.primaryImageUrl,
+                        contentDescription = coach.name,
+                        modifier = Modifier
+                            .fillMaxSize()
+                            .clip(RoundedCornerShape(topStart = 16.dp, topEnd = 16.dp)),
+                        contentScale = ContentScale.Crop
+                    )
+                } else {
+                    val visual = sportVisuals[coach.sportType]
+                    Box(
+                        modifier = Modifier
+                            .fillMaxSize()
+                            .background(
+                                Brush.linearGradient(
+                                    listOf(
+                                        visual?.gradientStart?.copy(alpha = 0.2f) ?: Color(0xFFDDD6FE),
+                                        visual?.gradientEnd?.copy(alpha = 0.4f) ?: Color(0xFFA78BFA)
+                                    )
+                                )
+                            )
+                    )
+                }
+            }
+            Column(modifier = Modifier.padding(10.dp)) {
+                Text(
+                    text = coach.name,
+                    style = MaterialTheme.typography.titleSmall,
+                    color = TextPrimary,
+                    fontWeight = FontWeight.SemiBold,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis
+                )
+                Text(
+                    text = coach.specialization ?: coach.sportType.displayName,
+                    style = MaterialTheme.typography.bodySmall,
+                    color = TextSecondary,
+                    fontSize = 11.sp,
+                    maxLines = 1
+                )
+                Spacer(modifier = Modifier.height(4.dp))
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    if (coach.avgRating > 0) {
+                        Icon(
+                            Icons.Default.Star,
+                            contentDescription = null,
+                            modifier = Modifier.size(12.dp),
+                            tint = Color(0xFFFBBF24)
+                        )
+                        Spacer(modifier = Modifier.width(2.dp))
+                        Text(
+                            text = String.format("%.1f", coach.avgRating),
+                            style = MaterialTheme.typography.labelSmall,
+                            color = TextPrimary,
+                            fontWeight = FontWeight.SemiBold
+                        )
+                        Spacer(modifier = Modifier.width(6.dp))
+                    }
+                    Text(
+                        text = "${coach.pricePerHour.toInt()} den/h",
+                        style = MaterialTheme.typography.labelSmall,
+                        color = TextSecondary
+                    )
+                }
+            }
         }
     }
 }
 
+// ── Deal card (horizontal scroll) ──
 @Composable
 private fun DealCard(
     name: String,
@@ -752,268 +694,17 @@ private fun DealCard(
     price: Double,
     discountedPrice: Double?,
     discountText: String?,
-    sportColor: Color,
-    onClick: () -> Unit
-) {
-    Card(
-        onClick = onClick,
-        modifier = Modifier.width(180.dp),
-        shape = RoundedCornerShape(12.dp),
-        colors = CardDefaults.cardColors(containerColor = Navy700),
-        elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)
-    ) {
-        Column {
-            // Image section
-            Box(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(120.dp)
-            ) {
-                if (imageUrl != null) {
-                    AsyncImage(
-                        model = imageUrl,
-                        contentDescription = name,
-                        modifier = Modifier
-                            .fillMaxSize()
-                            .clip(RoundedCornerShape(topStart = 12.dp, topEnd = 12.dp)),
-                        contentScale = ContentScale.Crop
-                    )
-                } else {
-                    Box(
-                        modifier = Modifier
-                            .fillMaxSize()
-                            .background(
-                                Brush.linearGradient(
-                                    colors = listOf(sportColor.copy(alpha = 0.4f), Navy700)
-                                )
-                            ),
-                        contentAlignment = Alignment.Center
-                    ) {
-                        Icon(
-                            Icons.Default.SportsBasketball,
-                            contentDescription = null,
-                            modifier = Modifier.size(40.dp),
-                            tint = sportColor.copy(alpha = 0.6f)
-                        )
-                    }
-                }
-
-                // Gradient overlay
-                Box(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .height(40.dp)
-                        .align(Alignment.BottomCenter)
-                        .background(
-                            Brush.verticalGradient(
-                                colors = listOf(Color.Transparent, Navy700)
-                            )
-                        )
-                )
-
-                // Discount badge
-                if (discountText != null) {
-                    DiscountBadge(
-                        text = discountText,
-                        modifier = Modifier
-                            .align(Alignment.TopEnd)
-                            .padding(8.dp)
-                    )
-                }
-            }
-
-            // Info section
-            Column(modifier = Modifier.padding(12.dp)) {
-                Text(
-                    text = name,
-                    style = MaterialTheme.typography.titleSmall,
-                    color = WarmWhite,
-                    maxLines = 1,
-                    overflow = TextOverflow.Ellipsis
-                )
-                Text(
-                    text = subtitle,
-                    style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    maxLines = 1,
-                    overflow = TextOverflow.Ellipsis
-                )
-                Spacer(modifier = Modifier.height(4.dp))
-                PriceTag(price = price, discountedPrice = discountedPrice)
-            }
-        }
-    }
-}
-
-// ── Find a Match CTA ──
-
-@Composable
-private fun FindMatchCard(onClick: () -> Unit) {
-    Card(
-        onClick = onClick,
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(horizontal = 16.dp, vertical = 8.dp),
-        shape = RoundedCornerShape(12.dp),
-        colors = CardDefaults.cardColors(containerColor = Color.Transparent),
-        elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)
-    ) {
-        Box(
-            modifier = Modifier
-                .fillMaxWidth()
-                .background(
-                    Brush.horizontalGradient(
-                        colors = listOf(
-                            USOpenGold.copy(alpha = 0.15f),
-                            Navy600
-                        )
-                    ),
-                    shape = RoundedCornerShape(12.dp)
-                )
-                .padding(20.dp)
-        ) {
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                Column(modifier = Modifier.weight(1f)) {
-                    Text(
-                        text = "Find a Match",
-                        style = MaterialTheme.typography.titleLarge,
-                        color = USOpenGold
-                    )
-                    Spacer(modifier = Modifier.height(4.dp))
-                    Text(
-                        text = "Join pickup games or create your own",
-                        style = MaterialTheme.typography.bodySmall,
-                        color = WarmWhite.copy(alpha = 0.7f)
-                    )
-                }
-                Icon(
-                    Icons.AutoMirrored.Filled.ArrowForward,
-                    contentDescription = "Go",
-                    tint = USOpenGold,
-                    modifier = Modifier.size(28.dp)
-                )
-            }
-        }
-    }
-}
-
-// ── Other Sports Card ──
-
-@Composable
-private fun OtherSportsCard(
-    otherSportsCount: Int,
-    onClick: () -> Unit
-) {
-    Card(
-        onClick = onClick,
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(horizontal = 16.dp, vertical = 4.dp),
-        shape = RoundedCornerShape(12.dp),
-        colors = CardDefaults.cardColors(containerColor = Color.Transparent),
-        elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)
-    ) {
-        Box(
-            modifier = Modifier
-                .fillMaxWidth()
-                .background(
-                    Brush.horizontalGradient(
-                        colors = listOf(Navy700, Navy600)
-                    ),
-                    shape = RoundedCornerShape(12.dp)
-                )
-                .padding(horizontal = 20.dp, vertical = 16.dp)
-        ) {
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                Row(verticalAlignment = Alignment.CenterVertically) {
-                    Text(
-                        text = "\uD83C\uDFC6",
-                        fontSize = 24.sp
-                    )
-                    Spacer(modifier = Modifier.width(12.dp))
-                    Column {
-                        Text(
-                            text = "Other Sports",
-                            style = MaterialTheme.typography.titleMedium,
-                            color = WarmWhite
-                        )
-                        Text(
-                            text = "$otherSportsCount more sports to explore",
-                            style = MaterialTheme.typography.bodySmall,
-                            color = WarmWhite.copy(alpha = 0.6f)
-                        )
-                    }
-                }
-                Icon(
-                    Icons.AutoMirrored.Filled.ArrowForward,
-                    contentDescription = "Browse",
-                    tint = USOpenGold,
-                    modifier = Modifier.size(24.dp)
-                )
-            }
-        }
-    }
-}
-
-// ── Generic Horizontal Card Row (for Venues / Coaches) ──
-
-@Composable
-private fun <T> HorizontalCardRow(
-    items: List<T>,
-    getId: (T) -> Long,
-    getName: (T) -> String,
-    getSubtitle: (T) -> String,
-    getImageUrl: (T) -> String?,
-    getPrice: (T) -> Double,
-    getDiscountedPrice: (T) -> Double?,
-    getRating: (T) -> Double,
-    onClick: (T) -> Unit
-) {
-    LazyRow(
-        contentPadding = PaddingValues(horizontal = 16.dp),
-        horizontalArrangement = Arrangement.spacedBy(12.dp)
-    ) {
-        items(items, key = { getId(it) }) { item ->
-            ItemCard(
-                name = getName(item),
-                subtitle = getSubtitle(item),
-                imageUrl = getImageUrl(item),
-                price = getPrice(item),
-                discountedPrice = getDiscountedPrice(item),
-                rating = getRating(item),
-                onClick = { onClick(item) }
-            )
-        }
-    }
-}
-
-@Composable
-private fun ItemCard(
-    name: String,
-    subtitle: String,
-    imageUrl: String?,
-    price: Double,
-    discountedPrice: Double?,
     rating: Double,
     onClick: () -> Unit
 ) {
     Card(
         onClick = onClick,
-        modifier = Modifier.width(160.dp),
-        shape = RoundedCornerShape(12.dp),
-        colors = CardDefaults.cardColors(containerColor = Navy700),
-        elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)
+        modifier = Modifier.width(180.dp),
+        shape = RoundedCornerShape(16.dp),
+        colors = CardDefaults.cardColors(containerColor = CardBg),
+        elevation = CardDefaults.cardElevation(defaultElevation = 1.dp)
     ) {
         Column {
-            // Image
             Box(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -1025,41 +716,40 @@ private fun ItemCard(
                         contentDescription = name,
                         modifier = Modifier
                             .fillMaxSize()
-                            .clip(RoundedCornerShape(topStart = 12.dp, topEnd = 12.dp)),
+                            .clip(RoundedCornerShape(topStart = 16.dp, topEnd = 16.dp)),
                         contentScale = ContentScale.Crop
                     )
                 } else {
                     Box(
                         modifier = Modifier
                             .fillMaxSize()
-                            .background(Navy600),
-                        contentAlignment = Alignment.Center
-                    ) {
-                        Icon(
-                            Icons.Default.SportsBasketball,
-                            contentDescription = null,
-                            modifier = Modifier.size(32.dp),
-                            tint = USOpenGold.copy(alpha = 0.4f)
-                        )
-                    }
+                            .background(Color(0xFFF3F4F6))
+                    )
+                }
+                if (discountText != null) {
+                    DiscountBadge(
+                        text = discountText,
+                        modifier = Modifier
+                            .align(Alignment.TopEnd)
+                            .padding(8.dp)
+                    )
                 }
             }
-
-            // Info
             Column(modifier = Modifier.padding(10.dp)) {
                 Text(
                     text = name,
                     style = MaterialTheme.typography.titleSmall,
-                    color = WarmWhite,
+                    color = TextPrimary,
+                    fontWeight = FontWeight.SemiBold,
                     maxLines = 1,
                     overflow = TextOverflow.Ellipsis
                 )
                 Text(
                     text = subtitle,
                     style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    maxLines = 1,
-                    overflow = TextOverflow.Ellipsis
+                    color = TextSecondary,
+                    fontSize = 11.sp,
+                    maxLines = 1
                 )
                 Spacer(modifier = Modifier.height(4.dp))
                 Row(verticalAlignment = Alignment.CenterVertically) {
@@ -1069,14 +759,14 @@ private fun ItemCard(
                         Icon(
                             Icons.Default.Star,
                             contentDescription = null,
-                            modifier = Modifier.size(14.dp),
-                            tint = USOpenGold
+                            modifier = Modifier.size(12.dp),
+                            tint = Color(0xFFFBBF24)
                         )
+                        Spacer(modifier = Modifier.width(2.dp))
                         Text(
                             text = String.format("%.1f", rating),
                             style = MaterialTheme.typography.labelSmall,
-                            color = USOpenGold,
-                            modifier = Modifier.padding(start = 2.dp)
+                            color = TextPrimary
                         )
                     }
                 }
@@ -1085,32 +775,114 @@ private fun ItemCard(
     }
 }
 
+// ── Find a Match CTA (dark card with gold text) ──
+@Composable
+private fun FindMatchCta(onClick: () -> Unit) {
+    Box(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(horizontal = 16.dp)
+            .clip(RoundedCornerShape(16.dp))
+            .background(NavBarBg)
+            .clickable(onClick = onClick)
+            .padding(horizontal = 20.dp, vertical = 18.dp)
+    ) {
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Column {
+                Text(
+                    text = "Find a Match",
+                    style = MaterialTheme.typography.titleMedium,
+                    color = GoldAccent,
+                    fontWeight = FontWeight.Bold
+                )
+                Spacer(modifier = Modifier.height(2.dp))
+                Text(
+                    text = "Join pickup games or create your own",
+                    style = MaterialTheme.typography.bodySmall,
+                    color = Color.White.copy(alpha = 0.7f)
+                )
+            }
+            Icon(
+                Icons.AutoMirrored.Filled.ArrowForward,
+                contentDescription = "Go",
+                tint = GoldAccent,
+                modifier = Modifier.size(24.dp)
+            )
+        }
+    }
+}
+
+// ── "Want to see more sports?" bottom CTA ──
+@Composable
+private fun AddSportCta(onClick: () -> Unit) {
+    Box(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(horizontal = 16.dp)
+            .clip(RoundedCornerShape(16.dp))
+            .background(CardBg)
+            .clickable(onClick = onClick)
+            .padding(16.dp)
+    ) {
+        Column {
+            Text(
+                text = "Want to see more sports?",
+                style = MaterialTheme.typography.titleSmall,
+                color = TextPrimary,
+                fontWeight = FontWeight.SemiBold
+            )
+            Spacer(modifier = Modifier.height(2.dp))
+            Text(
+                text = "Add another to your follow list and we'll re-tune the feed.",
+                style = MaterialTheme.typography.bodySmall,
+                color = TextSecondary
+            )
+            Spacer(modifier = Modifier.height(10.dp))
+            Box(
+                modifier = Modifier
+                    .clip(RoundedCornerShape(8.dp))
+                    .background(NavBarBg)
+                    .padding(horizontal = 12.dp, vertical = 8.dp)
+            ) {
+                Text(
+                    text = "+ Add sport",
+                    style = MaterialTheme.typography.labelMedium,
+                    color = GoldAccent,
+                    fontWeight = FontWeight.SemiBold
+                )
+            }
+        }
+    }
+}
+
 // ── Previews ──
 
-@Preview(showBackground = true, backgroundColor = 0xFF0A1628)
+@Preview(showBackground = true)
 @Composable
 private fun PlayerHomeScreenPreview() {
     val sampleSports = listOf(
-        Sport(id = 1, sportType = SportType.BASKETBALL, name = "Basketball"),
-        Sport(id = 2, sportType = SportType.FOOTBALL, name = "Football"),
-        Sport(id = 3, sportType = SportType.TENNIS, name = "Tennis"),
-        Sport(id = 4, sportType = SportType.PADDLE, name = "Paddle"),
-        Sport(id = 5, sportType = SportType.VOLLEYBALL, name = "Volleyball"),
-        Sport(id = 6, sportType = SportType.YOGA, name = "Yoga"),
+        Sport(id = 1, sportType = SportType.FOOTBALL, name = "Football"),
+        Sport(id = 2, sportType = SportType.TENNIS, name = "Tennis"),
+        Sport(id = 3, sportType = SportType.PADDLE, name = "Paddle"),
+        Sport(id = 4, sportType = SportType.YOGA, name = "Yoga"),
     )
     val sampleVenues = listOf(
-        Venue(id = 1, name = "City Sports Hall", sportType = SportType.BASKETBALL, pricePerHour = 45.0, address = "123 Main St", city = "New York"),
-        Venue(id = 2, name = "Tennis Club", sportType = SportType.TENNIS, pricePerHour = 30.0, address = "456 Oak Ave", city = "Boston"),
+        Venue(id = 1, name = "Skopje Padel Club", sportType = SportType.PADDLE, pricePerHour = 800.0, address = "Main St", city = "Skopje"),
+        Venue(id = 2, name = "Vodno Tennis Center", sportType = SportType.TENNIS, pricePerHour = 600.0, address = "Vodno", city = "Skopje"),
     )
     val sampleCoaches = listOf(
-        Coach(id = 1, name = "Coach Mike", sportType = SportType.BASKETBALL, pricePerHour = 60.0, specialization = "Youth Training"),
+        Coach(id = 1, name = "Coach Goran", sportType = SportType.PADDLE, pricePerHour = 1200.0, specialization = "Paddle pro"),
     )
     val previewState = PlayerHomeUiState(
         user = User(
             id = 1,
-            displayName = "Alex",
-            email = "alex@test.com",
-            interestedSports = listOf(SportType.BASKETBALL, SportType.TENNIS, SportType.FOOTBALL)
+            displayName = "Bojan",
+            email = "bojan@test.com",
+            interestedSports = listOf(SportType.FOOTBALL, SportType.TENNIS, SportType.PADDLE, SportType.YOGA)
         ),
         sports = sampleSports,
         allVenues = sampleVenues,
@@ -1127,12 +899,9 @@ private fun PlayerHomeScreenPreview() {
             onCoachClick = {},
             onNavigateToProfile = {},
             onNavigateToNotifications = {},
-            onNavigateToSettings = {},
             onNavigateToSearch = {},
             onNavigateToFavorites = {},
-            onNavigateToFriends = {},
             onFindMatch = {},
-            onSelectSport = {},
             onBrowseAllSports = {}
         )
     }
