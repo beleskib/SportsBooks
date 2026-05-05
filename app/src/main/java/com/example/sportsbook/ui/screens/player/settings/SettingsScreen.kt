@@ -26,11 +26,19 @@ import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.automirrored.filled.ArrowForward
 import androidx.compose.material.icons.automirrored.filled.Logout
 import androidx.compose.material.icons.filled.Check
+import androidx.compose.material.icons.filled.CreditCard
+import androidx.compose.material.icons.automirrored.filled.Help
+import androidx.compose.material.icons.filled.Info
+import androidx.compose.material.icons.filled.Language
 import androidx.compose.material.icons.filled.Lock
 import androidx.compose.material.icons.filled.Notifications
 import androidx.compose.material.icons.filled.Person
+import androidx.compose.material.icons.filled.Policy
+import androidx.compose.material.icons.filled.Shield
+import androidx.compose.material.icons.filled.SportsScore
 import androidx.compose.material.icons.filled.SportsSoccer
 import androidx.compose.material.icons.filled.Star
+import androidx.compose.material.icons.filled.Straighten
 import androidx.compose.material.icons.filled.Visibility
 import androidx.compose.material.icons.filled.VisibilityOff
 import androidx.compose.material3.Button
@@ -56,9 +64,9 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.RectangleShape
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.font.FontWeight
@@ -72,22 +80,29 @@ import com.example.sportsbook.domain.enums.SportType
 import com.example.sportsbook.domain.model.v2.ProfileVisibility
 import com.example.sportsbook.domain.model.v2.SubscriptionStatus
 import com.example.sportsbook.ui.common.LoadingIndicator
-import com.example.sportsbook.ui.theme.CoolGray
-import com.example.sportsbook.ui.theme.Navy600
-import com.example.sportsbook.ui.theme.Navy700
-import com.example.sportsbook.ui.theme.Navy800
-import com.example.sportsbook.ui.theme.Navy900
 import com.example.sportsbook.ui.theme.SportsBookTheme
-import com.example.sportsbook.ui.theme.SportGreen
-import com.example.sportsbook.ui.theme.USOpenGold
-import com.example.sportsbook.ui.theme.WarmWhite
 import java.time.LocalDate
 import java.time.format.DateTimeFormatter
 
-// SportsBooks+ brand colors (indigo → purple gradient like the web)
-private val PlusIndigo = Color(0xFF4F46E5)
-private val PlusPurple = Color(0xFF7C3AED)
-private val PlusGoldBadge = Color(0xFFFDE68A)
+// ── Light-theme design tokens ──
+private val LightBg = Color(0xFFF9FAFB)
+private val CardBg = Color.White
+private val TextPrimary = Color(0xFF111827)
+private val TextSecondary = Color(0xFF6B7280)
+private val TextTertiary = Color(0xFF9CA3AF)
+private val GoldAccent = Color(0xFFFDE047)
+private val GoldDark = Color(0xFFEAB308)
+private val NavBarBg = Color(0xFF111827)
+private val RoseLight = Color(0xFFFECDD3)   // rose-200
+private val RoseText = Color(0xFFBE123C)    // rose-700
+private val EmeraldBg = Color(0xFFD1FAE5)   // emerald-100
+private val EmeraldText = Color(0xFF047857) // emerald-700
+private val PurpleBg = Color(0xFFF3E8FF)    // purple-100
+private val PurpleText = Color(0xFF7C3AED)  // purple-700
+private val BlueBg = Color(0xFFDBEAFE)      // blue-100
+private val BlueText = Color(0xFF1D4ED8)    // blue-700
+private val YellowBg = Color(0xFFFEF9C3)   // yellow-100 (icon bg)
+private val YellowText = Color(0xFFA16207)  // yellow-700
 
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalLayoutApi::class)
 @Composable
@@ -102,7 +117,6 @@ fun SettingsScreen(
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
     val snackbarHostState = remember { SnackbarHostState() }
 
-    // Show toast via snackbar
     LaunchedEffect(uiState.toast) {
         uiState.toast?.let {
             snackbarHostState.showSnackbar(it)
@@ -110,7 +124,6 @@ fun SettingsScreen(
         }
     }
 
-    // Open checkout URL in browser when available
     LaunchedEffect(uiState.checkoutUrl) {
         uiState.checkoutUrl?.let { url ->
             onOpenCheckoutUrl(url)
@@ -119,14 +132,14 @@ fun SettingsScreen(
     }
 
     Scaffold(
-        containerColor = Navy900,
+        containerColor = LightBg,
         snackbarHost = { SnackbarHost(snackbarHostState) },
         topBar = {
             TopAppBar(
                 title = {
                     Text(
                         "Settings",
-                        color = WarmWhite,
+                        color = GoldAccent,
                         fontWeight = FontWeight.Bold
                     )
                 },
@@ -135,12 +148,12 @@ fun SettingsScreen(
                         Icon(
                             Icons.AutoMirrored.Filled.ArrowBack,
                             contentDescription = "Back",
-                            tint = WarmWhite
+                            tint = Color.White
                         )
                     }
                 },
                 colors = TopAppBarDefaults.topAppBarColors(
-                    containerColor = Navy900
+                    containerColor = NavBarBg
                 )
             )
         }
@@ -153,69 +166,13 @@ fun SettingsScreen(
         Column(
             modifier = Modifier
                 .fillMaxSize()
+                .background(LightBg)
                 .padding(padding)
                 .verticalScroll(rememberScrollState())
+                .padding(horizontal = 16.dp, vertical = 16.dp),
+            verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
-            // ── User header card ──
-            Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(horizontal = 16.dp, vertical = 12.dp),
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                if (uiState.photoUrl != null) {
-                    AsyncImage(
-                        model = uiState.photoUrl,
-                        contentDescription = "Profile photo",
-                        modifier = Modifier
-                            .size(52.dp)
-                            .clip(CircleShape),
-                        contentScale = ContentScale.Crop
-                    )
-                } else {
-                    Box(
-                        modifier = Modifier
-                            .size(52.dp)
-                            .clip(CircleShape)
-                            .background(Navy600),
-                        contentAlignment = Alignment.Center
-                    ) {
-                        Icon(
-                            Icons.Default.Person,
-                            contentDescription = "Profile",
-                            modifier = Modifier.size(28.dp),
-                            tint = USOpenGold
-                        )
-                    }
-                }
-                Spacer(modifier = Modifier.width(14.dp))
-                Column(modifier = Modifier.weight(1f)) {
-                    Row(verticalAlignment = Alignment.CenterVertically) {
-                        Text(
-                            text = uiState.displayName ?: "No name set",
-                            style = MaterialTheme.typography.titleMedium,
-                            color = WarmWhite,
-                            fontWeight = FontWeight.SemiBold
-                        )
-                        // Plus badge next to name
-                        if (uiState.isPlus) {
-                            Spacer(modifier = Modifier.width(8.dp))
-                            PlusBadge()
-                        }
-                    }
-                    Text(
-                        text = uiState.email,
-                        style = MaterialTheme.typography.bodySmall,
-                        color = CoolGray
-                    )
-                }
-            }
-
-            HorizontalDivider(color = Navy600.copy(alpha = 0.5f))
-
-            Spacer(modifier = Modifier.height(8.dp))
-
-            // ── SportsBooks+ Card ──
+            // ── SportsBooks+ card ──
             SportsBooksPlus(
                 isPlus = uiState.isPlus,
                 subscription = uiState.subscription,
@@ -226,124 +183,203 @@ fun SettingsScreen(
                 onReactivate = viewModel::reactivateSubscription
             )
 
-            Spacer(modifier = Modifier.height(8.dp))
-            HorizontalDivider(color = Navy600.copy(alpha = 0.5f))
-            Spacer(modifier = Modifier.height(8.dp))
-
-            // ── Profile Visibility ──
-            SectionHeader("PROFILE VISIBILITY")
-
-            Text(
-                text = if (uiState.isPlus) "Control who can see your profile."
-                else "Upgrade to SportsBooks+ to unlock private & friends-only options.",
-                style = MaterialTheme.typography.bodySmall,
-                color = CoolGray,
-                modifier = Modifier.padding(horizontal = 16.dp, vertical = 4.dp)
-            )
-
-            Spacer(modifier = Modifier.height(4.dp))
-
-            ProfileVisibility.entries.forEach { visibility ->
-                VisibilityOption(
-                    visibility = visibility,
-                    isSelected = uiState.profileVisibility == visibility,
-                    isLocked = !uiState.isPlus && visibility != ProfileVisibility.PUBLIC,
-                    isDisabled = uiState.actionLoading,
-                    onClick = { viewModel.setVisibility(visibility) }
+            // ── Grouped card 1: Main settings ──
+            SettingsCard {
+                val sportsSubtitle = when {
+                    uiState.interestedSports.isEmpty() -> "None picked"
+                    else -> "${uiState.interestedSports.size} picked"
+                }
+                SettingsRow(
+                    icon = Icons.Default.Person,
+                    label = "Account",
+                    onClick = onNavigateToEditProfile
+                )
+                CardDivider()
+                SettingsRow(
+                    icon = Icons.Default.SportsSoccer,
+                    label = "Sports I follow",
+                    subtitle = sportsSubtitle,
+                    onClick = onNavigateToSportsIFollow
+                )
+                CardDivider()
+                SettingsRow(
+                    icon = Icons.Default.Notifications,
+                    label = "Notifications",
+                    onClick = { /* TODO Phase 3 */ }
+                )
+                CardDivider()
+                SettingsRow(
+                    icon = Icons.Default.CreditCard,
+                    label = "Payment methods",
+                    onClick = { /* TODO */ }
+                )
+                CardDivider()
+                SettingsRow(
+                    icon = Icons.Default.Lock,
+                    label = "Privacy & visibility",
+                    onClick = { /* TODO: navigate to dedicated privacy screen */ }
+                )
+                CardDivider()
+                SettingsRow(
+                    icon = Icons.Default.Language,
+                    label = "Language",
+                    subtitle = "English",
+                    onClick = { /* TODO */ }
                 )
             }
 
-            Spacer(modifier = Modifier.height(8.dp))
-            HorizontalDivider(color = Navy600.copy(alpha = 0.5f))
-            Spacer(modifier = Modifier.height(8.dp))
-
-            // ── Sports I Follow preview ──
-            SectionHeader("SPORTS I FOLLOW")
-
-            if (uiState.interestedSports.isEmpty()) {
-                Text(
-                    text = "No sports selected. Tap to pick your favourites.",
-                    style = MaterialTheme.typography.bodyMedium,
-                    color = CoolGray,
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .clickable(onClick = onNavigateToSportsIFollow)
-                        .padding(horizontal = 16.dp, vertical = 10.dp)
+            // ── Grouped card 2: Preferences ──
+            SettingsCard {
+                SettingsRow(
+                    icon = Icons.Default.Straighten,
+                    label = "Units & distance",
+                    subtitle = "km",
+                    onClick = { /* TODO */ }
                 )
-            } else {
-                FlowRow(
+                CardDivider()
+                SettingsRow(
+                    icon = Icons.Default.Star,
+                    label = "Appearance",
+                    subtitle = "System",
+                    onClick = { /* TODO */ }
+                )
+            }
+
+            // ── Grouped card 3: Legal ──
+            SettingsCard {
+                SettingsRow(
+                    icon = Icons.Default.Info,
+                    label = "Terms of service",
+                    onClick = { /* TODO */ }
+                )
+                CardDivider()
+                SettingsRow(
+                    icon = Icons.Default.Shield,
+                    label = "Privacy policy",
+                    onClick = { /* TODO */ }
+                )
+                CardDivider()
+                SettingsRow(
+                    icon = Icons.AutoMirrored.Filled.Help,
+                    label = "Help & support",
+                    onClick = { /* TODO */ }
+                )
+            }
+
+            // ── Profile Visibility (inline, light theme) ──
+            VisibilitySection(
+                isPlus = uiState.isPlus,
+                profileVisibility = uiState.profileVisibility,
+                actionLoading = uiState.actionLoading,
+                onSetVisibility = viewModel::setVisibility
+            )
+
+            // ── Sports I Follow preview chips ──
+            if (uiState.interestedSports.isNotEmpty()) {
+                Column(
                     modifier = Modifier
                         .fillMaxWidth()
+                        .shadow(2.dp, RoundedCornerShape(16.dp))
+                        .clip(RoundedCornerShape(16.dp))
+                        .background(CardBg)
                         .clickable(onClick = onNavigateToSportsIFollow)
-                        .padding(horizontal = 16.dp, vertical = 8.dp),
-                    horizontalArrangement = Arrangement.spacedBy(8.dp),
-                    verticalArrangement = Arrangement.spacedBy(8.dp)
+                        .padding(16.dp)
                 ) {
-                    uiState.interestedSports.forEach { sport ->
-                        SportChip(sport = sport)
+                    Text(
+                        text = "SPORTS I FOLLOW",
+                        style = MaterialTheme.typography.labelSmall,
+                        color = TextTertiary,
+                        fontWeight = FontWeight.SemiBold,
+                        letterSpacing = 1.sp
+                    )
+                    Spacer(modifier = Modifier.height(10.dp))
+                    FlowRow(
+                        horizontalArrangement = Arrangement.spacedBy(8.dp),
+                        verticalArrangement = Arrangement.spacedBy(8.dp)
+                    ) {
+                        uiState.interestedSports.forEach { sport ->
+                            SportChip(sport = sport)
+                        }
                     }
                 }
             }
 
-            SettingsMenuButton(
-                icon = Icons.Default.SportsSoccer,
-                label = "Edit Sports I Follow",
-                onClick = onNavigateToSportsIFollow
-            )
-
-            Spacer(modifier = Modifier.height(8.dp))
-            HorizontalDivider(color = Navy600.copy(alpha = 0.5f))
-            Spacer(modifier = Modifier.height(8.dp))
-
-            // ── Account section ──
-            SectionHeader("ACCOUNT")
-
-            SettingsMenuButton(
-                icon = Icons.Default.Person,
-                label = "Edit Profile",
-                onClick = onNavigateToEditProfile
-            )
-
-            SettingsMenuButton(
-                icon = Icons.Default.Notifications,
-                label = "Notification Preferences",
-                onClick = { /* TODO Phase 3 */ }
-            )
-
-            SettingsMenuButton(
-                icon = Icons.Default.Lock,
-                label = "Security & Password",
-                onClick = { /* TODO */ }
-            )
-
-            Spacer(modifier = Modifier.height(16.dp))
-            HorizontalDivider(color = Navy600.copy(alpha = 0.5f))
-            Spacer(modifier = Modifier.height(16.dp))
-
-            // ── Sign Out ──
-            Box(
+            // ── Sign out ──
+            OutlinedButton(
+                onClick = {
+                    viewModel.signOut()
+                    onSignOut()
+                },
                 modifier = Modifier.fillMaxWidth(),
-                contentAlignment = Alignment.Center
+                shape = RoundedCornerShape(12.dp),
+                colors = ButtonDefaults.outlinedButtonColors(
+                    containerColor = CardBg,
+                    contentColor = RoseText
+                ),
+                border = androidx.compose.foundation.BorderStroke(1.dp, RoseLight)
             ) {
-                OutlinedButton(
-                    onClick = {
-                        viewModel.signOut()
-                        onSignOut()
-                    },
-                    shape = RectangleShape
-                ) {
-                    Icon(
-                        Icons.AutoMirrored.Filled.Logout,
-                        contentDescription = null,
-                        tint = MaterialTheme.colorScheme.error,
-                        modifier = Modifier.size(18.dp)
-                    )
-                    Spacer(modifier = Modifier.width(8.dp))
-                    Text("Sign Out", color = MaterialTheme.colorScheme.error)
-                }
+                Icon(
+                    Icons.AutoMirrored.Filled.Logout,
+                    contentDescription = null,
+                    tint = RoseText,
+                    modifier = Modifier.size(18.dp)
+                )
+                Spacer(modifier = Modifier.width(8.dp))
+                Text(
+                    "Sign out",
+                    color = RoseText,
+                    fontWeight = FontWeight.SemiBold,
+                    style = MaterialTheme.typography.bodyMedium
+                )
             }
 
-            Spacer(modifier = Modifier.height(40.dp))
+            Spacer(modifier = Modifier.height(24.dp))
+        }
+    }
+}
+
+// ── Profile visibility inline section ──
+@Composable
+private fun VisibilitySection(
+    isPlus: Boolean,
+    profileVisibility: ProfileVisibility,
+    actionLoading: Boolean,
+    onSetVisibility: (ProfileVisibility) -> Unit
+) {
+    Column(
+        modifier = Modifier
+            .fillMaxWidth()
+            .shadow(2.dp, RoundedCornerShape(16.dp))
+            .clip(RoundedCornerShape(16.dp))
+            .background(CardBg)
+            .padding(16.dp),
+        verticalArrangement = Arrangement.spacedBy(0.dp)
+    ) {
+        Text(
+            text = "PROFILE VISIBILITY",
+            style = MaterialTheme.typography.labelSmall,
+            color = TextTertiary,
+            fontWeight = FontWeight.SemiBold,
+            letterSpacing = 1.sp
+        )
+        Spacer(modifier = Modifier.height(4.dp))
+        Text(
+            text = if (isPlus) "Control who can see your profile."
+            else "Upgrade to SportsBooks+ to unlock private & friends-only options.",
+            style = MaterialTheme.typography.bodySmall,
+            color = TextSecondary,
+            modifier = Modifier.padding(bottom = 12.dp)
+        )
+
+        ProfileVisibility.entries.forEachIndexed { index, visibility ->
+            if (index > 0) Spacer(modifier = Modifier.height(8.dp))
+            VisibilityOption(
+                visibility = visibility,
+                isSelected = profileVisibility == visibility,
+                isLocked = !isPlus && visibility != ProfileVisibility.PUBLIC,
+                isDisabled = actionLoading,
+                onClick = { onSetVisibility(visibility) }
+            )
         }
     }
 }
@@ -362,47 +398,47 @@ private fun SportsBooksPlus(
     Column(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(horizontal = 16.dp, vertical = 8.dp)
+            .shadow(4.dp, RoundedCornerShape(16.dp))
+            .clip(RoundedCornerShape(16.dp))
+            .background(NavBarBg)
     ) {
-        // Gradient header
-        Box(
-            modifier = Modifier
-                .fillMaxWidth()
-                .clip(RoundedCornerShape(topStart = 16.dp, topEnd = 16.dp))
-                .background(
-                    Brush.horizontalGradient(listOf(PlusIndigo, PlusPurple))
-                )
-                .padding(horizontal = 16.dp, vertical = 14.dp)
-        ) {
-            Row(verticalAlignment = Alignment.CenterVertically) {
-                Text("👑", fontSize = 22.sp)
-                Spacer(modifier = Modifier.width(10.dp))
-                Column {
-                    Text(
-                        text = "SportsBooks+",
-                        style = MaterialTheme.typography.titleMedium,
-                        color = Color.White,
-                        fontWeight = FontWeight.Bold
-                    )
-                    Text(
-                        text = when {
-                            isPlus && subscription?.status == SubscriptionStatus.TRIALING -> "Free trial active"
-                            isPlus -> "You're a Plus member"
-                            else -> "Unlock premium features"
-                        },
-                        style = MaterialTheme.typography.bodySmall,
-                        color = Color.White.copy(alpha = 0.8f)
-                    )
-                }
-            }
-        }
-
-        // Body
+        // Header region
         Column(
             modifier = Modifier
                 .fillMaxWidth()
-                .clip(RoundedCornerShape(bottomStart = 16.dp, bottomEnd = 16.dp))
-                .background(Navy800)
+                .padding(horizontal = 20.dp, vertical = 18.dp)
+        ) {
+            Text(
+                text = "SportsBooks",
+                style = MaterialTheme.typography.labelMedium,
+                color = GoldAccent,
+                fontWeight = FontWeight.SemiBold,
+                fontSize = 11.sp,
+                letterSpacing = 0.5.sp
+            )
+            Spacer(modifier = Modifier.height(2.dp))
+            Text(
+                text = "Plus +",
+                style = MaterialTheme.typography.headlineMedium,
+                color = Color.White,
+                fontWeight = FontWeight.ExtraBold
+            )
+            Spacer(modifier = Modifier.height(4.dp))
+            Text(
+                text = "Play more, pay less. Match faster.",
+                style = MaterialTheme.typography.bodySmall,
+                color = Color(0xFFD1D5DB) // gray-300
+            )
+        }
+
+        // White inner card with features + CTA
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 12.dp)
+                .padding(bottom = 16.dp)
+                .clip(RoundedCornerShape(12.dp))
+                .background(CardBg)
                 .padding(16.dp)
         ) {
             if (isLoading) {
@@ -414,147 +450,252 @@ private fun SportsBooksPlus(
                 ) {
                     CircularProgressIndicator(
                         modifier = Modifier.size(24.dp),
-                        color = PlusIndigo,
+                        color = GoldDark,
                         strokeWidth = 2.dp
                     )
                 }
             } else if (isPlus) {
-                // Active status
-                Row(
-                    verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.spacedBy(8.dp)
-                ) {
-                    Box(
-                        modifier = Modifier
-                            .clip(RoundedCornerShape(12.dp))
-                            .background(SportGreen.copy(alpha = 0.15f))
-                            .padding(horizontal = 8.dp, vertical = 3.dp)
-                    ) {
-                        Row(verticalAlignment = Alignment.CenterVertically) {
-                            Icon(
-                                Icons.Default.Check,
-                                contentDescription = null,
-                                modifier = Modifier.size(12.dp),
-                                tint = SportGreen
-                            )
-                            Spacer(modifier = Modifier.width(4.dp))
-                            Text(
-                                text = "Active",
-                                style = MaterialTheme.typography.labelSmall,
-                                color = SportGreen,
-                                fontWeight = FontWeight.Bold
-                            )
-                        }
-                    }
-                    subscription?.let { sub ->
-                        val dateText = when {
-                            sub.status == SubscriptionStatus.TRIALING && sub.trialEnd != null ->
-                                "Trial ends ${formatDate(sub.trialEnd)}"
-                            sub.cancelAtPeriodEnd ->
-                                "Access until ${formatDate(sub.currentPeriodEnd)}"
-                            else ->
-                                "Renews ${formatDate(sub.currentPeriodEnd)}"
-                        }
-                        Text(
-                            text = dateText,
-                            style = MaterialTheme.typography.bodySmall,
-                            color = CoolGray
-                        )
-                    }
-                }
+                // ── Active subscriber view ──
+                PlusActiveView(
+                    subscription = subscription,
+                    actionLoading = actionLoading,
+                    onCancel = onCancel,
+                    onReactivate = onReactivate
+                )
+            } else {
+                // ── Upsell feature list + CTA ──
+                PlusUpsellView(
+                    actionLoading = actionLoading,
+                    onUpgrade = onUpgrade
+                )
+            }
+        }
+    }
+}
 
-                Spacer(modifier = Modifier.height(12.dp))
+@Composable
+private fun PlusUpsellView(
+    actionLoading: Boolean,
+    onUpgrade: () -> Unit
+) {
+    Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
+        PlusFeatureRow(
+            iconBg = YellowBg,
+            iconTint = YellowText,
+            icon = Icons.Default.SportsScore,
+            title = "Priority matchmaking",
+            description = "Jump the queue and get matched faster with top players."
+        )
+        PlusFeatureRow(
+            iconBg = EmeraldBg,
+            iconTint = EmeraldText,
+            icon = Icons.Default.CreditCard,
+            title = "Zero service fees",
+            description = "Keep 100% of your booking price — no platform cut."
+        )
+        PlusFeatureRow(
+            iconBg = PurpleBg,
+            iconTint = PurpleText,
+            icon = Icons.Default.Star,
+            title = "Advanced stats",
+            description = "Deep performance insights and trend analysis."
+        )
+        PlusFeatureRow(
+            iconBg = BlueBg,
+            iconTint = BlueText,
+            icon = Icons.Default.Check,
+            title = "Free cancel up to 1h",
+            description = "Cancel within 1 hour of kick-off at no charge."
+        )
+        PlusFeatureRow(
+            iconBg = YellowBg,
+            iconTint = YellowText,
+            icon = Icons.Default.Person,
+            title = "+ Member badge",
+            description = "Stand out with an exclusive gold member badge."
+        )
 
-                // Features
-                PlusFeatureList()
+        Spacer(modifier = Modifier.height(4.dp))
 
-                Spacer(modifier = Modifier.height(12.dp))
-
-                // Cancel / Reactivate
-                if (subscription?.cancelAtPeriodEnd == true) {
-                    Button(
-                        onClick = onReactivate,
-                        enabled = !actionLoading,
-                        modifier = Modifier.fillMaxWidth(),
-                        colors = ButtonDefaults.buttonColors(
-                            containerColor = PlusIndigo
-                        ),
-                        shape = RoundedCornerShape(12.dp)
-                    ) {
-                        Text(
-                            if (actionLoading) "Processing..." else "Reactivate Subscription",
-                            fontWeight = FontWeight.Bold
-                        )
-                    }
-                } else {
-                    TextButton(
-                        onClick = onCancel,
-                        enabled = !actionLoading
-                    ) {
-                        Text(
-                            "Cancel subscription",
-                            style = MaterialTheme.typography.bodySmall,
-                            color = CoolGray
-                        )
-                    }
+        // CTA button — gold gradient
+        Box(
+            modifier = Modifier
+                .fillMaxWidth()
+                .clip(RoundedCornerShape(12.dp))
+                .background(
+                    Brush.horizontalGradient(
+                        listOf(GoldAccent, Color(0xFFFACC15), GoldDark)
+                    )
+                )
+                .clickable(enabled = !actionLoading, onClick = onUpgrade)
+                .padding(vertical = 14.dp),
+            contentAlignment = Alignment.Center
+        ) {
+            if (actionLoading) {
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    CircularProgressIndicator(
+                        modifier = Modifier.size(16.dp),
+                        color = TextPrimary,
+                        strokeWidth = 2.dp
+                    )
+                    Spacer(modifier = Modifier.width(8.dp))
+                    Text(
+                        "Starting checkout...",
+                        color = TextPrimary,
+                        fontWeight = FontWeight.Bold,
+                        style = MaterialTheme.typography.bodyMedium
+                    )
                 }
             } else {
-                // Upsell
                 Text(
-                    text = "Upgrade for a better experience. Start with a 7-day free trial.",
-                    style = MaterialTheme.typography.bodySmall,
-                    color = CoolGray
+                    "Try free for 7 days →",
+                    color = TextPrimary,
+                    fontWeight = FontWeight.Bold,
+                    style = MaterialTheme.typography.bodyMedium
                 )
+            }
+        }
+    }
+}
 
-                Spacer(modifier = Modifier.height(12.dp))
+@Composable
+private fun PlusActiveView(
+    subscription: com.example.sportsbook.domain.model.v2.SubscriptionInfo?,
+    actionLoading: Boolean,
+    onCancel: () -> Unit,
+    onReactivate: () -> Unit
+) {
+    Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
+        // Welcome + active pill
+        Row(
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.SpaceBetween,
+            modifier = Modifier.fillMaxWidth()
+        ) {
+            Column {
+                Text(
+                    text = "Welcome to Plus",
+                    style = MaterialTheme.typography.titleMedium,
+                    color = GoldDark,
+                    fontWeight = FontWeight.Bold
+                )
+                subscription?.let { sub ->
+                    val planLabel = "Monthly · 499 ден"
+                    val dateText = when {
+                        sub.status == SubscriptionStatus.TRIALING && sub.trialEnd != null ->
+                            "Trial ends ${formatDate(sub.trialEnd)}"
+                        sub.cancelAtPeriodEnd ->
+                            "Access until ${formatDate(sub.currentPeriodEnd)}"
+                        else ->
+                            "Renews ${formatDate(sub.currentPeriodEnd)}"
+                    }
+                    Text(
+                        text = planLabel,
+                        style = MaterialTheme.typography.bodySmall,
+                        color = TextSecondary
+                    )
+                    Text(
+                        text = dateText,
+                        style = MaterialTheme.typography.bodySmall,
+                        color = TextTertiary
+                    )
+                }
+            }
+            // "Active" pill
+            Box(
+                modifier = Modifier
+                    .clip(RoundedCornerShape(999.dp))
+                    .background(GoldAccent)
+                    .padding(horizontal = 12.dp, vertical = 4.dp)
+            ) {
+                Text(
+                    text = "Active",
+                    style = MaterialTheme.typography.labelSmall,
+                    color = TextPrimary,
+                    fontWeight = FontWeight.Bold,
+                    fontSize = 11.sp
+                )
+            }
+        }
 
-                PlusFeatureList()
+        HorizontalDivider(color = Color(0xFFF3F4F6))
 
-                Spacer(modifier = Modifier.height(16.dp))
-
-                Button(
-                    onClick = onUpgrade,
-                    enabled = !actionLoading,
-                    modifier = Modifier.fillMaxWidth(),
-                    colors = ButtonDefaults.buttonColors(
-                        containerColor = Color.Transparent
-                    ),
-                    shape = RoundedCornerShape(14.dp)
-                ) {
+        // Active perks
+        val perks = listOf(
+            "Priority matchmaking",
+            "Zero service fees on all bookings",
+            "Advanced player stats",
+            "Free cancel up to 1h before",
+            "Profile visibility controls",
+            "+ Member badge on profile"
+        )
+        Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
+            perks.forEach { perk ->
+                Row(verticalAlignment = Alignment.CenterVertically) {
                     Box(
                         modifier = Modifier
-                            .fillMaxWidth()
-                            .clip(RoundedCornerShape(14.dp))
-                            .background(
-                                Brush.horizontalGradient(listOf(PlusIndigo, PlusPurple))
-                            )
-                            .padding(vertical = 10.dp),
-                        contentAlignment = Alignment.Center
-                    ) {
-                        if (actionLoading) {
-                            Row(verticalAlignment = Alignment.CenterVertically) {
-                                CircularProgressIndicator(
-                                    modifier = Modifier.size(16.dp),
-                                    color = Color.White,
-                                    strokeWidth = 2.dp
-                                )
-                                Spacer(modifier = Modifier.width(8.dp))
-                                Text(
-                                    "Starting checkout...",
-                                    color = Color.White,
-                                    fontWeight = FontWeight.Bold,
-                                    style = MaterialTheme.typography.bodyMedium
-                                )
-                            }
-                        } else {
-                            Text(
-                                "Start 7-day free trial",
-                                color = Color.White,
-                                fontWeight = FontWeight.Bold,
-                                style = MaterialTheme.typography.bodyMedium
-                            )
-                        }
-                    }
+                            .size(6.dp)
+                            .clip(CircleShape)
+                            .background(GoldDark)
+                    )
+                    Spacer(modifier = Modifier.width(8.dp))
+                    Text(
+                        text = perk,
+                        style = MaterialTheme.typography.bodySmall,
+                        color = TextSecondary
+                    )
+                }
+            }
+        }
+
+        HorizontalDivider(color = Color(0xFFF3F4F6))
+
+        // Actions
+        if (subscription?.cancelAtPeriodEnd == true) {
+            Button(
+                onClick = onReactivate,
+                enabled = !actionLoading,
+                modifier = Modifier.fillMaxWidth(),
+                colors = ButtonDefaults.buttonColors(containerColor = GoldDark),
+                shape = RoundedCornerShape(12.dp)
+            ) {
+                Text(
+                    if (actionLoading) "Processing..." else "Reactivate subscription",
+                    fontWeight = FontWeight.Bold,
+                    color = TextPrimary
+                )
+            }
+        } else {
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(8.dp)
+            ) {
+                OutlinedButton(
+                    onClick = { /* TODO: switch to annual */ },
+                    modifier = Modifier.weight(1f),
+                    shape = RoundedCornerShape(12.dp),
+                    border = androidx.compose.foundation.BorderStroke(1.dp, Color(0xFFD1D5DB))
+                ) {
+                    Text(
+                        "Switch to annual",
+                        style = MaterialTheme.typography.bodySmall,
+                        color = TextSecondary,
+                        fontWeight = FontWeight.SemiBold
+                    )
+                }
+                Button(
+                    onClick = onCancel,
+                    enabled = !actionLoading,
+                    modifier = Modifier.weight(1f),
+                    colors = ButtonDefaults.buttonColors(containerColor = RoseText),
+                    shape = RoundedCornerShape(12.dp)
+                ) {
+                    Text(
+                        if (actionLoading) "..." else "Cancel renewal",
+                        style = MaterialTheme.typography.bodySmall,
+                        fontWeight = FontWeight.SemiBold,
+                        color = Color.White
+                    )
                 }
             }
         }
@@ -562,36 +703,47 @@ private fun SportsBooksPlus(
 }
 
 @Composable
-private fun PlusFeatureList() {
-    val features = listOf(
-        "0% service fee on all bookings",
-        "Priority matchmaking ranking",
-        "24h cancellation window (vs 48h)",
-        "Advanced player stats & insights",
-        "Profile visibility controls",
-        "SportsBooks+ badge on profile"
-    )
-    Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
-        features.forEach { feature ->
-            Row(verticalAlignment = Alignment.CenterVertically) {
-                Icon(
-                    Icons.Default.Check,
-                    contentDescription = null,
-                    modifier = Modifier.size(16.dp),
-                    tint = PlusIndigo
-                )
-                Spacer(modifier = Modifier.width(8.dp))
-                Text(
-                    text = feature,
-                    style = MaterialTheme.typography.bodySmall,
-                    color = WarmWhite.copy(alpha = 0.85f)
-                )
-            }
+private fun PlusFeatureRow(
+    iconBg: Color,
+    iconTint: Color,
+    icon: ImageVector,
+    title: String,
+    description: String
+) {
+    Row(verticalAlignment = Alignment.Top) {
+        Box(
+            modifier = Modifier
+                .size(36.dp)
+                .clip(RoundedCornerShape(10.dp))
+                .background(iconBg),
+            contentAlignment = Alignment.Center
+        ) {
+            Icon(
+                imageVector = icon,
+                contentDescription = null,
+                modifier = Modifier.size(18.dp),
+                tint = iconTint
+            )
+        }
+        Spacer(modifier = Modifier.width(12.dp))
+        Column(modifier = Modifier.weight(1f)) {
+            Text(
+                text = title,
+                style = MaterialTheme.typography.bodyMedium,
+                color = TextPrimary,
+                fontWeight = FontWeight.SemiBold
+            )
+            Text(
+                text = description,
+                style = MaterialTheme.typography.bodySmall,
+                color = TextSecondary,
+                fontSize = 11.sp
+            )
         }
     }
 }
 
-// ── Visibility option radio button ──
+// ── Visibility option radio row ──
 @Composable
 private fun VisibilityOption(
     visibility: ProfileVisibility,
@@ -600,22 +752,17 @@ private fun VisibilityOption(
     isDisabled: Boolean,
     onClick: () -> Unit
 ) {
-    val borderColor by animateColorAsState(
-        targetValue = if (isSelected) PlusIndigo else Navy600,
-        label = "borderColor"
-    )
-    val bgColor by animateColorAsState(
-        targetValue = if (isSelected) PlusIndigo.copy(alpha = 0.1f) else Navy800,
-        label = "bgColor"
+    val ringColor by animateColorAsState(
+        targetValue = if (isSelected) TextPrimary else Color(0xFFD1D5DB),
+        label = "visibilityRing"
     )
 
     Row(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(horizontal = 16.dp, vertical = 4.dp)
             .clip(RoundedCornerShape(12.dp))
-            .border(1.dp, borderColor, RoundedCornerShape(12.dp))
-            .background(bgColor)
+            .border(1.dp, if (isSelected) Color(0xFFD1D5DB) else Color(0xFFF3F4F6), RoundedCornerShape(12.dp))
+            .background(if (isSelected) Color(0xFFF9FAFB) else Color.White)
             .then(
                 if (isDisabled || isLocked) Modifier
                 else Modifier.clickable(onClick = onClick)
@@ -623,36 +770,12 @@ private fun VisibilityOption(
             .padding(horizontal = 14.dp, vertical = 12.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {
-        // Icon
-        val icon = when (visibility) {
-            ProfileVisibility.PUBLIC -> Icons.Default.Visibility
-            ProfileVisibility.FRIENDS_ONLY -> Icons.Default.Person
-            ProfileVisibility.PRIVATE -> Icons.Default.VisibilityOff
-        }
-        Box(
-            modifier = Modifier
-                .size(36.dp)
-                .clip(RoundedCornerShape(10.dp))
-                .background(if (isSelected) PlusIndigo.copy(alpha = 0.15f) else Navy700),
-            contentAlignment = Alignment.Center
-        ) {
-            Icon(
-                imageVector = icon,
-                contentDescription = null,
-                modifier = Modifier.size(18.dp),
-                tint = if (isSelected) PlusIndigo else CoolGray
-            )
-        }
-
-        Spacer(modifier = Modifier.width(12.dp))
-
-        // Label + description
         Column(modifier = Modifier.weight(1f)) {
             Row(verticalAlignment = Alignment.CenterVertically) {
                 Text(
                     text = visibility.displayLabel,
                     style = MaterialTheme.typography.bodyMedium,
-                    color = if (isSelected) WarmWhite else WarmWhite.copy(alpha = if (isLocked) 0.5f else 0.85f),
+                    color = if (isLocked) TextTertiary else TextPrimary,
                     fontWeight = if (isSelected) FontWeight.SemiBold else FontWeight.Normal
                 )
                 if (isLocked) {
@@ -660,13 +783,13 @@ private fun VisibilityOption(
                     Box(
                         modifier = Modifier
                             .clip(RoundedCornerShape(4.dp))
-                            .background(PlusIndigo.copy(alpha = 0.15f))
+                            .background(YellowBg)
                             .padding(horizontal = 6.dp, vertical = 1.dp)
                     ) {
                         Text(
                             text = "Plus",
                             style = MaterialTheme.typography.labelSmall,
-                            color = PlusIndigo,
+                            color = YellowText,
                             fontWeight = FontWeight.Bold,
                             fontSize = 10.sp
                         )
@@ -676,73 +799,83 @@ private fun VisibilityOption(
             Text(
                 text = visibility.description,
                 style = MaterialTheme.typography.bodySmall,
-                color = CoolGray.copy(alpha = if (isLocked) 0.5f else 1f),
-                fontSize = 11.sp
+                color = TextTertiary,
+                fontSize = 10.sp
             )
         }
 
-        // Selection indicator
-        if (isSelected) {
-            Box(
-                modifier = Modifier
-                    .size(22.dp)
-                    .clip(CircleShape)
-                    .background(PlusIndigo),
-                contentAlignment = Alignment.Center
-            ) {
-                Icon(
-                    Icons.Default.Check,
-                    contentDescription = null,
-                    modifier = Modifier.size(14.dp),
-                    tint = Color.White
+        Spacer(modifier = Modifier.width(12.dp))
+
+        // Radio circle indicator
+        Box(
+            modifier = Modifier
+                .size(20.dp)
+                .clip(CircleShape)
+                .border(
+                    width = if (isSelected) 0.dp else 2.dp,
+                    color = ringColor,
+                    shape = CircleShape
+                )
+                .background(if (isSelected) TextPrimary else Color.Transparent),
+            contentAlignment = Alignment.Center
+        ) {
+            if (isSelected) {
+                Box(
+                    modifier = Modifier
+                        .size(8.dp)
+                        .clip(CircleShape)
+                        .background(GoldAccent)
                 )
             }
         }
     }
 }
 
-// ── Plus badge chip ──
+// ── Plus badge chip (gold pill, "+ Member") ──
 @Composable
 fun PlusBadge(modifier: Modifier = Modifier) {
     Box(
         modifier = modifier
-            .clip(RoundedCornerShape(6.dp))
-            .background(
-                Brush.horizontalGradient(listOf(PlusIndigo, PlusPurple))
-            )
+            .clip(RoundedCornerShape(999.dp))
+            .background(Brush.linearGradient(listOf(GoldAccent, Color(0xFFFACC15), GoldDark)))
             .padding(horizontal = 8.dp, vertical = 2.dp)
     ) {
-        Row(verticalAlignment = Alignment.CenterVertically) {
-            Text("👑", fontSize = 10.sp)
-            Spacer(modifier = Modifier.width(3.dp))
-            Text(
-                text = "PLUS",
-                style = MaterialTheme.typography.labelSmall,
-                color = Color.White,
-                fontWeight = FontWeight.ExtraBold,
-                fontSize = 9.sp,
-                letterSpacing = 1.sp
-            )
-        }
+        Text(
+            text = "+ Member",
+            style = MaterialTheme.typography.labelSmall,
+            color = TextPrimary,
+            fontWeight = FontWeight.Bold,
+            fontSize = 9.sp
+        )
     }
 }
 
-// ── Shared composables ──
-
+// ── Shared card container ──
 @Composable
-private fun SectionHeader(title: String) {
-    Text(
-        text = title,
-        style = MaterialTheme.typography.labelSmall,
-        color = CoolGray,
-        fontWeight = FontWeight.Bold,
-        modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp),
-        letterSpacing = MaterialTheme.typography.labelSmall.letterSpacing * 1.5f
-    )
+private fun SettingsCard(content: @Composable () -> Unit) {
+    Column(
+        modifier = Modifier
+            .fillMaxWidth()
+            .shadow(2.dp, RoundedCornerShape(16.dp))
+            .clip(RoundedCornerShape(16.dp))
+            .background(CardBg)
+    ) {
+        content()
+    }
 }
 
 @Composable
-private fun SettingsMenuButton(
+private fun CardDivider() {
+    HorizontalDivider(
+        modifier = Modifier.padding(horizontal = 16.dp),
+        color = Color(0xFFF3F4F6),
+        thickness = 1.dp
+    )
+}
+
+// ── Settings row (icon + label + optional subtitle + chevron) ──
+@Composable
+private fun SettingsRow(
     icon: ImageVector,
     label: String,
     subtitle: String? = null,
@@ -755,48 +888,61 @@ private fun SettingsMenuButton(
             .padding(horizontal = 16.dp, vertical = 14.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {
-        Icon(
-            imageVector = icon,
-            contentDescription = null,
-            modifier = Modifier.size(22.dp),
-            tint = WarmWhite
-        )
-        Spacer(modifier = Modifier.width(16.dp))
+        // Icon container
+        Box(
+            modifier = Modifier
+                .size(34.dp)
+                .clip(RoundedCornerShape(8.dp))
+                .background(LightBg),
+            contentAlignment = Alignment.Center
+        ) {
+            Icon(
+                imageVector = icon,
+                contentDescription = null,
+                modifier = Modifier.size(18.dp),
+                tint = TextSecondary
+            )
+        }
+        Spacer(modifier = Modifier.width(14.dp))
         Column(modifier = Modifier.weight(1f)) {
             Text(
                 text = label,
-                style = MaterialTheme.typography.bodyLarge,
-                color = WarmWhite
+                style = MaterialTheme.typography.bodyMedium,
+                color = TextPrimary,
+                fontWeight = FontWeight.Normal
             )
             if (subtitle != null) {
                 Text(
                     text = subtitle,
                     style = MaterialTheme.typography.bodySmall,
-                    color = CoolGray
+                    color = TextTertiary,
+                    fontSize = 12.sp
                 )
             }
         }
         Icon(
             imageVector = Icons.AutoMirrored.Filled.ArrowForward,
             contentDescription = null,
-            modifier = Modifier.size(18.dp),
-            tint = WarmWhite.copy(alpha = 0.4f)
+            modifier = Modifier.size(16.dp),
+            tint = TextTertiary
         )
     }
 }
 
+// ── Sport chip ──
 @Composable
 private fun SportChip(sport: SportType) {
     Box(
         modifier = Modifier
             .clip(RoundedCornerShape(20.dp))
-            .background(Navy600)
-            .padding(horizontal = 14.dp, vertical = 6.dp)
+            .background(LightBg)
+            .border(1.dp, Color(0xFFE5E7EB), RoundedCornerShape(20.dp))
+            .padding(horizontal = 12.dp, vertical = 6.dp)
     ) {
         Text(
             text = sport.displayName,
             style = MaterialTheme.typography.labelMedium,
-            color = USOpenGold,
+            color = TextPrimary,
             fontWeight = FontWeight.SemiBold
         )
     }
@@ -811,7 +957,7 @@ private fun formatDate(isoDate: String): String {
     }
 }
 
-@Preview(showBackground = true, backgroundColor = 0xFF0A1628)
+@Preview(showBackground = true, backgroundColor = 0xFFF9FAFB)
 @Composable
 private fun SettingsScreenPreview() {
     SportsBookTheme {
