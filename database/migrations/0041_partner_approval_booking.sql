@@ -31,7 +31,10 @@ RETURNS TABLE (
     expired_coach_name TEXT
 ) AS $$
 BEGIN
-    -- Cancel expired pending bookings and return their details
+    -- Cancel expired pending bookings, reopen their time slots, and return
+    -- details for notification dispatch — all within a single CTE chain so
+    -- the time-slot UPDATE uses the exact time_slot_id values from the
+    -- booking UPDATE rather than a heuristic re-query (race-condition fix).
     RETURN QUERY
     WITH expired AS (
         UPDATE bookings
@@ -40,6 +43,12 @@ BEGIN
           AND expires_at IS NOT NULL
           AND expires_at < NOW()
         RETURNING id, player_id, time_slot_id, venue_id, coach_id
+    ),
+    reopened AS (
+        UPDATE time_slots
+        SET is_available = true, updated_at = NOW()
+        WHERE id IN (SELECT time_slot_id FROM expired)
+        RETURNING id
     )
     SELECT
         e.id,
@@ -50,18 +59,6 @@ BEGIN
     FROM expired e
     LEFT JOIN venues v ON v.id = e.venue_id
     LEFT JOIN coaches c ON c.id = e.coach_id;
-
-    -- Reopen the time slots for expired bookings
-    UPDATE time_slots
-    SET is_available = true, updated_at = NOW()
-    WHERE id IN (
-        SELECT b.time_slot_id
-        FROM bookings b
-        WHERE b.status = 'cancelled'
-          AND b.expires_at IS NOT NULL
-          AND b.expires_at < NOW()
-          AND b.updated_at >= NOW() - INTERVAL '1 minute'
-    );
 END;
 $$ LANGUAGE plpgsql;
 

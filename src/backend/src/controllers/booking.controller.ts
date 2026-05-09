@@ -1,5 +1,5 @@
 import { Request, Response, NextFunction } from 'express';
-import { success, created } from '../utils/apiResponse';
+import { success, created, paginated } from '../utils/apiResponse';
 import * as bookingRepo from '../repositories/booking.repository';
 import * as gamificationRepo from '../repositories/gamification.repository';
 import * as notificationRepo from '../repositories/notification.repository';
@@ -9,7 +9,7 @@ import * as venueBookingLobbyRepo from '../repositories/venueBookingLobby.reposi
 import * as timeSlotRepo from '../repositories/timeSlot.repository';
 import { sendBookingConfirmedEmails } from '../services/bookingEmail.service';
 import { sendPartnerBookingRequestEmail } from '../services/partnerApproval.service';
-import { NotFoundError, ForbiddenError } from '../utils/errors';
+import { NotFoundError, ForbiddenError, ValidationError } from '../utils/errors';
 
 export async function create(req: Request, res: Response, next: NextFunction) {
   try {
@@ -53,8 +53,10 @@ export async function create(req: Request, res: Response, next: NextFunction) {
 export async function getMyBookings(req: Request, res: Response, next: NextFunction) {
   try {
     const status = req.query.status ? String(req.query.status) : undefined;
-    const bookings = await bookingRepo.findByPlayerId(req.user!.id, status);
-    success(res, bookings);
+    const page = req.query.page ? Number(req.query.page) : 1;
+    const limit = req.query.limit ? Number(req.query.limit) : 20;
+    const result = await bookingRepo.findByPlayerId(req.user!.id, status, { page, limit });
+    paginated(res, result.data, { page: result.page, limit: result.limit, total: result.total });
   } catch (e) { next(e); }
 }
 
@@ -62,6 +64,32 @@ export async function getById(req: Request, res: Response, next: NextFunction) {
   try {
     const booking = await bookingRepo.findById(Number(req.params.id));
     if (!booking) throw new NotFoundError('Booking');
+
+    const userId = req.user!.id;
+    const userRole = req.user!.role;
+
+    // Only the player who made the booking, the partner who owns the
+    // venue/coach, or an admin may view a specific booking.
+    let authorized = false;
+    if (userRole === 'admin') {
+      authorized = true;
+    } else if (Number(booking.playerId) === userId) {
+      authorized = true;
+    } else {
+      if (booking.venueId) {
+        const venue = await venueRepo.findById(booking.venueId);
+        if (venue && Number(venue.ownerId) === userId) authorized = true;
+      }
+      if (!authorized && booking.coachId) {
+        const coach = await coachRepo.findById(booking.coachId);
+        if (coach && Number(coach.userId) === userId) authorized = true;
+      }
+    }
+
+    if (!authorized) {
+      throw new ForbiddenError('Forbidden');
+    }
+
     success(res, booking);
   } catch (e) { next(e); }
 }
@@ -69,6 +97,41 @@ export async function getById(req: Request, res: Response, next: NextFunction) {
 export async function updateStatus(req: Request, res: Response, next: NextFunction) {
   try {
     const { status } = req.body;
+    const userId = req.user!.id;
+    const userRole = req.user!.role;
+
+    // Validate status against allowed values
+    const ALLOWED_STATUSES = ['pending', 'approved', 'confirmed', 'completed', 'cancelled'];
+    if (!status || !ALLOWED_STATUSES.includes(status)) {
+      throw new ValidationError(`Invalid status. Allowed values: ${ALLOWED_STATUSES.join(', ')}`);
+    }
+
+    // Fetch the existing booking and verify ownership
+    const existing = await bookingRepo.findById(Number(req.params.id));
+    if (!existing) throw new NotFoundError('Booking');
+
+    // Check if user is the player, the partner, or an admin
+    let isOwnerOrPlayer = false;
+    if (userRole === 'admin') {
+      isOwnerOrPlayer = true;
+    } else if (Number(existing.playerId) === userId) {
+      isOwnerOrPlayer = true;
+    } else {
+      // Check partner ownership via venue or coach
+      if (existing.venueId) {
+        const venue = await venueRepo.findById(existing.venueId);
+        if (venue && Number(venue.ownerId) === userId) isOwnerOrPlayer = true;
+      }
+      if (!isOwnerOrPlayer && existing.coachId) {
+        const coach = await coachRepo.findById(existing.coachId);
+        if (coach && Number(coach.userId) === userId) isOwnerOrPlayer = true;
+      }
+    }
+
+    if (!isOwnerOrPlayer) {
+      throw new ForbiddenError('Forbidden');
+    }
+
     const booking = await bookingRepo.updateStatus(Number(req.params.id), status);
 
     // Award XP when a booking is completed
@@ -101,8 +164,10 @@ export async function getBookingCounts(_req: Request, res: Response, next: NextF
 export async function getPartnerBookings(req: Request, res: Response, next: NextFunction) {
   try {
     const status = req.query.status ? String(req.query.status) : undefined;
-    const bookings = await bookingRepo.findByPartner(req.user!.id, status);
-    success(res, bookings);
+    const page = req.query.page ? Number(req.query.page) : 1;
+    const limit = req.query.limit ? Number(req.query.limit) : 20;
+    const result = await bookingRepo.findByPartner(req.user!.id, status, { page, limit });
+    paginated(res, result.data, { page: result.page, limit: result.limit, total: result.total });
   } catch (e) { next(e); }
 }
 

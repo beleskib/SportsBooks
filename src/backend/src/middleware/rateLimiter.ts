@@ -1,9 +1,14 @@
 import rateLimit from 'express-rate-limit';
 
-// Strict limiter for authentication endpoints: 5 attempts per 15 minutes
+// Rate limits are relaxed in development/test to avoid blocking rapid
+// iteration and automated test suites, while production keeps strict
+// limits to guard against brute-force and abuse.
+const isDev = process.env.NODE_ENV !== 'production';
+
+// Auth endpoint limiter: 1000 req/15 min (dev/test) | 5 req/15 min (prod)
 export const authLimiter = rateLimit({
   windowMs: 15 * 60 * 1000,
-  max: 5,
+  max: isDev ? 1000 : 5,
   standardHeaders: true,
   legacyHeaders: false,
   message: {
@@ -12,10 +17,10 @@ export const authLimiter = rateLimit({
   },
 });
 
-// General API limiter: 100 requests per 15 minutes per IP
+// General API limiter: 10000 req/15 min (dev/test) | 100 req/15 min (prod)
 export const apiLimiter = rateLimit({
   windowMs: 15 * 60 * 1000,
-  max: 100,
+  max: isDev ? 10000 : 100,
   standardHeaders: true,
   legacyHeaders: false,
   message: {

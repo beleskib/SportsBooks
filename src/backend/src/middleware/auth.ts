@@ -31,7 +31,7 @@ export async function authenticate(req: Request, _res: Response, next: NextFunct
 
     let firebaseUid: string;
 
-    if (process.env.DEV_AUTH_BYPASS === 'true') {
+    if (process.env.DEV_AUTH_BYPASS === 'true' && process.env.NODE_ENV !== 'production') {
       // Dev mode: smart token handling
       if (firebaseAuth && token.includes('.') && token.length > 100) {
         // Real JWT from mobile/web client — verify it properly
@@ -66,14 +66,23 @@ export async function authenticate(req: Request, _res: Response, next: NextFunct
         partnerType: row.partner_type,
       };
     } else {
-      // User not yet registered — only firebase_uid is available
-      req.user = {
-        id: 0,
-        firebaseUid,
-        email: '',
-        role: 'player',
-        partnerType: null,
-      };
+      // Allow registration endpoint for new users
+      if (req.path === '/register' || req.originalUrl?.includes('/auth/register')) {
+        req.user = {
+          id: 0,
+          firebaseUid,
+          email: '',
+          role: 'player',
+          partnerType: null,
+        };
+      } else {
+        // User not yet registered — reject with 403 so downstream code
+        // never operates on a non-existent user id.
+        _res.status(403).json({
+          error: 'User account not found. Please complete registration.',
+        });
+        return;
+      }
     }
 
     next();

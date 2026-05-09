@@ -3,7 +3,7 @@
 //
 // Design rules (from product owner):
 //  - Player and partner receive the same receipt template.
-//  - Platform fee = 5% of slot price (charged to player).
+//  - Platform fee = 10% of slot price (charged to player).
 //  - Stripe processing fee (~2.9% + €0.30) is absorbed by SportsBooks
 //    — NOT shown on the receipt.
 //  - Cancellation policy: free up to 12h before slot start; no refund inside.
@@ -18,7 +18,7 @@ import * as venueRepo from '../repositories/venue.repository';
 import * as coachRepo from '../repositories/coach.repository';
 
 const FRONTEND_URL = process.env.FRONTEND_BASE_URL ?? 'http://localhost:5173';
-const PLATFORM_FEE_RATE = 0.05; // 5%
+const PLATFORM_FEE_RATE = 0.10; // 10%
 const CANCELLATION_WINDOW_HOURS = 12;
 const CURRENCY_LABEL = 'ден'; // matches in-app currency display
 
@@ -116,7 +116,7 @@ function renderHtml(opts: {
       <table style="width:100%;border-collapse:collapse;font-size:14px;margin-bottom:18px;">
         <tr><td style="padding:6px 0;color:#4B5563;">Slot price</td>
             <td style="padding:6px 0;text-align:right;">${formatMoney(lineItems.slotPrice)}</td></tr>
-        <tr><td style="padding:6px 0;color:#4B5563;">Platform fee (5%)</td>
+        <tr><td style="padding:6px 0;color:#4B5563;">Platform fee (10%)</td>
             <td style="padding:6px 0;text-align:right;">${formatMoney(lineItems.platformFee)}</td></tr>
         <tr><td colspan="2" style="border-top:1px solid #E5E7EB;height:1px;padding:0;"></td></tr>
         <tr><td style="padding:10px 0;font-weight:700;">Total ${recipientLabel === 'player' ? 'charged' : ''}</td>

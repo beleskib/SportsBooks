@@ -94,7 +94,7 @@ BEGIN
         c.avg_rating,
         c.total_reviews,
         c.city,
-        (SELECT ci.image_url FROM coach_images ci WHERE ci.venue_id = c.id AND ci.is_primary = true LIMIT 1) AS primary_image_url,
+        (SELECT ci.image_url FROM coach_images ci WHERE ci.coach_id = c.id AND ci.is_primary = true LIMIT 1) AS primary_image_url,
         d.title AS discount_title,
         d.discount_percent,
         d.discount_amount,

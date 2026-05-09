@@ -76,18 +76,23 @@ export async function createNotification(
 
 export async function findByUserId(
   userId: number,
-  limit: number = 20,
-  offset: number = 0
-): Promise<NotificationRow[]> {
+  options: { page?: number; limit?: number } = {}
+): Promise<{ data: NotificationRow[]; total: number; page: number; limit: number }> {
+  const page = options.page || 1;
+  const limit = Math.min(options.limit || 20, 100);
+  const offset = (page - 1) * limit;
+
   const result = await query(
-    `SELECT id, user_id, type, title, body, data, is_read, created_at, updated_at
+    `SELECT id, user_id, type, title, body, data, is_read, created_at, updated_at,
+            COUNT(*) OVER() AS total_count
      FROM notifications
      WHERE user_id = $1
      ORDER BY created_at DESC
      LIMIT $2 OFFSET $3`,
     [userId, limit, offset]
   );
-  return result.rows.map(mapNotificationRow);
+  const total = result.rows.length > 0 ? Number(result.rows[0].total_count) : 0;
+  return { data: result.rows.map(mapNotificationRow), total, page, limit };
 }
 
 export async function getUnreadCount(userId: number): Promise<number> {

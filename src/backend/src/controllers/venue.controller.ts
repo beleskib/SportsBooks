@@ -1,14 +1,16 @@
 import { Request, Response, NextFunction } from 'express';
-import { success, created } from '../utils/apiResponse';
+import { success, created, paginated } from '../utils/apiResponse';
 import * as venueRepo from '../repositories/venue.repository';
 import { NotFoundError, ValidationError, ForbiddenError } from '../utils/errors';
 import { syncVenueToFirestore, softDeleteVenueInFirestore } from '../services/firestoreSync.service';
 import { notifyAdminListingSubmitted } from '../services/listingApproval.service';
 
-export async function getAll(_req: Request, res: Response, next: NextFunction) {
+export async function getAll(req: Request, res: Response, next: NextFunction) {
   try {
-    const venues = await venueRepo.findAll();
-    success(res, venues);
+    const page = req.query.page ? Number(req.query.page) : 1;
+    const limit = req.query.limit ? Number(req.query.limit) : 20;
+    const result = await venueRepo.findAll({ page, limit });
+    paginated(res, result.data, { page: result.page, limit: result.limit, total: result.total });
   } catch (e) { next(e); }
 }
 

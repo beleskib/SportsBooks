@@ -201,16 +201,25 @@ function assembleVenues(
 // listings stay invisible until an admin signs off (see migration 0054).
 // ============================================================
 
-export async function findAll(): Promise<VenueRow[]> {
+export async function findAll(
+  options: { page?: number; limit?: number } = {}
+): Promise<{ data: VenueRow[]; total: number; page: number; limit: number }> {
+  const page = options.page || 1;
+  const limit = Math.min(options.limit || 20, 100);
+  const offset = (page - 1) * limit;
+
   const result = await query(
-    `SELECT ${VENUE_COLS}
+    `SELECT ${VENUE_COLS}, COUNT(*) OVER() AS total_count
      FROM venues
      WHERE approval_status = 'approved'
-     ORDER BY created_at DESC`
+     ORDER BY created_at DESC
+     LIMIT $1 OFFSET $2`,
+    [limit, offset]
   );
+  const total = result.rows.length > 0 ? Number(result.rows[0].total_count) : 0;
   const ids = result.rows.map((r: any) => r.id);
   const relations = await loadVenueRelations(ids);
-  return assembleVenues(result.rows, relations);
+  return { data: assembleVenues(result.rows, relations), total, page, limit };
 }
 
 export async function findBySport(sportType: string): Promise<VenueRow[]> {

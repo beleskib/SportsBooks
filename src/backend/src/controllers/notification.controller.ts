@@ -1,13 +1,13 @@
 import { Request, Response, NextFunction } from 'express';
-import { success } from '../utils/apiResponse';
+import { success, paginated } from '../utils/apiResponse';
 import * as notificationRepo from '../repositories/notification.repository';
 
 export async function getNotifications(req: Request, res: Response, next: NextFunction) {
   try {
+    const page = req.query.page ? Number(req.query.page) : 1;
     const limit = req.query.limit ? Number(req.query.limit) : 20;
-    const offset = req.query.offset ? Number(req.query.offset) : 0;
-    const notifications = await notificationRepo.findByUserId(req.user!.id, limit, offset);
-    success(res, notifications);
+    const result = await notificationRepo.findByUserId(req.user!.id, { page, limit });
+    paginated(res, result.data, { page: result.page, limit: result.limit, total: result.total });
   } catch (e) { next(e); }
 }
 

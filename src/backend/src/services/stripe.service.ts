@@ -58,7 +58,7 @@ export async function createPaymentIntent(
   }
 
   // 4. Dev mode bypass: skip Stripe when no valid key is configured
-  if (process.env.DEV_AUTH_BYPASS === 'true') {
+  if (process.env.DEV_AUTH_BYPASS === 'true' && process.env.NODE_ENV !== 'production') {
     const devPaymentId = `dev_pi_${Date.now()}_${booking.id}`;
     const platformFee = Math.round(effectivePrice * PLATFORM_FEE_PERCENT);
     const payment = await paymentRepo.create(

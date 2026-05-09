@@ -327,3 +327,25 @@ export async function notifyPartyDisbanded(
 
   await Promise.all(promises);
 }
+
+// ============================================================
+// Match lobby full notification
+// ============================================================
+
+export async function notifyMatchLobbyFull(
+  matchId: number,
+  matchTitle: string,
+  participantUserIds: number[]
+): Promise<void> {
+  const promises = participantUserIds.map((uid) =>
+    sendNotification(
+      uid,
+      'match_lobby_full',
+      'Match is Full!',
+      `The lobby for ${matchTitle} is now full. Get ready to play!`,
+      { matchId: String(matchId) }
+    )
+  );
+
+  await Promise.all(promises);
+}

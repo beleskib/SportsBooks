@@ -2,7 +2,7 @@ import { Request, Response, NextFunction } from 'express';
 import { success } from '../utils/apiResponse';
 import * as userRepo from '../repositories/user.repository';
 import * as feedRepo from '../repositories/feed.repository';
-import { NotFoundError, ValidationError } from '../utils/errors';
+import { NotFoundError, ValidationError, ForbiddenError } from '../utils/errors';
 import * as friendshipRepo from '../repositories/friendship.repository';
 
 export async function getMe(req: Request, res: Response, next: NextFunction) {
@@ -33,6 +33,24 @@ export async function updateMe(req: Request, res: Response, next: NextFunction) 
 export async function setRole(req: Request, res: Response, next: NextFunction) {
   try {
     const { role, partnerType } = req.body;
+
+    // Only 'player' and 'partner' are valid self-service roles.
+    // Admin accounts must be created through a separate privileged flow.
+    const ALLOWED_SELF_SERVICE_ROLES = ['player', 'partner'];
+    if (!role || !ALLOWED_SELF_SERVICE_ROLES.includes(role)) {
+      throw new ForbiddenError('Forbidden');
+    }
+
+    // Once a user is already a partner, they cannot change their role via this endpoint.
+    if (req.user!.role === 'partner') {
+      throw new ForbiddenError('Forbidden');
+    }
+
+    // Only players can promote themselves to partner.
+    if (role === 'partner' && req.user!.role !== 'player') {
+      throw new ForbiddenError('Forbidden');
+    }
+
     const user = await userRepo.setRoleByFirebaseUid(req.user!.firebaseUid, role, partnerType);
     if (!user) throw new NotFoundError('User');
     success(res, user);

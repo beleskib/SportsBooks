@@ -3,10 +3,18 @@
 -- Part of v2-practical-ux: lets hosts restrict lobbies by skill range + reliability.
 
 -- UP
+-- skill_level_min and skill_level_max already exist from migration 0045;
+-- use IF NOT EXISTS to avoid duplicate-column errors on re-run.
+-- The range constraint is dropped first so it can be recreated cleanly.
 ALTER TABLE community_lobbies
-    ADD COLUMN skill_level_min INTEGER CHECK (skill_level_min BETWEEN 1 AND 5),
-    ADD COLUMN skill_level_max INTEGER CHECK (skill_level_max BETWEEN 1 AND 5),
-    ADD COLUMN skill_strict    BOOLEAN NOT NULL DEFAULT false,
+    ADD COLUMN IF NOT EXISTS skill_level_min INTEGER CHECK (skill_level_min BETWEEN 1 AND 5),
+    ADD COLUMN IF NOT EXISTS skill_level_max INTEGER CHECK (skill_level_max BETWEEN 1 AND 5),
+    ADD COLUMN IF NOT EXISTS skill_strict    BOOLEAN NOT NULL DEFAULT false;
+
+ALTER TABLE community_lobbies
+    DROP CONSTRAINT IF EXISTS chk_community_lobbies_skill_range;
+
+ALTER TABLE community_lobbies
     ADD CONSTRAINT chk_community_lobbies_skill_range
         CHECK (skill_level_min IS NULL OR skill_level_max IS NULL OR skill_level_min <= skill_level_max);
 

@@ -163,16 +163,25 @@ function assembleCoaches(rows: any[], relations: Awaited<ReturnType<typeof loadC
 // Public reads — filter to approval_status = 'approved'.
 // ============================================================
 
-export async function findAll(): Promise<CoachRow[]> {
+export async function findAll(
+  options: { page?: number; limit?: number } = {}
+): Promise<{ data: CoachRow[]; total: number; page: number; limit: number }> {
+  const page = options.page || 1;
+  const limit = Math.min(options.limit || 20, 100);
+  const offset = (page - 1) * limit;
+
   const result = await query(
-    `SELECT ${COACH_COLS}
+    `SELECT ${COACH_COLS}, COUNT(*) OVER() AS total_count
      FROM coaches
      WHERE approval_status = 'approved'
-     ORDER BY created_at DESC`
+     ORDER BY created_at DESC
+     LIMIT $1 OFFSET $2`,
+    [limit, offset]
   );
+  const total = result.rows.length > 0 ? Number(result.rows[0].total_count) : 0;
   const ids = result.rows.map((r: any) => r.id);
   const relations = await loadCoachRelations(ids);
-  return assembleCoaches(result.rows, relations);
+  return { data: assembleCoaches(result.rows, relations), total, page, limit };
 }
 
 export async function findBySport(sportType: string): Promise<CoachRow[]> {

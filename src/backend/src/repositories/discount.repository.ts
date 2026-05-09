@@ -52,6 +52,16 @@ export async function findByCoachId(coachId: number): Promise<DiscountRow[]> {
   return result.rows.map(mapRow);
 }
 
+export async function findById(id: number): Promise<DiscountRow | null> {
+  const result = await query(
+    `SELECT id, venue_id, coach_id, title, description, discount_percent,
+            discount_amount, valid_from, valid_until, is_active, created_at, updated_at
+     FROM discounts WHERE id = $1`,
+    [id]
+  );
+  return result.rows.length > 0 ? mapRow(result.rows[0]) : null;
+}
+
 export async function create(data: {
   venueId?: number;
   coachId?: number;

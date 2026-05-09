@@ -1,5 +1,6 @@
 import * as admin from 'firebase-admin';
 import { env } from './env';
+import { logger } from './logger';
 import * as fs from 'fs';
 import * as path from 'path';
 
@@ -12,12 +13,16 @@ try {
     firebaseApp = admin.initializeApp({
       credential: admin.credential.cert(serviceAccount),
     });
-    console.log('Firebase Admin initialized');
+    logger.info('Firebase Admin initialized');
   } else {
-    console.warn(`Firebase service account not found at ${serviceAccountPath}. Auth verification disabled.`);
+    logger.warn(`Firebase service account not found at ${serviceAccountPath}. Auth verification disabled.`);
   }
 } catch (error) {
-  console.warn('Firebase Admin initialization failed:', error);
+  if (process.env.NODE_ENV === 'production') {
+    logger.error('FATAL: Firebase initialization failed');
+    process.exit(1);
+  }
+  logger.warn(error, 'Firebase Admin initialization failed');
 }
 
 export const getFirebaseAuth = (): admin.auth.Auth | null => {

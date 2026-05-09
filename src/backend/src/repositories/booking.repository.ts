@@ -132,7 +132,15 @@ export async function create(playerId: number, timeSlotId: number, notes?: strin
   return booking;
 }
 
-export async function findByPlayerId(playerId: number, status?: string): Promise<BookingRow[]> {
+export async function findByPlayerId(
+  playerId: number,
+  status?: string,
+  options: { page?: number; limit?: number } = {}
+): Promise<{ data: BookingRow[]; total: number; page: number; limit: number }> {
+  const page = options.page || 1;
+  const limit = Math.min(options.limit || 20, 100);
+  const offset = (page - 1) * limit;
+
   let sql = `
     SELECT b.id, b.player_id, b.time_slot_id, b.venue_id, b.coach_id,
            b.status, b.total_price, b.notes, b.expires_at, b.created_at, b.updated_at,
@@ -140,22 +148,27 @@ export async function findByPlayerId(playerId: number, status?: string): Promise
            v.address AS venue_address, v.price_per_hour AS venue_price_per_hour,
            c.name AS coach_name, c.sport_type AS coach_sport_type,
            c.price_per_hour AS coach_price_per_hour,
-           ts.slot_date, ts.start_time, ts.end_time
+           ts.slot_date, ts.start_time, ts.end_time,
+           COUNT(*) OVER() AS total_count
     FROM bookings b
     LEFT JOIN venues v ON v.id = b.venue_id
     LEFT JOIN coaches c ON c.id = b.coach_id
     LEFT JOIN time_slots ts ON ts.id = b.time_slot_id
     WHERE b.player_id = $1`;
   const params: any[] = [playerId];
+  let paramIndex = 2;
 
   if (status) {
-    sql += ` AND b.status = $2`;
+    sql += ` AND b.status = $${paramIndex}`;
     params.push(status);
+    paramIndex++;
   }
-  sql += ` ORDER BY b.created_at DESC`;
+  sql += ` ORDER BY b.created_at DESC LIMIT $${paramIndex} OFFSET $${paramIndex + 1}`;
+  params.push(limit, offset);
 
   const result = await query(sql, params);
-  return result.rows.map(mapRow);
+  const total = result.rows.length > 0 ? Number(result.rows[0].total_count) : 0;
+  return { data: result.rows.map(mapRow), total, page, limit };
 }
 
 export async function findById(id: number): Promise<BookingRow | null> {
@@ -189,7 +202,15 @@ export async function updateStatus(id: number, status: string): Promise<BookingR
   return booking;
 }
 
-export async function findByPartner(userId: number, status?: string): Promise<BookingRow[]> {
+export async function findByPartner(
+  userId: number,
+  status?: string,
+  options: { page?: number; limit?: number } = {}
+): Promise<{ data: BookingRow[]; total: number; page: number; limit: number }> {
+  const page = options.page || 1;
+  const limit = Math.min(options.limit || 20, 100);
+  const offset = (page - 1) * limit;
+
   let sql = `
     SELECT b.id, b.player_id, b.time_slot_id, b.venue_id, b.coach_id,
            b.status, b.total_price, b.notes, b.expires_at, b.created_at, b.updated_at,
@@ -198,7 +219,8 @@ export async function findByPartner(userId: number, status?: string): Promise<Bo
            v.address AS venue_address, v.price_per_hour AS venue_price_per_hour,
            c.name AS coach_name, c.sport_type AS coach_sport_type,
            c.price_per_hour AS coach_price_per_hour,
-           ts.slot_date, ts.start_time, ts.end_time
+           ts.slot_date, ts.start_time, ts.end_time,
+           COUNT(*) OVER() AS total_count
     FROM bookings b
     LEFT JOIN users u ON u.id = b.player_id
     LEFT JOIN venues v ON v.id = b.venue_id
@@ -206,15 +228,19 @@ export async function findByPartner(userId: number, status?: string): Promise<Bo
     LEFT JOIN time_slots ts ON ts.id = b.time_slot_id
     WHERE (v.owner_id = $1 OR c.user_id = $1)`;
   const params: any[] = [userId];
+  let paramIndex = 2;
 
   if (status) {
-    sql += ` AND b.status = $2`;
+    sql += ` AND b.status = $${paramIndex}`;
     params.push(status);
+    paramIndex++;
   }
-  sql += ` ORDER BY b.created_at DESC`;
+  sql += ` ORDER BY b.created_at DESC LIMIT $${paramIndex} OFFSET $${paramIndex + 1}`;
+  params.push(limit, offset);
 
   const result = await query(sql, params);
-  return result.rows.map(mapRow);
+  const total = result.rows.length > 0 ? Number(result.rows[0].total_count) : 0;
+  return { data: result.rows.map(mapRow), total, page, limit };
 }
 
 export async function approveBooking(id: number): Promise<BookingRow> {
