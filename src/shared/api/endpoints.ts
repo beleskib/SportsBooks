@@ -118,6 +118,13 @@ export const FRIEND_ENDPOINTS = {
   SEARCH_USERS: `${API_PREFIX}/friends/search-users`,
 } as const;
 
+export const DM_ENDPOINTS = {
+  CONVERSATIONS: `${API_PREFIX}/dm`,
+  UNREAD_COUNT: `${API_PREFIX}/dm/unread-count`,
+  MESSAGES: (friendUserId: number) => `${API_PREFIX}/dm/${friendUserId}/messages`,
+  MARK_READ: (friendUserId: number) => `${API_PREFIX}/dm/${friendUserId}/read`,
+} as const;
+
 export const STRIPE_CONNECT_ENDPOINTS = {
   ONBOARD: `${API_PREFIX}/stripe-connect/onboard`,
   STATUS: `${API_PREFIX}/stripe-connect/status`,

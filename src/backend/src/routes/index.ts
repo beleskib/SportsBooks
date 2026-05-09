@@ -25,6 +25,7 @@ import communityRoutes from './community.routes';
 import lobbyRoutes from './lobby.routes';
 import venueBookingLobbyRoutes from './venueBookingLobby.routes';
 import v2Routes from './v2.routes';
+import directMessageRoutes from './directMessage.routes';
 import adminRoutes from './admin.routes';
 import subscriptionRoutes from './subscription.routes';
 
@@ -56,6 +57,7 @@ router.use('/communities', communityRoutes);
 router.use('/', lobbyRoutes);  // handles both /communities/:id/lobbies and /lobbies/*
 router.use('/venue-booking-lobbies', venueBookingLobbyRoutes);
 router.use('/', v2Routes);  // v2-practical-ux: /home/feed, /play/search, /bookings/:id/rebook, /split-payments/*, etc.
+router.use('/dm', directMessageRoutes);  // friend-to-friend direct messages
 router.use('/admin', adminRoutes);  // owner admin dashboard (admin role only)
 router.use('/subscription', subscriptionRoutes);  // SportsBooks+ subscription management
 
