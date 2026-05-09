@@ -141,8 +141,8 @@ export async function getHomeFeed(req: Request, res: Response, next: NextFunctio
          FROM available_players ap
          JOIN users u ON u.id = ap.user_id
          JOIN friendships f
-           ON ((f.user_id_a = $1 AND f.user_id_b = ap.user_id)
-            OR (f.user_id_b = $1 AND f.user_id_a = ap.user_id))
+           ON ((f.requester_id = $1 AND f.addressee_id = ap.user_id)
+            OR (f.addressee_id = $1 AND f.requester_id = ap.user_id))
          WHERE f.status = 'accepted'
            AND (ap.available_until IS NULL OR ap.available_until > NOW())
            ${interestedSportsSqlList ? `AND ap.sport_type IN (${interestedSportsSqlList})` : ''}

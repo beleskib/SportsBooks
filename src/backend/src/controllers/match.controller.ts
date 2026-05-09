@@ -4,6 +4,37 @@ import * as matchRepo from '../repositories/match.repository';
 import * as userRepo from '../repositories/user.repository';
 import { NotFoundError, ForbiddenError, ValidationError } from '../utils/errors';
 import * as notificationService from '../services/notification.service';
+import { getFirestoreDb } from '../config/firebase';
+
+// ============================================================
+// Firestore sync helper
+// ============================================================
+
+async function syncMatchToFirestore(matchId: number): Promise<void> {
+  try {
+    const match = await matchRepo.findById(matchId);
+    if (!match) return;
+    const db = getFirestoreDb();
+    if (!db) return;
+    await db.collection('matches').doc(String(matchId)).set({
+      id: match.id,
+      title: match.title,
+      status: match.status,
+      currentPlayers: match.currentPlayers,
+      maxPlayers: match.maxPlayers,
+      participants: match.participants.map((p) => ({
+        userId: p.userId,
+        userName: p.userName,
+        userPhotoUrl: p.userPhotoUrl,
+        role: p.role,
+        status: p.status,
+      })),
+      updatedAt: Date.now(),
+    }, { merge: true });
+  } catch (e) {
+    console.error('Firestore match sync failed:', e);
+  }
+}
 
 // ============================================================
 // Matches
@@ -12,6 +43,7 @@ import * as notificationService from '../services/notification.service';
 export async function createMatch(req: Request, res: Response, next: NextFunction) {
   try {
     const match = await matchRepo.create(req.user!.id, req.body);
+    syncMatchToFirestore(match.id).catch(() => {});
     created(res, match, 'Match created');
   } catch (e) { next(e); }
 }
@@ -75,6 +107,7 @@ export async function updateMatch(req: Request, res: Response, next: NextFunctio
       throw new ForbiddenError('Only the host can update this match');
     }
     const updated = await matchRepo.update(Number(req.params.id), req.body);
+    syncMatchToFirestore(Number(req.params.id)).catch(() => {});
     success(res, updated);
   } catch (e) { next(e); }
 }
@@ -87,6 +120,7 @@ export async function cancelMatch(req: Request, res: Response, next: NextFunctio
       throw new ForbiddenError('Only the host can cancel this match');
     }
     const updated = await matchRepo.updateStatus(Number(req.params.id), 'cancelled');
+    syncMatchToFirestore(Number(req.params.id)).catch(() => {});
     success(res, updated);
   } catch (e) { next(e); }
 }
@@ -115,6 +149,26 @@ export async function joinMatch(req: Request, res: Response, next: NextFunction)
       ).catch((err) => console.error('Failed to send join notification:', err));
     }
 
+    // If the match just became full, notify all participants (including the host)
+    if (autoApprove && match.currentPlayers + 1 >= match.maxPlayers) {
+      try {
+        const updatedMatch = await matchRepo.findById(match.id);
+        if (updatedMatch && updatedMatch.currentPlayers >= updatedMatch.maxPlayers) {
+          const allUserIds = updatedMatch.participants
+            .filter((p) => p.status === 'approved')
+            .map((p) => p.userId);
+          notificationService.notifyMatchLobbyFull(
+            match.id,
+            match.title,
+            allUserIds
+          ).catch((err) => console.error('Failed to send match-full notification:', err));
+        }
+      } catch (err) {
+        console.error('Failed to check/send match-full notification:', err);
+      }
+    }
+
+    syncMatchToFirestore(Number(req.params.id)).catch(() => {});
     created(res, participant, autoApprove ? 'Joined match' : 'Join request sent');
   } catch (e) { next(e); }
 }
@@ -122,6 +176,7 @@ export async function joinMatch(req: Request, res: Response, next: NextFunction)
 export async function leaveMatch(req: Request, res: Response, next: NextFunction) {
   try {
     await matchRepo.removeParticipant(Number(req.params.id), req.user!.id);
+    syncMatchToFirestore(Number(req.params.id)).catch(() => {});
     success(res, { message: 'Left match' });
   } catch (e) { next(e); }
 }
@@ -154,6 +209,23 @@ export async function respondToJoinRequest(req: Request, res: Response, next: Ne
         updated.userId,
         match.title
       ).catch((err) => console.error('Failed to send approval notification:', err));
+
+      // If the match just became full after this approval, notify everyone
+      try {
+        const refreshedMatch = await matchRepo.findById(match.id);
+        if (refreshedMatch && refreshedMatch.currentPlayers >= refreshedMatch.maxPlayers) {
+          const allUserIds = refreshedMatch.participants
+            .filter((p) => p.status === 'approved')
+            .map((p) => p.userId);
+          notificationService.notifyMatchLobbyFull(
+            match.id,
+            match.title,
+            allUserIds
+          ).catch((err) => console.error('Failed to send match-full notification:', err));
+        }
+      } catch (err) {
+        console.error('Failed to check/send match-full notification:', err);
+      }
     } else if (req.body.status === 'declined') {
       notificationService.notifyMatchJoinDeclined(
         match.id,
@@ -162,6 +234,7 @@ export async function respondToJoinRequest(req: Request, res: Response, next: Ne
       ).catch((err) => console.error('Failed to send decline notification:', err));
     }
 
+    syncMatchToFirestore(Number(req.params.matchId)).catch(() => {});
     success(res, updated);
   } catch (e) { next(e); }
 }
@@ -181,10 +254,12 @@ export async function getChatMessages(req: Request, res: Response, next: NextFun
 
 export async function sendChatMessage(req: Request, res: Response, next: NextFunction) {
   try {
+    // Accept both `message` (preferred) and `content` (legacy) for backward compatibility
+    const text = req.body.message || req.body.content;
     const message = await matchRepo.addChatMessage(
       Number(req.params.id),
       req.user!.id,
-      req.body.content
+      text
     );
     created(res, message, 'Message sent');
   } catch (e) { next(e); }

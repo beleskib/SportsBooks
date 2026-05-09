@@ -113,6 +113,7 @@ export async function searchPlay(req: Request, res: Response, next: NextFunction
            SELECT 1 FROM bookings b
            WHERE b.time_slot_id = ts.id AND b.status IN ('pending','approved','confirmed','completed')
          )
+         AND $1::BIGINT IS NOT NULL
          AND (ts.slot_date::TIMESTAMP + ts.start_time::TIME) BETWEEN $${fromIdx}::TIMESTAMP AND $${toIdx}::TIMESTAMP
          ${sportFilterSql('v.sport_type')}
        ORDER BY start_at ASC

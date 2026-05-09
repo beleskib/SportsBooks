@@ -52,8 +52,8 @@ export async function createSplit(req: Request, res: Response, next: NextFunctio
       }
       shares = customAmounts;
     } else {
-      // Equal split across booker + invited payers
-      const payers = [req.user!.id, ...(payerUserIds ?? [])];
+      // Equal split across booker + invited payers (deduplicate)
+      const payers = [...new Set([req.user!.id, ...(payerUserIds ?? [])])];
       const share = Math.round((totalPrice / payers.length) * 100) / 100;
       shares = payers.map(userId => ({ userId, amount: share }));
       // Correct last share for rounding
