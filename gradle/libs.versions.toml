@@ -75,6 +75,7 @@ firebase-messaging = { group = "com.google.firebase", name = "firebase-messaging
 maps-compose = { group = "com.google.maps.android", name = "maps-compose", version.ref = "mapsCompose" }
 play-services-location = { group = "com.google.android.gms", name = "play-services-location", version.ref = "playServicesLocation" }
 play-services-maps = { group = "com.google.android.gms", name = "play-services-maps", version.ref = "playServicesMaps" }
+firebase-crashlytics = { group = "com.google.firebase", name = "firebase-crashlytics-ktx", version = "19.4.2" }
 
 [plugins]
 android-application = { id = "com.android.application", version.ref = "agp" }

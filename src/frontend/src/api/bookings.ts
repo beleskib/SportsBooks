@@ -14,6 +14,15 @@ export interface BookingCountsResponse {
   coaches: BookingCount[]
 }
 
+export interface BookingMessage {
+  id: number
+  bookingId: number
+  senderId: number
+  senderName: string
+  content: string
+  createdAt: string
+}
+
 // Reservation detail (partner approval flow — landing page from email link).
 // Mirrors the BookingRow shape on the backend.
 export interface ReservationDetail {
@@ -42,4 +51,13 @@ export const bookingApi = {
 
   decline: (id: number) =>
     apiClient.put(`/bookings/${id}/decline`) as Promise<ApiResponse<ReservationDetail>>,
+
+  getPartnerBookings: (status?: string) =>
+    apiClient.get(status ? `/bookings/partner?status=${status}` : '/bookings/partner') as Promise<ApiResponse<ReservationDetail[]>>,
+
+  getMessages: (bookingId: number) =>
+    apiClient.get(`/bookings/${bookingId}/messages`) as Promise<ApiResponse<BookingMessage[]>>,
+
+  sendMessage: (bookingId: number, content: string) =>
+    apiClient.post(`/bookings/${bookingId}/messages`, { content }) as Promise<ApiResponse<BookingMessage>>,
 }

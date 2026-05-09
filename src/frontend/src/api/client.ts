@@ -4,6 +4,7 @@ import { auth } from '@/config/firebase'
 const apiClient = axios.create({
   baseURL: '/api',
   headers: { 'Content-Type': 'application/json' },
+  timeout: 30000,
 })
 
 // Add auth token to every request
@@ -15,6 +16,18 @@ apiClient.interceptors.request.use(async (config) => {
   }
   return config
 })
+
+// Handle 401 Unauthorized — token expired or invalid, redirect to login
+apiClient.interceptors.response.use(
+  (response) => response,
+  (error) => {
+    if (error.response?.status === 401) {
+      // Token expired or invalid — redirect to login
+      window.location.href = '/login'
+    }
+    return Promise.reject(error)
+  }
+)
 
 // Unwrap response — backend wraps in { success, data, message }
 apiClient.interceptors.response.use(

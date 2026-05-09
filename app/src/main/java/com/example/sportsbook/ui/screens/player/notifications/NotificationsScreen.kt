@@ -25,6 +25,7 @@ import androidx.compose.material.icons.filled.Message
 import androidx.compose.material.icons.filled.Notifications
 import androidx.compose.material.icons.filled.PersonAdd
 import androidx.compose.material.icons.filled.Star
+import androidx.compose.material.icons.filled.Groups
 import androidx.compose.material.icons.filled.SportsScore
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.HorizontalDivider
@@ -269,6 +270,7 @@ private fun notificationIcon(type: NotificationType): ImageVector = when (type) 
     NotificationType.MATCH_JOIN_APPROVED,
     NotificationType.MATCH_JOIN_DECLINED -> Icons.Default.Group
     NotificationType.MATCH_CHAT_MESSAGE -> Icons.Default.Message
+    NotificationType.MATCH_LOBBY_FULL -> Icons.Default.Groups
     NotificationType.MATCH_STARTING_SOON,
     NotificationType.MATCH_CANCELLED -> Icons.Default.SportsScore
     NotificationType.BOOKING_REQUEST,
@@ -296,6 +298,7 @@ private fun notificationIconColor(type: NotificationType) = when (type) {
     NotificationType.MATCH_JOIN_APPROVED,
     NotificationType.MATCH_JOIN_DECLINED -> MaterialTheme.colorScheme.primary
     NotificationType.MATCH_CHAT_MESSAGE -> MaterialTheme.colorScheme.tertiary
+    NotificationType.MATCH_LOBBY_FULL -> MaterialTheme.colorScheme.primary
     NotificationType.MATCH_STARTING_SOON -> MaterialTheme.colorScheme.secondary
     NotificationType.MATCH_CANCELLED -> MaterialTheme.colorScheme.error
     NotificationType.BOOKING_REQUEST -> MaterialTheme.colorScheme.secondary

@@ -88,6 +88,8 @@ import com.example.sportsbook.ui.screens.player.venuelobby.VenueBookingLobbyDeta
 import com.example.sportsbook.ui.screens.splash.SplashScreen
 import com.example.sportsbook.ui.v2.play.PlayHomeScreen
 import com.example.sportsbook.ui.v2.calendar.WeeklyCalendarScreen
+import com.example.sportsbook.ui.screens.player.chat.ChatsListScreen
+import com.example.sportsbook.ui.screens.player.chat.FriendChatScreen
 
 @Composable
 fun SportsBookNavHost(
@@ -230,7 +232,9 @@ fun SportsBookNavHost(
                 RegisterScreen(
                     onNavigateToLogin = { navController.popBackStack() },
                     onRegisterSuccess = {
-                        navController.navigate(Route.Splash) {
+                        // Go directly to role selection so new users can choose
+                        // Player or Partner before onboarding begins
+                        navController.navigate(Route.RoleSelection) {
                             popUpTo(Route.Login) { inclusive = true }
                         }
                     }
@@ -488,7 +492,35 @@ fun SportsBookNavHost(
                     },
                     onNavigateToSettings = {
                         navController.navigate(Route.Settings)
+                    },
+                    onNavigateToChats = {
+                        navController.navigate(Route.ChatsList)
                     }
+                )
+            }
+
+            composable<Route.ChatsList> {
+                ChatsListScreen(
+                    onNavigateToBookingChat = { bookingId ->
+                        navController.navigate(Route.BookingChat(bookingId))
+                    },
+                    onNavigateToMatchChat = { matchId ->
+                        navController.navigate(Route.MatchChat(matchId))
+                    },
+                    onNavigateToFriendChat = { userId, name, photoUrl ->
+                        navController.navigate(Route.FriendChat(userId, name, photoUrl))
+                    },
+                    onBack = { navController.popBackStack() },
+                )
+            }
+
+            composable<Route.FriendChat> { backStackEntry ->
+                val route = backStackEntry.toRoute<Route.FriendChat>()
+                FriendChatScreen(
+                    friendUserId = route.friendUserId,
+                    friendName = route.friendName,
+                    friendPhotoUrl = route.friendPhotoUrl,
+                    onBack = { navController.popBackStack() },
                 )
             }
 
@@ -713,6 +745,9 @@ fun SportsBookNavHost(
                             minSkillLevel = minSkill,
                             maxSkillLevel = maxSkill
                         ))
+                    },
+                    onPlayerClick = { userId ->
+                        navController.navigate(Route.PlayerPublicProfile(userId))
                     }
                 )
             }
@@ -837,7 +872,10 @@ fun SportsBookNavHost(
                 FriendsListScreen(
                     onBack = { navController.popBackStack() },
                     onAddFriend = { navController.navigate(Route.AddFriend) },
-                    onViewRequests = { navController.navigate(Route.FriendRequests) }
+                    onViewRequests = { navController.navigate(Route.FriendRequests) },
+                    onMessageFriend = { userId, name, photoUrl ->
+                        navController.navigate(Route.FriendChat(userId, name, photoUrl))
+                    }
                 )
             }
 

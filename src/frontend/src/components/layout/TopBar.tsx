@@ -1,5 +1,7 @@
 import { LogOut, Shield, Store } from 'lucide-react'
 import { useAuth } from '@/context/AuthContext'
+import { NotificationBell } from '@/components/ui/NotificationBell'
+import { InboxBell } from '@/components/ui/InboxBell'
 
 export function TopBar() {
   const { user, isAdmin, logout } = useAuth()
@@ -9,7 +11,12 @@ export function TopBar() {
       <h2 className="text-lg font-semibold text-gray-800">
         {isAdmin ? 'Admin Dashboard' : 'Partner Dashboard'}
       </h2>
-      <div className="flex items-center gap-4">
+      <div className="flex items-center gap-3">
+        {/* DM inbox — visible for both partners and admins */}
+        <InboxBell />
+        {/* Notification bell — visible for both partners and admins */}
+        <NotificationBell />
+
         <span className="flex items-center gap-2 text-sm text-gray-600">
           {isAdmin ? (
             <span className="inline-flex items-center gap-1 rounded-full bg-purple-100 px-2 py-0.5 text-xs font-medium text-purple-700">

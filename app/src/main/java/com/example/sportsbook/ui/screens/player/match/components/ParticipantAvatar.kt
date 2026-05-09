@@ -1,6 +1,7 @@
 package com.example.sportsbook.ui.screens.player.match.components
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
@@ -33,11 +34,14 @@ fun ParticipantAvatar(
     photoUrl: String?,
     role: ParticipantRole = ParticipantRole.PLAYER,
     size: Dp = 48.dp,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    onClick: (() -> Unit)? = null
 ) {
     Column(
         horizontalAlignment = Alignment.CenterHorizontally,
-        modifier = modifier
+        modifier = modifier.then(
+            if (onClick != null) Modifier.clickable(onClick = onClick) else Modifier
+        )
     ) {
         Box(contentAlignment = Alignment.Center) {
             if (photoUrl != null) {

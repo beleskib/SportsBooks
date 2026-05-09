@@ -3,6 +3,9 @@ package com.example.sportsbook.ui.screens.player.match
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.example.sportsbook.domain.enums.MatchStatus
+import com.example.sportsbook.domain.enums.ParticipantRole
+import com.example.sportsbook.domain.enums.ParticipantStatus
 import com.example.sportsbook.domain.model.Match
 import com.example.sportsbook.domain.model.MatchParticipant
 import com.example.sportsbook.domain.model.Party
@@ -11,10 +14,17 @@ import com.example.sportsbook.data.remote.dto.CreateFeedPostRequestDto
 import com.example.sportsbook.domain.repository.AuthRepository
 import com.example.sportsbook.domain.repository.MatchRepository
 import com.example.sportsbook.domain.repository.PartyRepository
+import com.google.firebase.firestore.FirebaseFirestore
+import com.google.firebase.firestore.ListenerRegistration
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.channels.awaitClose
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.callbackFlow
+import kotlinx.coroutines.flow.catch
+import kotlinx.coroutines.flow.launchIn
+import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import javax.inject.Inject
@@ -42,18 +52,30 @@ data class MatchDetailUiState(
         get() = canJoin && activeParty != null && activeParty.status == "ready"
 }
 
+// Lightweight snapshot of real-time fields arriving from Firestore.
+private data class FirestoreMatchSnapshot(
+    val currentPlayers: Int,
+    val maxPlayers: Int,
+    val status: MatchStatus,
+    val participants: List<MatchParticipant>
+)
+
 @HiltViewModel
 class MatchDetailViewModel @Inject constructor(
     private val matchRepository: MatchRepository,
     private val authRepository: AuthRepository,
     private val partyRepository: PartyRepository,
     private val apiService: ApiService,
+    private val firestore: FirebaseFirestore,
     savedStateHandle: SavedStateHandle
 ) : ViewModel() {
 
     private val matchId: Long = checkNotNull(savedStateHandle["matchId"])
     private val _uiState = MutableStateFlow(MatchDetailUiState())
     val uiState: StateFlow<MatchDetailUiState> = _uiState.asStateFlow()
+
+    // Held so we can remove it in onCleared() without relying on the Flow collector.
+    private var firestoreListenerRegistration: ListenerRegistration? = null
 
     init {
         loadCurrentUser()
@@ -75,12 +97,119 @@ class MatchDetailViewModel @Inject constructor(
             matchRepository.getMatchById(matchId)
                 .onSuccess { match ->
                     _uiState.update { it.copy(match = match, isLoading = false) }
+                    // Start the real-time Firestore overlay after the full REST load succeeds.
+                    startFirestoreListener()
                 }
                 .onFailure { e ->
                     _uiState.update { it.copy(error = e.message, isLoading = false) }
                 }
         }
     }
+
+    /**
+     * Converts the Firestore addSnapshotListener callback into a Flow using callbackFlow,
+     * and stores the ListenerRegistration so onCleared() can explicitly remove it.
+     *
+     * If Firestore fails at any point the error is swallowed — the screen continues to show
+     * REST-fetched data without interruption.
+     */
+    private fun startFirestoreListener() {
+        // Remove any previously-registered listener before re-registering.
+        firestoreListenerRegistration?.remove()
+
+        val snapshotFlow = callbackFlow<FirestoreMatchSnapshot> {
+            val registration = firestore
+                .collection("matches")
+                .document(matchId.toString())
+                .addSnapshotListener { snapshot, error ->
+                    if (error != null || snapshot == null || !snapshot.exists()) return@addSnapshotListener
+
+                    val currentPlayers = (snapshot.getLong("currentPlayers") ?: return@addSnapshotListener).toInt()
+                    val maxPlayers = (snapshot.getLong("maxPlayers") ?: return@addSnapshotListener).toInt()
+
+                    val rawStatus = snapshot.getString("status") ?: return@addSnapshotListener
+                    val status = parseMatchStatus(rawStatus) ?: return@addSnapshotListener
+
+                    @Suppress("UNCHECKED_CAST")
+                    val rawParticipants = snapshot.get("participants") as? List<Map<String, Any?>> ?: emptyList()
+                    val participants = rawParticipants.mapNotNull { map ->
+                        val userId = (map["userId"] as? Long) ?: (map["userId"] as? Number)?.toLong() ?: return@mapNotNull null
+                        val participantStatus = parseParticipantStatus(map["status"] as? String ?: "") ?: return@mapNotNull null
+                        val role = parseParticipantRole(map["role"] as? String ?: "") ?: ParticipantRole.PLAYER
+                        MatchParticipant(
+                            matchId = matchId,
+                            userId = userId,
+                            userName = map["userName"] as? String,
+                            userPhotoUrl = map["userPhotoUrl"] as? String,
+                            status = participantStatus,
+                            role = role,
+                        )
+                    }
+
+                    trySend(FirestoreMatchSnapshot(currentPlayers, maxPlayers, status, participants))
+                }
+
+            // Store for explicit cleanup in onCleared().
+            firestoreListenerRegistration = registration
+
+            awaitClose { registration.remove() }
+        }
+
+        snapshotFlow
+            .onEach { snapshot -> applyFirestoreSnapshot(snapshot) }
+            .catch { /* Swallow — REST data remains the source of truth on failure */ }
+            .launchIn(viewModelScope)
+    }
+
+    /**
+     * Overlays the dynamic Firestore fields onto whatever the REST load populated.
+     * All static fields (title, sport, dates, location, cost, etc.) stay from REST.
+     */
+    private fun applyFirestoreSnapshot(snapshot: FirestoreMatchSnapshot) {
+        _uiState.update { state ->
+            val currentMatch = state.match ?: return@update state
+            state.copy(
+                match = currentMatch.copy(
+                    currentPlayers = snapshot.currentPlayers,
+                    maxPlayers = snapshot.maxPlayers,
+                    status = snapshot.status,
+                    participants = snapshot.participants
+                )
+            )
+        }
+    }
+
+    // -----------------------------------------------------------------------
+    // Enum parsing helpers — map Firestore lowercase strings to domain enums.
+    // -----------------------------------------------------------------------
+
+    private fun parseMatchStatus(raw: String): MatchStatus? = when (raw.lowercase()) {
+        "draft" -> MatchStatus.DRAFT
+        "open" -> MatchStatus.OPEN
+        "full" -> MatchStatus.FULL
+        "in_progress" -> MatchStatus.IN_PROGRESS
+        "completed" -> MatchStatus.COMPLETED
+        "cancelled" -> MatchStatus.CANCELLED
+        else -> null
+    }
+
+    private fun parseParticipantStatus(raw: String): ParticipantStatus? = when (raw.lowercase()) {
+        "pending" -> ParticipantStatus.PENDING
+        "approved" -> ParticipantStatus.APPROVED
+        "declined" -> ParticipantStatus.DECLINED
+        "left" -> ParticipantStatus.LEFT
+        else -> null
+    }
+
+    private fun parseParticipantRole(raw: String): ParticipantRole? = when (raw.lowercase()) {
+        "host" -> ParticipantRole.HOST
+        "player" -> ParticipantRole.PLAYER
+        else -> null
+    }
+
+    // -----------------------------------------------------------------------
+    // Actions
+    // -----------------------------------------------------------------------
 
     private fun loadActiveParty() {
         viewModelScope.launch {
@@ -184,5 +313,11 @@ class MatchDetailViewModel @Inject constructor(
 
     fun clearShareSuccess() {
         _uiState.update { it.copy(shareSuccess = false) }
+    }
+
+    override fun onCleared() {
+        super.onCleared()
+        firestoreListenerRegistration?.remove()
+        firestoreListenerRegistration = null
     }
 }

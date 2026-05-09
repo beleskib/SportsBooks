@@ -11,6 +11,9 @@ import {
   ShieldCheck,
   ClipboardCheck,
   Settings,
+  Inbox,
+  Mail,
+  BarChart3,
 } from 'lucide-react'
 import { useAuth } from '@/context/AuthContext'
 import { PartnerType } from '@/types'
@@ -27,6 +30,7 @@ export function Sidebar() {
 
   const partnerNavItems = [
     { to: '/', icon: LayoutDashboard, label: 'Dashboard' },
+    { to: '/reservations', icon: Inbox, label: 'Reservations' },
     ...(partnerType === PartnerType.VENUE_OWNER
       ? [{ to: '/venues', icon: MapPin, label: 'My Venues' }]
       : []),
@@ -34,6 +38,7 @@ export function Sidebar() {
       ? [{ to: '/coaches', icon: Users, label: 'My Profile' }]
       : []),
     { to: '/time-slots', icon: Calendar, label: 'Time Slots' },
+    { to: '/analytics', icon: BarChart3, label: 'Analytics' },
     { to: '/earnings', icon: DollarSign, label: 'Earnings' },
     { to: '/stripe', icon: CreditCard, label: 'Payment Setup' },
   ]
@@ -43,6 +48,7 @@ export function Sidebar() {
   const v2NavItems = [
     { to: '/v2/calendar', icon: CalendarRange, label: 'Calendar (v2)' },
     { to: '/v2/play', icon: Sparkles, label: 'Play (v2)' },
+    { to: '/inbox', icon: Mail, label: 'Messages' },
     { to: '/settings', icon: Settings, label: 'Settings' },
   ]
 

@@ -59,8 +59,9 @@ export function PartnerReservationDetailPage() {
       const fn = action === 'approve' ? bookingApi.approve : bookingApi.decline
       await fn(Number(id))
       setResolution({ kind: action === 'approve' ? 'approved' : 'declined' })
-    } catch (err: any) {
-      setResolution({ kind: 'error', message: err?.error?.message ?? 'Action failed' })
+    } catch (err: unknown) {
+      const message = err instanceof Error ? err.message : 'Action failed'
+      setResolution({ kind: 'error', message })
     }
   }
 

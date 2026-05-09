@@ -69,8 +69,9 @@ export function AdminListingDetailPage() {
     try {
       await adminApi.approveListing(detail.type, detail.id)
       navigate('/admin/listings')
-    } catch (e: any) {
-      setError(e?.error?.message ?? 'Could not approve')
+    } catch (e: unknown) {
+      const msg = e instanceof Error ? e.message : 'Could not approve'
+      setError(msg)
     } finally {
       setActionPending(false)
     }
@@ -82,8 +83,9 @@ export function AdminListingDetailPage() {
     try {
       await adminApi.rejectListing(detail.type, detail.id, reason.trim())
       navigate('/admin/listings')
-    } catch (e: any) {
-      setError(e?.error?.message ?? 'Could not reject')
+    } catch (e: unknown) {
+      const msg = e instanceof Error ? e.message : 'Could not reject'
+      setError(msg)
       setActionPending(false)
     }
   }

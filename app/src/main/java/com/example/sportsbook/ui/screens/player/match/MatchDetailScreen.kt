@@ -43,7 +43,7 @@ import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.collectAsState
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -75,9 +75,10 @@ fun MatchDetailScreen(
     onRatePlayers: (Long) -> Unit,
     onJoinWithParty: (Long) -> Unit = {},
     onBrowseAvailablePlayers: (matchId: Long, sportType: String, minSkill: Int?, maxSkill: Int?) -> Unit = { _, _, _, _ -> },
+    onPlayerClick: (Long) -> Unit = {},
     viewModel: MatchDetailViewModel = hiltViewModel()
 ) {
-    val uiState by viewModel.uiState.collectAsState()
+    val uiState by viewModel.uiState.collectAsStateWithLifecycle()
     var showShareDialog by remember { mutableStateOf(false) }
     var shareCaption by remember { mutableStateOf("") }
     val snackbarHostState = remember { SnackbarHostState() }
@@ -236,7 +237,8 @@ fun MatchDetailScreen(
                                 ParticipantAvatar(
                                     name = p.userName,
                                     photoUrl = p.userPhotoUrl,
-                                    role = p.role
+                                    role = p.role,
+                                    onClick = { onPlayerClick(p.userId) }
                                 )
                             }
                         }

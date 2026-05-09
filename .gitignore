@@ -91,4 +91,4 @@ firebase-service-account.json
 coverage/
 .nyc_output/
 src/backend/tmp/
-Sportsbook
+/Sportsbook

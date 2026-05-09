@@ -7,6 +7,7 @@ enum class NotificationType(val value: String, val displayName: String) {
     MATCH_CHAT_MESSAGE("match_chat_message", "Chat Message"),
     MATCH_STARTING_SOON("match_starting_soon", "Match Starting"),
     MATCH_CANCELLED("match_cancelled", "Match Cancelled"),
+    MATCH_LOBBY_FULL("match_lobby_full", "Match Full"),
     BOOKING_REQUEST("booking_request", "Booking Request"),
     BOOKING_APPROVED("booking_approved", "Booking Approved"),
     BOOKING_DECLINED("booking_declined", "Booking Declined"),

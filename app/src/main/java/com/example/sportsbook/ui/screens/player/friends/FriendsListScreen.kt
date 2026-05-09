@@ -17,6 +17,7 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.automirrored.filled.Chat
 import androidx.compose.material.icons.filled.DeleteOutline
 import androidx.compose.material.icons.filled.Group
 import androidx.compose.material.icons.filled.MailOutline
@@ -56,6 +57,7 @@ fun FriendsListScreen(
     onBack: () -> Unit,
     onAddFriend: () -> Unit,
     onViewRequests: () -> Unit,
+    onMessageFriend: (userId: Long, name: String, photoUrl: String?) -> Unit = { _, _, _ -> },
     viewModel: FriendsListViewModel = hiltViewModel()
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
@@ -110,7 +112,14 @@ fun FriendsListScreen(
                     items(uiState.friends, key = { it.id }) { friend ->
                         FriendCard(
                             friend = friend,
-                            onRemove = { viewModel.removeFriend(friend.friendId) }
+                            onRemove = { viewModel.removeFriend(friend.friendId) },
+                            onMessage = {
+                                onMessageFriend(
+                                    friend.friendId,
+                                    friend.friendName ?: "Friend",
+                                    friend.friendPhotoUrl,
+                                )
+                            }
                         )
                     }
                     item { Spacer(modifier = Modifier.height(16.dp)) }
@@ -152,6 +161,7 @@ private fun FriendsEmptyState(
 private fun FriendCard(
     friend: Friendship,
     onRemove: () -> Unit,
+    onMessage: () -> Unit = {},
     modifier: Modifier = Modifier
 ) {
     Card(
@@ -179,6 +189,13 @@ private fun FriendCard(
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
                 }
+            }
+            IconButton(onClick = onMessage) {
+                Icon(
+                    imageVector = Icons.AutoMirrored.Filled.Chat,
+                    contentDescription = "Message friend",
+                    tint = MaterialTheme.colorScheme.primary
+                )
             }
             IconButton(onClick = onRemove) {
                 Icon(
@@ -301,7 +318,8 @@ private fun FriendCardPreview() {
                 status = "accepted",
                 createdAt = "2026-02-14T08:00:00Z"
             ),
-            onRemove = {}
+            onRemove = {},
+            onMessage = {}
         )
     }
 }

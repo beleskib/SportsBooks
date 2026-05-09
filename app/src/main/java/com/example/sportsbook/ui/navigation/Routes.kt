@@ -73,6 +73,11 @@ sealed interface Route {
     @Serializable data object FriendsList : Route
     @Serializable data object FriendRequests : Route
     @Serializable data object AddFriend : Route
+    @Serializable data class FriendChat(
+        val friendUserId: Long,
+        val friendName: String,
+        val friendPhotoUrl: String? = null,
+    ) : Route
 
     // Party
     @Serializable data object CreateParty : Route
@@ -114,4 +119,7 @@ sealed interface Route {
     @Serializable data object V2PlayHome : Route
     @Serializable data object V2WeeklyCalendar : Route
     @Serializable data object SportsIFollow : Route
+
+    // Chats hub
+    @Serializable data object ChatsList : Route
 }

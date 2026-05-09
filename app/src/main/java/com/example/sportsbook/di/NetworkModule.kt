@@ -1,5 +1,6 @@
 package com.example.sportsbook.di
 
+import com.example.sportsbook.BuildConfig
 import com.example.sportsbook.data.remote.api.ApiService
 import com.example.sportsbook.data.remote.api.AuthInterceptor
 import dagger.Module
@@ -19,7 +20,7 @@ import javax.inject.Singleton
 @InstallIn(SingletonComponent::class)
 object NetworkModule {
 
-    private const val BASE_URL = "http://10.0.2.2:3000/" // Android emulator localhost
+    private val BASE_URL = BuildConfig.BASE_URL
 
     @Provides
     @Singleton
@@ -34,7 +35,8 @@ object NetworkModule {
     @Singleton
     fun provideLoggingInterceptor(): HttpLoggingInterceptor =
         HttpLoggingInterceptor().apply {
-            level = HttpLoggingInterceptor.Level.BODY
+            level = if (BuildConfig.DEBUG) HttpLoggingInterceptor.Level.BODY
+                    else HttpLoggingInterceptor.Level.NONE
         }
 
     @Provides

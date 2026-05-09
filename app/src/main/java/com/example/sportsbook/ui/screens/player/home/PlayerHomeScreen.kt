@@ -178,7 +178,8 @@ fun PlayerHomeScreen(
             onNavigateToSearch = onNavigateToSearch,
             onNavigateToFavorites = onNavigateToFavorites,
             onFindMatch = onFindMatch,
-            onBrowseAllSports = onBrowseAllSports
+            onBrowseAllSports = onBrowseAllSports,
+            notificationCount = uiState.notificationCount
         )
     }
 }
@@ -195,7 +196,8 @@ private fun PlayerHomeContent(
     onNavigateToSearch: () -> Unit,
     onNavigateToFavorites: () -> Unit,
     onFindMatch: () -> Unit,
-    onBrowseAllSports: () -> Unit = {}
+    onBrowseAllSports: () -> Unit = {},
+    notificationCount: Int = 0
 ) {
     LazyColumn(
         modifier = Modifier
@@ -207,7 +209,8 @@ private fun PlayerHomeContent(
         item {
             NavBar(
                 location = uiState.user?.let { "Skopje" } ?: "Discover",
-                onNotificationClick = onNavigateToNotifications
+                onNotificationClick = onNavigateToNotifications,
+                notificationCount = notificationCount
             )
         }
 
@@ -373,7 +376,8 @@ private fun PlayerHomeContent(
 @Composable
 private fun NavBar(
     location: String,
-    onNotificationClick: () -> Unit
+    onNotificationClick: () -> Unit,
+    notificationCount: Int = 0
 ) {
     Row(
         modifier = Modifier
@@ -389,13 +393,32 @@ private fun NavBar(
             fontWeight = FontWeight.SemiBold
         )
         Spacer(modifier = Modifier.weight(1f))
-        IconButton(onClick = onNotificationClick, modifier = Modifier.size(32.dp)) {
-            Icon(
-                Icons.Default.Notifications,
-                contentDescription = "Notifications",
-                tint = GoldAccent,
-                modifier = Modifier.size(22.dp)
-            )
+        Box {
+            IconButton(onClick = onNotificationClick, modifier = Modifier.size(32.dp)) {
+                Icon(
+                    Icons.Default.Notifications,
+                    contentDescription = "Notifications",
+                    tint = GoldAccent,
+                    modifier = Modifier.size(22.dp)
+                )
+            }
+            if (notificationCount > 0) {
+                Box(
+                    modifier = Modifier
+                        .align(Alignment.TopEnd)
+                        .size(16.dp)
+                        .background(Color(0xFFEF4444), CircleShape),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Text(
+                        text = if (notificationCount > 99) "99+" else notificationCount.toString(),
+                        color = Color.White,
+                        fontSize = 9.sp,
+                        fontWeight = FontWeight.Bold,
+                        lineHeight = 9.sp
+                    )
+                }
+            }
         }
     }
 }
@@ -889,6 +912,7 @@ private fun PlayerHomeScreenPreview() {
         allCoaches = sampleCoaches,
         topDealVenues = emptyList(),
         topDealCoaches = emptyList(),
+        notificationCount = 3,
         isLoading = false
     )
     SportsBookTheme {
@@ -902,7 +926,8 @@ private fun PlayerHomeScreenPreview() {
             onNavigateToSearch = {},
             onNavigateToFavorites = {},
             onFindMatch = {},
-            onBrowseAllSports = {}
+            onBrowseAllSports = {},
+            notificationCount = previewState.notificationCount
         )
     }
 }

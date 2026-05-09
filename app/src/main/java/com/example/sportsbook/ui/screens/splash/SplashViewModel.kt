@@ -55,7 +55,10 @@ class SplashViewModel @Inject constructor(
                                     if (authState.user.onboardingCompleted) {
                                         SplashUiState.NavigateToPlayerHome
                                     } else {
-                                        SplashUiState.NavigateToPlayerOnboarding
+                                        // New users get role='player' by default but haven't
+                                        // actually chosen a role yet — send them to role selection
+                                        // so they can pick Player or Partner before onboarding.
+                                        SplashUiState.NavigateToRoleSelection
                                     }
                                 }
                                 UserRole.PARTNER -> SplashUiState.NavigateToPartnerDashboard

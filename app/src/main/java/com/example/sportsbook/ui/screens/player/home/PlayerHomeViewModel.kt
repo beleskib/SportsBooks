@@ -9,6 +9,7 @@ import com.example.sportsbook.domain.model.User
 import com.example.sportsbook.domain.model.Venue
 import com.example.sportsbook.domain.repository.AuthRepository
 import com.example.sportsbook.domain.repository.CoachRepository
+import com.example.sportsbook.domain.repository.NotificationRepository
 import com.example.sportsbook.domain.repository.SportRepository
 import com.example.sportsbook.domain.repository.UserRepository
 import com.example.sportsbook.domain.repository.VenueRepository
@@ -32,6 +33,7 @@ data class PlayerHomeUiState(
     val allCoaches: List<Coach> = emptyList(),
     val selectedSportType: SportType? = null,
     val searchQuery: String = "",
+    val notificationCount: Int = 0,
     val isLoading: Boolean = false,
     val error: String? = null
 ) {
@@ -116,7 +118,8 @@ class PlayerHomeViewModel @Inject constructor(
     private val venueRepository: VenueRepository,
     private val coachRepository: CoachRepository,
     private val userRepository: UserRepository,
-    private val authRepository: AuthRepository
+    private val authRepository: AuthRepository,
+    private val notificationRepository: NotificationRepository
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(PlayerHomeUiState())
@@ -126,6 +129,19 @@ class PlayerHomeViewModel @Inject constructor(
 
     init {
         loadData()
+        startNotificationCountPolling()
+    }
+
+    private fun startNotificationCountPolling() {
+        viewModelScope.launch {
+            while (true) {
+                notificationRepository.getUnreadCount()
+                    .onSuccess { count ->
+                        _uiState.update { it.copy(notificationCount = count) }
+                    }
+                delay(30_000L)
+            }
+        }
     }
 
     fun loadData() {

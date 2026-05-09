@@ -1,3 +1,5 @@
+import java.util.Properties
+
 plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.android)
@@ -6,6 +8,7 @@ plugins {
     alias(libs.plugins.kotlin.serialization)
     alias(libs.plugins.hilt.android.plugin)
     alias(libs.plugins.ksp)
+    id("com.google.firebase.crashlytics")
 }
 
 android {
@@ -22,17 +25,40 @@ android {
         testInstrumentationRunner = "com.example.sportsbook.HiltTestRunner"
     }
 
+    signingConfigs {
+        create("release") {
+            val props = rootProject.file("local.properties")
+            if (props.exists()) {
+                val properties = Properties().apply { load(props.inputStream()) }
+                storeFile = file(properties.getProperty("RELEASE_STORE_FILE", "release.keystore"))
+                storePassword = properties.getProperty("RELEASE_STORE_PASSWORD", "")
+                keyAlias = properties.getProperty("RELEASE_KEY_ALIAS", "")
+                keyPassword = properties.getProperty("RELEASE_KEY_PASSWORD", "")
+            } else {
+                // CI: read from environment variables
+                storeFile = file(System.getenv("RELEASE_STORE_FILE") ?: "release.keystore")
+                storePassword = System.getenv("RELEASE_STORE_PASSWORD") ?: ""
+                keyAlias = System.getenv("RELEASE_KEY_ALIAS") ?: ""
+                keyPassword = System.getenv("RELEASE_KEY_PASSWORD") ?: ""
+            }
+        }
+    }
+
     buildTypes {
         debug {
+            buildConfigField("String", "BASE_URL", "\"http://10.0.2.2:3000/\"")
             buildConfigField("String", "STRIPE_PUBLISHABLE_KEY", "\"pk_test_REPLACE_WITH_YOUR_KEY\"")
         }
         release {
-            isMinifyEnabled = false
+            isMinifyEnabled = true
+            isShrinkResources = true
             proguardFiles(
                 getDefaultProguardFile("proguard-android-optimize.txt"),
                 "proguard-rules.pro"
             )
+            buildConfigField("String", "BASE_URL", "\"https://api.sportsbooks.app/\"")
             buildConfigField("String", "STRIPE_PUBLISHABLE_KEY", "\"pk_live_REPLACE_WITH_YOUR_KEY\"")
+            signingConfig = signingConfigs.getByName("release")
         }
     }
     compileOptions {
@@ -84,6 +110,9 @@ dependencies {
     implementation(libs.maps.compose)
     implementation(libs.play.services.location)
     implementation(libs.play.services.maps)
+
+    // Firebase Crashlytics
+    implementation(libs.firebase.crashlytics)
 
     // Hilt DI
     implementation(libs.hilt.android)

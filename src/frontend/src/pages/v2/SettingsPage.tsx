@@ -62,7 +62,7 @@ export function SettingsPage() {
   }
 
   const handleCancel = async () => {
-    if (!confirm('Cancel your SportsBooks+ subscription? You'll keep access until the end of the billing period.')) return
+    if (!confirm("Cancel your SportsBooks+ subscription? You'll keep access until the end of the billing period.")) return
     setActionLoading(true)
     try {
       await subscriptionApi.cancel()
@@ -151,7 +151,7 @@ export function SettingsPage() {
                 {isPlus
                   ? isTrialing
                     ? 'Free trial active'
-                    : 'You're a Plus member'
+                    : "You're a Plus member"
                   : 'Unlock premium features'}
               </p>
             </div>
