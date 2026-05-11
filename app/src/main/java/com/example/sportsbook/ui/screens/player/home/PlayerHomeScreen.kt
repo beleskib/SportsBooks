@@ -208,7 +208,7 @@ private fun PlayerHomeContent(
         // ── Dark Nav Bar ──
         item {
             NavBar(
-                location = uiState.user?.let { "Skopje" } ?: "Discover",
+                location = uiState.cityName ?: "Discover",
                 onNotificationClick = onNavigateToNotifications,
                 notificationCount = notificationCount
             )

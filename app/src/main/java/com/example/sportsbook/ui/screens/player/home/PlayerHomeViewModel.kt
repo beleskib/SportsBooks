@@ -13,6 +13,8 @@ import com.example.sportsbook.domain.repository.NotificationRepository
 import com.example.sportsbook.domain.repository.SportRepository
 import com.example.sportsbook.domain.repository.UserRepository
 import com.example.sportsbook.domain.repository.VenueRepository
+import com.example.sportsbook.domain.service.LocationService
+import kotlinx.coroutines.flow.firstOrNull
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.async
@@ -34,6 +36,7 @@ data class PlayerHomeUiState(
     val selectedSportType: SportType? = null,
     val searchQuery: String = "",
     val notificationCount: Int = 0,
+    val cityName: String? = null,
     val isLoading: Boolean = false,
     val error: String? = null
 ) {
@@ -119,7 +122,8 @@ class PlayerHomeViewModel @Inject constructor(
     private val coachRepository: CoachRepository,
     private val userRepository: UserRepository,
     private val authRepository: AuthRepository,
-    private val notificationRepository: NotificationRepository
+    private val notificationRepository: NotificationRepository,
+    private val locationService: LocationService
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(PlayerHomeUiState())
@@ -130,6 +134,25 @@ class PlayerHomeViewModel @Inject constructor(
     init {
         loadData()
         startNotificationCountPolling()
+        resolveUserCity()
+    }
+
+    private fun resolveUserCity() {
+        viewModelScope.launch {
+            try {
+                // Try current location first, fall back to last known
+                val location = locationService.getCurrentLocation()
+                    ?: locationService.getLastKnownLocation().firstOrNull()
+                if (location != null) {
+                    val city = locationService.getCityName(location.latitude, location.longitude)
+                    if (city != null) {
+                        _uiState.update { it.copy(cityName = city) }
+                    }
+                }
+            } catch (_: Exception) {
+                // Location unavailable — keep null, UI will show "Discover"
+            }
+        }
     }
 
     private fun startNotificationCountPolling() {

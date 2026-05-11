@@ -40,7 +40,7 @@ fun VenueMapScreen(
         ?: uiState.venues.firstOrNull()?.let {
             if (it.latitude != null && it.longitude != null) LatLng(it.latitude, it.longitude) else null
         }
-        ?: LatLng(41.9981, 21.4254) // Skopje default
+        ?: LatLng(41.9981, 21.4254) // Macedonia center fallback
 
     val cameraPositionState = rememberCameraPositionState {
         position = CameraPosition.fromLatLngZoom(defaultPos, 12f)
