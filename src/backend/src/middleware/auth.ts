@@ -2,6 +2,7 @@ import { Request, Response, NextFunction } from 'express';
 import { getFirebaseAuth } from '../config/firebase';
 import { query } from '../config/database';
 import { UnauthorizedError } from '../utils/errors';
+import { logger } from '../config/logger';
 
 export interface AuthUser {
   id: number;
@@ -37,18 +38,18 @@ export async function authenticate(req: Request, _res: Response, next: NextFunct
         // Real JWT from mobile/web client — verify it properly
         const decoded = await firebaseAuth.verifyIdToken(token);
         firebaseUid = decoded.uid;
-        console.log(`Auth: verified real JWT → uid=${firebaseUid}`);
+        logger.debug(`Auth: verified real JWT, uid=${firebaseUid}`);
       } else {
         // Short token — treat as raw firebase UID (Postman/curl testing)
         firebaseUid = token;
-        console.log(`Auth: dev bypass → using token as uid=${firebaseUid}`);
+        logger.debug(`Auth: dev bypass, using token as uid=${firebaseUid}`);
       }
     } else if (firebaseAuth) {
       const decoded = await firebaseAuth.verifyIdToken(token);
       firebaseUid = decoded.uid;
     } else {
-      // No Firebase and no dev bypass: treat token as firebase UID
-      firebaseUid = token;
+      // No Firebase auth available and dev bypass not enabled — reject
+      throw new UnauthorizedError('Authentication service unavailable');
     }
 
     const result = await query(

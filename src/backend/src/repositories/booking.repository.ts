@@ -1,4 +1,4 @@
-import { query } from '../config/database';
+import { query, pool } from '../config/database';
 import { NotFoundError } from '../utils/errors';
 
 export interface BookingRow {
@@ -258,15 +258,35 @@ export async function approveBooking(id: number): Promise<BookingRow> {
 }
 
 export async function declineBooking(id: number): Promise<BookingRow> {
-  const result = await query(
-    `UPDATE bookings SET status = 'cancelled', expires_at = NULL, updated_at = NOW()
-     WHERE id = $1 AND status = 'pending'
-     RETURNING time_slot_id`,
-    [id]
-  );
-  if (result.rows.length === 0) throw new NotFoundError('Booking not found or not in pending status');
-  // Reopen the time slot
-  await query('UPDATE time_slots SET is_available = true, updated_at = NOW() WHERE id = $1', [result.rows[0].time_slot_id]);
+  const client = await pool.connect();
+  try {
+    await client.query('BEGIN');
+
+    const result = await client.query(
+      `UPDATE bookings SET status = 'cancelled', expires_at = NULL, updated_at = NOW()
+       WHERE id = $1 AND status = 'pending'
+       RETURNING time_slot_id`,
+      [id]
+    );
+    if (result.rows.length === 0) {
+      await client.query('ROLLBACK');
+      throw new NotFoundError('Booking not found or not in pending status');
+    }
+
+    // Reopen the time slot
+    await client.query(
+      'UPDATE time_slots SET is_available = true, updated_at = NOW() WHERE id = $1',
+      [result.rows[0].time_slot_id]
+    );
+
+    await client.query('COMMIT');
+  } catch (err) {
+    await client.query('ROLLBACK');
+    throw err;
+  } finally {
+    client.release();
+  }
+
   const booking = await findById(id);
   if (!booking) throw new NotFoundError('Booking');
   return booking;
