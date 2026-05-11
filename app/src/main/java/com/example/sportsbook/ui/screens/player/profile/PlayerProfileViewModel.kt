@@ -2,10 +2,13 @@ package com.example.sportsbook.ui.screens.player.profile
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.example.sportsbook.domain.enums.BookingStatus
 import com.example.sportsbook.domain.enums.SportType
+import com.example.sportsbook.domain.model.Booking
 import com.example.sportsbook.domain.model.Sport
 import com.example.sportsbook.domain.model.User
 import com.example.sportsbook.domain.repository.AuthRepository
+import com.example.sportsbook.domain.repository.BookingRepository
 import com.example.sportsbook.domain.repository.SportRepository
 import com.example.sportsbook.domain.repository.UserRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -22,6 +25,7 @@ data class PlayerProfileUiState(
     val sports: List<Sport> = emptyList(),
     val followers: Int = 0,
     val following: Int = 0,
+    val pastBookings: List<Booking> = emptyList(),
     val isLoading: Boolean = false,
     val isSaving: Boolean = false,
     val error: String? = null,
@@ -37,7 +41,8 @@ data class PlayerProfileUiState(
 class PlayerProfileViewModel @Inject constructor(
     private val userRepository: UserRepository,
     private val sportRepository: SportRepository,
-    private val authRepository: AuthRepository
+    private val authRepository: AuthRepository,
+    private val bookingRepository: BookingRepository
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(PlayerProfileUiState())
@@ -45,6 +50,7 @@ class PlayerProfileViewModel @Inject constructor(
 
     init {
         loadProfile()
+        loadPastBookings()
     }
 
     fun loadProfile() {
@@ -75,6 +81,18 @@ class PlayerProfileViewModel @Inject constructor(
                     error = userResult.exceptionOrNull()?.message
                 )
             }
+        }
+    }
+
+    private fun loadPastBookings() {
+        viewModelScope.launch {
+            bookingRepository.getMyBookings(BookingStatus.COMPLETED)
+                .onSuccess { bookings ->
+                    _uiState.update { it.copy(pastBookings = bookings.take(3)) }
+                }
+                .onFailure {
+                    // Silently ignore — past bookings are supplementary
+                }
         }
     }
 

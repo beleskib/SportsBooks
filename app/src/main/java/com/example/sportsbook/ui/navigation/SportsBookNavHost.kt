@@ -495,6 +495,15 @@ fun SportsBookNavHost(
                     },
                     onNavigateToChats = {
                         navController.navigate(Route.ChatsList)
+                    },
+                    onNavigateToBookingDetail = { bookingId ->
+                        navController.navigate(Route.BookingDetail(bookingId))
+                    },
+                    onNavigateToMyBookings = {
+                        navController.navigate(Route.MyBookings) {
+                            popUpTo(Route.PlayerHome) { inclusive = false }
+                            launchSingleTop = true
+                        }
                     }
                 )
             }

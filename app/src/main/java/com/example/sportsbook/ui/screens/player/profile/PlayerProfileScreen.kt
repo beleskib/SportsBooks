@@ -25,6 +25,7 @@ import androidx.compose.material.icons.automirrored.filled.Logout
 import androidx.compose.material.icons.filled.Chat
 import androidx.compose.material.icons.filled.ChevronRight
 import androidx.compose.material.icons.filled.Dashboard
+import androidx.compose.material.icons.filled.History
 import androidx.compose.material.icons.filled.People
 import androidx.compose.material.icons.filled.Person
 import androidx.compose.material.icons.filled.PersonAdd
@@ -64,10 +65,13 @@ import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import coil.compose.AsyncImage
+import com.example.sportsbook.domain.enums.BookingStatus
 import com.example.sportsbook.domain.enums.PartnerType
 import com.example.sportsbook.domain.enums.UserRole
+import com.example.sportsbook.domain.model.Booking
 import com.example.sportsbook.ui.common.ErrorView
 import com.example.sportsbook.ui.common.LoadingIndicator
+import com.example.sportsbook.ui.common.toDisplayDate
 import com.example.sportsbook.ui.screens.player.settings.PlusBadge
 import com.example.sportsbook.ui.theme.SportsBookTheme
 
@@ -97,6 +101,8 @@ fun PlayerProfileScreen(
     onNavigateToFriends: () -> Unit = {},
     onNavigateToSettings: () -> Unit = {},
     onNavigateToChats: () -> Unit = {},
+    onNavigateToBookingDetail: (Long) -> Unit = {},
+    onNavigateToMyBookings: () -> Unit = {},
     viewModel: PlayerProfileViewModel = hiltViewModel()
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
@@ -594,6 +600,83 @@ fun PlayerProfileScreen(
                         Spacer(modifier = Modifier.height(12.dp))
                     }
 
+                    // ── 9. Past Bookings card ──
+                    if (uiState.pastBookings.isNotEmpty()) {
+                        item {
+                            Card(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .padding(horizontal = 16.dp),
+                                colors = CardDefaults.cardColors(containerColor = CardBg),
+                                elevation = CardDefaults.cardElevation(defaultElevation = 1.dp),
+                                shape = RoundedCornerShape(16.dp)
+                            ) {
+                                Column(modifier = Modifier.padding(16.dp)) {
+                                    Row(
+                                        modifier = Modifier.fillMaxWidth(),
+                                        horizontalArrangement = Arrangement.SpaceBetween,
+                                        verticalAlignment = Alignment.CenterVertically
+                                    ) {
+                                        Row(verticalAlignment = Alignment.CenterVertically) {
+                                            Icon(
+                                                imageVector = Icons.Default.History,
+                                                contentDescription = "Past Bookings",
+                                                tint = TextSecondary,
+                                                modifier = Modifier.size(16.dp)
+                                            )
+                                            Spacer(modifier = Modifier.width(6.dp))
+                                            Text(
+                                                text = "PAST BOOKINGS",
+                                                style = MaterialTheme.typography.labelSmall.copy(
+                                                    fontSize = 10.sp,
+                                                    letterSpacing = 0.8.sp
+                                                ),
+                                                color = TextSecondary,
+                                                fontWeight = FontWeight.SemiBold
+                                            )
+                                        }
+                                    }
+                                    Spacer(modifier = Modifier.height(12.dp))
+                                    uiState.pastBookings.forEachIndexed { index, booking ->
+                                        PastBookingRow(
+                                            booking = booking,
+                                            onClick = { onNavigateToBookingDetail(booking.id) }
+                                        )
+                                        if (index < uiState.pastBookings.lastIndex) {
+                                            HorizontalDivider(
+                                                color = Color(0xFFF3F4F6),
+                                                modifier = Modifier.padding(vertical = 8.dp)
+                                            )
+                                        }
+                                    }
+                                    Spacer(modifier = Modifier.height(12.dp))
+                                    HorizontalDivider(color = Color(0xFFF3F4F6))
+                                    Spacer(modifier = Modifier.height(8.dp))
+                                    Row(
+                                        modifier = Modifier
+                                            .fillMaxWidth()
+                                            .clickable { onNavigateToMyBookings() },
+                                        horizontalArrangement = Arrangement.Center,
+                                        verticalAlignment = Alignment.CenterVertically
+                                    ) {
+                                        Text(
+                                            text = "View All",
+                                            style = MaterialTheme.typography.labelMedium,
+                                            color = Color(0xFF1D4ED8)
+                                        )
+                                        Icon(
+                                            imageVector = Icons.Default.ChevronRight,
+                                            contentDescription = null,
+                                            tint = Color(0xFF1D4ED8),
+                                            modifier = Modifier.size(16.dp)
+                                        )
+                                    }
+                                }
+                            }
+                            Spacer(modifier = Modifier.height(12.dp))
+                        }
+                    }
+
                     // ── Partner tools ──
                     if (isPartner) {
                         item {
@@ -678,6 +761,66 @@ fun PlayerProfileScreen(
         SnackbarHost(
             hostState = snackbarHostState,
             modifier = Modifier.align(Alignment.BottomCenter)
+        )
+    }
+}
+
+// ── Past booking row (inside the Past Bookings card) ──
+@Composable
+private fun PastBookingRow(
+    booking: Booking,
+    onClick: () -> Unit
+) {
+    val displayName = booking.venue?.name ?: booking.coach?.name ?: "Booking #${booking.id}"
+    val dateText = booking.timeSlot?.slotDate?.toDisplayDate() ?: ""
+    val isCompleted = booking.status == BookingStatus.COMPLETED
+    val statusColor = if (isCompleted) Color(0xFF16A34A) else Color(0xFF1D4ED8)
+    val statusBg = if (isCompleted) Color(0xFFDCFCE7) else Color(0xFFDBEAFE)
+
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .clickable(onClick = onClick),
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        Column(modifier = Modifier.weight(1f)) {
+            Text(
+                text = displayName,
+                style = MaterialTheme.typography.bodyMedium.copy(fontWeight = FontWeight.SemiBold),
+                color = TextPrimary
+            )
+            if (dateText.isNotBlank()) {
+                Spacer(modifier = Modifier.height(2.dp))
+                Text(
+                    text = dateText,
+                    style = MaterialTheme.typography.bodySmall,
+                    color = TextSecondary
+                )
+            }
+        }
+        Spacer(modifier = Modifier.width(8.dp))
+        Column(horizontalAlignment = Alignment.End) {
+            Text(
+                text = "${"%.0f".format(booking.totalPrice)} ден",
+                style = MaterialTheme.typography.bodySmall.copy(fontWeight = FontWeight.SemiBold),
+                color = TextPrimary
+            )
+            Spacer(modifier = Modifier.height(4.dp))
+            Text(
+                text = booking.status.name,
+                style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.SemiBold),
+                color = statusColor,
+                modifier = androidx.compose.ui.Modifier
+                    .background(color = statusBg, shape = RoundedCornerShape(4.dp))
+                    .padding(horizontal = 6.dp, vertical = 2.dp)
+            )
+        }
+        Spacer(modifier = Modifier.width(4.dp))
+        Icon(
+            imageVector = Icons.Default.ChevronRight,
+            contentDescription = null,
+            tint = TextTertiary,
+            modifier = Modifier.size(16.dp)
         )
     }
 }

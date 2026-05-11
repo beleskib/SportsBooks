@@ -97,6 +97,7 @@ import com.example.sportsbook.data.remote.dto.CreateVenueBookingLobbyRequestDto
 import com.example.sportsbook.data.remote.dto.UpdateVenueBookingLobbyRequestDto
 import com.example.sportsbook.data.remote.dto.AddTeamRequestDto
 import com.example.sportsbook.data.remote.dto.SplitPaymentIntentResponseDto
+import com.example.sportsbook.data.remote.dto.ReceiptDto
 import retrofit2.http.Body
 import retrofit2.http.DELETE
 import retrofit2.http.GET
@@ -280,6 +281,10 @@ interface ApiService {
 
     @PUT("api/bookings/{id}/decline")
     suspend fun declineBooking(@Path("id") id: Long): ApiResponseDto<BookingDto>
+
+    // Booking Receipt
+    @GET("api/bookings/{id}/receipt")
+    suspend fun getBookingReceipt(@Path("id") bookingId: Long): ApiResponseDto<ReceiptDto>
 
     // Reviews
     @GET("api/reviews/venue/{venueId}")

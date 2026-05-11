@@ -2,6 +2,7 @@ package com.example.sportsbook.domain.repository
 
 import com.example.sportsbook.domain.enums.BookingStatus
 import com.example.sportsbook.domain.model.Booking
+import com.example.sportsbook.domain.model.BookingReceipt
 
 interface BookingRepository {
     suspend fun createBooking(timeSlotId: Long, notes: String? = null): Result<Booking>
@@ -12,4 +13,5 @@ interface BookingRepository {
     suspend fun updateBookingStatus(id: Long, status: BookingStatus): Result<Booking>
     suspend fun approveBooking(id: Long): Result<Booking>
     suspend fun declineBooking(id: Long): Result<Booking>
+    suspend fun getBookingReceipt(bookingId: Long): Result<BookingReceipt>
 }

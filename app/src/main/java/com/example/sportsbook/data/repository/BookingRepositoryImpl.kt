@@ -4,6 +4,7 @@ import com.example.sportsbook.data.remote.api.ApiService
 import com.example.sportsbook.data.remote.dto.CreateBookingRequestDto
 import com.example.sportsbook.domain.enums.BookingStatus
 import com.example.sportsbook.domain.model.Booking
+import com.example.sportsbook.domain.model.BookingReceipt
 import com.example.sportsbook.domain.repository.BookingRepository
 import javax.inject.Inject
 import javax.inject.Singleton
@@ -43,5 +44,9 @@ class BookingRepositoryImpl @Inject constructor(
 
     override suspend fun declineBooking(id: Long): Result<Booking> = runCatching {
         apiService.declineBooking(id).data.toDomain()
+    }
+
+    override suspend fun getBookingReceipt(bookingId: Long): Result<BookingReceipt> = runCatching {
+        apiService.getBookingReceipt(bookingId).data.toDomain()
     }
 }
