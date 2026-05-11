@@ -5,6 +5,8 @@ import * as gamificationRepo from '../repositories/gamification.repository';
 import { query } from '../config/database';
 import { NotFoundError, ValidationError } from '../utils/errors';
 import { resolvePartnerStripeAccountId } from './stripeConnect.service';
+import { getFirestoreDb } from '../config/firebase';
+import { syncBookingToFirestore } from './firestoreBookingSync.service';
 
 const PLATFORM_FEE_PERCENT = 0.10; // 10% commission
 
@@ -155,6 +157,14 @@ export async function confirmPayment(paymentId: number): Promise<paymentRepo.Pay
   // Update booking status to confirmed
   await bookingRepo.updateStatus(payment.bookingId, 'confirmed');
 
+  // Sync to Firestore payments collection
+  syncPaymentToFirestore(payment.bookingId, paymentId).catch((err) =>
+    console.error('Firestore payment sync failed:', err)
+  );
+
+  // Sync booking status to Firestore bookings collection
+  syncBookingToFirestore(payment.bookingId).catch(() => {});
+
   return updated;
 }
 
@@ -172,6 +182,9 @@ export async function failPayment(paymentId: number): Promise<paymentRepo.Paymen
   // Cancel the booking
   await bookingRepo.updateStatus(payment.bookingId, 'cancelled');
 
+  // Sync cancellation to Firestore bookings collection
+  syncBookingToFirestore(payment.bookingId).catch(() => {});
+
   // Re-open the time slot
   const booking = await bookingRepo.findById(payment.bookingId);
   if (booking) {
@@ -182,4 +195,56 @@ export async function failPayment(paymentId: number): Promise<paymentRepo.Paymen
   }
 
   return updated;
+}
+
+export async function syncPaymentToFirestore(bookingId: number, paymentId: number): Promise<void> {
+  const db = getFirestoreDb();
+  if (!db) return;
+
+  const result = await query(
+    `SELECT
+      b.id AS booking_id, b.total_price, b.notes,
+      p.id AS payment_id, p.amount, p.currency, p.status, p.payment_method,
+      p.external_payment_id, p.platform_fee_amount, p.paid_at,
+      ts.slot_date, ts.start_time, ts.end_time,
+      v.name AS venue_name, v.address AS venue_address, v.sport_type AS venue_sport,
+      c.name AS coach_name, c.address AS coach_address, c.sport_type AS coach_sport,
+      u.display_name AS player_name, u.email AS player_email, u.firebase_uid
+    FROM bookings b
+    JOIN payments p ON p.booking_id = b.id
+    LEFT JOIN time_slots ts ON ts.id = b.time_slot_id
+    LEFT JOIN venues v ON v.id = b.venue_id
+    LEFT JOIN coaches c ON c.id = b.coach_id
+    JOIN users u ON u.id = b.player_id
+    WHERE b.id = $1 AND p.id = $2`,
+    [bookingId, paymentId]
+  );
+
+  if (result.rows.length === 0) return;
+  const row = result.rows[0];
+
+  await db.collection('payments').doc(String(row.payment_id)).set({
+    paymentId: Number(row.payment_id),
+    bookingId: Number(row.booking_id),
+    receiptNumber: `SB-${row.booking_id}-${row.payment_id}`,
+    playerName: row.player_name,
+    playerEmail: row.player_email,
+    playerFirebaseUid: row.firebase_uid,
+    providerType: row.venue_name ? 'venue' : 'coach',
+    providerName: row.venue_name || row.coach_name,
+    providerAddress: row.venue_address || row.coach_address || null,
+    sportType: row.venue_sport || row.coach_sport,
+    slotDate: row.slot_date instanceof Date ? row.slot_date.toISOString().split('T')[0] : row.slot_date,
+    startTime: row.start_time,
+    endTime: row.end_time,
+    amount: Number(row.amount),
+    currency: row.currency,
+    platformFee: row.platform_fee_amount ? Number(row.platform_fee_amount) : 0,
+    total: Number(row.total_price),
+    status: row.status,
+    paymentMethod: row.payment_method,
+    externalPaymentId: row.external_payment_id,
+    paidAt: row.paid_at,
+    createdAt: new Date().toISOString(),
+  });
 }

@@ -7,6 +7,8 @@ import * as bookingRepo from '../repositories/booking.repository';
 import { query } from '../config/database';
 import * as stripeConnectService from '../services/stripeConnect.service';
 import * as subRepo from '../repositories/subscription.repository';
+import { syncPaymentToFirestore } from '../services/stripe.service';
+import { syncBookingToFirestore } from '../services/firestoreBookingSync.service';
 
 export async function handleStripeWebhook(req: Request, res: Response, next: NextFunction) {
   try {
@@ -27,6 +29,13 @@ export async function handleStripeWebhook(req: Request, res: Response, next: Nex
         if (payment && payment.status === 'pending') {
           await paymentRepo.updateStatus(payment.id, 'completed', new Date().toISOString());
           await bookingRepo.updateStatus(payment.bookingId, 'confirmed');
+
+          // Sync completed payment to Firestore
+          syncPaymentToFirestore(payment.bookingId, payment.id).catch((err) =>
+            console.error('Firestore payment sync failed:', err)
+          );
+          // Sync booking status to Firestore bookings collection
+          syncBookingToFirestore(payment.bookingId).catch(() => {});
         }
         break;
       }
@@ -36,6 +45,8 @@ export async function handleStripeWebhook(req: Request, res: Response, next: Nex
         if (payment && payment.status === 'pending') {
           await paymentRepo.updateStatus(payment.id, 'failed');
           await bookingRepo.updateStatus(payment.bookingId, 'cancelled');
+          // Sync cancellation to Firestore bookings collection
+          syncBookingToFirestore(payment.bookingId).catch(() => {});
           const booking = await bookingRepo.findById(payment.bookingId);
           if (booking) {
             await query('UPDATE time_slots SET is_available = true WHERE id = $1', [booking.timeSlotId]);

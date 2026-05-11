@@ -48,6 +48,7 @@ export const BOOKING_ENDPOINTS = {
   LIST: `${API_PREFIX}/bookings`,
   BY_ID: (id: number) => `${API_PREFIX}/bookings/${id}`,
   UPDATE_STATUS: (id: number) => `${API_PREFIX}/bookings/${id}/status`,
+  RECEIPT: (id: number) => `${API_PREFIX}/bookings/${id}/receipt`,
   MY_BOOKINGS: `${API_PREFIX}/bookings/mine`,
   PARTNER_BOOKINGS: `${API_PREFIX}/bookings/partner`,
 } as const;

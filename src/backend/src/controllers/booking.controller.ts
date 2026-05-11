@@ -10,6 +10,48 @@ import * as timeSlotRepo from '../repositories/timeSlot.repository';
 import { sendBookingConfirmedEmails } from '../services/bookingEmail.service';
 import { sendPartnerBookingRequestEmail } from '../services/partnerApproval.service';
 import { NotFoundError, ForbiddenError, ValidationError } from '../utils/errors';
+import { query } from '../config/database';
+import { syncBookingToFirestore, syncBookingsToFirestore } from '../services/firestoreBookingSync.service';
+
+/**
+ * Auto-complete past confirmed/approved bookings.
+ * When a booking's time slot date + end time is in the past and the booking
+ * is still confirmed or approved, we mark it as 'completed' and award XP.
+ * Called lazily when bookings are fetched — no cron job required.
+ */
+async function autoCompletePastBookings(userId?: number): Promise<void> {
+  try {
+    const result = await query(
+      `UPDATE bookings b
+       SET status = 'completed', updated_at = NOW()
+       FROM time_slots ts
+       WHERE ts.id = b.time_slot_id
+         AND b.status IN ('confirmed', 'approved')
+         AND (ts.slot_date + ts.end_time) < NOW()
+         ${userId ? 'AND b.player_id = $1' : ''}
+       RETURNING b.id, b.player_id`,
+      userId ? [userId] : []
+    );
+
+    // Award XP for each auto-completed booking (fire-and-forget)
+    for (const row of result.rows) {
+      gamificationRepo.addXpTransaction(
+        Number(row.player_id),
+        25,
+        'booking_completed',
+        Number(row.id),
+        `Auto-completed booking #${row.id}`
+      ).catch(() => {});
+    }
+
+    // Sync all auto-completed bookings to Firestore
+    if (result.rows.length > 0) {
+      syncBookingsToFirestore(result.rows.map((r: any) => Number(r.id))).catch(() => {});
+    }
+  } catch (e) {
+    console.error('Auto-complete past bookings failed:', e);
+  }
+}
 
 export async function create(req: Request, res: Response, next: NextFunction) {
   try {
@@ -46,12 +88,18 @@ export async function create(req: Request, res: Response, next: NextFunction) {
       console.error('Failed to send partner approval email:', e)
     );
 
+    // Sync new booking to Firestore for real-time updates
+    syncBookingToFirestore(booking.id).catch(() => {});
+
     created(res, booking, 'Booking created');
   } catch (e) { next(e); }
 }
 
 export async function getMyBookings(req: Request, res: Response, next: NextFunction) {
   try {
+    // Auto-complete any past confirmed bookings before fetching
+    await autoCompletePastBookings(req.user!.id);
+
     const status = req.query.status ? String(req.query.status) : undefined;
     const page = req.query.page ? Number(req.query.page) : 1;
     const limit = req.query.limit ? Number(req.query.limit) : 20;
@@ -62,6 +110,9 @@ export async function getMyBookings(req: Request, res: Response, next: NextFunct
 
 export async function getById(req: Request, res: Response, next: NextFunction) {
   try {
+    // Auto-complete if this booking's date has passed
+    await autoCompletePastBookings();
+
     const booking = await bookingRepo.findById(Number(req.params.id));
     if (!booking) throw new NotFoundError('Booking');
 
@@ -147,6 +198,9 @@ export async function updateStatus(req: Request, res: Response, next: NextFuncti
       }
     }
 
+    // Sync status change to Firestore
+    syncBookingToFirestore(booking.id).catch(() => {});
+
     success(res, booking);
   } catch (e) { next(e); }
 }
@@ -222,6 +276,9 @@ export const approveBooking = async (req: Request, res: Response, next: NextFunc
       console.error('Failed to send booking confirmation emails:', e)
     );
 
+    // Sync approval to Firestore
+    syncBookingToFirestore(booking.id).catch(() => {});
+
     // Check if this booking is linked to a venue booking lobby
     try {
       const lobbyForBooking = await venueBookingLobbyRepo.findByBookingId(booking.id);
@@ -281,6 +338,9 @@ export const declineBooking = async (req: Request, res: Response, next: NextFunc
     } catch (e) {
       console.error('Failed to send booking declined notification:', e);
     }
+
+    // Sync decline to Firestore
+    syncBookingToFirestore(booking.id).catch(() => {});
 
     // Check if this booking is linked to a venue booking lobby and cancel it
     try {
