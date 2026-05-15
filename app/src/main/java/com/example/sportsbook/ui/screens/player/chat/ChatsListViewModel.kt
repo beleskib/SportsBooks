@@ -5,6 +5,7 @@ import androidx.lifecycle.viewModelScope
 import com.example.sportsbook.domain.enums.BookingStatus
 import com.example.sportsbook.domain.repository.BookingRepository
 import com.example.sportsbook.domain.repository.MatchRepository
+import com.example.sportsbook.domain.repository.PartyRepository
 import com.example.sportsbook.domain.repository.UserRepository
 import com.google.firebase.firestore.FirebaseFirestore
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -19,7 +20,7 @@ import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
-enum class ChatType { BOOKING, MATCH, FRIEND }
+enum class ChatType { BOOKING, MATCH, FRIEND, PARTY }
 
 data class ChatConversation(
     val id: Long,
@@ -36,6 +37,7 @@ data class ChatsListUiState(
     val bookingChats: List<ChatConversation> = emptyList(),
     val matchChats: List<ChatConversation> = emptyList(),
     val friendChats: List<ChatConversation> = emptyList(),
+    val partyChats: List<ChatConversation> = emptyList(),
     val isLoading: Boolean = false,
     val error: String? = null,
 )
@@ -51,6 +53,7 @@ private val CHAT_ELIGIBLE_STATUSES = setOf(
 class ChatsListViewModel @Inject constructor(
     private val bookingRepository: BookingRepository,
     private val matchRepository: MatchRepository,
+    private val partyRepository: PartyRepository,
     private val userRepository: UserRepository,
     private val firestore: FirebaseFirestore,
 ) : ViewModel() {
@@ -74,9 +77,11 @@ class ChatsListViewModel @Inject constructor(
 
             val bookingsDeferred = async { bookingRepository.getMyBookings() }
             val matchesDeferred = async { matchRepository.getMyMatches() }
+            val partyDeferred = async { partyRepository.getActiveParty() }
 
             val bookingsResult = bookingsDeferred.await()
             val matchesResult = matchesDeferred.await()
+            val partyResult = partyDeferred.await()
 
             val bookingChats = bookingsResult
                 .getOrNull()
@@ -112,6 +117,21 @@ class ChatsListViewModel @Inject constructor(
                 }
                 ?: emptyList()
 
+            val partyChats = partyResult
+                .getOrNull()
+                ?.let { party ->
+                    listOf(
+                        ChatConversation(
+                            id = party.id,
+                            title = party.name ?: "My Party",
+                            subtitle = "${party.members.size} members · ${party.status}",
+                            type = ChatType.PARTY,
+                            status = party.status,
+                        )
+                    )
+                }
+                ?: emptyList()
+
             val combinedError = when {
                 bookingsResult.isFailure && matchesResult.isFailure ->
                     "Failed to load chats. Pull down to retry."
@@ -126,6 +146,7 @@ class ChatsListViewModel @Inject constructor(
                 it.copy(
                     bookingChats = bookingChats,
                     matchChats = matchChats,
+                    partyChats = partyChats,
                     isLoading = false,
                     error = combinedError,
                 )
@@ -163,10 +184,22 @@ class ChatsListViewModel @Inject constructor(
                 }
                 val conversations = snapshot?.documents?.mapNotNull { doc ->
                     val participants = doc.get("participants") as? List<*> ?: return@mapNotNull null
-                    val friendId = participants.firstOrNull { it != currentUserId }
+                    val friendId = participants
+                        .firstOrNull { entry ->
+                            val entryId = (entry as? Long) ?: (entry as? Number)?.toLong()
+                            entryId != null && entryId != currentUserId
+                        }
                         ?.let { (it as? Long) ?: (it as? Number)?.toLong() }
                         ?: return@mapNotNull null
-                    val friendName = doc.getString("friendName") ?: "Friend"
+                    // Prefer the `names` map (new documents); fall back to `friendName` for
+                    // legacy documents created before this schema change.
+                    @Suppress("UNCHECKED_CAST")
+                    val names = doc.get("names") as? Map<String, String> ?: emptyMap()
+                    val friendName = names.entries
+                        .firstOrNull { it.key != currentUserId.toString() }
+                        ?.value
+                        ?: doc.getString("friendName")
+                        ?: "Friend"
                     val lastMessage = doc.getString("lastMessage") ?: "No messages yet"
                     val lastMessageAt = doc.getTimestamp("lastMessageAt")?.toDate()?.time ?: 0L
                     ChatConversation(

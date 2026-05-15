@@ -82,9 +82,6 @@ import com.example.sportsbook.ui.screens.player.community.CreateCommunityScreen
 import com.example.sportsbook.ui.screens.player.community.CreateLobbyScreen
 import com.example.sportsbook.ui.screens.player.community.InviteFriendsScreen
 import com.example.sportsbook.ui.screens.player.community.LobbyDetailScreen
-import com.example.sportsbook.ui.screens.player.venuelobby.BrowseVenueLobbiesScreen
-import com.example.sportsbook.ui.screens.player.venuelobby.CreateVenueBookingLobbyScreen
-import com.example.sportsbook.ui.screens.player.venuelobby.VenueBookingLobbyDetailScreen
 import com.example.sportsbook.ui.screens.splash.SplashScreen
 import com.example.sportsbook.ui.v2.play.PlayHomeScreen
 import com.example.sportsbook.ui.v2.calendar.WeeklyCalendarScreen
@@ -121,6 +118,12 @@ fun SportsBookNavHost(
             }
             link.type.startsWith("match_") && link.matchId != null -> {
                 navController.navigate(Route.MatchDetail(link.matchId))
+            }
+            link.type.startsWith("party_") && link.partyId != null -> {
+                navController.navigate(Route.PartyDetail(link.partyId))
+            }
+            link.type == "friend_request" || link.type == "friend_request_accepted" -> {
+                navController.navigate(Route.FriendsList)
             }
         }
 
@@ -281,7 +284,11 @@ fun SportsBookNavHost(
             }
 
             // Player flow
-            composable<Route.PlayerHome> {
+            composable<Route.PlayerHome> { backStackEntry ->
+                val sportsUpdated by backStackEntry.savedStateHandle
+                    .getStateFlow("sports_updated", false)
+                    .collectAsStateWithLifecycle()
+
                 PlayerHomeScreen(
                     onSportClick = { sportType ->
                         navController.navigate(Route.SportDetail(sportType))
@@ -312,6 +319,9 @@ fun SportsBookNavHost(
                     onFindMatch = {
                         navController.navigate(Route.MatchList)
                     },
+                    onMatchClick = { matchId ->
+                        navController.navigate(Route.MatchDetail(matchId))
+                    },
                     onNavigateToSearch = {
                         navController.navigate(Route.Search)
                     },
@@ -326,6 +336,10 @@ fun SportsBookNavHost(
                     },
                     onNavigateToCommunities = {
                         navController.navigate(Route.CommunityList)
+                    },
+                    refreshTrigger = sportsUpdated,
+                    onRefreshConsumed = {
+                        backStackEntry.savedStateHandle["sports_updated"] = false
                     }
                 )
             }
@@ -417,7 +431,11 @@ fun SportsBookNavHost(
                     },
                     onBack = { navController.popBackStack() },
                     onSplitWithFriends = { timeSlotId, venueId ->
-                        navController.navigate(Route.CreateVenueBookingLobby(timeSlotId = timeSlotId, venueId = venueId))
+                        navController.navigate(Route.CreateMatch(
+                            preselectedVenueId = venueId,
+                            preselectedTimeSlotId = timeSlotId,
+                            preselectedPaymentType = "split"
+                        ))
                     }
                 )
             }
@@ -519,6 +537,9 @@ fun SportsBookNavHost(
                     onNavigateToFriendChat = { userId, name, photoUrl ->
                         navController.navigate(Route.FriendChat(userId, name, photoUrl))
                     },
+                    onNavigateToPartyChat = { partyId ->
+                        navController.navigate(Route.PartyDetail(partyId))
+                    },
                     onBack = { navController.popBackStack() },
                 )
             }
@@ -592,7 +613,14 @@ fun SportsBookNavHost(
             composable<Route.SportsIFollow> {
                 SportsIFollowScreen(
                     onBack = { navController.popBackStack() },
-                    onSaved = { navController.popBackStack() }
+                    onSaved = {
+                        // Signal PlayerHome directly to reload sports data
+                        try {
+                            navController.getBackStackEntry<Route.PlayerHome>()
+                                .savedStateHandle["sports_updated"] = true
+                        } catch (_: Exception) { /* PlayerHome not on back stack */ }
+                        navController.popBackStack()
+                    }
                 )
             }
 
@@ -720,7 +748,7 @@ fun SportsBookNavHost(
                         navController.navigate(Route.MatchDetail(matchId))
                     },
                     onCreateMatch = {
-                        navController.navigate(Route.CreateMatch)
+                        navController.navigate(Route.CreateMatch())
                     },
                     onCreateParty = {
                         navController.navigate(Route.CreateParty)
@@ -988,35 +1016,6 @@ fun SportsBookNavHost(
                 InviteFriendsScreen(
                     onBack = { navController.popBackStack() },
                     onInvitesSent = { navController.popBackStack() }
-                )
-            }
-
-            // Venue Booking Lobbies
-            composable<Route.BrowseVenueLobbies> {
-                BrowseVenueLobbiesScreen(
-                    onLobbyClick = { lobbyId ->
-                        navController.navigate(Route.VenueBookingLobbyDetail(lobbyId))
-                    },
-                    onCreateLobby = {
-                        navController.navigate(Route.CreateVenueBookingLobby())
-                    },
-                    onBack = { navController.popBackStack() }
-                )
-            }
-
-            composable<Route.CreateVenueBookingLobby> {
-                CreateVenueBookingLobbyScreen(
-                    onLobbyCreated = { lobbyId ->
-                        navController.popBackStack()
-                        navController.navigate(Route.VenueBookingLobbyDetail(lobbyId))
-                    },
-                    onBack = { navController.popBackStack() }
-                )
-            }
-
-            composable<Route.VenueBookingLobbyDetail> {
-                VenueBookingLobbyDetailScreen(
-                    onBack = { navController.popBackStack() }
                 )
             }
 

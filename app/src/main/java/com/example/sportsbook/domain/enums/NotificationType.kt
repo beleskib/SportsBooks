@@ -24,6 +24,8 @@ enum class NotificationType(val value: String, val displayName: String) {
     PARTY_DISBANDED("party_disbanded", "Party Disbanded"),
     FEED_POST_LIKED("feed_post_liked", "Post Liked"),
     FEED_POST_COMMENTED("feed_post_commented", "Post Comment"),
+    MATCH_COMPLETED("match_completed", "Match Completed"),
+    REVIEW_REMINDER("review_reminder", "Rating Reminder"),
     GENERAL("general", "General");
 
     companion object {

@@ -74,6 +74,11 @@ class FriendChatViewModel @Inject constructor(
     /**
      * Ensures the parent `direct_messages/{chatId}` document exists with a
      * `participants` array so it can be discovered via array-contains queries.
+     *
+     * Names are stored as a map keyed by user ID so that each participant can
+     * look up the other person's name independently of who created the document.
+     * Legacy documents (with `friendName` instead of `names`) remain readable
+     * via a fallback in [ChatsListViewModel].
      */
     private suspend fun ensureChatDocument() {
         val docRef = firestore.collection("direct_messages").document(chatId)
@@ -83,10 +88,16 @@ class FriendChatViewModel @Inject constructor(
                 docRef.set(
                     mapOf(
                         "participants" to listOf(currentUserId, friendUserId),
-                        "friendName" to friendName,
+                        "names" to mapOf(
+                            currentUserId.toString() to currentUserName,
+                            friendUserId.toString() to friendName,
+                        ),
                         "createdAt" to FieldValue.serverTimestamp(),
                     )
                 ).await()
+            } else {
+                // Keep the current user's display name up-to-date (e.g. after a rename).
+                docRef.update("names.${currentUserId}", currentUserName).await()
             }
         }
     }

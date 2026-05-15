@@ -289,6 +289,8 @@ private fun notificationIcon(type: NotificationType): ImageVector = when (type) 
     NotificationType.PARTY_DISBANDED -> Icons.Default.Group
     NotificationType.FEED_POST_LIKED -> Icons.Default.Star
     NotificationType.FEED_POST_COMMENTED -> Icons.Default.Message
+    NotificationType.MATCH_COMPLETED -> Icons.Default.SportsScore
+    NotificationType.REVIEW_REMINDER -> Icons.Default.Star
     NotificationType.GENERAL -> Icons.Default.Notifications
 }
 
@@ -317,6 +319,8 @@ private fun notificationIconColor(type: NotificationType) = when (type) {
     NotificationType.PARTY_DISBANDED -> MaterialTheme.colorScheme.error
     NotificationType.FEED_POST_LIKED -> MaterialTheme.colorScheme.tertiary
     NotificationType.FEED_POST_COMMENTED -> MaterialTheme.colorScheme.tertiary
+    NotificationType.MATCH_COMPLETED -> MaterialTheme.colorScheme.secondary
+    NotificationType.REVIEW_REMINDER -> MaterialTheme.colorScheme.tertiary
     NotificationType.GENERAL -> MaterialTheme.colorScheme.primary
 }
 

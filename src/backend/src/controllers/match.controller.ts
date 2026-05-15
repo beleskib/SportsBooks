@@ -2,9 +2,16 @@ import { Request, Response, NextFunction } from 'express';
 import { success, created } from '../utils/apiResponse';
 import * as matchRepo from '../repositories/match.repository';
 import * as userRepo from '../repositories/user.repository';
+import * as timeSlotRepo from '../repositories/timeSlot.repository';
+import * as bookingRepo from '../repositories/booking.repository';
+import * as splitRepo from '../repositories/splitPayment.repository';
+import * as participantRepo from '../repositories/bookingParticipant.repository';
+import * as venueRepo from '../repositories/venue.repository';
 import { NotFoundError, ForbiddenError, ValidationError } from '../utils/errors';
 import * as notificationService from '../services/notification.service';
 import { getFirestoreDb } from '../config/firebase';
+import { query } from '../config/database';
+import { sendNotification } from '../services/notification.service';
 
 // ============================================================
 // Firestore sync helper
@@ -22,6 +29,10 @@ async function syncMatchToFirestore(matchId: number): Promise<void> {
       status: match.status,
       currentPlayers: match.currentPlayers,
       maxPlayers: match.maxPlayers,
+      paymentType: match.paymentType,
+      totalPrice: match.totalPrice,
+      pricePerPlayer: match.pricePerPlayer,
+      currency: match.currency,
       participants: match.participants.map((p) => ({
         userId: p.userId,
         userName: p.userName,
@@ -37,19 +48,146 @@ async function syncMatchToFirestore(matchId: number): Promise<void> {
 }
 
 // ============================================================
+// Auto-complete past matches
+// ============================================================
+
+/**
+ * Auto-complete past matches whose end time has passed.
+ * When a match's match_date + end_time is in the past and the match
+ * is still open, full, or in_progress, we mark it as 'completed'.
+ * Called lazily when matches are fetched — no cron job required.
+ */
+async function autoCompletePastMatches(): Promise<void> {
+  try {
+    const result = await query(
+      `UPDATE matches m
+       SET status = 'completed', updated_at = NOW()
+       WHERE m.status IN ('open', 'full', 'in_progress')
+         AND (m.match_date + m.end_time::time) < NOW()
+       RETURNING m.id, m.host_id,
+         (SELECT ARRAY_AGG(mp.user_id)
+          FROM match_participants mp
+          WHERE mp.match_id = m.id AND mp.status = 'approved'
+         ) AS participant_user_ids`
+    );
+
+    for (const row of result.rows) {
+      const matchId = Number(row.id);
+
+      // Sync each auto-completed match to Firestore
+      syncMatchToFirestore(matchId).catch(() => {});
+
+      // Send rating reminder notification to all participants (including host)
+      const participantIds: number[] = row.participant_user_ids ?? [];
+      const allUserIds = new Set<number>([Number(row.host_id), ...participantIds]);
+      for (const userId of allUserIds) {
+        sendNotification(
+          userId,
+          'match_completed',
+          'Match Completed!',
+          'Don\'t forget to rate the players! You have 24 hours.',
+          { matchId: String(matchId) }
+        ).catch(() => {});
+      }
+    }
+  } catch (e) {
+    console.error('Auto-complete past matches failed:', e);
+  }
+}
+
+// ============================================================
 // Matches
 // ============================================================
 
 export async function createMatch(req: Request, res: Response, next: NextFunction) {
   try {
-    const match = await matchRepo.create(req.user!.id, req.body);
+    const { timeSlotId, venueId } = req.body;
+    const paymentType: string = req.body.paymentType || 'host_pays';
+
+    let bookingId: number | undefined;
+    let totalPrice = 0;
+    let pricePerPlayer = 0;
+
+    // If both venueId and timeSlotId are provided, auto-create a pending booking
+    if (venueId && timeSlotId) {
+      // Validate the time slot belongs to the venue and is available
+      const slot = await timeSlotRepo.findById(timeSlotId);
+      if (!slot) throw new NotFoundError('Time slot');
+      if (slot.venueId !== venueId) {
+        throw new ValidationError('Time slot does not belong to the selected venue');
+      }
+      if (!slot.isAvailable) {
+        throw new ValidationError('Time slot is no longer available');
+      }
+
+      // Look up venue to compute pricing
+      const venue = await venueRepo.findById(venueId);
+      if (venue) {
+        totalPrice = slot.priceOverride ?? venue.pricePerHour;
+        pricePerPlayer = Math.round((totalPrice / (req.body.maxPlayers || 2)) * 100) / 100;
+      }
+
+      // Create the booking via the stored procedure (handles locking, pricing, discounts)
+      const booking = await bookingRepo.create(req.user!.id, timeSlotId);
+      bookingId = booking.id;
+
+      // Find the venue owner and send a notification
+      const ownerResult = await query(
+        'SELECT owner_id FROM venues WHERE id = $1',
+        [venueId]
+      );
+      if (ownerResult.rows.length > 0) {
+        const ownerId = Number(ownerResult.rows[0].owner_id);
+        sendNotification(
+          ownerId,
+          'booking_request',
+          'New Reservation Request',
+          `A match lobby wants to book your venue for ${slot.slotDate} ${slot.startTime}-${slot.endTime}`,
+          { bookingId: String(bookingId) }
+        ).catch((err) => console.error('Failed to send booking notification:', err));
+      }
+    }
+
+    const match = await matchRepo.create(req.user!.id, {
+      ...req.body,
+      bookingId,
+      paymentType,
+      timeSlotId: timeSlotId || null,
+      totalPrice,
+      pricePerPlayer,
+      currency: 'MKD',
+    });
+
+    // If a booking was created, link the match back by updating booking_id
+    if (bookingId) {
+      await query(
+        'UPDATE matches SET booking_id = $1, updated_at = NOW() WHERE id = $2',
+        [bookingId, match.id]
+      );
+      match.bookingId = bookingId;
+    }
+
     syncMatchToFirestore(match.id).catch(() => {});
     created(res, match, 'Match created');
   } catch (e) { next(e); }
 }
 
+export async function getVenueTimeSlots(req: Request, res: Response, next: NextFunction) {
+  try {
+    const venueId = Number(req.params.venueId);
+    const date = req.query.date ? String(req.query.date) : undefined;
+    if (!date) {
+      throw new ValidationError('date query parameter is required');
+    }
+
+    const slots = await timeSlotRepo.findByVenue(venueId, date, date);
+    success(res, slots);
+  } catch (e) { next(e); }
+}
+
 export async function listMatches(req: Request, res: Response, next: NextFunction) {
   try {
+    await autoCompletePastMatches();
     const filters = {
       sportType: req.query.sportType ? String(req.query.sportType) : undefined,
       status: req.query.status ? String(req.query.status) : undefined,
@@ -66,6 +204,7 @@ export async function listMatches(req: Request, res: Response, next: NextFunctio
 
 export async function getMyMatches(req: Request, res: Response, next: NextFunction) {
   try {
+    await autoCompletePastMatches();
     const [hosted, participating] = await Promise.all([
       matchRepo.findByHostId(req.user!.id),
       matchRepo.findByParticipantId(req.user!.id),
@@ -93,6 +232,7 @@ export async function getNearbyMatches(req: Request, res: Response, next: NextFu
 
 export async function getMatchById(req: Request, res: Response, next: NextFunction) {
   try {
+    await autoCompletePastMatches();
     const match = await matchRepo.findById(Number(req.params.id));
     if (!match) throw new NotFoundError('Match');
     success(res, match);
@@ -162,6 +302,48 @@ export async function joinMatch(req: Request, res: Response, next: NextFunction)
             match.title,
             allUserIds
           ).catch((err) => console.error('Failed to send match-full notification:', err));
+
+          // When match fills and has split payment, auto-create split shares
+          if (updatedMatch.paymentType === 'split' && updatedMatch.bookingId) {
+            try {
+              const approvedParticipants = updatedMatch.participants
+                .filter(p => p.status === 'approved');
+              const shareAmount = Math.round((updatedMatch.totalPrice / approvedParticipants.length) * 100) / 100;
+
+              for (const p of approvedParticipants) {
+                // Create split payment share
+                const share = await splitRepo.createShare(
+                  updatedMatch.bookingId, p.userId, shareAmount, updatedMatch.currency
+                );
+                // Link as booking participant
+                await participantRepo.inviteMany(updatedMatch.bookingId, [p.userId]).catch(() => {});
+                await participantRepo.linkSplitPayment(updatedMatch.bookingId, p.userId, share.id);
+
+                // Notify each participant to pay their share
+                notificationService.sendNotification(
+                  p.userId,
+                  'split_payment_request',
+                  'Pay Your Share',
+                  `Match "${updatedMatch.title}" is full! Pay your share of ${shareAmount} ${updatedMatch.currency}`,
+                  { matchId: String(updatedMatch.id), bookingId: String(updatedMatch.bookingId), shareAmount: String(shareAmount) }
+                ).catch(() => {});
+              }
+            } catch (err) {
+              console.error('Failed to create split payments for match:', err);
+            }
+          }
+
+          if (updatedMatch.paymentType === 'cash_at_venue' && updatedMatch.bookingId) {
+            try {
+              const approvedParticipants = updatedMatch.participants
+                .filter(p => p.status === 'approved');
+              for (const p of approvedParticipants) {
+                await participantRepo.inviteMany(updatedMatch.bookingId, [p.userId]).catch(() => {});
+              }
+            } catch (err) {
+              console.error('Failed to link booking participants for cash match:', err);
+            }
+          }
         }
       } catch (err) {
         console.error('Failed to check/send match-full notification:', err);
@@ -222,6 +404,45 @@ export async function respondToJoinRequest(req: Request, res: Response, next: Ne
             match.title,
             allUserIds
           ).catch((err) => console.error('Failed to send match-full notification:', err));
+
+          // When match fills and has split payment, auto-create split shares
+          if (refreshedMatch.paymentType === 'split' && refreshedMatch.bookingId) {
+            try {
+              const approvedParticipants = refreshedMatch.participants
+                .filter(p => p.status === 'approved');
+              const shareAmount = Math.round((refreshedMatch.totalPrice / approvedParticipants.length) * 100) / 100;
+
+              for (const p of approvedParticipants) {
+                const share = await splitRepo.createShare(
+                  refreshedMatch.bookingId, p.userId, shareAmount, refreshedMatch.currency
+                );
+                await participantRepo.inviteMany(refreshedMatch.bookingId, [p.userId]).catch(() => {});
+                await participantRepo.linkSplitPayment(refreshedMatch.bookingId, p.userId, share.id);
+
+                notificationService.sendNotification(
+                  p.userId,
+                  'split_payment_request',
+                  'Pay Your Share',
+                  `Match "${refreshedMatch.title}" is full! Pay your share of ${shareAmount} ${refreshedMatch.currency}`,
+                  { matchId: String(refreshedMatch.id), bookingId: String(refreshedMatch.bookingId), shareAmount: String(shareAmount) }
+                ).catch(() => {});
+              }
+            } catch (err) {
+              console.error('Failed to create split payments for match:', err);
+            }
+          }
+
+          if (refreshedMatch.paymentType === 'cash_at_venue' && refreshedMatch.bookingId) {
+            try {
+              const approvedParticipants = refreshedMatch.participants
+                .filter(p => p.status === 'approved');
+              for (const p of approvedParticipants) {
+                await participantRepo.inviteMany(refreshedMatch.bookingId, [p.userId]).catch(() => {});
+              }
+            } catch (err) {
+              console.error('Failed to link booking participants for cash match:', err);
+            }
+          }
         }
       } catch (err) {
         console.error('Failed to check/send match-full notification:', err);
@@ -271,8 +492,31 @@ export async function sendChatMessage(req: Request, res: Response, next: NextFun
 
 export async function ratePlayer(req: Request, res: Response, next: NextFunction) {
   try {
+    const matchId = Number(req.params.matchId);
+
+    // Guard: match must exist and be completed
+    const match = await matchRepo.findById(matchId);
+    if (!match || match.status !== 'completed') {
+      throw new ValidationError('Match must be completed before rating');
+    }
+
+    // Guard: 24-hour rating window
+    const completedAt = new Date(match.updatedAt);
+    const hoursSince = (Date.now() - completedAt.getTime()) / (1000 * 60 * 60);
+    if (hoursSince > 24) {
+      throw new ValidationError('Rating window has expired (24 hours after match completion)');
+    }
+
+    // Guard: rater must be a participant with approved status
+    const isParticipant = match.participants.some(
+      (p) => p.userId === req.user!.id && p.status === 'approved'
+    );
+    if (!isParticipant) {
+      throw new ForbiddenError('Only approved participants can rate players in this match');
+    }
+
     const rating = await matchRepo.createPlayerRating({
-      matchId: Number(req.params.matchId),
+      matchId,
       raterId: req.user!.id,
       ratedId: req.body.ratedId,
       skillRating: req.body.skillRating,
@@ -420,5 +664,119 @@ export async function invitePlayer(req: Request, res: Response, next: NextFuncti
     ).catch((err) => console.error('Failed to send invite notification:', err));
 
     created(res, participant, 'Player invited');
+  } catch (e) { next(e); }
+}
+
+// ============================================================
+// Match Payment (split payment flow)
+// ============================================================
+
+export async function getMatchPaymentStatus(req: Request, res: Response, next: NextFunction) {
+  try {
+    const matchId = Number(req.params.id);
+    const match = await matchRepo.findById(matchId);
+    if (!match) throw new NotFoundError('Match');
+    if (!match.bookingId) {
+      return success(res, { matchId, paymentType: match.paymentType, shares: [] });
+    }
+
+    const shares = await splitRepo.findByBookingId(match.bookingId);
+    const summary = await splitRepo.getSummary(match.bookingId);
+
+    success(res, {
+      matchId,
+      bookingId: match.bookingId,
+      paymentType: match.paymentType,
+      totalPrice: match.totalPrice,
+      pricePerPlayer: match.pricePerPlayer,
+      currency: match.currency,
+      ...summary,
+      shares,
+    });
+  } catch (e) { next(e); }
+}
+
+export async function createMatchPaymentIntent(req: Request, res: Response, next: NextFunction) {
+  try {
+    const matchId = Number(req.params.id);
+    const userId = req.user!.id;
+
+    const match = await matchRepo.findById(matchId);
+    if (!match) throw new NotFoundError('Match');
+    if (!match.bookingId) throw new ValidationError('Match has no linked booking');
+
+    // Verify user is a participant
+    const isParticipant = match.participants.some(p => p.userId === userId && p.status === 'approved');
+    if (!isParticipant) throw new ForbiddenError('Only match participants can pay');
+
+    // Find their split payment share
+    const shares = await splitRepo.findByBookingId(match.bookingId);
+    const myShare = shares.find(s => s.payerUserId === userId);
+    if (!myShare) throw new NotFoundError('No payment share found for this user');
+    if (myShare.status === 'paid') {
+      return success(res, { alreadyPaid: true, share: myShare });
+    }
+
+    // For dev mode, generate a dev secret
+    const devSecret = `dev_secret_match_${matchId}_${userId}_${Date.now()}`;
+
+    success(res, {
+      shareId: myShare.id,
+      amount: myShare.amount,
+      currency: match.currency,
+      clientSecret: devSecret,
+      bookingId: match.bookingId,
+      matchId: match.id,
+    });
+  } catch (e) { next(e); }
+}
+
+export async function confirmMatchPayment(req: Request, res: Response, next: NextFunction) {
+  try {
+    const matchId = Number(req.params.id);
+    const userId = req.user!.id;
+
+    const match = await matchRepo.findById(matchId);
+    if (!match) throw new NotFoundError('Match');
+    if (!match.bookingId) throw new ValidationError('Match has no linked booking');
+
+    // Find the user's split share
+    const shares = await splitRepo.findByBookingId(match.bookingId);
+    const myShare = shares.find(s => s.payerUserId === userId);
+    if (!myShare) throw new NotFoundError('No payment share found');
+    if (myShare.status === 'paid') {
+      return success(res, myShare, 'Already paid');
+    }
+
+    // Mark as paid (use dev payment intent ID for dev mode)
+    const paymentIntentId = `dev_match_${matchId}_${userId}_${Date.now()}`;
+    const updated = await splitRepo.markPaid(myShare.id, paymentIntentId);
+
+    // Check if all shares are now paid
+    const updatedShares = await splitRepo.findByBookingId(match.bookingId);
+    const allPaid = updatedShares.every(s => s.status === 'paid');
+
+    if (allPaid) {
+      // Confirm the booking
+      await query(
+        `UPDATE bookings SET status = 'confirmed', updated_at = NOW() WHERE id = $1`,
+        [match.bookingId]
+      );
+      // Notify everyone that the match is fully paid and confirmed
+      const allUserIds = match.participants
+        .filter(p => p.status === 'approved')
+        .map(p => p.userId);
+      for (const uid of allUserIds) {
+        notificationService.sendNotification(
+          uid,
+          'booking_confirmed',
+          'Match Confirmed!',
+          `All players have paid. Match "${match.title}" is confirmed!`,
+          { matchId: String(matchId), bookingId: String(match.bookingId) }
+        ).catch(() => {});
+      }
+    }
+
+    success(res, updated, 'Payment confirmed');
   } catch (e) { next(e); }
 }

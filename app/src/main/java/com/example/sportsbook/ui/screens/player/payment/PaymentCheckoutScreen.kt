@@ -29,8 +29,10 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.CheckCircle
+import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.LocationOn
 import androidx.compose.material.icons.filled.Person
+import androidx.compose.material.icons.filled.Search
 import androidx.compose.material.icons.filled.Star
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
@@ -42,12 +44,15 @@ import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedButton
+import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Slider
 import androidx.compose.material3.SliderDefaults
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
+import androidx.compose.material3.Switch
+import androidx.compose.material3.SwitchDefaults
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
@@ -67,6 +72,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.example.sportsbook.domain.model.Friendship
 import com.example.sportsbook.ui.theme.GoldDark
 import com.example.sportsbook.ui.theme.GoldLight
 import com.example.sportsbook.ui.theme.GoldAccent
@@ -76,6 +82,8 @@ import kotlin.math.roundToInt
 
 private val XpGreen = Color(0xFF2E7D32)
 private val XpGreenLight = Color(0xFF4CAF50)
+private val SplitBlue = Color(0xFF1565C0)
+private val SplitBlueLight = Color(0xFF42A5F5)
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -117,6 +125,11 @@ fun PaymentCheckoutScreen(
 
     val finalAmount = (uiState.amount - uiState.xpDiscount).coerceAtLeast(0.0)
     val isFreeWithXp = uiState.amount > 0 && finalAmount == 0.0 && uiState.xpRedeemed
+    val displayPayAmount = if (uiState.splitEnabled && uiState.selectedFriends.isNotEmpty()) {
+        uiState.yourShare
+    } else {
+        finalAmount
+    }
 
     Scaffold(
         topBar = {
@@ -181,6 +194,25 @@ fun PaymentCheckoutScreen(
                     )
                 }
 
+                // ── Split with Friends Section ──────────────────────
+                if (!isFreeWithXp) {
+                    SplitWithFriendsSection(
+                        splitEnabled = uiState.splitEnabled,
+                        friends = uiState.filteredFriends,
+                        selectedFriends = uiState.selectedFriends,
+                        searchQuery = uiState.friendSearchQuery,
+                        isLoading = uiState.isLoadingFriends,
+                        totalAmount = finalAmount,
+                        splitPartySize = uiState.splitPartySize,
+                        yourShare = uiState.yourShare,
+                        onToggleSplit = viewModel::toggleSplit,
+                        onSearchQueryChange = viewModel::onFriendSearchQueryChange,
+                        onToggleFriend = viewModel::toggleFriendSelection,
+                        isFriendSelected = viewModel::isFriendSelected,
+                        modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp)
+                    )
+                }
+
                 // ── Price Breakdown ──────────────────────────────────
                 PriceBreakdownCard(
                     originalPrice = uiState.amount,
@@ -189,6 +221,9 @@ fun PaymentCheckoutScreen(
                     xpAmount = uiState.xpToRedeem,
                     finalAmount = finalAmount,
                     isFreeWithXp = isFreeWithXp,
+                    splitEnabled = uiState.splitEnabled && uiState.selectedFriends.isNotEmpty(),
+                    splitPartySize = uiState.splitPartySize,
+                    yourShare = uiState.yourShare,
                     modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp)
                 )
 
@@ -202,12 +237,16 @@ fun PaymentCheckoutScreen(
                     contentAlignment = Alignment.Center
                 ) {
                     when {
-                        uiState.isCreatingIntent || uiState.isProcessingPayment -> {
+                        uiState.isCreatingIntent || uiState.isProcessingPayment || uiState.isCreatingSplit -> {
                             Column(horizontalAlignment = Alignment.CenterHorizontally) {
                                 CircularProgressIndicator()
                                 Spacer(modifier = Modifier.height(8.dp))
                                 Text(
-                                    text = if (uiState.isCreatingIntent) "Preparing payment..." else "Processing...",
+                                    text = when {
+                                        uiState.isCreatingSplit -> "Setting up split..."
+                                        uiState.isCreatingIntent -> "Preparing payment..."
+                                        else -> "Processing..."
+                                    },
                                     style = MaterialTheme.typography.bodyMedium
                                 )
                             }
@@ -242,14 +281,27 @@ fun PaymentCheckoutScreen(
                                 modifier = Modifier
                                     .fillMaxWidth()
                                     .height(56.dp),
-                                shape = RoundedCornerShape(16.dp)
+                                shape = RoundedCornerShape(16.dp),
+                                colors = if (uiState.splitEnabled && uiState.selectedFriends.isNotEmpty()) {
+                                    ButtonDefaults.buttonColors(containerColor = SplitBlue)
+                                } else {
+                                    ButtonDefaults.buttonColors()
+                                }
                             ) {
-                                val displayAmount = if (uiState.amount > 0) finalAmount else uiState.amount
-                                Text(
-                                    text = if (displayAmount > 0) "Pay ${"%.0f".format(displayAmount)} ден" else "Proceed to Payment",
-                                    fontWeight = FontWeight.Bold,
-                                    fontSize = 16.sp
-                                )
+                                if (uiState.splitEnabled && uiState.selectedFriends.isNotEmpty()) {
+                                    Text(
+                                        text = "Pay Your Share — ${"%.0f".format(displayPayAmount)} ден",
+                                        fontWeight = FontWeight.Bold,
+                                        fontSize = 16.sp
+                                    )
+                                } else {
+                                    val amt = if (uiState.amount > 0) displayPayAmount else uiState.amount
+                                    Text(
+                                        text = if (amt > 0) "Pay ${"%.0f".format(amt)} ден" else "Proceed to Payment",
+                                        fontWeight = FontWeight.Bold,
+                                        fontSize = 16.sp
+                                    )
+                                }
                             }
                         }
                     }
@@ -339,6 +391,340 @@ private fun DetailChip(label: String, value: String) {
             style = MaterialTheme.typography.bodyMedium,
             fontWeight = FontWeight.SemiBold
         )
+    }
+}
+
+// ═════════════════════════════════════════════════════════════════
+// Split with Friends Section
+// ═════════════════════════════════════════════════════════════════
+@Composable
+private fun SplitWithFriendsSection(
+    splitEnabled: Boolean,
+    friends: List<Friendship>,
+    selectedFriends: List<Friendship>,
+    searchQuery: String,
+    isLoading: Boolean,
+    totalAmount: Double,
+    splitPartySize: Int,
+    yourShare: Double,
+    onToggleSplit: (Boolean) -> Unit,
+    onSearchQueryChange: (String) -> Unit,
+    onToggleFriend: (Friendship) -> Unit,
+    isFriendSelected: (Friendship) -> Boolean,
+    modifier: Modifier = Modifier
+) {
+    Card(
+        modifier = modifier.fillMaxWidth(),
+        shape = RoundedCornerShape(16.dp),
+        colors = CardDefaults.cardColors(
+            containerColor = Color.Transparent
+        )
+    ) {
+        Box(
+            modifier = Modifier
+                .fillMaxWidth()
+                .background(
+                    brush = Brush.linearGradient(
+                        colors = listOf(
+                            SplitBlue.copy(alpha = 0.10f),
+                            SplitBlueLight.copy(alpha = 0.06f),
+                            Color.White.copy(alpha = 0.02f)
+                        )
+                    )
+                )
+                .border(
+                    width = 1.dp,
+                    brush = Brush.linearGradient(
+                        colors = listOf(
+                            SplitBlue.copy(alpha = 0.4f),
+                            SplitBlueLight.copy(alpha = 0.2f)
+                        )
+                    ),
+                    shape = RoundedCornerShape(16.dp)
+                )
+        ) {
+            Column(modifier = Modifier.padding(16.dp)) {
+                // ── Header with toggle ──────────────────────────────
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.SpaceBetween
+                ) {
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        Box(
+                            modifier = Modifier
+                                .size(36.dp)
+                                .clip(CircleShape)
+                                .background(SplitBlue.copy(alpha = 0.15f)),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Icon(
+                                imageVector = Icons.Default.Person,
+                                contentDescription = null,
+                                tint = SplitBlue,
+                                modifier = Modifier.size(20.dp)
+                            )
+                        }
+                        Spacer(modifier = Modifier.width(10.dp))
+                        Column {
+                            Text(
+                                text = "Split with Friends",
+                                style = MaterialTheme.typography.titleMedium,
+                                fontWeight = FontWeight.Bold
+                            )
+                            Text(
+                                text = "Split the cost equally",
+                                style = MaterialTheme.typography.labelSmall,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                            )
+                        }
+                    }
+                    Switch(
+                        checked = splitEnabled,
+                        onCheckedChange = onToggleSplit,
+                        colors = SwitchDefaults.colors(
+                            checkedThumbColor = Color.White,
+                            checkedTrackColor = SplitBlue
+                        )
+                    )
+                }
+
+                // ── Expanded content when enabled ───────────────────
+                AnimatedVisibility(
+                    visible = splitEnabled,
+                    enter = expandVertically() + fadeIn(),
+                    exit = shrinkVertically() + fadeOut()
+                ) {
+                    Column {
+                        Spacer(modifier = Modifier.height(14.dp))
+
+                        // Selected friends chips
+                        if (selectedFriends.isNotEmpty()) {
+                            Row(
+                                modifier = Modifier.fillMaxWidth(),
+                                horizontalArrangement = Arrangement.spacedBy(8.dp)
+                            ) {
+                                selectedFriends.forEach { friend ->
+                                    SelectedFriendChip(
+                                        name = friend.friendName ?: "Friend",
+                                        onRemove = { onToggleFriend(friend) }
+                                    )
+                                }
+                            }
+                            Spacer(modifier = Modifier.height(10.dp))
+                        }
+
+                        // Search field
+                        OutlinedTextField(
+                            value = searchQuery,
+                            onValueChange = onSearchQueryChange,
+                            placeholder = { Text("Search friends...", fontSize = 14.sp) },
+                            leadingIcon = {
+                                Icon(
+                                    imageVector = Icons.Default.Search,
+                                    contentDescription = null,
+                                    modifier = Modifier.size(18.dp),
+                                    tint = MaterialTheme.colorScheme.onSurfaceVariant
+                                )
+                            },
+                            modifier = Modifier.fillMaxWidth(),
+                            shape = RoundedCornerShape(12.dp),
+                            singleLine = true,
+                            colors = OutlinedTextFieldDefaults.colors(
+                                focusedBorderColor = SplitBlue,
+                                unfocusedBorderColor = MaterialTheme.colorScheme.outline.copy(alpha = 0.3f)
+                            ),
+                            textStyle = MaterialTheme.typography.bodyMedium
+                        )
+
+                        Spacer(modifier = Modifier.height(10.dp))
+
+                        // Friend list
+                        if (isLoading) {
+                            Box(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .padding(vertical = 16.dp),
+                                contentAlignment = Alignment.Center
+                            ) {
+                                CircularProgressIndicator(
+                                    modifier = Modifier.size(24.dp),
+                                    strokeWidth = 2.dp
+                                )
+                            }
+                        } else if (friends.isEmpty()) {
+                            Text(
+                                text = if (searchQuery.isNotBlank()) "No friends found" else "No friends yet",
+                                style = MaterialTheme.typography.bodySmall,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                modifier = Modifier.padding(vertical = 8.dp)
+                            )
+                        } else {
+                            Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
+                                friends.take(5).forEach { friend ->
+                                    FriendRow(
+                                        friend = friend,
+                                        isSelected = isFriendSelected(friend),
+                                        onToggle = { onToggleFriend(friend) }
+                                    )
+                                }
+                                if (friends.size > 5) {
+                                    Text(
+                                        text = "Search to find more friends...",
+                                        style = MaterialTheme.typography.labelSmall,
+                                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                        modifier = Modifier.padding(start = 8.dp, top = 4.dp)
+                                    )
+                                }
+                            }
+                        }
+
+                        // Split summary
+                        if (selectedFriends.isNotEmpty()) {
+                            Spacer(modifier = Modifier.height(12.dp))
+                            HorizontalDivider(
+                                color = SplitBlue.copy(alpha = 0.2f)
+                            )
+                            Spacer(modifier = Modifier.height(12.dp))
+
+                            // Split calculation display
+                            Row(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .clip(RoundedCornerShape(12.dp))
+                                    .background(SplitBlue.copy(alpha = 0.08f))
+                                    .padding(12.dp),
+                                verticalAlignment = Alignment.CenterVertically,
+                                horizontalArrangement = Arrangement.SpaceBetween
+                            ) {
+                                Column {
+                                    Text(
+                                        text = "Splitting $splitPartySize ways",
+                                        style = MaterialTheme.typography.bodyMedium,
+                                        fontWeight = FontWeight.SemiBold,
+                                        color = SplitBlue
+                                    )
+                                    Text(
+                                        text = "${"%.0f".format(totalAmount)} ден ÷ $splitPartySize people",
+                                        style = MaterialTheme.typography.labelSmall,
+                                        color = SplitBlue.copy(alpha = 0.7f)
+                                    )
+                                }
+                                Column(horizontalAlignment = Alignment.End) {
+                                    Text(
+                                        text = "${"%.0f".format(yourShare)} ден",
+                                        style = MaterialTheme.typography.titleMedium,
+                                        fontWeight = FontWeight.ExtraBold,
+                                        color = SplitBlue
+                                    )
+                                    Text(
+                                        text = "each",
+                                        style = MaterialTheme.typography.labelSmall,
+                                        color = SplitBlue.copy(alpha = 0.7f)
+                                    )
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
+
+@Composable
+private fun SelectedFriendChip(
+    name: String,
+    onRemove: () -> Unit
+) {
+    Box(
+        modifier = Modifier
+            .clip(RoundedCornerShape(20.dp))
+            .background(SplitBlue.copy(alpha = 0.15f))
+            .padding(start = 10.dp, end = 4.dp, top = 4.dp, bottom = 4.dp)
+    ) {
+        Row(verticalAlignment = Alignment.CenterVertically) {
+            Text(
+                text = name,
+                fontSize = 12.sp,
+                fontWeight = FontWeight.SemiBold,
+                color = SplitBlue,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis
+            )
+            Spacer(modifier = Modifier.width(2.dp))
+            Icon(
+                imageVector = Icons.Default.Close,
+                contentDescription = "Remove",
+                modifier = Modifier
+                    .size(16.dp)
+                    .clip(CircleShape)
+                    .clickable(onClick = onRemove),
+                tint = SplitBlue.copy(alpha = 0.7f)
+            )
+        }
+    }
+}
+
+@Composable
+private fun FriendRow(
+    friend: Friendship,
+    isSelected: Boolean,
+    onToggle: () -> Unit
+) {
+    val bgColor = if (isSelected) SplitBlue.copy(alpha = 0.10f) else Color.Transparent
+    val borderColor = if (isSelected) SplitBlue.copy(alpha = 0.4f) else MaterialTheme.colorScheme.outline.copy(alpha = 0.15f)
+
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .clip(RoundedCornerShape(10.dp))
+            .background(bgColor)
+            .border(1.dp, borderColor, RoundedCornerShape(10.dp))
+            .clickable(onClick = onToggle)
+            .padding(horizontal = 12.dp, vertical = 10.dp),
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        // Avatar placeholder
+        Box(
+            modifier = Modifier
+                .size(32.dp)
+                .clip(CircleShape)
+                .background(
+                    if (isSelected) SplitBlue.copy(alpha = 0.2f)
+                    else MaterialTheme.colorScheme.surfaceContainerHighest
+                ),
+            contentAlignment = Alignment.Center
+        ) {
+            val initial = friend.friendName?.firstOrNull()?.uppercase() ?: "?"
+            Text(
+                text = initial,
+                fontSize = 14.sp,
+                fontWeight = FontWeight.Bold,
+                color = if (isSelected) SplitBlue else MaterialTheme.colorScheme.onSurfaceVariant
+            )
+        }
+
+        Spacer(modifier = Modifier.width(10.dp))
+
+        Text(
+            text = friend.friendName ?: "Unknown",
+            style = MaterialTheme.typography.bodyMedium,
+            fontWeight = if (isSelected) FontWeight.SemiBold else FontWeight.Normal,
+            color = if (isSelected) SplitBlue else MaterialTheme.colorScheme.onSurface,
+            modifier = Modifier.weight(1f),
+            maxLines = 1,
+            overflow = TextOverflow.Ellipsis
+        )
+
+        if (isSelected) {
+            Icon(
+                imageVector = Icons.Default.CheckCircle,
+                contentDescription = "Selected",
+                tint = SplitBlue,
+                modifier = Modifier.size(20.dp)
+            )
+        }
     }
 }
 
@@ -697,6 +1083,9 @@ private fun PriceBreakdownCard(
     xpAmount: Int,
     finalAmount: Double,
     isFreeWithXp: Boolean,
+    splitEnabled: Boolean = false,
+    splitPartySize: Int = 1,
+    yourShare: Double = 0.0,
     modifier: Modifier = Modifier
 ) {
     Card(
@@ -743,6 +1132,23 @@ private fun PriceBreakdownCard(
                 }
             }
 
+            // Split line
+            AnimatedVisibility(
+                visible = splitEnabled,
+                enter = expandVertically() + fadeIn(),
+                exit = shrinkVertically() + fadeOut()
+            ) {
+                Column {
+                    Spacer(modifier = Modifier.height(6.dp))
+                    PriceRow(
+                        label = "Split $splitPartySize ways",
+                        value = "÷ $splitPartySize",
+                        valueColor = SplitBlue,
+                        labelColor = SplitBlue
+                    )
+                }
+            }
+
             Spacer(modifier = Modifier.height(8.dp))
             HorizontalDivider(color = MaterialTheme.colorScheme.outline.copy(alpha = 0.3f))
             Spacer(modifier = Modifier.height(8.dp))
@@ -754,7 +1160,7 @@ private fun PriceBreakdownCard(
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 Text(
-                    text = "Total",
+                    text = if (splitEnabled) "Your Share" else "Total",
                     style = MaterialTheme.typography.titleMedium,
                     fontWeight = FontWeight.Bold
                 )
@@ -775,11 +1181,12 @@ private fun PriceBreakdownCard(
                         )
                     }
                 } else {
+                    val displayAmount = if (splitEnabled) yourShare else finalAmount
                     Text(
-                        text = "${"%.0f".format(finalAmount)} ден",
+                        text = "${"%.0f".format(displayAmount)} ден",
                         style = MaterialTheme.typography.titleLarge,
                         fontWeight = FontWeight.ExtraBold,
-                        color = MaterialTheme.colorScheme.primary
+                        color = if (splitEnabled) SplitBlue else MaterialTheme.colorScheme.primary
                     )
                 }
             }
@@ -862,13 +1269,37 @@ private fun PaymentCheckoutScreenPreview() {
                     onApplyXpDiscount = {},
                     modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp)
                 )
+                SplitWithFriendsSection(
+                    splitEnabled = true,
+                    friends = listOf(
+                        Friendship(id = 1, friendId = 10, friendName = "Marko"),
+                        Friendship(id = 2, friendId = 11, friendName = "Stefan"),
+                        Friendship(id = 3, friendId = 12, friendName = "Ana"),
+                    ),
+                    selectedFriends = listOf(
+                        Friendship(id = 1, friendId = 10, friendName = "Marko"),
+                    ),
+                    searchQuery = "",
+                    isLoading = false,
+                    totalAmount = 1000.0,
+                    splitPartySize = 2,
+                    yourShare = 500.0,
+                    onToggleSplit = {},
+                    onSearchQueryChange = {},
+                    onToggleFriend = {},
+                    isFriendSelected = { it.friendId == 10L },
+                    modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp)
+                )
                 PriceBreakdownCard(
-                    originalPrice = 1500.0,
-                    xpDiscount = 5.0,
-                    xpRedeemed = true,
-                    xpAmount = 500,
-                    finalAmount = 1495.0,
+                    originalPrice = 1000.0,
+                    xpDiscount = 0.0,
+                    xpRedeemed = false,
+                    xpAmount = 0,
+                    finalAmount = 1000.0,
                     isFreeWithXp = false,
+                    splitEnabled = true,
+                    splitPartySize = 2,
+                    yourShare = 500.0,
                     modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp)
                 )
                 Spacer(modifier = Modifier.height(16.dp))
@@ -878,9 +1309,10 @@ private fun PaymentCheckoutScreenPreview() {
                         .fillMaxWidth()
                         .padding(horizontal = 16.dp)
                         .height(56.dp),
-                    shape = RoundedCornerShape(16.dp)
+                    shape = RoundedCornerShape(16.dp),
+                    colors = ButtonDefaults.buttonColors(containerColor = SplitBlue)
                 ) {
-                    Text("Pay 1495 ден", fontWeight = FontWeight.Bold, fontSize = 16.sp)
+                    Text("Pay Your Share — 500 ден", fontWeight = FontWeight.Bold, fontSize = 16.sp)
                 }
             }
         }

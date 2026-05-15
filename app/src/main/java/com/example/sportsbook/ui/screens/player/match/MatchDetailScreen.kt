@@ -9,6 +9,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
@@ -18,20 +19,26 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.automirrored.filled.Chat
 import androidx.compose.material.icons.filled.CalendarToday
+import androidx.compose.material.icons.filled.CheckCircle
 import androidx.compose.material.icons.filled.Groups
+import androidx.compose.material.icons.filled.HourglassEmpty
 import androidx.compose.material.icons.filled.LocationOn
+import androidx.compose.material.icons.filled.Payment
 import androidx.compose.material.icons.filled.Schedule
 import androidx.compose.material.icons.filled.Share
 import androidx.compose.material.icons.filled.PersonSearch
 import androidx.compose.material.icons.filled.Star
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FilledTonalButton
+import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
+import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedTextField
@@ -50,12 +57,17 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
+import com.example.sportsbook.data.remote.dto.MatchPaymentStatusDto
+import com.example.sportsbook.data.remote.dto.v2.SplitPaymentShareDto
 import com.example.sportsbook.domain.enums.MatchStatus
 import com.example.sportsbook.domain.enums.MatchType
+import java.time.Duration
+import java.time.Instant
 import com.example.sportsbook.domain.enums.MatchVisibility
 import com.example.sportsbook.domain.enums.ParticipantRole
 import com.example.sportsbook.domain.enums.ParticipantStatus
@@ -81,6 +93,7 @@ fun MatchDetailScreen(
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
     var showShareDialog by remember { mutableStateOf(false) }
     var shareCaption by remember { mutableStateOf("") }
+    var showRatingReminder by remember { mutableStateOf(false) }
     val snackbarHostState = remember { SnackbarHostState() }
 
     LaunchedEffect(uiState.shareSuccess) {
@@ -88,6 +101,63 @@ fun MatchDetailScreen(
             snackbarHostState.showSnackbar("Match shared to your feed!")
             viewModel.clearShareSuccess()
         }
+    }
+
+    LaunchedEffect(uiState.paymentSuccess) {
+        if (uiState.paymentSuccess) {
+            snackbarHostState.showSnackbar("Payment successful!")
+        }
+    }
+
+    val match = uiState.match
+    LaunchedEffect(match) {
+        if (match != null &&
+            match.status == MatchStatus.COMPLETED &&
+            uiState.isParticipant &&
+            match.updatedAt != null
+        ) {
+            val completedAt = try {
+                Instant.parse(match.updatedAt)
+            } catch (_: Exception) {
+                null
+            }
+            if (completedAt != null && Duration.between(completedAt, Instant.now()).toHours() < 24) {
+                showRatingReminder = true
+            }
+        }
+    }
+
+    // Rating reminder dialog
+    if (showRatingReminder && match != null) {
+        AlertDialog(
+            onDismissRequest = { showRatingReminder = false },
+            icon = {
+                Icon(
+                    imageVector = Icons.Default.Star,
+                    contentDescription = null,
+                    tint = Color(0xFFFFD700)
+                )
+            },
+            title = { Text("Match Completed!") },
+            text = {
+                Text("Don't forget to rate the players! You have 24 hours to submit your ratings.")
+            },
+            confirmButton = {
+                Button(
+                    onClick = {
+                        showRatingReminder = false
+                        onRatePlayers(match.id)
+                    }
+                ) {
+                    Text("Rate Now")
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { showRatingReminder = false }) {
+                    Text("Maybe Later")
+                }
+            }
+        )
     }
 
     // Share dialog
@@ -222,6 +292,14 @@ fun MatchDetailScreen(
                             } else {
                                 Text("Free to join!", color = MaterialTheme.colorScheme.tertiary, fontWeight = FontWeight.Medium)
                             }
+                            if (match.paymentType != null && match.paymentType != "host_pays") {
+                                Text(
+                                    text = "Payment: ${match.paymentType.replace("_", " ").replaceFirstChar { it.uppercase() }}",
+                                    style = MaterialTheme.typography.bodyMedium,
+                                    color = MaterialTheme.colorScheme.secondary,
+                                    fontWeight = FontWeight.Medium
+                                )
+                            }
                         }
                     }
 
@@ -332,8 +410,27 @@ fun MatchDetailScreen(
                         }
                     }
 
-                    // Rate players (completed matches)
-                    if (match.status.name == "COMPLETED" && uiState.isParticipant) {
+                    // Payment Status Section (for split matches)
+                    if (uiState.showPaymentSection) {
+                        HorizontalDivider()
+                        PaymentStatusSection(
+                            paymentStatus = uiState.paymentStatus!!,
+                            myShare = uiState.myShare,
+                            canPayShare = uiState.canPayShare,
+                            isPaying = uiState.isPayingShare,
+                            onPayShare = { viewModel.payMyShare() }
+                        )
+                    }
+
+                    // Rate players (completed matches, within 24 hours)
+                    val isWithin24Hours = match.updatedAt?.let {
+                        try {
+                            val completedAt = Instant.parse(it)
+                            Duration.between(completedAt, Instant.now()).toHours() < 24
+                        } catch (_: Exception) { true }
+                    } ?: true
+
+                    if (match.status == MatchStatus.COMPLETED && uiState.isParticipant && isWithin24Hours) {
                         Button(
                             onClick = { onRatePlayers(match.id) },
                             modifier = Modifier.fillMaxWidth()
@@ -353,6 +450,100 @@ fun MatchDetailScreen(
                             Text("Cancel Match", color = MaterialTheme.colorScheme.error)
                         }
                     }
+                }
+            }
+        }
+    }
+}
+
+@Composable
+private fun PaymentStatusSection(
+    paymentStatus: MatchPaymentStatusDto,
+    myShare: SplitPaymentShareDto?,
+    canPayShare: Boolean,
+    isPaying: Boolean,
+    onPayShare: () -> Unit
+) {
+    Card(modifier = Modifier.fillMaxWidth()) {
+        Column(modifier = Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
+            Text("Payment Status", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
+
+            // Progress bar
+            val progress = if (paymentStatus.totalAmount > 0) {
+                (paymentStatus.paidAmount / paymentStatus.totalAmount).toFloat().coerceIn(0f, 1f)
+            } else 0f
+
+            Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween
+                ) {
+                    Text(
+                        "${"%.0f".format(paymentStatus.paidAmount)} / ${"%.0f".format(paymentStatus.totalAmount)} ${paymentStatus.currency}",
+                        style = MaterialTheme.typography.bodySmall
+                    )
+                    Text(
+                        "${(progress * 100).toInt()}% paid",
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.primary
+                    )
+                }
+                LinearProgressIndicator(
+                    progress = { progress },
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(8.dp),
+                    trackColor = MaterialTheme.colorScheme.surfaceVariant
+                )
+            }
+
+            // Individual shares
+            paymentStatus.shares.forEach { share ->
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Row(
+                        horizontalArrangement = Arrangement.spacedBy(8.dp),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Icon(
+                            imageVector = if (share.status == "paid") Icons.Default.CheckCircle else Icons.Default.HourglassEmpty,
+                            contentDescription = null,
+                            tint = if (share.status == "paid") Color(0xFF16A34A) else Color(0xFFF59E0B),
+                            modifier = Modifier.size(20.dp)
+                        )
+                        Text(
+                            share.payerName ?: "Player",
+                            style = MaterialTheme.typography.bodyMedium
+                        )
+                    }
+                    Text(
+                        "${"%.0f".format(share.amount)} ${share.currency}",
+                        style = MaterialTheme.typography.bodyMedium,
+                        fontWeight = FontWeight.Medium
+                    )
+                }
+            }
+
+            // Pay button
+            if (canPayShare && myShare != null) {
+                Spacer(modifier = Modifier.height(4.dp))
+                Button(
+                    onClick = onPayShare,
+                    enabled = !isPaying,
+                    modifier = Modifier.fillMaxWidth(),
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = Color(0xFF2563EB)
+                    )
+                ) {
+                    Icon(Icons.Default.Payment, contentDescription = null)
+                    Spacer(Modifier.width(8.dp))
+                    Text(
+                        if (isPaying) "Processing..."
+                        else "Pay Your Share — ${"%.0f".format(myShare.amount)} ${myShare.currency}"
+                    )
                 }
             }
         }

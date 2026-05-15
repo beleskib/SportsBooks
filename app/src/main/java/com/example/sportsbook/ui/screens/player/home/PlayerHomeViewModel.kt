@@ -4,11 +4,13 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.sportsbook.domain.enums.SportType
 import com.example.sportsbook.domain.model.Coach
+import com.example.sportsbook.domain.model.Match
 import com.example.sportsbook.domain.model.Sport
 import com.example.sportsbook.domain.model.User
 import com.example.sportsbook.domain.model.Venue
 import com.example.sportsbook.domain.repository.AuthRepository
 import com.example.sportsbook.domain.repository.CoachRepository
+import com.example.sportsbook.domain.repository.MatchRepository
 import com.example.sportsbook.domain.repository.NotificationRepository
 import com.example.sportsbook.domain.repository.SportRepository
 import com.example.sportsbook.domain.repository.UserRepository
@@ -29,6 +31,7 @@ import javax.inject.Inject
 data class PlayerHomeUiState(
     val user: User? = null,
     val sports: List<Sport> = emptyList(),
+    val myMatches: List<Match> = emptyList(),
     val topDealVenues: List<Venue> = emptyList(),
     val topDealCoaches: List<Coach> = emptyList(),
     val allVenues: List<Venue> = emptyList(),
@@ -40,6 +43,12 @@ data class PlayerHomeUiState(
     val isLoading: Boolean = false,
     val error: String? = null
 ) {
+    /** Active matches (open, full, or in progress) — shown prominently at top */
+    val activeMatches: List<Match>
+        get() = myMatches.filter {
+            it.status.name in listOf("OPEN", "FULL", "IN_PROGRESS")
+        }
+
     /** Sports the user picked during onboarding */
     val mySports: List<Sport>
         get() {
@@ -123,6 +132,7 @@ class PlayerHomeViewModel @Inject constructor(
     private val userRepository: UserRepository,
     private val authRepository: AuthRepository,
     private val notificationRepository: NotificationRepository,
+    private val matchRepository: MatchRepository,
     private val locationService: LocationService
 ) : ViewModel() {
 
@@ -177,6 +187,7 @@ class PlayerHomeViewModel @Inject constructor(
             val coachDealsDeferred = async { coachRepository.getTopDeals() }
             val allVenuesDeferred = async { venueRepository.getAllVenues() }
             val allCoachesDeferred = async { coachRepository.getAllCoaches() }
+            val myMatchesDeferred = async { matchRepository.getMyMatches() }
 
             val userResult = userDeferred.await()
             val sportsResult = sportsDeferred.await()
@@ -184,6 +195,7 @@ class PlayerHomeViewModel @Inject constructor(
             val coachDealsResult = coachDealsDeferred.await()
             val allVenuesResult = allVenuesDeferred.await()
             val allCoachesResult = allCoachesDeferred.await()
+            val myMatchesResult = myMatchesDeferred.await()
 
             val error = listOf(sportsResult, venueDealsResult, coachDealsResult, allVenuesResult, allCoachesResult)
                 .firstOrNull { it.isFailure }
@@ -194,6 +206,7 @@ class PlayerHomeViewModel @Inject constructor(
                 current.copy(
                     user = userResult.getOrNull() ?: current.user,
                     sports = sportsResult.getOrElse { current.sports },
+                    myMatches = myMatchesResult.getOrElse { current.myMatches },
                     topDealVenues = venueDealsResult.getOrElse { current.topDealVenues },
                     topDealCoaches = coachDealsResult.getOrElse { current.topDealCoaches },
                     allVenues = allVenuesResult.getOrElse { current.allVenues },

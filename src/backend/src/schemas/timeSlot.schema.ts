@@ -1,8 +1,8 @@
 import { z } from 'zod';
 
 export const generateSlotsSchema = z.object({
-  venueId: z.number().int().positive().optional(),
-  coachId: z.number().int().positive().optional(),
+  venueId: z.number().int().positive().optional().nullable(),
+  coachId: z.number().int().positive().optional().nullable(),
   dateFrom: z.string().min(1),
   dateTo: z.string().min(1),
   startHour: z.number().int().min(0).max(23).optional(),

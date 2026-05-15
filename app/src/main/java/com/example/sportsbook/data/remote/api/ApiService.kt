@@ -98,6 +98,12 @@ import com.example.sportsbook.data.remote.dto.UpdateVenueBookingLobbyRequestDto
 import com.example.sportsbook.data.remote.dto.AddTeamRequestDto
 import com.example.sportsbook.data.remote.dto.SplitPaymentIntentResponseDto
 import com.example.sportsbook.data.remote.dto.ReceiptDto
+import com.example.sportsbook.data.remote.dto.MatchPaymentStatusDto
+import com.example.sportsbook.data.remote.dto.MatchPaymentIntentDto
+import com.example.sportsbook.data.remote.dto.v2.CreateSplitRequestDto
+import com.example.sportsbook.data.remote.dto.v2.SplitPaymentSummaryDto
+import com.example.sportsbook.data.remote.dto.v2.SplitPaymentShareDto
+import com.example.sportsbook.data.remote.dto.v2.PaySplitShareRequestDto
 import retrofit2.http.Body
 import retrofit2.http.DELETE
 import retrofit2.http.GET
@@ -323,6 +329,13 @@ interface ApiService {
     @GET("api/payments/{id}")
     suspend fun getPaymentById(@Path("id") id: Long): ApiResponseDto<PaymentDto>
 
+    // Match venue time slots
+    @GET("api/matches/venue-slots/{venueId}")
+    suspend fun getVenueTimeSlotsForMatch(
+        @Path("venueId") venueId: Long,
+        @Query("date") date: String,
+    ): ApiResponseDto<List<TimeSlotDto>>
+
     // Matches
     @POST("api/matches")
     suspend fun createMatch(@Body request: CreateMatchRequestDto): ApiResponseDto<MatchDto>
@@ -406,6 +419,16 @@ interface ApiService {
 
     @GET("api/matches/players/{userId}/ratings")
     suspend fun getPlayerRatings(@Path("userId") userId: Long): ApiResponseDto<List<PlayerRatingDto>>
+
+    // Match Split Payments
+    @GET("api/matches/{id}/payment-status")
+    suspend fun getMatchPaymentStatus(@Path("id") id: Long): ApiResponseDto<MatchPaymentStatusDto>
+
+    @POST("api/matches/{id}/pay")
+    suspend fun createMatchPaymentIntent(@Path("id") id: Long): ApiResponseDto<MatchPaymentIntentDto>
+
+    @POST("api/matches/{id}/confirm-payment")
+    suspend fun confirmMatchPayment(@Path("id") id: Long): ApiResponseDto<SplitPaymentShareDto>
 
     // Notifications
     @GET("api/notifications")
@@ -674,6 +697,22 @@ interface ApiService {
 
     @POST("api/venue-booking-lobbies/{id}/confirm-payment")
     suspend fun confirmLobbyPayment(@Path("id") id: Long): ApiResponseDto<VenueBookingLobbyDto>
+
+    // ── Split Payments ──────────────────────────────────────────────────
+    @POST("api/bookings/{id}/split")
+    suspend fun createSplit(
+        @Path("id") bookingId: Long,
+        @Body request: CreateSplitRequestDto
+    ): ApiResponseDto<SplitPaymentSummaryDto>
+
+    @GET("api/bookings/{id}/split")
+    suspend fun getSplitSummary(@Path("id") bookingId: Long): ApiResponseDto<SplitPaymentSummaryDto>
+
+    @POST("api/split-payments/{shareId}/pay")
+    suspend fun paySplitShare(
+        @Path("shareId") shareId: Long,
+        @Body request: PaySplitShareRequestDto
+    ): ApiResponseDto<SplitPaymentShareDto>
 
     // Lobby Teams
     @GET("api/venue-booking-lobbies/{id}/teams")

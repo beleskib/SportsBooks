@@ -11,6 +11,8 @@ import com.example.sportsbook.domain.model.MatchParticipant
 import com.example.sportsbook.domain.model.Party
 import com.example.sportsbook.data.remote.api.ApiService
 import com.example.sportsbook.data.remote.dto.CreateFeedPostRequestDto
+import com.example.sportsbook.data.remote.dto.MatchPaymentStatusDto
+import com.example.sportsbook.data.remote.dto.v2.SplitPaymentShareDto
 import com.example.sportsbook.domain.repository.AuthRepository
 import com.example.sportsbook.domain.repository.MatchRepository
 import com.example.sportsbook.domain.repository.PartyRepository
@@ -39,7 +41,12 @@ data class MatchDetailUiState(
     val error: String? = null,
     val joinSuccess: Boolean = false,
     val leaveSuccess: Boolean = false,
-    val shareSuccess: Boolean = false
+    val shareSuccess: Boolean = false,
+    // Payment status (for split matches)
+    val paymentStatus: MatchPaymentStatusDto? = null,
+    val isLoadingPayment: Boolean = false,
+    val isPayingShare: Boolean = false,
+    val paymentSuccess: Boolean = false
 ) {
     val isHost: Boolean get() = match?.hostId == currentUserId
     val isParticipant: Boolean
@@ -50,6 +57,14 @@ data class MatchDetailUiState(
         get() = match?.participants?.filter { it.status.name == "PENDING" } ?: emptyList()
     val canJoinWithParty: Boolean
         get() = canJoin && activeParty != null && activeParty.status == "ready"
+    val isSplitMatch: Boolean get() = match?.paymentType == "split"
+    val matchIsFull: Boolean get() = match?.status?.name == "FULL" || match?.status?.name == "IN_PROGRESS"
+    val showPaymentSection: Boolean get() = isSplitMatch && paymentStatus != null && paymentStatus.shares.isNotEmpty()
+    val myShare: SplitPaymentShareDto? get() {
+        val uid = currentUserId ?: return null
+        return paymentStatus?.shares?.find { it.payerUserId == uid }
+    }
+    val canPayShare: Boolean get() = myShare?.status == "pending" || myShare?.status == "awaiting"
 }
 
 // Lightweight snapshot of real-time fields arriving from Firestore.
@@ -99,6 +114,8 @@ class MatchDetailViewModel @Inject constructor(
                     _uiState.update { it.copy(match = match, isLoading = false) }
                     // Start the real-time Firestore overlay after the full REST load succeeds.
                     startFirestoreListener()
+                    // Load payment status for split matches.
+                    loadPaymentStatus()
                 }
                 .onFailure { e ->
                     _uiState.update { it.copy(error = e.message, isLoading = false) }
@@ -313,6 +330,47 @@ class MatchDetailViewModel @Inject constructor(
 
     fun clearShareSuccess() {
         _uiState.update { it.copy(shareSuccess = false) }
+    }
+
+    private fun loadPaymentStatus() {
+        val match = _uiState.value.match ?: return
+        if (match.paymentType != "split") return
+
+        viewModelScope.launch {
+            _uiState.update { it.copy(isLoadingPayment = true) }
+            try {
+                val response = apiService.getMatchPaymentStatus(matchId)
+                _uiState.update { it.copy(isLoadingPayment = false, paymentStatus = response.data) }
+            } catch (e: Exception) {
+                _uiState.update { it.copy(isLoadingPayment = false) }
+            }
+        }
+    }
+
+    fun payMyShare() {
+        viewModelScope.launch {
+            _uiState.update { it.copy(isPayingShare = true, error = null) }
+            try {
+                val intentResponse = apiService.createMatchPaymentIntent(matchId)
+                val intent = intentResponse.data
+                if (intent.alreadyPaid) {
+                    _uiState.update { it.copy(isPayingShare = false, paymentSuccess = true) }
+                    loadPaymentStatus()
+                    return@launch
+                }
+                // Dev mode: auto-confirm since the client secret starts with "dev_secret_"
+                if (intent.clientSecret?.startsWith("dev_secret_") == true) {
+                    apiService.confirmMatchPayment(matchId)
+                    _uiState.update { it.copy(isPayingShare = false, paymentSuccess = true) }
+                    loadPaymentStatus()
+                } else {
+                    // Real Stripe: would launch PaymentSheet here
+                    _uiState.update { it.copy(isPayingShare = false, error = "Stripe payments not yet implemented for matches") }
+                }
+            } catch (e: Exception) {
+                _uiState.update { it.copy(isPayingShare = false, error = e.message ?: "Payment failed") }
+            }
+        }
     }
 
     override fun onCleared() {

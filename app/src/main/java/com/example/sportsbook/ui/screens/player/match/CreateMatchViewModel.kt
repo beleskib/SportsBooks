@@ -1,8 +1,11 @@
 package com.example.sportsbook.ui.screens.player.match
 
+import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.example.sportsbook.data.remote.api.ApiService
 import com.example.sportsbook.data.remote.dto.CreateMatchRequestDto
+import com.example.sportsbook.domain.enums.MatchPaymentType
 import com.example.sportsbook.domain.enums.MatchType
 import com.example.sportsbook.domain.enums.MatchVisibility
 import com.example.sportsbook.domain.enums.SportType
@@ -19,6 +22,14 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import javax.inject.Inject
+
+data class TimeSlotInfo(
+    val id: Long,
+    val startTime: String,
+    val endTime: String,
+    val price: Double,
+    val isAvailable: Boolean = true,
+)
 
 data class CreateMatchUiState(
     val title: String = "",
@@ -44,7 +55,12 @@ data class CreateMatchUiState(
     val venueSuggestions: List<Venue> = emptyList(),
     val showSuggestions: Boolean = false,
     val selectedVenueId: Long? = null,
-    val isSearchingVenues: Boolean = false
+    val isSearchingVenues: Boolean = false,
+    // Venue time slot state
+    val availableTimeSlots: List<TimeSlotInfo> = emptyList(),
+    val selectedTimeSlotId: Long? = null,
+    val isLoadingTimeSlots: Boolean = false,
+    val paymentType: MatchPaymentType = MatchPaymentType.HOST_PAYS
 ) {
     val isValid: Boolean
         get() = title.isNotBlank() && matchDate.isNotBlank() &&
@@ -55,17 +71,50 @@ data class CreateMatchUiState(
 @HiltViewModel
 class CreateMatchViewModel @Inject constructor(
     private val matchRepository: MatchRepository,
-    private val venueRepository: VenueRepository
+    private val venueRepository: VenueRepository,
+    private val apiService: ApiService,
+    savedStateHandle: SavedStateHandle
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(CreateMatchUiState())
     val uiState: StateFlow<CreateMatchUiState> = _uiState.asStateFlow()
 
     private var searchJob: Job? = null
+    private var timeSlotsJob: Job? = null
     private var cachedVenuesBySport: Map<SportType, List<Venue>> = emptyMap()
+
+    private val preselectedVenueId: Long? = savedStateHandle["preselectedVenueId"]
+    private val preselectedTimeSlotId: Long? = savedStateHandle["preselectedTimeSlotId"]
+    private val preselectedPaymentType: String? = savedStateHandle["preselectedPaymentType"]
 
     init {
         preloadVenuesForSport(_uiState.value.sportType)
+        applyPreselection()
+    }
+
+    private fun applyPreselection() {
+        val venueId = preselectedVenueId ?: return
+        viewModelScope.launch {
+            venueRepository.getVenueById(venueId).onSuccess { venue ->
+                _uiState.update {
+                    it.copy(
+                        locationName = venue.name,
+                        address = venue.address,
+                        selectedVenueId = venue.id,
+                        sportType = venue.sportType,
+                    )
+                }
+                preselectedPaymentType?.let { pt ->
+                    val matchPaymentType = MatchPaymentType.entries.find { it.apiValue == pt }
+                    if (matchPaymentType != null) {
+                        updatePaymentType(matchPaymentType)
+                    }
+                }
+                if (_uiState.value.matchDate.isNotBlank()) {
+                    loadVenueTimeSlots()
+                }
+            }
+        }
     }
 
     fun updateTitle(value: String) { _uiState.update { it.copy(title = value) } }
@@ -76,14 +125,19 @@ class CreateMatchViewModel @Inject constructor(
                 sportType = value,
                 venueSuggestions = emptyList(),
                 showSuggestions = false,
-                selectedVenueId = null
+                selectedVenueId = null,
+                availableTimeSlots = emptyList(),
+                selectedTimeSlotId = null
             )
         }
         preloadVenuesForSport(value)
     }
     fun updateMatchType(value: MatchType) { _uiState.update { it.copy(matchType = value) } }
     fun updateVisibility(value: MatchVisibility) { _uiState.update { it.copy(visibility = value) } }
-    fun updateMatchDate(value: String) { _uiState.update { it.copy(matchDate = value) } }
+    fun updateMatchDate(value: String) {
+        _uiState.update { it.copy(matchDate = value) }
+        loadVenueTimeSlots()
+    }
     fun updateStartTime(value: String) { _uiState.update { it.copy(startTime = value) } }
     fun updateEndTime(value: String) { _uiState.update { it.copy(endTime = value) } }
     fun updateMinPlayers(value: Int) { _uiState.update { it.copy(minPlayers = value) } }
@@ -94,9 +148,23 @@ class CreateMatchViewModel @Inject constructor(
     fun updateIsFree(value: Boolean) { _uiState.update { it.copy(isFree = value) } }
     fun updateCostPerPlayer(value: Double) { _uiState.update { it.copy(costPerPlayer = value) } }
 
+    fun updatePaymentType(value: MatchPaymentType) {
+        _uiState.update {
+            it.copy(
+                paymentType = value,
+                isFree = value == MatchPaymentType.CASH_AT_VENUE || value == MatchPaymentType.HOST_PAYS
+            )
+        }
+    }
+
     fun updateLocationName(value: String) {
         _uiState.update {
-            it.copy(locationName = value, selectedVenueId = null)
+            it.copy(
+                locationName = value,
+                selectedVenueId = null,
+                availableTimeSlots = emptyList(),
+                selectedTimeSlotId = null
+            )
         }
         searchVenues(value)
     }
@@ -108,7 +176,20 @@ class CreateMatchViewModel @Inject constructor(
                 address = venue.address ?: "",
                 selectedVenueId = venue.id,
                 showSuggestions = false,
-                venueSuggestions = emptyList()
+                venueSuggestions = emptyList(),
+                selectedTimeSlotId = null,
+                availableTimeSlots = emptyList()
+            )
+        }
+        loadVenueTimeSlots()
+    }
+
+    fun selectTimeSlot(slot: TimeSlotInfo) {
+        _uiState.update {
+            it.copy(
+                selectedTimeSlotId = slot.id,
+                startTime = slot.startTime,
+                endTime = slot.endTime
             )
         }
     }
@@ -174,6 +255,38 @@ class CreateMatchViewModel @Inject constructor(
         }
     }
 
+    private fun loadVenueTimeSlots() {
+        timeSlotsJob?.cancel()
+        val venueId = _uiState.value.selectedVenueId
+        val date = _uiState.value.matchDate
+
+        if (venueId == null || date.isBlank()) {
+            _uiState.update { it.copy(availableTimeSlots = emptyList(), isLoadingTimeSlots = false) }
+            return
+        }
+
+        timeSlotsJob = viewModelScope.launch {
+            _uiState.update { it.copy(isLoadingTimeSlots = true) }
+            try {
+                val response = apiService.getVenueTimeSlotsForMatch(venueId, date)
+                val slots = response.data.map { dto ->
+                    TimeSlotInfo(
+                        id = dto.id,
+                        startTime = dto.startTime,
+                        endTime = dto.endTime,
+                        price = dto.priceOverride ?: 0.0,
+                        isAvailable = dto.isAvailable
+                    )
+                }
+                _uiState.update {
+                    it.copy(availableTimeSlots = slots, isLoadingTimeSlots = false)
+                }
+            } catch (e: Exception) {
+                _uiState.update { it.copy(availableTimeSlots = emptyList(), isLoadingTimeSlots = false) }
+            }
+        }
+    }
+
     fun createMatch() {
         val s = _uiState.value
         if (!s.isValid) return
@@ -181,6 +294,9 @@ class CreateMatchViewModel @Inject constructor(
         viewModelScope.launch {
             _uiState.update { it.copy(isCreating = true, error = null) }
             val request = CreateMatchRequestDto(
+                venueId = s.selectedVenueId,
+                timeSlotId = s.selectedTimeSlotId,
+                paymentType = s.paymentType.apiValue,
                 sportType = s.sportType,
                 matchType = s.matchType,
                 visibility = s.visibility,

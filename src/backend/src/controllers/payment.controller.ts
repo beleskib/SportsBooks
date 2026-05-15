@@ -7,6 +7,7 @@ import * as venueRepo from '../repositories/venue.repository';
 import * as coachRepo from '../repositories/coach.repository';
 import { NotFoundError, ValidationError, ForbiddenError } from '../utils/errors';
 import * as userRepo from '../repositories/user.repository';
+import { syncBookingToFirestore } from '../services/firestoreBookingSync.service';
 
 /**
  * Check whether the requesting user is the payer, the partner receiving
@@ -63,13 +64,27 @@ export async function createPaymentIntent(req: Request, res: Response, next: Nex
 
 export async function confirmPayment(req: Request, res: Response, next: NextFunction) {
   try {
-    // Only admins may manually confirm payments.
-    // Normal flow is via the Stripe webhook (webhook.controller.ts).
-    if (req.user?.role !== 'admin') {
-      throw new ForbiddenError('Forbidden');
+    const paymentId = Number(req.params.id);
+
+    // Look up the payment record so we can check ownership and dev status
+    const payment = await paymentRepo.findById(paymentId);
+    if (!payment) throw new NotFoundError('Payment');
+
+    const isAdmin = req.user?.role === 'admin';
+    const isDevPayment = payment.externalPaymentId?.startsWith('dev_') ?? false;
+
+    if (!isAdmin) {
+      // Allow the payer to confirm their own dev-mode payments
+      const userId = await resolveUserId(req);
+      const isPayer = Number(payment.payerId) === userId;
+
+      if (!(isPayer && isDevPayment)) {
+        throw new ForbiddenError('Forbidden');
+      }
     }
-    const payment = await stripeService.confirmPayment(Number(req.params.id));
-    success(res, payment, 'Payment confirmed');
+
+    const confirmed = await stripeService.confirmPayment(paymentId);
+    success(res, confirmed, 'Payment confirmed');
   } catch (e) {
     next(e);
   }
@@ -77,13 +92,27 @@ export async function confirmPayment(req: Request, res: Response, next: NextFunc
 
 export async function failPayment(req: Request, res: Response, next: NextFunction) {
   try {
-    // Only admins may manually mark a payment as failed.
-    // Normal flow is via the Stripe webhook (webhook.controller.ts).
-    if (req.user?.role !== 'admin') {
-      throw new ForbiddenError('Forbidden');
+    const paymentId = Number(req.params.id);
+
+    // Look up the payment record so we can check ownership and dev status
+    const payment = await paymentRepo.findById(paymentId);
+    if (!payment) throw new NotFoundError('Payment');
+
+    const isAdmin = req.user?.role === 'admin';
+    const isDevPayment = payment.externalPaymentId?.startsWith('dev_') ?? false;
+
+    if (!isAdmin) {
+      // Allow the payer to fail their own dev-mode payments
+      const userId = await resolveUserId(req);
+      const isPayer = Number(payment.payerId) === userId;
+
+      if (!(isPayer && isDevPayment)) {
+        throw new ForbiddenError('Forbidden');
+      }
     }
-    const payment = await stripeService.failPayment(Number(req.params.id));
-    success(res, payment, 'Payment marked as failed');
+
+    const failed = await stripeService.failPayment(paymentId);
+    success(res, failed, 'Payment marked as failed');
   } catch (e) {
     next(e);
   }
@@ -130,6 +159,56 @@ export async function getByBookingId(req: Request, res: Response, next: NextFunc
     }
 
     success(res, payment);
+  } catch (e) {
+    next(e);
+  }
+}
+
+export async function cashConfirm(req: Request, res: Response, next: NextFunction) {
+  try {
+    const userId = await resolveUserId(req);
+    const { bookingId } = req.body;
+
+    if (!bookingId) {
+      throw new ValidationError('bookingId is required');
+    }
+
+    // Validate booking exists, belongs to user, and is in approved status
+    const booking = await bookingRepo.findById(bookingId);
+    if (!booking) throw new NotFoundError('Booking');
+
+    if (booking.playerId !== userId) {
+      throw new ForbiddenError('You can only pay for your own bookings');
+    }
+
+    if (booking.status !== 'approved') {
+      throw new ValidationError('Booking must be in approved status before payment');
+    }
+
+    // Create payment record for cash at venue
+    const payment = await paymentRepo.create(
+      booking.id,
+      userId,
+      booking.totalPrice,
+      'MKD',
+      'cash_at_venue',
+      0
+    );
+
+    // Mark payment as pending_cash (will be completed when cash is collected)
+    await paymentRepo.updateStatus(payment.id, 'pending_cash');
+
+    // Update booking status to confirmed
+    await bookingRepo.updateStatus(booking.id, 'confirmed');
+
+    // Sync to Firestore (fire-and-forget)
+    syncBookingToFirestore(booking.id).catch(() => {});
+    stripeService.syncPaymentToFirestore(booking.id, payment.id).catch((err) =>
+      console.error('Firestore payment sync failed:', err)
+    );
+
+    const updatedPayment = await paymentRepo.findById(payment.id);
+    created(res, updatedPayment, 'Cash at venue payment confirmed');
   } catch (e) {
     next(e);
   }

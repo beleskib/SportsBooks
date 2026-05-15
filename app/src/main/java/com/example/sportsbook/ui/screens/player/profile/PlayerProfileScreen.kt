@@ -32,6 +32,7 @@ import androidx.compose.material.icons.filled.PersonAdd
 import androidx.compose.material.icons.filled.Save
 import androidx.compose.material.icons.filled.Schedule
 import androidx.compose.material.icons.filled.Settings
+import androidx.compose.material.icons.filled.Star
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
@@ -397,57 +398,12 @@ fun PlayerProfileScreen(
 
                     // ── 6. Player ratings card ──
                     item {
-                        Card(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .padding(horizontal = 16.dp),
-                            colors = CardDefaults.cardColors(containerColor = CardBg),
-                            elevation = CardDefaults.cardElevation(defaultElevation = 1.dp),
-                            shape = RoundedCornerShape(16.dp)
-                        ) {
-                            Column(modifier = Modifier.padding(16.dp)) {
-                                Row(
-                                    modifier = Modifier.fillMaxWidth(),
-                                    horizontalArrangement = Arrangement.SpaceBetween,
-                                    verticalAlignment = Alignment.CenterVertically
-                                ) {
-                                    Text(
-                                        text = "PLAYER RATINGS",
-                                        style = MaterialTheme.typography.labelSmall.copy(
-                                            fontSize = 10.sp,
-                                            letterSpacing = 0.8.sp
-                                        ),
-                                        color = TextSecondary,
-                                        fontWeight = FontWeight.SemiBold
-                                    )
-                                    Text(
-                                        text = "from $reviewCount reviews",
-                                        style = MaterialTheme.typography.labelSmall.copy(
-                                            fontSize = 10.sp
-                                        ),
-                                        color = TextTertiary
-                                    )
-                                }
-                                Spacer(modifier = Modifier.height(14.dp))
-                                RatingBar(
-                                    label = "Skill",
-                                    score = skillRating,
-                                    barColor = YellowBar
-                                )
-                                Spacer(modifier = Modifier.height(10.dp))
-                                RatingBar(
-                                    label = "Sportsmanship",
-                                    score = sportsmanshipRating,
-                                    barColor = EmeraldBar
-                                )
-                                Spacer(modifier = Modifier.height(10.dp))
-                                RatingBar(
-                                    label = "Punctuality",
-                                    score = punctualityRating,
-                                    barColor = BlueBar
-                                )
-                            }
-                        }
+                        PlayerRatingsCard(
+                            skillRating = skillRating.toDouble(),
+                            sportsmanshipRating = sportsmanshipRating.toDouble(),
+                            punctualityRating = punctualityRating.toDouble(),
+                            totalRatings = reviewCount
+                        )
                         Spacer(modifier = Modifier.height(12.dp))
                     }
 
@@ -762,6 +718,129 @@ fun PlayerProfileScreen(
             hostState = snackbarHostState,
             modifier = Modifier.align(Alignment.BottomCenter)
         )
+    }
+}
+
+private val StarGold = Color(0xFFFBBF24)
+
+// ── Player Ratings card ──
+@Composable
+private fun PlayerRatingsCard(
+    skillRating: Double,
+    sportsmanshipRating: Double,
+    punctualityRating: Double,
+    totalRatings: Int
+) {
+    Card(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(horizontal = 16.dp),
+        colors = CardDefaults.cardColors(containerColor = CardBg),
+        elevation = CardDefaults.cardElevation(defaultElevation = 1.dp),
+        shape = RoundedCornerShape(16.dp)
+    ) {
+        Column(modifier = Modifier.padding(16.dp)) {
+            // Header row: star icon + title
+            Row(
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Icon(
+                    imageVector = Icons.Default.Star,
+                    contentDescription = null,
+                    tint = StarGold,
+                    modifier = Modifier.size(16.dp)
+                )
+                Spacer(modifier = Modifier.width(6.dp))
+                Text(
+                    text = "Player Ratings",
+                    style = MaterialTheme.typography.titleSmall.copy(
+                        fontWeight = FontWeight.Bold
+                    ),
+                    color = TextPrimary
+                )
+            }
+
+            Spacer(modifier = Modifier.height(16.dp))
+
+            if (totalRatings == 0) {
+                Text(
+                    text = "No ratings yet",
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = TextSecondary
+                )
+            } else {
+                PlayerRatingRow(label = "Skill", rating = skillRating)
+                Spacer(modifier = Modifier.height(12.dp))
+                PlayerRatingRow(label = "Sportsmanship", rating = sportsmanshipRating)
+                Spacer(modifier = Modifier.height(12.dp))
+                PlayerRatingRow(label = "Punctuality", rating = punctualityRating)
+
+                Spacer(modifier = Modifier.height(14.dp))
+                Text(
+                    text = "Based on $totalRatings ${if (totalRatings == 1) "rating" else "ratings"}",
+                    style = MaterialTheme.typography.bodySmall,
+                    color = TextSecondary
+                )
+            }
+        }
+    }
+}
+
+// ── Single row: label — ⭐ X.X ──
+@Composable
+private fun PlayerRatingRow(
+    label: String,
+    rating: Double
+) {
+    Row(
+        modifier = Modifier.fillMaxWidth(),
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        Text(
+            text = label,
+            style = MaterialTheme.typography.bodyMedium,
+            color = TextPrimary,
+            modifier = Modifier.weight(1f)
+        )
+        Icon(
+            imageVector = Icons.Default.Star,
+            contentDescription = null,
+            tint = StarGold,
+            modifier = Modifier.size(16.dp)
+        )
+        Spacer(modifier = Modifier.width(4.dp))
+        Text(
+            text = String.format("%.1f", rating),
+            style = MaterialTheme.typography.bodyMedium.copy(fontWeight = FontWeight.SemiBold),
+            color = TextPrimary
+        )
+    }
+}
+
+@Preview(showBackground = true, backgroundColor = 0xFFF9FAFB)
+@Composable
+private fun PlayerRatingsCardPreview() {
+    SportsBookTheme {
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .background(LightBg)
+                .padding(vertical = 16.dp)
+        ) {
+            PlayerRatingsCard(
+                skillRating = 4.2,
+                sportsmanshipRating = 4.8,
+                punctualityRating = 4.5,
+                totalRatings = 12
+            )
+            Spacer(modifier = Modifier.height(16.dp))
+            PlayerRatingsCard(
+                skillRating = 0.0,
+                sportsmanshipRating = 0.0,
+                punctualityRating = 0.0,
+                totalRatings = 0
+            )
+        }
     }
 }
 

@@ -50,8 +50,10 @@ import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import coil.compose.AsyncImage
+import com.example.sportsbook.domain.enums.MatchStatus
 import com.example.sportsbook.domain.enums.SportType
 import com.example.sportsbook.domain.model.Coach
+import com.example.sportsbook.domain.model.Match
 import com.example.sportsbook.domain.model.Sport
 import com.example.sportsbook.domain.model.User
 import com.example.sportsbook.domain.model.Venue
@@ -153,14 +155,25 @@ fun PlayerHomeScreen(
     onNavigateToSettings: () -> Unit,
     onSignOut: () -> Unit,
     onFindMatch: () -> Unit = {},
+    onMatchClick: (Long) -> Unit = {},
     onNavigateToSearch: () -> Unit = {},
     onNavigateToFavorites: () -> Unit = {},
     onNavigateToFriends: () -> Unit = {},
     onBrowseAllSports: () -> Unit = {},
     onNavigateToCommunities: () -> Unit = {},
+    refreshTrigger: Boolean = false,
+    onRefreshConsumed: () -> Unit = {},
     viewModel: PlayerHomeViewModel = hiltViewModel()
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
+
+    // Auto-reload when returning from SportsIFollow (or any screen that sets the trigger)
+    androidx.compose.runtime.LaunchedEffect(refreshTrigger) {
+        if (refreshTrigger) {
+            viewModel.loadData()
+            onRefreshConsumed()
+        }
+    }
 
     when {
         uiState.isLoading -> LoadingIndicator()
@@ -178,6 +191,7 @@ fun PlayerHomeScreen(
             onNavigateToSearch = onNavigateToSearch,
             onNavigateToFavorites = onNavigateToFavorites,
             onFindMatch = onFindMatch,
+            onMatchClick = onMatchClick,
             onBrowseAllSports = onBrowseAllSports,
             notificationCount = uiState.notificationCount
         )
@@ -196,6 +210,7 @@ private fun PlayerHomeContent(
     onNavigateToSearch: () -> Unit,
     onNavigateToFavorites: () -> Unit,
     onFindMatch: () -> Unit,
+    onMatchClick: (Long) -> Unit = {},
     onBrowseAllSports: () -> Unit = {},
     notificationCount: Int = 0
 ) {
@@ -217,6 +232,40 @@ private fun PlayerHomeContent(
         // ── Search Bar ──
         item {
             SearchBar(onClick = onNavigateToSearch)
+        }
+
+        // ── Your Active Matches ──
+        if (uiState.activeMatches.isNotEmpty()) {
+            item {
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = 16.dp, vertical = 8.dp),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    SectionLabel("Your matches · ${uiState.activeMatches.size}")
+                    Text(
+                        text = "See all →",
+                        style = MaterialTheme.typography.bodySmall,
+                        color = Color(0xFF2563EB),
+                        modifier = Modifier.clickable(onClick = onFindMatch)
+                    )
+                }
+            }
+            item {
+                LazyRow(
+                    contentPadding = PaddingValues(horizontal = 16.dp),
+                    horizontalArrangement = Arrangement.spacedBy(12.dp)
+                ) {
+                    items(uiState.activeMatches, key = { "match-${it.id}" }) { match ->
+                        ActiveMatchCard(
+                            match = match,
+                            onClick = { onMatchClick(match.id) }
+                        )
+                    }
+                }
+            }
         }
 
         // ── Your Sports grid ──
@@ -798,6 +847,125 @@ private fun DealCard(
     }
 }
 
+// ── Active match card (horizontal scroll, above sports) ──
+@Composable
+private fun ActiveMatchCard(match: Match, onClick: () -> Unit) {
+    val visual = sportVisuals[match.sportType]
+    val statusColor = when (match.status) {
+        MatchStatus.OPEN -> Color(0xFF16A34A)        // green
+        MatchStatus.FULL -> Color(0xFFF59E0B)         // amber
+        MatchStatus.IN_PROGRESS -> Color(0xFF2563EB)  // blue
+        else -> TextSecondary
+    }
+    val statusLabel = when (match.status) {
+        MatchStatus.OPEN -> "Open"
+        MatchStatus.FULL -> "Full"
+        MatchStatus.IN_PROGRESS -> "Live"
+        else -> match.status.name.lowercase().replaceFirstChar { it.uppercase() }
+    }
+
+    Card(
+        onClick = onClick,
+        modifier = Modifier.width(220.dp),
+        shape = RoundedCornerShape(16.dp),
+        colors = CardDefaults.cardColors(containerColor = CardBg),
+        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
+    ) {
+        Column {
+            // Gradient header with sport emoji + status chip
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(56.dp)
+                    .background(
+                        Brush.linearGradient(
+                            listOf(
+                                visual?.gradientStart ?: Color(0xFF6366F1),
+                                visual?.gradientEnd ?: Color(0xFF4F46E5)
+                            )
+                        )
+                    )
+                    .padding(horizontal = 12.dp, vertical = 8.dp)
+            ) {
+                Text(
+                    text = visual?.emoji ?: "⚽",
+                    fontSize = 24.sp,
+                    modifier = Modifier.align(Alignment.CenterStart)
+                )
+                // Status chip
+                Box(
+                    modifier = Modifier
+                        .align(Alignment.TopEnd)
+                        .clip(RoundedCornerShape(999.dp))
+                        .background(statusColor.copy(alpha = 0.9f))
+                        .padding(horizontal = 8.dp, vertical = 3.dp)
+                ) {
+                    Text(
+                        text = statusLabel,
+                        style = MaterialTheme.typography.labelSmall,
+                        color = Color.White,
+                        fontWeight = FontWeight.Bold,
+                        fontSize = 10.sp
+                    )
+                }
+            }
+
+            Column(modifier = Modifier.padding(12.dp)) {
+                Text(
+                    text = match.title,
+                    style = MaterialTheme.typography.titleSmall,
+                    color = TextPrimary,
+                    fontWeight = FontWeight.SemiBold,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis
+                )
+                Spacer(modifier = Modifier.height(4.dp))
+                // Date + time
+                Text(
+                    text = "${match.matchDate} · ${match.displayTime}",
+                    style = MaterialTheme.typography.bodySmall,
+                    color = TextSecondary,
+                    fontSize = 11.sp,
+                    maxLines = 1
+                )
+                // Location
+                Text(
+                    text = match.displayLocation,
+                    style = MaterialTheme.typography.bodySmall,
+                    color = TextSecondary,
+                    fontSize = 11.sp,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis
+                )
+                Spacer(modifier = Modifier.height(6.dp))
+                // Players + cost
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    // Player count
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        Text(
+                            text = "👥 ${match.currentPlayers}/${match.maxPlayers}",
+                            style = MaterialTheme.typography.labelSmall,
+                            color = TextPrimary,
+                            fontWeight = FontWeight.Medium
+                        )
+                    }
+                    // Cost
+                    Text(
+                        text = match.displayCost,
+                        style = MaterialTheme.typography.labelSmall,
+                        color = if (match.isFree) Color(0xFF16A34A) else TextPrimary,
+                        fontWeight = FontWeight.SemiBold
+                    )
+                }
+            }
+        }
+    }
+}
+
 // ── Find a Match CTA (dark card with gold text) ──
 @Composable
 private fun FindMatchCta(onClick: () -> Unit) {
@@ -926,6 +1094,7 @@ private fun PlayerHomeScreenPreview() {
             onNavigateToSearch = {},
             onNavigateToFavorites = {},
             onFindMatch = {},
+            onMatchClick = {},
             onBrowseAllSports = {},
             notificationCount = previewState.notificationCount
         )

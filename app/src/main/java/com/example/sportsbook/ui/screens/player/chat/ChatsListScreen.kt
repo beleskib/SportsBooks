@@ -20,6 +20,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.automirrored.filled.KeyboardArrowRight
 import androidx.compose.material.icons.filled.CalendarToday
+import androidx.compose.material.icons.filled.Groups
 import androidx.compose.material.icons.filled.Person
 import androidx.compose.material.icons.filled.SportsSoccer
 import androidx.compose.material3.Card
@@ -68,6 +69,7 @@ fun ChatsListScreen(
     onNavigateToBookingChat: (bookingId: Long) -> Unit,
     onNavigateToMatchChat: (matchId: Long) -> Unit,
     onNavigateToFriendChat: (userId: Long, name: String, photoUrl: String?) -> Unit = { _, _, _ -> },
+    onNavigateToPartyChat: (partyId: Long) -> Unit = {},
     onBack: () -> Unit,
     viewModel: ChatsListViewModel = hiltViewModel(),
 ) {
@@ -154,6 +156,17 @@ fun ChatsListScreen(
                         )
                     },
                 )
+                Tab(
+                    selected = selectedTab == 3,
+                    onClick = { selectedTab = 3 },
+                    text = {
+                        Text(
+                            "Team",
+                            style = MaterialTheme.typography.labelLarge,
+                            color = if (selectedTab == 3) TextPrimary else TextTertiary,
+                        )
+                    },
+                )
             }
 
             // ── Content with pull-to-refresh ──────────────────────────────────
@@ -163,7 +176,7 @@ fun ChatsListScreen(
                 modifier = Modifier.fillMaxSize(),
             ) {
                 when {
-                    uiState.isLoading && uiState.bookingChats.isEmpty() && uiState.matchChats.isEmpty() -> {
+                    uiState.isLoading && uiState.bookingChats.isEmpty() && uiState.matchChats.isEmpty() && uiState.partyChats.isEmpty() -> {
                         Box(
                             modifier = Modifier.fillMaxSize(),
                             contentAlignment = Alignment.Center,
@@ -203,7 +216,7 @@ fun ChatsListScreen(
                         )
                     }
 
-                    else -> {
+                    selectedTab == 2 -> {
                         ChatConversationList(
                             conversations = uiState.friendChats,
                             emptyMessage = "No direct messages yet.\nMessage a friend from your Friends list.",
@@ -211,6 +224,14 @@ fun ChatsListScreen(
                                 val friendId = conversation.friendUserId ?: return@ChatConversationList
                                 onNavigateToFriendChat(friendId, conversation.title, null)
                             },
+                        )
+                    }
+
+                    else -> {
+                        ChatConversationList(
+                            conversations = uiState.partyChats,
+                            emptyMessage = "No party chats yet.\nCreate or join a party to start chatting.",
+                            onConversationClick = { onNavigateToPartyChat(it.id) },
                         )
                     }
                 }
@@ -300,6 +321,11 @@ private fun ChatConversationRow(
                     Color(0xFF854D0E),   // yellow-800
                     Icons.Default.Person,
                 )
+                ChatType.PARTY -> Triple(
+                    Color(0xFFF3E8FF),   // purple-100
+                    Color(0xFF7C3AED),   // purple-600
+                    Icons.Default.Groups,
+                )
             }
             Box(
                 modifier = Modifier
@@ -369,6 +395,9 @@ private fun StatusBadge(
         "ongoing" -> Color(0xFFDBEAFE) to Color(0xFF1E40AF)    // blue
         "full" -> Color(0xFFFEF9C3) to Color(0xFF92400E)       // amber
         "cancelled" -> Color(0xFFFEE2E2) to Color(0xFF991B1B)  // red
+        "forming" -> Color(0xFFF3E8FF) to Color(0xFF6D28D9)    // purple
+        "ready" -> Color(0xFFDCFCE7) to Color(0xFF166534)      // green
+        "in_match" -> Color(0xFFDBEAFE) to Color(0xFF1E40AF)   // blue
         else -> Color(0xFFF3F4F6) to Color(0xFF374151)          // gray
     }
 
@@ -394,7 +423,7 @@ private fun StatusBadge(
 @Preview(showBackground = true, backgroundColor = 0xFFF9FAFB)
 @Composable
 private fun ChatsListScreenPreview() {
-    val bookingChats = listOf(
+    val venueChats = listOf(
         ChatConversation(
             id = 1L,
             title = "City Tennis Center",
@@ -419,10 +448,28 @@ private fun ChatsListScreenPreview() {
             status = "Open",
         ),
     )
+    val friendChats = listOf(
+        ChatConversation(
+            id = 20L,
+            title = "Alex Johnson",
+            subtitle = "See you on the court!",
+            type = ChatType.FRIEND,
+            status = "DM",
+            friendUserId = 99L,
+        ),
+    )
+    val partyChats = listOf(
+        ChatConversation(
+            id = 30L,
+            title = "Weekend Warriors",
+            subtitle = "3 members · forming",
+            type = ChatType.PARTY,
+            status = "forming",
+        ),
+    )
 
     androidx.compose.material3.MaterialTheme {
         Column(modifier = Modifier.fillMaxSize().background(LightBg)) {
-            // TabRow preview
             var selectedTab by remember { mutableIntStateOf(0) }
             TabRow(
                 selectedTabIndex = selectedTab,
@@ -444,11 +491,18 @@ private fun ChatsListScreenPreview() {
                     onClick = { selectedTab = 2 },
                     text = { Text("Friends") },
                 )
+                Tab(
+                    selected = selectedTab == 3,
+                    onClick = { selectedTab = 3 },
+                    text = { Text("Team") },
+                )
             }
 
             val conversations = when (selectedTab) {
-                0 -> bookingChats
+                0 -> venueChats
                 1 -> matchChats
+                2 -> friendChats
+                3 -> partyChats
                 else -> emptyList()
             }
             ChatConversationList(

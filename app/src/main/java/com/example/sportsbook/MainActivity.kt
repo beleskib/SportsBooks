@@ -24,6 +24,7 @@ data class NotificationDeepLink(
     val type: String,
     val bookingId: Long? = null,
     val matchId: Long? = null,
+    val partyId: Long? = null,
 )
 
 @AndroidEntryPoint
@@ -62,11 +63,13 @@ class MainActivity : ComponentActivity() {
         val type = intent?.getStringExtra("type") ?: return
         val bookingId = intent.getStringExtra("bookingId")?.toLongOrNull()
         val matchId = intent.getStringExtra("matchId")?.toLongOrNull()
+        val partyId = intent.getStringExtra("partyId")?.toLongOrNull()
 
         _pendingDeepLink.value = NotificationDeepLink(
             type = type,
             bookingId = bookingId,
             matchId = matchId,
+            partyId = partyId,
         )
     }
 

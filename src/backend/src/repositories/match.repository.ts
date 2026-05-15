@@ -32,6 +32,11 @@ export interface MatchRow {
   longitude: number | null;
   isFree: boolean;
   costPerPlayer: number;
+  paymentType: string;
+  timeSlotId: number | null;
+  totalPrice: number;
+  pricePerPlayer: number;
+  currency: string;
   recurrenceRuleId: number | null;
   parentMatchId: number | null;
   participants: ParticipantRow[];
@@ -132,6 +137,11 @@ function mapMatchRow(row: any): Omit<MatchRow, 'participants'> {
     longitude: row.longitude ? Number(row.longitude) : null,
     isFree: row.is_free,
     costPerPlayer: Number(row.cost_per_player ?? 0),
+    paymentType: row.payment_type ?? 'host_pays',
+    timeSlotId: row.time_slot_id ? Number(row.time_slot_id) : null,
+    totalPrice: Number(row.total_price ?? 0),
+    pricePerPlayer: Number(row.price_per_player ?? 0),
+    currency: row.currency ?? 'MKD',
     recurrenceRuleId: row.recurrence_rule_id ? Number(row.recurrence_rule_id) : null,
     parentMatchId: row.parent_match_id ? Number(row.parent_match_id) : null,
     createdAt: row.created_at?.toISOString?.() ?? row.created_at,
@@ -219,6 +229,7 @@ const MATCH_SELECT = `
   m.start_time, m.end_time, m.min_players, m.max_players, m.current_players,
   m.min_skill_level, m.max_skill_level, m.location_name, m.address,
   m.latitude, m.longitude, m.is_free, m.cost_per_player,
+  m.payment_type, m.time_slot_id, m.total_price, m.price_per_player, m.currency,
   m.recurrence_rule_id, m.parent_match_id, m.created_at, m.updated_at,
   u.display_name AS host_name, u.photo_url AS host_photo_url,
   v.name AS venue_name`;
@@ -232,13 +243,16 @@ export async function create(hostId: number, data: {
   locationName?: string; address?: string;
   latitude?: number; longitude?: number;
   isFree?: boolean; costPerPlayer?: number;
+  paymentType?: string; timeSlotId?: number;
+  totalPrice?: number; pricePerPlayer?: number; currency?: string;
 }): Promise<MatchRow> {
   const result = await query(
     `INSERT INTO matches (host_id, booking_id, venue_id, sport_type, match_type,
        visibility, title, description, match_date, start_time, end_time,
        min_players, max_players, current_players, min_skill_level, max_skill_level,
-       location_name, address, latitude, longitude, is_free, cost_per_player, status)
-     VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,1,$14,$15,$16,$17,$18,$19,$20,$21,'open')
+       location_name, address, latitude, longitude, is_free, cost_per_player,
+       payment_type, time_slot_id, total_price, price_per_player, currency, status)
+     VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,1,$14,$15,$16,$17,$18,$19,$20,$21,$22,$23,$24,$25,$26,'open')
      RETURNING *`,
     [
       hostId, data.bookingId || null, data.venueId || null,
@@ -249,6 +263,8 @@ export async function create(hostId: number, data: {
       data.locationName || null, data.address || null,
       data.latitude || null, data.longitude || null,
       data.isFree !== false, data.costPerPlayer || 0,
+      data.paymentType || 'host_pays', data.timeSlotId || null,
+      data.totalPrice || 0, data.pricePerPlayer || 0, data.currency || 'MKD',
     ]
   );
   const match = mapMatchRow(result.rows[0]);
@@ -363,6 +379,8 @@ export async function update(id: number, data: Record<string, any>): Promise<Mat
     address: 'address', latitude: 'latitude', longitude: 'longitude',
     isFree: 'is_free', costPerPlayer: 'cost_per_player', visibility: 'visibility',
     status: 'status',
+    paymentType: 'payment_type', timeSlotId: 'time_slot_id',
+    totalPrice: 'total_price', pricePerPlayer: 'price_per_player', currency: 'currency',
   };
 
   const setClauses: string[] = [];

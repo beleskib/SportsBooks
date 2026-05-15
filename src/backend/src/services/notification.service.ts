@@ -251,47 +251,52 @@ export async function notifyFeedPostCommented(
 export async function notifyPartyInvite(
   userId: number,
   leaderName: string,
-  partyName: string
+  partyName: string,
+  partyId: number
 ): Promise<void> {
   await sendNotification(
     userId,
     'party_invite',
     `${leaderName} invited you to a party`,
     `${leaderName} invited you to join "${partyName}". Tap to respond.`,
-    {}
+    { partyId: String(partyId) }
   );
 }
 
 export async function notifyPartyInviteAccepted(
   leaderId: number,
-  memberName: string
+  memberName: string,
+  partyId: number
 ): Promise<void> {
   await sendNotification(
     leaderId,
     'party_invite_accepted',
     `${memberName} accepted your party invite`,
     `${memberName} has joined your party!`,
-    {}
+    { partyId: String(partyId) }
   );
 }
 
 export async function notifyPartyInviteDeclined(
   leaderId: number,
-  memberName: string
+  memberName: string,
+  partyId: number
 ): Promise<void> {
   await sendNotification(
     leaderId,
     'party_invite_declined',
     `${memberName} declined your party invite`,
     `${memberName} won't be joining the party.`,
-    {}
+    { partyId: String(partyId) }
   );
 }
 
 export async function notifyPartyJoinedMatch(
   memberUserIds: number[],
   matchTitle: string,
-  excludeUserId: number
+  excludeUserId: number,
+  partyId: number,
+  matchId: number
 ): Promise<void> {
   const promises = memberUserIds
     .filter((uid) => uid !== excludeUserId)
@@ -301,7 +306,7 @@ export async function notifyPartyJoinedMatch(
         'party_joined_match',
         'Your party joined a match',
         `Your party has joined "${matchTitle}". Get ready to play!`,
-        {}
+        { partyId: String(partyId), matchId: String(matchId) }
       )
     );
 
@@ -311,7 +316,8 @@ export async function notifyPartyJoinedMatch(
 export async function notifyPartyDisbanded(
   memberUserIds: number[],
   partyName: string,
-  excludeUserId: number
+  excludeUserId: number,
+  partyId: number
 ): Promise<void> {
   const promises = memberUserIds
     .filter((uid) => uid !== excludeUserId)
@@ -321,7 +327,7 @@ export async function notifyPartyDisbanded(
         'party_disbanded',
         'Party disbanded',
         `"${partyName}" has been disbanded by the leader.`,
-        {}
+        { partyId: String(partyId) }
       )
     );
 

@@ -40,7 +40,11 @@ sealed interface Route {
     // Matchmaking
     @Serializable data object MatchList : Route
     @Serializable data class MatchDetail(val matchId: Long) : Route
-    @Serializable data object CreateMatch : Route
+    @Serializable data class CreateMatch(
+        val preselectedVenueId: Long? = null,
+        val preselectedTimeSlotId: Long? = null,
+        val preselectedPaymentType: String? = null
+    ) : Route
     @Serializable data class MatchChat(val matchId: Long) : Route
     @Serializable data class RatePlayers(val matchId: Long) : Route
     @Serializable data class AvailablePlayers(

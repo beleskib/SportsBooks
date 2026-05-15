@@ -75,7 +75,8 @@ export async function inviteToParty(req: Request, res: Response, next: NextFunct
       notificationService.notifyPartyInvite(
         userId,
         leaderName,
-        partyName
+        partyName,
+        partyId
       ).catch((err) => console.error('Failed to send party invite notification:', err));
     }
 
@@ -108,13 +109,15 @@ export async function respondToInvite(req: Request, res: Response, next: NextFun
         // Notify leader that member accepted
         notificationService.notifyPartyInviteAccepted(
           party.leaderId,
-          memberName
+          memberName,
+          partyId
         ).catch((err) => console.error('Failed to send party invite accepted notification:', err));
       } else {
         // Notify leader that member declined
         notificationService.notifyPartyInviteDeclined(
           party.leaderId,
-          memberName
+          memberName,
+          partyId
         ).catch((err) => console.error('Failed to send party invite declined notification:', err));
       }
 
@@ -150,7 +153,8 @@ export async function disbandParty(req: Request, res: Response, next: NextFuncti
     notificationService.notifyPartyDisbanded(
       acceptedMemberIds,
       partyName,
-      req.user!.id
+      req.user!.id,
+      partyId
     ).catch((err) => console.error('Failed to send party disbanded notifications:', err));
 
     success(res, { message: 'Party disbanded' });
@@ -208,7 +212,9 @@ export async function joinMatchWithParty(req: Request, res: Response, next: Next
     notificationService.notifyPartyJoinedMatch(
       memberUserIds,
       match.title,
-      req.user!.id
+      req.user!.id,
+      partyId,
+      matchId
     ).catch((err) => console.error('Failed to send party joined match notifications:', err));
 
     // Return updated match

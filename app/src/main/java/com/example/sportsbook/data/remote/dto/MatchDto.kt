@@ -41,6 +41,11 @@ data class MatchDto(
     val longitude: Double? = null,
     val isFree: Boolean = true,
     val costPerPlayer: Double = 0.0,
+    val paymentType: String? = null,
+    val timeSlotId: Long? = null,
+    val totalPrice: Double? = null,
+    val pricePerPlayer: Double? = null,
+    val currency: String? = null,
     val recurrenceRuleId: Long? = null,
     val parentMatchId: Long? = null,
     val participants: List<MatchParticipantDto> = emptyList(),
@@ -58,6 +63,11 @@ data class MatchDto(
         locationName = locationName, address = address,
         latitude = latitude, longitude = longitude,
         isFree = isFree, costPerPlayer = costPerPlayer,
+        paymentType = paymentType,
+        timeSlotId = timeSlotId,
+        totalPrice = totalPrice ?: 0.0,
+        pricePerPlayer = pricePerPlayer ?: 0.0,
+        currency = currency ?: "MKD",
         recurrenceRuleId = recurrenceRuleId, parentMatchId = parentMatchId,
         participants = participants.map { it.toDomain() },
         createdAt = createdAt, updatedAt = updatedAt
@@ -130,6 +140,7 @@ data class PlayerRatingDto(
 data class CreateMatchRequestDto(
     val bookingId: Long? = null,
     val venueId: Long? = null,
+    val timeSlotId: Long? = null,
     val sportType: SportType,
     val matchType: MatchType,
     val visibility: MatchVisibility = MatchVisibility.PUBLIC,
@@ -147,7 +158,8 @@ data class CreateMatchRequestDto(
     val latitude: Double? = null,
     val longitude: Double? = null,
     val isFree: Boolean = true,
-    val costPerPlayer: Double = 0.0
+    val costPerPlayer: Double = 0.0,
+    val paymentType: String? = null
 )
 
 @Serializable

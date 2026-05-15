@@ -27,6 +27,8 @@ export const createMatchSchema = z.object({
   longitude: z.number().min(-180).max(180).optional().nullable(),
   isFree: z.boolean().optional(),
   costPerPlayer: z.number().min(0).optional().nullable(),
+  timeSlotId: z.number().int().positive().optional().nullable(),
+  paymentType: z.enum(['host_pays', 'split', 'split_to_teams', 'cash_at_venue']).optional(),
 });
 
 export const updateMatchSchema = createMatchSchema.partial();

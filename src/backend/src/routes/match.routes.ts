@@ -11,11 +11,19 @@ import * as partyController from '../controllers/party.controller';
 
 const router = Router();
 
+// Venue time slots for match creation
+router.get('/venue-slots/:venueId', authenticate, matchController.getVenueTimeSlots);
+
 // Matches
 router.post('/', authenticate, validate(createMatchSchema), matchController.createMatch);
 router.get('/', authenticate, matchController.listMatches);
 router.get('/mine', authenticate, matchController.getMyMatches);
 router.get('/nearby', authenticate, matchController.getNearbyMatches);
+// Match split payments
+router.get('/:id/payment-status', authenticate, matchController.getMatchPaymentStatus);
+router.post('/:id/pay', authenticate, matchController.createMatchPaymentIntent);
+router.post('/:id/confirm-payment', authenticate, matchController.confirmMatchPayment);
+
 router.get('/:id', authenticate, matchController.getMatchById);
 router.put('/:id', authenticate, validate(updateMatchSchema), matchController.updateMatch);
 router.put('/:id/cancel', authenticate, matchController.cancelMatch);

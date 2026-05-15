@@ -3,12 +3,17 @@ package com.example.sportsbook.ui.screens.player.payment
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.example.sportsbook.domain.model.Booking
+import com.example.sportsbook.data.remote.api.ApiService
+import com.example.sportsbook.data.remote.dto.v2.CreateSplitRequestDto
+import com.example.sportsbook.domain.model.Friendship
 import com.example.sportsbook.domain.repository.BookingRepository
+import com.example.sportsbook.domain.repository.FriendshipRepository
 import com.example.sportsbook.domain.repository.GamificationRepository
 import com.example.sportsbook.domain.repository.PaymentRepository
 import com.stripe.android.paymentsheet.PaymentSheetResult
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -40,13 +45,35 @@ data class PaymentCheckoutUiState(
     val xpRedeemed: Boolean = false,
     val isRedeemingXp: Boolean = false,
     val currentLevel: Int = 1,
-)
+    // Split with Friends state
+    val splitEnabled: Boolean = false,
+    val friends: List<Friendship> = emptyList(),
+    val selectedFriends: List<Friendship> = emptyList(),
+    val friendSearchQuery: String = "",
+    val filteredFriends: List<Friendship> = emptyList(),
+    val isLoadingFriends: Boolean = false,
+    val isCreatingSplit: Boolean = false,
+    val splitCreated: Boolean = false,
+) {
+    /** Number of people sharing the cost (host + selected friends) */
+    val splitPartySize: Int get() = 1 + selectedFriends.size
+
+    /** Each person's share after XP discount is applied to the total */
+    val yourShare: Double
+        get() {
+            if (!splitEnabled || selectedFriends.isEmpty()) return (amount - if (xpRedeemed) xpDiscount else 0.0).coerceAtLeast(0.0)
+            val effectiveTotal = (amount - if (xpRedeemed) xpDiscount else 0.0).coerceAtLeast(0.0)
+            return Math.round(effectiveTotal / splitPartySize * 100.0) / 100.0
+        }
+}
 
 @HiltViewModel
 class PaymentCheckoutViewModel @Inject constructor(
     private val paymentRepository: PaymentRepository,
     private val gamificationRepository: GamificationRepository,
     private val bookingRepository: BookingRepository,
+    private val friendshipRepository: FriendshipRepository,
+    private val apiService: ApiService,
     savedStateHandle: SavedStateHandle,
 ) : ViewModel() {
 
@@ -54,11 +81,13 @@ class PaymentCheckoutViewModel @Inject constructor(
     val uiState: StateFlow<PaymentCheckoutUiState> = _uiState.asStateFlow()
 
     private val bookingId: Long = savedStateHandle["bookingId"] ?: 0L
+    private var friendSearchJob: Job? = null
 
     init {
         _uiState.update { it.copy(bookingId = bookingId) }
         loadBookingDetails()
         loadXpBalance()
+        loadFriends()
     }
 
     private fun loadBookingDetails() {
@@ -102,6 +131,73 @@ class PaymentCheckoutViewModel @Inject constructor(
                 }
         }
     }
+
+    private fun loadFriends() {
+        viewModelScope.launch {
+            _uiState.update { it.copy(isLoadingFriends = true) }
+            friendshipRepository.getMyFriends()
+                .onSuccess { friends ->
+                    _uiState.update {
+                        it.copy(
+                            isLoadingFriends = false,
+                            friends = friends,
+                            filteredFriends = friends
+                        )
+                    }
+                }
+                .onFailure {
+                    _uiState.update { it.copy(isLoadingFriends = false) }
+                }
+        }
+    }
+
+    // ── Split with Friends ──────────────────────────────────────────
+
+    fun toggleSplit(enabled: Boolean) {
+        _uiState.update {
+            it.copy(
+                splitEnabled = enabled,
+                selectedFriends = if (!enabled) emptyList() else it.selectedFriends,
+                splitCreated = if (!enabled) false else it.splitCreated
+            )
+        }
+    }
+
+    fun onFriendSearchQueryChange(query: String) {
+        _uiState.update { it.copy(friendSearchQuery = query) }
+        friendSearchJob?.cancel()
+        friendSearchJob = viewModelScope.launch {
+            delay(200)
+            val allFriends = _uiState.value.friends
+            val filtered = if (query.isBlank()) {
+                allFriends
+            } else {
+                allFriends.filter {
+                    it.friendName?.contains(query, ignoreCase = true) == true
+                }
+            }
+            _uiState.update { it.copy(filteredFriends = filtered) }
+        }
+    }
+
+    fun toggleFriendSelection(friend: Friendship) {
+        _uiState.update { state ->
+            val current = state.selectedFriends.toMutableList()
+            val existing = current.find { it.friendId == friend.friendId }
+            if (existing != null) {
+                current.remove(existing)
+            } else {
+                current.add(friend)
+            }
+            state.copy(selectedFriends = current)
+        }
+    }
+
+    fun isFriendSelected(friend: Friendship): Boolean {
+        return _uiState.value.selectedFriends.any { it.friendId == friend.friendId }
+    }
+
+    // ── XP ──────────────────────────────────────────────────────────
 
     fun onXpSliderChange(xp: Int) {
         val discount = xp / 100.0
@@ -151,7 +247,51 @@ class PaymentCheckoutViewModel @Inject constructor(
         }
     }
 
+    // ── Payment ─────────────────────────────────────────────────────
+
     fun initiatePayment() {
+        val state = _uiState.value
+
+        // If split is enabled and not yet created, create split first
+        if (state.splitEnabled && state.selectedFriends.isNotEmpty() && !state.splitCreated) {
+            createSplitThenPay()
+            return
+        }
+
+        proceedToPayment()
+    }
+
+    private fun createSplitThenPay() {
+        viewModelScope.launch {
+            _uiState.update { it.copy(isCreatingSplit = true, error = null) }
+            try {
+                val friendIds = _uiState.value.selectedFriends.map { it.friendId }
+                val response = apiService.createSplit(
+                    bookingId = bookingId,
+                    request = CreateSplitRequestDto(
+                        payerUserIds = friendIds
+                    )
+                )
+                _uiState.update {
+                    it.copy(
+                        isCreatingSplit = false,
+                        splitCreated = true
+                    )
+                }
+                // Now proceed to pay host's share
+                proceedToPayment()
+            } catch (e: Exception) {
+                _uiState.update {
+                    it.copy(
+                        isCreatingSplit = false,
+                        error = e.message ?: "Failed to create split payment"
+                    )
+                }
+            }
+        }
+    }
+
+    private fun proceedToPayment() {
         viewModelScope.launch {
             _uiState.update { it.copy(isCreatingIntent = true, error = null) }
 

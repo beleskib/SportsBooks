@@ -7,6 +7,7 @@ import * as paymentController from '../controllers/payment.controller';
 const router = Router();
 
 router.post('/create-intent', authenticate, validate(createPaymentIntentSchema), paymentController.createPaymentIntent);
+router.post('/cash-confirm', authenticate, paymentController.cashConfirm);
 router.post('/:id/confirm', authenticate, paymentController.confirmPayment);
 router.post('/:id/fail', authenticate, paymentController.failPayment);
 router.get('/mine', authenticate, paymentController.getMyPayments);

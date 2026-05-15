@@ -1,10 +1,15 @@
 package com.example.sportsbook.ui.screens.player.match
 
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.ExperimentalLayoutApi
+import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
@@ -57,8 +62,11 @@ import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
 import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.compose.material3.FilterChip
+import com.example.sportsbook.domain.enums.MatchPaymentType
 import com.example.sportsbook.domain.enums.MatchType
 import com.example.sportsbook.domain.enums.MatchVisibility
 import com.example.sportsbook.domain.enums.SportType
@@ -200,88 +208,90 @@ fun CreateMatchScreen(
                 }
             }
 
-            // Time pickers
-            var showStartTimePicker by remember { mutableStateOf(false) }
-            var showEndTimePicker by remember { mutableStateOf(false) }
-            val startTimeState = rememberTimePickerState(initialHour = 18, initialMinute = 0)
-            val endTimeState = rememberTimePickerState(initialHour = 19, initialMinute = 0)
+            // Time pickers — only shown for pickup games (no venue selected)
+            if (uiState.selectedVenueId == null) {
+                var showStartTimePicker by remember { mutableStateOf(false) }
+                var showEndTimePicker by remember { mutableStateOf(false) }
+                val startTimeState = rememberTimePickerState(initialHour = 18, initialMinute = 0)
+                val endTimeState = rememberTimePickerState(initialHour = 19, initialMinute = 0)
 
-            Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                OutlinedTextField(
-                    value = uiState.startTime,
-                    onValueChange = {},
-                    readOnly = true,
-                    label = { Text("Start *") },
-                    placeholder = { Text("HH:MM") },
-                    modifier = Modifier
-                        .weight(1f)
-                        .clickable { showStartTimePicker = true },
-                    singleLine = true,
-                    trailingIcon = {
-                        IconButton(onClick = { showStartTimePicker = true }) {
-                            Icon(Icons.Default.AccessTime, contentDescription = "Pick start time", modifier = Modifier.size(20.dp))
-                        }
-                    },
-                    enabled = false,
-                    colors = androidx.compose.material3.OutlinedTextFieldDefaults.colors(
-                        disabledTextColor = MaterialTheme.colorScheme.onSurface,
-                        disabledBorderColor = MaterialTheme.colorScheme.outline,
-                        disabledLabelColor = MaterialTheme.colorScheme.onSurfaceVariant,
-                        disabledTrailingIconColor = MaterialTheme.colorScheme.onSurfaceVariant,
-                        disabledPlaceholderColor = MaterialTheme.colorScheme.onSurfaceVariant
+                Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                    OutlinedTextField(
+                        value = uiState.startTime,
+                        onValueChange = {},
+                        readOnly = true,
+                        label = { Text("Start *") },
+                        placeholder = { Text("HH:MM") },
+                        modifier = Modifier
+                            .weight(1f)
+                            .clickable { showStartTimePicker = true },
+                        singleLine = true,
+                        trailingIcon = {
+                            IconButton(onClick = { showStartTimePicker = true }) {
+                                Icon(Icons.Default.AccessTime, contentDescription = "Pick start time", modifier = Modifier.size(20.dp))
+                            }
+                        },
+                        enabled = false,
+                        colors = androidx.compose.material3.OutlinedTextFieldDefaults.colors(
+                            disabledTextColor = MaterialTheme.colorScheme.onSurface,
+                            disabledBorderColor = MaterialTheme.colorScheme.outline,
+                            disabledLabelColor = MaterialTheme.colorScheme.onSurfaceVariant,
+                            disabledTrailingIconColor = MaterialTheme.colorScheme.onSurfaceVariant,
+                            disabledPlaceholderColor = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
                     )
-                )
-                OutlinedTextField(
-                    value = uiState.endTime,
-                    onValueChange = {},
-                    readOnly = true,
-                    label = { Text("End *") },
-                    placeholder = { Text("HH:MM") },
-                    modifier = Modifier
-                        .weight(1f)
-                        .clickable { showEndTimePicker = true },
-                    singleLine = true,
-                    trailingIcon = {
-                        IconButton(onClick = { showEndTimePicker = true }) {
-                            Icon(Icons.Default.AccessTime, contentDescription = "Pick end time", modifier = Modifier.size(20.dp))
-                        }
-                    },
-                    enabled = false,
-                    colors = androidx.compose.material3.OutlinedTextFieldDefaults.colors(
-                        disabledTextColor = MaterialTheme.colorScheme.onSurface,
-                        disabledBorderColor = MaterialTheme.colorScheme.outline,
-                        disabledLabelColor = MaterialTheme.colorScheme.onSurfaceVariant,
-                        disabledTrailingIconColor = MaterialTheme.colorScheme.onSurfaceVariant,
-                        disabledPlaceholderColor = MaterialTheme.colorScheme.onSurfaceVariant
+                    OutlinedTextField(
+                        value = uiState.endTime,
+                        onValueChange = {},
+                        readOnly = true,
+                        label = { Text("End *") },
+                        placeholder = { Text("HH:MM") },
+                        modifier = Modifier
+                            .weight(1f)
+                            .clickable { showEndTimePicker = true },
+                        singleLine = true,
+                        trailingIcon = {
+                            IconButton(onClick = { showEndTimePicker = true }) {
+                                Icon(Icons.Default.AccessTime, contentDescription = "Pick end time", modifier = Modifier.size(20.dp))
+                            }
+                        },
+                        enabled = false,
+                        colors = androidx.compose.material3.OutlinedTextFieldDefaults.colors(
+                            disabledTextColor = MaterialTheme.colorScheme.onSurface,
+                            disabledBorderColor = MaterialTheme.colorScheme.outline,
+                            disabledLabelColor = MaterialTheme.colorScheme.onSurfaceVariant,
+                            disabledTrailingIconColor = MaterialTheme.colorScheme.onSurfaceVariant,
+                            disabledPlaceholderColor = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
                     )
-                )
-            }
-
-            if (showStartTimePicker) {
-                TimePickerDialog(
-                    onDismiss = { showStartTimePicker = false },
-                    onConfirm = {
-                        val h = startTimeState.hour.toString().padStart(2, '0')
-                        val m = startTimeState.minute.toString().padStart(2, '0')
-                        viewModel.updateStartTime("$h:$m")
-                        showStartTimePicker = false
-                    }
-                ) {
-                    TimePicker(state = startTimeState)
                 }
-            }
 
-            if (showEndTimePicker) {
-                TimePickerDialog(
-                    onDismiss = { showEndTimePicker = false },
-                    onConfirm = {
-                        val h = endTimeState.hour.toString().padStart(2, '0')
-                        val m = endTimeState.minute.toString().padStart(2, '0')
-                        viewModel.updateEndTime("$h:$m")
-                        showEndTimePicker = false
+                if (showStartTimePicker) {
+                    TimePickerDialog(
+                        onDismiss = { showStartTimePicker = false },
+                        onConfirm = {
+                            val h = startTimeState.hour.toString().padStart(2, '0')
+                            val m = startTimeState.minute.toString().padStart(2, '0')
+                            viewModel.updateStartTime("$h:$m")
+                            showStartTimePicker = false
+                        }
+                    ) {
+                        TimePicker(state = startTimeState)
                     }
-                ) {
-                    TimePicker(state = endTimeState)
+                }
+
+                if (showEndTimePicker) {
+                    TimePickerDialog(
+                        onDismiss = { showEndTimePicker = false },
+                        onConfirm = {
+                            val h = endTimeState.hour.toString().padStart(2, '0')
+                            val m = endTimeState.minute.toString().padStart(2, '0')
+                            viewModel.updateEndTime("$h:$m")
+                            showEndTimePicker = false
+                        }
+                    ) {
+                        TimePicker(state = endTimeState)
+                    }
                 }
             }
 
@@ -396,6 +406,55 @@ fun CreateMatchScreen(
                 singleLine = true,
                 readOnly = uiState.selectedVenueId != null
             )
+
+            // Time slot picker (visible when venue + date are both set)
+            if (uiState.selectedVenueId != null && uiState.matchDate.isNotBlank()) {
+                TimeSlotPicker(
+                    slots = uiState.availableTimeSlots,
+                    selectedSlotId = uiState.selectedTimeSlotId,
+                    isLoading = uiState.isLoadingTimeSlots,
+                    onSlotSelected = viewModel::selectTimeSlot
+                )
+            }
+
+            // Payment Type (only when venue is selected)
+            if (uiState.selectedVenueId != null) {
+                Spacer(modifier = Modifier.height(16.dp))
+                Text(
+                    text = "Payment",
+                    style = MaterialTheme.typography.titleSmall,
+                    fontWeight = FontWeight.SemiBold
+                )
+                Spacer(modifier = Modifier.height(8.dp))
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+                    MatchPaymentType.entries.forEach { pt ->
+                        FilterChip(
+                            selected = uiState.paymentType == pt,
+                            onClick = { viewModel.updatePaymentType(pt) },
+                            label = { Text(pt.displayName, fontSize = 12.sp) },
+                            modifier = Modifier.weight(1f)
+                        )
+                    }
+                }
+
+                // Show price per player when split is selected and time slot is chosen
+                if (uiState.paymentType == MatchPaymentType.SPLIT && uiState.selectedTimeSlotId != null) {
+                    val selectedSlot = uiState.availableTimeSlots.find { it.id == uiState.selectedTimeSlotId }
+                    if (selectedSlot != null && uiState.maxPlayers > 0) {
+                        val perPlayer = selectedSlot.price / uiState.maxPlayers
+                        Spacer(modifier = Modifier.height(8.dp))
+                        Text(
+                            text = "${"%.0f".format(perPlayer)} ден/player (${"%.0f".format(selectedSlot.price)} ÷ ${uiState.maxPlayers})",
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.primary,
+                            fontWeight = FontWeight.SemiBold
+                        )
+                    }
+                }
+            }
 
             // Cost
             Row(
@@ -515,6 +574,115 @@ private fun TimePickerDialog(
                 ) {
                     TextButton(onClick = onDismiss) { Text("Cancel") }
                     TextButton(onClick = onConfirm) { Text("OK") }
+                }
+            }
+        }
+    }
+}
+
+@OptIn(ExperimentalLayoutApi::class)
+@Composable
+private fun TimeSlotPicker(
+    slots: List<TimeSlotInfo>,
+    selectedSlotId: Long?,
+    isLoading: Boolean,
+    onSlotSelected: (TimeSlotInfo) -> Unit
+) {
+    // Color tokens
+    val availableBg = Color(0xFFF3F4F6)       // gray-100
+    val availableText = Color(0xFF374151)      // gray-700
+    val selectedBg = Color(0xFFDCFCE7)         // green-100
+    val selectedBorder = Color(0xFF16A34A)     // green-600
+    val selectedText = Color(0xFF166534)       // green-800
+    val bookedBg = Color(0xFFFEE2E2)           // red-100
+    val bookedBorder = Color(0xFFDC2626)       // red-600
+    val bookedText = Color(0xFF991B1B)         // red-800
+
+    Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+        Text(
+            text = "Available Time Slots",
+            style = MaterialTheme.typography.titleSmall
+        )
+
+        when {
+            isLoading -> {
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.Center
+                ) {
+                    CircularProgressIndicator(modifier = Modifier.size(24.dp), strokeWidth = 2.dp)
+                    Spacer(modifier = Modifier.padding(start = 8.dp))
+                    Text("Loading time slots...", style = MaterialTheme.typography.bodySmall)
+                }
+            }
+            slots.isEmpty() -> {
+                Text(
+                    text = "No available time slots for this date",
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+            }
+            else -> {
+                FlowRow(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(8.dp),
+                    verticalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+                    slots.forEach { slot ->
+                        val isSelected = slot.id == selectedSlotId
+                        val isBooked = !slot.isAvailable
+
+                        val bgColor = when {
+                            isSelected -> selectedBg
+                            isBooked -> bookedBg
+                            else -> availableBg
+                        }
+                        val textColor = when {
+                            isSelected -> selectedText
+                            isBooked -> bookedText
+                            else -> availableText
+                        }
+                        val border = when {
+                            isSelected -> BorderStroke(2.dp, selectedBorder)
+                            isBooked -> BorderStroke(1.dp, bookedBorder)
+                            else -> null
+                        }
+
+                        androidx.compose.material3.Surface(
+                            modifier = Modifier.clickable(enabled = !isBooked) {
+                                onSlotSelected(slot)
+                            },
+                            shape = RoundedCornerShape(4.dp),
+                            color = bgColor,
+                            border = border
+                        ) {
+                            Column(
+                                modifier = Modifier.padding(horizontal = 16.dp, vertical = 10.dp),
+                                horizontalAlignment = Alignment.CenterHorizontally
+                            ) {
+                                Text(
+                                    text = "${slot.startTime} - ${slot.endTime}",
+                                    style = MaterialTheme.typography.bodyMedium,
+                                    fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Normal,
+                                    color = textColor
+                                )
+                                if (isBooked) {
+                                    Text(
+                                        text = "Booked",
+                                        style = MaterialTheme.typography.labelSmall,
+                                        fontWeight = FontWeight.SemiBold,
+                                        color = bookedText
+                                    )
+                                } else if (slot.price > 0) {
+                                    Text(
+                                        text = "${String.format("%.0f", slot.price)} MKD",
+                                        style = MaterialTheme.typography.labelSmall,
+                                        color = textColor
+                                    )
+                                }
+                            }
+                        }
+                    }
                 }
             }
         }
