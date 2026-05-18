@@ -410,6 +410,59 @@ fun MatchDetailScreen(
                         }
                     }
 
+                    // Match Full CTA
+                    if (uiState.matchIsFull && uiState.isParticipant) {
+                        Card(
+                            modifier = Modifier.fillMaxWidth(),
+                            colors = androidx.compose.material3.CardDefaults.cardColors(
+                                containerColor = MaterialTheme.colorScheme.primaryContainer
+                            )
+                        ) {
+                            Column(
+                                modifier = Modifier.padding(16.dp),
+                                horizontalAlignment = Alignment.CenterHorizontally,
+                                verticalArrangement = Arrangement.spacedBy(8.dp)
+                            ) {
+                                Icon(
+                                    imageVector = Icons.Default.CheckCircle,
+                                    contentDescription = null,
+                                    tint = MaterialTheme.colorScheme.primary,
+                                    modifier = Modifier.size(32.dp)
+                                )
+                                Text(
+                                    text = "Match is Full!",
+                                    style = MaterialTheme.typography.titleMedium,
+                                    fontWeight = FontWeight.Bold,
+                                    color = MaterialTheme.colorScheme.onPrimaryContainer
+                                )
+                                Text(
+                                    text = if (match.paymentType == "cash_at_venue")
+                                        "Your spot is confirmed. Pay at the venue."
+                                    else if (match.paymentType == "split")
+                                        "Proceed to pay your share to confirm the booking."
+                                    else
+                                        "The booking is being processed.",
+                                    style = MaterialTheme.typography.bodyMedium,
+                                    color = MaterialTheme.colorScheme.onPrimaryContainer
+                                )
+                                if (match.paymentType == "split" && uiState.canPayShare && uiState.myShare != null) {
+                                    Button(
+                                        onClick = { viewModel.payMyShare() },
+                                        enabled = !uiState.isPayingShare,
+                                        modifier = Modifier.fillMaxWidth()
+                                    ) {
+                                        Icon(Icons.Default.Payment, null)
+                                        Spacer(Modifier.width(8.dp))
+                                        Text(
+                                            if (uiState.isPayingShare) "Processing..."
+                                            else "Pay Your Share — ${"%.0f".format(uiState.myShare!!.amount)} ${uiState.myShare!!.currency}"
+                                        )
+                                    }
+                                }
+                            }
+                        }
+                    }
+
                     // Payment Status Section (for split matches)
                     if (uiState.showPaymentSection) {
                         HorizontalDivider()
@@ -419,6 +472,19 @@ fun MatchDetailScreen(
                             canPayShare = uiState.canPayShare,
                             isPaying = uiState.isPayingShare,
                             onPayShare = { viewModel.payMyShare() }
+                        )
+                    }
+
+                    // Cash at Venue Section
+                    if (uiState.showCashAtVenueSection) {
+                        HorizontalDivider()
+                        CashAtVenueSection(
+                            match = match,
+                            isParticipant = uiState.isParticipant,
+                            onPayOnline = { viewModel.payMyShare() },
+                            isPaying = uiState.isPayingShare,
+                            canPayOnline = uiState.canPayShare,
+                            myShare = uiState.myShare
                         )
                     }
 
@@ -543,6 +609,79 @@ private fun PaymentStatusSection(
                     Text(
                         if (isPaying) "Processing..."
                         else "Pay Your Share — ${"%.0f".format(myShare.amount)} ${myShare.currency}"
+                    )
+                }
+            }
+        }
+    }
+}
+
+@Composable
+private fun CashAtVenueSection(
+    match: Match,
+    isParticipant: Boolean,
+    onPayOnline: () -> Unit,
+    isPaying: Boolean,
+    canPayOnline: Boolean,
+    myShare: SplitPaymentShareDto?
+) {
+    Card(modifier = Modifier.fillMaxWidth()) {
+        Column(
+            modifier = Modifier.padding(16.dp),
+            verticalArrangement = Arrangement.spacedBy(12.dp)
+        ) {
+            // Main confirmed text with icon
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(8.dp)
+            ) {
+                Icon(
+                    imageVector = Icons.Default.CheckCircle,
+                    contentDescription = null,
+                    tint = Color(0xFF16A34A),
+                    modifier = Modifier.size(24.dp)
+                )
+                Text(
+                    text = "Confirmed — Pay at Venue",
+                    style = MaterialTheme.typography.titleMedium,
+                    fontWeight = FontWeight.Bold,
+                    color = Color(0xFF16A34A)
+                )
+            }
+
+            Text(
+                text = "Payment will be collected at the venue on the day of the match.",
+                style = MaterialTheme.typography.bodyMedium,
+                color = MaterialTheme.colorScheme.onSurfaceVariant
+            )
+
+            // Show cost per player
+            if (!match.isFree) {
+                Text(
+                    text = "Your share: ${String.format("%.0f", match.costPerPlayer)} ден",
+                    style = MaterialTheme.typography.bodyMedium,
+                    fontWeight = FontWeight.Medium
+                )
+            }
+
+            // Optional: Pay now online instead
+            if (canPayOnline && myShare != null) {
+                HorizontalDivider()
+                Text(
+                    text = "Or pay now online",
+                    style = MaterialTheme.typography.labelMedium,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+                OutlinedButton(
+                    onClick = onPayOnline,
+                    enabled = !isPaying,
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    Icon(Icons.Default.Payment, contentDescription = null)
+                    Spacer(Modifier.width(8.dp))
+                    Text(
+                        if (isPaying) "Processing..."
+                        else "Pay Now — ${"%.0f".format(myShare.amount)} ${myShare.currency}"
                     )
                 }
             }

@@ -21,7 +21,11 @@ data class BookingDto(
     val updatedAt: String? = null,
     val expiresAt: String? = null,
     val playerName: String? = null,
-    val playerEmail: String? = null
+    val playerEmail: String? = null,
+    val isParticipant: Boolean = false,
+    val matchId: Long? = null,
+    val matchTitle: String? = null,
+    val matchStatus: String? = null
 ) {
     fun toDomain(): Booking = Booking(
         id = id, playerId = playerId, timeSlotId = timeSlotId,
@@ -31,7 +35,9 @@ data class BookingDto(
         venue = venue?.toDomain(),
         coach = coach?.toDomain(),
         createdAt = createdAt, updatedAt = updatedAt, expiresAt = expiresAt,
-        playerName = playerName, playerEmail = playerEmail
+        playerName = playerName, playerEmail = playerEmail,
+        isParticipant = isParticipant,
+        matchId = matchId, matchTitle = matchTitle, matchStatus = matchStatus
     )
 }
 

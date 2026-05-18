@@ -138,12 +138,52 @@ private fun BookingCard(
     onPayNow: () -> Unit = {},
     modifier: Modifier = Modifier
 ) {
-    val displayName = booking.venue?.name ?: booking.coach?.name ?: "Booking"
+    val displayName = if (booking.isMatchBooking) {
+        booking.matchTitle ?: booking.venue?.name ?: "Match Booking"
+    } else {
+        booking.venue?.name ?: booking.coach?.name ?: "Booking"
+    }
 
     Card(
         modifier = modifier.clickable(onClick = onClick)
     ) {
         Column(modifier = Modifier.padding(16.dp)) {
+            // Match badge row (for match-linked bookings)
+            if (booking.isMatchBooking) {
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = androidx.compose.foundation.layout.Arrangement.spacedBy(6.dp),
+                    modifier = Modifier.padding(bottom = 6.dp)
+                ) {
+                    Surface(
+                        color = MaterialTheme.colorScheme.secondaryContainer,
+                        contentColor = MaterialTheme.colorScheme.onSecondaryContainer,
+                        shape = MaterialTheme.shapes.small
+                    ) {
+                        Text(
+                            text = if (booking.isParticipant) "Match (Joined)" else "Match (Host)",
+                            style = MaterialTheme.typography.labelSmall,
+                            modifier = Modifier.padding(horizontal = 8.dp, vertical = 3.dp)
+                        )
+                    }
+                    if (booking.matchStatus != null) {
+                        val matchStatusColor = when (booking.matchStatus.lowercase()) {
+                            "full" -> androidx.compose.ui.graphics.Color(0xFF16A34A)
+                            "open" -> MaterialTheme.colorScheme.primary
+                            "in_progress" -> androidx.compose.ui.graphics.Color(0xFF2563EB)
+                            "completed" -> MaterialTheme.colorScheme.tertiary
+                            else -> MaterialTheme.colorScheme.onSurfaceVariant
+                        }
+                        Text(
+                            text = booking.matchStatus.replace("_", " ").replaceFirstChar { it.uppercase() },
+                            style = MaterialTheme.typography.labelSmall,
+                            color = matchStatusColor,
+                            fontWeight = androidx.compose.ui.text.font.FontWeight.Bold
+                        )
+                    }
+                }
+            }
+
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 verticalAlignment = Alignment.CenterVertically
@@ -154,6 +194,15 @@ private fun BookingCard(
                     modifier = Modifier.weight(1f)
                 )
                 BookingStatusBadge(status = booking.status)
+            }
+
+            // Venue name (shown separately when match title is used as display name)
+            if (booking.isMatchBooking && booking.venue != null) {
+                Text(
+                    text = booking.venue.name,
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
             }
 
             Spacer(modifier = Modifier.height(8.dp))

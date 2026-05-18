@@ -1022,7 +1022,10 @@ fun SportsBookNavHost(
             // v2-practical-ux
             composable<Route.V2PlayHome> {
                 PlayHomeScreen(
-                    onBack = { navController.popBackStack() }
+                    onBack = { navController.popBackStack() },
+                    onBrowseVenue = { venueId ->
+                        navController.navigate(Route.BookingCalendar(venueId = venueId))
+                    }
                 )
             }
 

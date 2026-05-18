@@ -66,6 +66,7 @@ import com.example.sportsbook.domain.model.v2.PlaySearchResult
 import com.example.sportsbook.domain.model.v2.PlaySuggestion
 import com.example.sportsbook.domain.model.v2.RebookSuggestion
 import com.example.sportsbook.domain.model.v2.UpcomingBooking
+import com.example.sportsbook.domain.model.v2.VenueSearchGroup
 import com.example.sportsbook.ui.theme.TextSecondary
 import com.example.sportsbook.ui.theme.BorderGray
 import com.example.sportsbook.ui.theme.LightBg
@@ -100,6 +101,7 @@ private val SPORTS = listOf(
 @Composable
 fun PlayHomeScreen(
     onBack: (() -> Unit)? = null,
+    onBrowseVenue: (venueId: Long) -> Unit = {},
     viewModel: PlayHomeViewModel = hiltViewModel()
 ) {
     val state by viewModel.uiState.collectAsStateWithLifecycle()
@@ -216,8 +218,26 @@ fun PlayHomeScreen(
                             )
                         }
                     } else {
-                        items(result.results, key = { "${it.type}-${it.id}" }) { suggestion ->
-                            PlaySuggestionCard(suggestion = suggestion)
+                        // Lobbies/matches shown as individual cards
+                        val lobbies = result.lobbyResults
+                        if (lobbies.isNotEmpty()) {
+                            items(lobbies, key = { "${it.type}-${it.id}" }) { suggestion ->
+                                PlaySuggestionCard(suggestion = suggestion)
+                            }
+                        }
+
+                        // Open slots grouped by venue
+                        val venueGroups = result.venueGroups
+                        if (venueGroups.isNotEmpty()) {
+                            item {
+                                SectionHeader(title = "Available venues")
+                            }
+                            items(venueGroups, key = { "venue-${it.venueId}" }) { group ->
+                                VenueGroupCard(
+                                    group = group,
+                                    onBrowseVenue = { onBrowseVenue(group.venueId) }
+                                )
+                            }
                         }
                     }
                 }
@@ -677,6 +697,77 @@ fun PlaySuggestionCard(suggestion: PlaySuggestion) {
             ) {
                 Text(
                     text = if (suggestion.type == "lobby") "Join lobby" else "Book this slot",
+                    style = MaterialTheme.typography.labelMedium
+                )
+            }
+        }
+    }
+}
+
+@Composable
+private fun VenueGroupCard(
+    group: VenueSearchGroup,
+    onBrowseVenue: () -> Unit
+) {
+    Card(
+        modifier = Modifier.fillMaxWidth(),
+        colors = CardDefaults.cardColors(containerColor = CardWhite),
+        shape = RoundedCornerShape(10.dp)
+    ) {
+        Column(modifier = Modifier.padding(14.dp)) {
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Column(modifier = Modifier.weight(1f)) {
+                    Text(
+                        text = group.sportType.replaceFirstChar { it.uppercase() },
+                        style = MaterialTheme.typography.labelSmall,
+                        color = TextSecondary
+                    )
+                    Spacer(Modifier.height(2.dp))
+                    Text(
+                        text = group.venueName,
+                        style = MaterialTheme.typography.bodyMedium.copy(fontWeight = FontWeight.SemiBold),
+                        color = TextPrimary,
+                        maxLines = 1
+                    )
+                }
+                group.priceFrom?.let { price ->
+                    Column(horizontalAlignment = Alignment.End) {
+                        Text(
+                            text = "from",
+                            style = MaterialTheme.typography.labelSmall,
+                            color = TextSecondary
+                        )
+                        Text(
+                            text = "${price.toLong()} ден",
+                            style = MaterialTheme.typography.bodyMedium.copy(fontWeight = FontWeight.SemiBold),
+                            color = GoldAccent
+                        )
+                    }
+                }
+            }
+            Spacer(Modifier.height(8.dp))
+            Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+                CountChip("${group.availableSlots} slots available")
+                group.distanceKm?.let { dist ->
+                    CountChip("${"%.1f".format(dist)} km")
+                }
+            }
+            Spacer(Modifier.height(10.dp))
+            Button(
+                onClick = onBrowseVenue,
+                modifier = Modifier.fillMaxWidth(),
+                colors = ButtonDefaults.buttonColors(
+                    containerColor = Color(0xFF4F46E5),
+                    contentColor = Color.White
+                ),
+                shape = RoundedCornerShape(6.dp)
+            ) {
+                Text(
+                    text = "Browse this venue",
                     style = MaterialTheme.typography.labelMedium
                 )
             }

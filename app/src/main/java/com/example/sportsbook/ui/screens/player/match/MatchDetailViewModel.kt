@@ -58,6 +58,8 @@ data class MatchDetailUiState(
     val canJoinWithParty: Boolean
         get() = canJoin && activeParty != null && activeParty.status == "ready"
     val isSplitMatch: Boolean get() = match?.paymentType == "split"
+    val isCashAtVenue: Boolean get() = match?.paymentType == "cash_at_venue"
+    val showCashAtVenueSection: Boolean get() = isCashAtVenue && (isParticipant || isHost)
     val matchIsFull: Boolean get() = match?.status?.name == "FULL" || match?.status?.name == "IN_PROGRESS"
     val showPaymentSection: Boolean get() = isSplitMatch && paymentStatus != null && paymentStatus.shares.isNotEmpty()
     val myShare: SplitPaymentShareDto? get() {
@@ -334,7 +336,7 @@ class MatchDetailViewModel @Inject constructor(
 
     private fun loadPaymentStatus() {
         val match = _uiState.value.match ?: return
-        if (match.paymentType != "split") return
+        if (match.paymentType != "split" && match.paymentType != "cash_at_venue") return
 
         viewModelScope.launch {
             _uiState.update { it.copy(isLoadingPayment = true) }

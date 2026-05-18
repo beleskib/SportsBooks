@@ -18,5 +18,12 @@ data class Booking(
     val updatedAt: String? = null,
     val expiresAt: String? = null,
     val playerName: String? = null,
-    val playerEmail: String? = null
-)
+    val playerEmail: String? = null,
+    val isParticipant: Boolean = false,
+    val matchId: Long? = null,
+    val matchTitle: String? = null,
+    val matchStatus: String? = null
+) {
+    /** True when this booking is linked to a match (lobby booking) */
+    val isMatchBooking: Boolean get() = matchId != null
+}

@@ -25,6 +25,10 @@ export interface BookingRow {
   } | null;
   venue?: { id: number; name: string; sportType?: string; address?: string; pricePerHour?: number } | null;
   coach?: { id: number; name: string; sportType?: string; pricePerHour?: number } | null;
+  isParticipant?: boolean;
+  matchId?: number | null;
+  matchTitle?: string | null;
+  matchStatus?: string | null;
   createdAt: string;
   updatedAt: string;
 }
@@ -69,6 +73,12 @@ function mapRow(row: any): BookingRow {
       sportType: row.coach_sport_type,
       pricePerHour: row.coach_price_per_hour ? Number(row.coach_price_per_hour) : undefined,
     } : null,
+    ...(row.is_participant !== undefined ? { isParticipant: row.is_participant } : {}),
+    ...(row.match_id !== undefined ? {
+      matchId: row.match_id ? Number(row.match_id) : null,
+      matchTitle: row.match_title ?? null,
+      matchStatus: row.match_status ?? null,
+    } : {}),
     createdAt: row.created_at?.toISOString?.() ?? row.created_at,
     updatedAt: row.updated_at?.toISOString?.() ?? row.updated_at,
   };
@@ -149,12 +159,18 @@ export async function findByPlayerId(
            c.name AS coach_name, c.sport_type AS coach_sport_type,
            c.price_per_hour AS coach_price_per_hour,
            ts.slot_date, ts.start_time, ts.end_time,
+           CASE WHEN b.player_id = $1 THEN false ELSE true END AS is_participant,
+           m.id AS match_id, m.title AS match_title, m.status AS match_status,
            COUNT(*) OVER() AS total_count
     FROM bookings b
     LEFT JOIN venues v ON v.id = b.venue_id
     LEFT JOIN coaches c ON c.id = b.coach_id
     LEFT JOIN time_slots ts ON ts.id = b.time_slot_id
-    WHERE b.player_id = $1`;
+    LEFT JOIN matches m ON m.booking_id = b.id
+    WHERE (b.player_id = $1 OR EXISTS (
+      SELECT 1 FROM booking_participants bp
+      WHERE bp.booking_id = b.id AND bp.user_id = $1 AND bp.status IN ('invited', 'accepted', 'attended')
+    ))`;
   const params: any[] = [playerId];
   let paramIndex = 2;
 

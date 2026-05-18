@@ -24,6 +24,7 @@ data class PlaySuggestion(
     val sportType: String,
     val startAt: String,
     val venueName: String?,
+    val venueId: Long? = null,
     val distanceKm: Double?,
     val currentPlayers: Int,
     val maxPlayers: Int,
@@ -68,6 +69,40 @@ data class PlaySearchResult(
     val lobbies: Int,
     val openSlots: Int,
     val availablePlayers: Int
+) {
+    /** Lobbies/matches are shown as individual cards */
+    val lobbyResults: List<PlaySuggestion>
+        get() = results.filter { it.type != "open_slot" }
+
+    /** Open slots grouped by venue — each venue appears once with a slot count */
+    val venueGroups: List<VenueSearchGroup>
+        get() = results
+            .filter { it.type == "open_slot" && it.venueId != null }
+            .groupBy { it.venueId!! }
+            .map { (venueId, slots) ->
+                val first = slots.first()
+                VenueSearchGroup(
+                    venueId = venueId,
+                    venueName = first.venueName ?: "Venue",
+                    sportType = first.sportType,
+                    distanceKm = first.distanceKm,
+                    availableSlots = slots.size,
+                    priceFrom = slots.mapNotNull { it.price }.minOrNull(),
+                    firstSlotTime = slots.minByOrNull { it.startAt }?.startAt
+                )
+            }
+            .sortedBy { it.firstSlotTime }
+}
+
+/** A venue with available slots, shown as a single card in search results */
+data class VenueSearchGroup(
+    val venueId: Long,
+    val venueName: String,
+    val sportType: String,
+    val distanceKm: Double?,
+    val availableSlots: Int,
+    val priceFrom: Double?,
+    val firstSlotTime: String?
 )
 
 data class SplitPaymentShare(
