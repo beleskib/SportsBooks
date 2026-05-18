@@ -42,6 +42,7 @@ import com.example.sportsbook.ui.common.toDisplayDate
 @Composable
 fun MyBookingsScreen(
     onBookingClick: (Long) -> Unit,
+    onMatchClick: (Long) -> Unit = {},
     onPayNow: (Long) -> Unit = {},
     viewModel: MyBookingsViewModel = hiltViewModel()
 ) {
@@ -116,7 +117,13 @@ fun MyBookingsScreen(
                             items(bookingsToShow, key = { it.id }) { booking ->
                                 BookingCard(
                                     booking = booking,
-                                    onClick = { onBookingClick(booking.id) },
+                                    onClick = {
+                                        if (booking.isMatchBooking && booking.matchId != null) {
+                                            onMatchClick(booking.matchId)
+                                        } else {
+                                            onBookingClick(booking.id)
+                                        }
+                                    },
                                     onPayNow = { onPayNow(booking.id) },
                                     modifier = Modifier
                                         .fillMaxWidth()

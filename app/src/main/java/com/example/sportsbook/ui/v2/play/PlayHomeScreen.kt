@@ -1,6 +1,7 @@
 package com.example.sportsbook.ui.v2.play
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -23,14 +24,18 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material.icons.filled.Star
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.DatePicker
+import androidx.compose.material3.DatePickerDialog
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ExposedDropdownMenuBox
+import androidx.compose.material3.MenuAnchorType
 import androidx.compose.material3.ExposedDropdownMenuDefaults
 import androidx.compose.material3.FilledTonalButton
 import androidx.compose.material3.Icon
@@ -42,8 +47,12 @@ import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
+import androidx.compose.material3.TimePicker
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
+import androidx.compose.material3.rememberDatePickerState
+import androidx.compose.material3.rememberTimePickerState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -102,6 +111,7 @@ private val SPORTS = listOf(
 fun PlayHomeScreen(
     onBack: (() -> Unit)? = null,
     onBrowseVenue: (venueId: Long) -> Unit = {},
+    onMatchClick: (matchId: Long) -> Unit = {},
     viewModel: PlayHomeViewModel = hiltViewModel()
 ) {
     val state by viewModel.uiState.collectAsStateWithLifecycle()
@@ -173,12 +183,35 @@ fun PlayHomeScreen(
                 }
                 state.feedError?.let { err ->
                     item {
-                        Text(
-                            text = err,
-                            color = MaterialTheme.colorScheme.error,
-                            style = MaterialTheme.typography.bodySmall,
-                            modifier = Modifier.padding(vertical = 4.dp)
-                        )
+                        Card(
+                            modifier = Modifier.fillMaxWidth(),
+                            colors = CardDefaults.cardColors(containerColor = CardWhite),
+                            shape = RoundedCornerShape(10.dp)
+                        ) {
+                            Column(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .padding(16.dp),
+                                horizontalAlignment = Alignment.CenterHorizontally,
+                                verticalArrangement = Arrangement.spacedBy(8.dp)
+                            ) {
+                                Text(
+                                    text = err,
+                                    color = MaterialTheme.colorScheme.error,
+                                    style = MaterialTheme.typography.bodySmall
+                                )
+                                Button(
+                                    onClick = { viewModel.retryFeed() },
+                                    colors = ButtonDefaults.buttonColors(
+                                        containerColor = Color(0xFF4F46E5),
+                                        contentColor = Color.White
+                                    ),
+                                    shape = RoundedCornerShape(8.dp)
+                                ) {
+                                    Text("Retry")
+                                }
+                            }
+                        }
                     }
                 }
             }
@@ -222,7 +255,10 @@ fun PlayHomeScreen(
                         val lobbies = result.lobbyResults
                         if (lobbies.isNotEmpty()) {
                             items(lobbies, key = { "${it.type}-${it.id}" }) { suggestion ->
-                                PlaySuggestionCard(suggestion = suggestion)
+                                PlaySuggestionCard(
+                                    suggestion = suggestion,
+                                    onAction = { onMatchClick(suggestion.id) }
+                                )
                             }
                         }
 
@@ -268,7 +304,16 @@ fun PlayHomeScreen(
                 if (suggested.isNotEmpty()) {
                     item { SectionHeader(title = "Suggested for you") }
                     items(suggested, key = { "sugg-${it.id}" }) { suggestion ->
-                        PlaySuggestionCard(suggestion = suggestion)
+                        PlaySuggestionCard(
+                            suggestion = suggestion,
+                            onAction = {
+                                if (suggestion.type == "open_slot" && suggestion.venueId != null) {
+                                    onBrowseVenue(suggestion.venueId)
+                                } else {
+                                    onMatchClick(suggestion.id)
+                                }
+                            }
+                        )
                     }
                 }
 
@@ -370,6 +415,8 @@ private fun SearchFormCard(
 ) {
     var sportDropdownExpanded by remember { mutableStateOf(false) }
     val selectedSportLabel = SPORTS.firstOrNull { it.first == sportType }?.second ?: "Any sport"
+    var showFromPicker by remember { mutableStateOf(false) }
+    var showToPicker by remember { mutableStateOf(false) }
 
     Card(
         modifier = Modifier.fillMaxWidth(),
@@ -390,34 +437,51 @@ private fun SearchFormCard(
                 )
             }
 
-            // From / To dates as plain text fields (ISO string)
+            // From / To dates — read-only fields that open date+time picker dialogs
             Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                OutlinedTextField(
-                    value = fromDate.take(16).replace('T', ' '),
-                    onValueChange = { onFromDateChanged(it.replace(' ', 'T')) },
-                    label = { Text("From", color = TextSecondary, style = MaterialTheme.typography.labelSmall) },
-                    modifier = Modifier.weight(1f),
-                    singleLine = true,
-                    textStyle = MaterialTheme.typography.bodySmall.copy(color = TextPrimary),
-                    colors = OutlinedTextFieldDefaults.colors(
-                        focusedBorderColor = GoldAccent,
-                        unfocusedBorderColor = BorderGray,
-                        cursorColor = GoldAccent
+                Box(modifier = Modifier.weight(1f)) {
+                    OutlinedTextField(
+                        value = fromDate.take(16).replace('T', ' '),
+                        onValueChange = {},
+                        readOnly = true,
+                        label = { Text("From", color = TextSecondary, style = MaterialTheme.typography.labelSmall) },
+                        modifier = Modifier.fillMaxWidth(),
+                        singleLine = true,
+                        textStyle = MaterialTheme.typography.bodySmall.copy(color = TextPrimary),
+                        colors = OutlinedTextFieldDefaults.colors(
+                            focusedBorderColor = GoldAccent,
+                            unfocusedBorderColor = BorderGray,
+                            cursorColor = GoldAccent
+                        )
                     )
-                )
-                OutlinedTextField(
-                    value = toDate.take(16).replace('T', ' '),
-                    onValueChange = { onToDateChanged(it.replace(' ', 'T')) },
-                    label = { Text("To", color = TextSecondary, style = MaterialTheme.typography.labelSmall) },
-                    modifier = Modifier.weight(1f),
-                    singleLine = true,
-                    textStyle = MaterialTheme.typography.bodySmall.copy(color = TextPrimary),
-                    colors = OutlinedTextFieldDefaults.colors(
-                        focusedBorderColor = GoldAccent,
-                        unfocusedBorderColor = BorderGray,
-                        cursorColor = GoldAccent
+                    // Transparent overlay captures taps on the whole field area
+                    Box(
+                        modifier = Modifier
+                            .matchParentSize()
+                            .clickable { showFromPicker = true }
                     )
-                )
+                }
+                Box(modifier = Modifier.weight(1f)) {
+                    OutlinedTextField(
+                        value = toDate.take(16).replace('T', ' '),
+                        onValueChange = {},
+                        readOnly = true,
+                        label = { Text("To", color = TextSecondary, style = MaterialTheme.typography.labelSmall) },
+                        modifier = Modifier.fillMaxWidth(),
+                        singleLine = true,
+                        textStyle = MaterialTheme.typography.bodySmall.copy(color = TextPrimary),
+                        colors = OutlinedTextFieldDefaults.colors(
+                            focusedBorderColor = GoldAccent,
+                            unfocusedBorderColor = BorderGray,
+                            cursorColor = GoldAccent
+                        )
+                    )
+                    Box(
+                        modifier = Modifier
+                            .matchParentSize()
+                            .clickable { showToPicker = true }
+                    )
+                }
             }
 
             // Sport dropdown
@@ -433,7 +497,7 @@ private fun SearchFormCard(
                     trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = sportDropdownExpanded) },
                     modifier = Modifier
                         .fillMaxWidth()
-                        .menuAnchor(),
+                        .menuAnchor(MenuAnchorType.PrimaryNotEditable),
                     textStyle = MaterialTheme.typography.bodySmall.copy(color = TextPrimary),
                     colors = OutlinedTextFieldDefaults.colors(
                         focusedBorderColor = GoldAccent,
@@ -512,6 +576,27 @@ private fun SearchFormCard(
             }
         }
     }
+
+    if (showFromPicker) {
+        DateTimePickerDialog(
+            onDismiss = { showFromPicker = false },
+            onConfirm = { iso ->
+                onFromDateChanged(iso)
+                showFromPicker = false
+            },
+            initialDate = fromDate
+        )
+    }
+    if (showToPicker) {
+        DateTimePickerDialog(
+            onDismiss = { showToPicker = false },
+            onConfirm = { iso ->
+                onToDateChanged(iso)
+                showToPicker = false
+            },
+            initialDate = toDate
+        )
+    }
 }
 
 @Composable
@@ -584,7 +669,7 @@ private fun RebookCard(
                 maxLines = 1
             )
             Text(
-                text = "\u20ac${booking.price.toLong()} · ${booking.lastSlotStart.take(10)}",
+                text = "${booking.price.toLong()} \u0434\u0435\u043d · ${booking.lastSlotStart.take(10)}",
                 style = MaterialTheme.typography.bodySmall,
                 color = TextSecondary
             )
@@ -621,7 +706,7 @@ private fun RebookCard(
 }
 
 @Composable
-fun PlaySuggestionCard(suggestion: PlaySuggestion) {
+fun PlaySuggestionCard(suggestion: PlaySuggestion, onAction: () -> Unit = {}) {
     val typeLabel = when (suggestion.type) {
         "lobby" -> "Lobby"
         "open_slot" -> "Open court"
@@ -653,7 +738,7 @@ fun PlaySuggestionCard(suggestion: PlaySuggestion) {
                 }
                 suggestion.price?.let { price ->
                     Text(
-                        text = "\u20ac${price.toLong()}",
+                        text = "${price.toLong()} \u0434\u0435\u043d",
                         style = MaterialTheme.typography.bodyMedium.copy(fontWeight = FontWeight.SemiBold),
                         color = GoldAccent
                     )
@@ -687,7 +772,7 @@ fun PlaySuggestionCard(suggestion: PlaySuggestion) {
             }
             Spacer(Modifier.height(10.dp))
             Button(
-                onClick = { /* navigate to lobby/slot — future wiring */ },
+                onClick = onAction,
                 modifier = Modifier.fillMaxWidth(),
                 colors = ButtonDefaults.buttonColors(
                     containerColor = Color(0xFF4F46E5),
@@ -842,7 +927,7 @@ private fun UpcomingBookingCard(booking: UpcomingBooking) {
                 if (booking.totalPrice > 0) {
                     Spacer(Modifier.height(4.dp))
                     Text(
-                        text = "€${booking.totalPrice.toLong()}",
+                        text = "${booking.totalPrice.toLong()} ден",
                         style = MaterialTheme.typography.labelSmall,
                         color = TextSecondary
                     )
@@ -904,6 +989,78 @@ private fun FriendChip(friend: FriendAvailability) {
                 )
             }
         }
+    }
+}
+
+// ============================================================
+// Date + Time picker dialog
+// ============================================================
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+private fun DateTimePickerDialog(
+    onDismiss: () -> Unit,
+    onConfirm: (String) -> Unit,
+    initialDate: String
+) {
+    var showTimePicker by remember { mutableStateOf(false) }
+
+    val initialMillis = remember(initialDate) {
+        try {
+            java.time.LocalDate.parse(initialDate.take(10))
+                .atStartOfDay()
+                .toInstant(java.time.ZoneOffset.UTC)
+                .toEpochMilli()
+        } catch (_: Exception) {
+            System.currentTimeMillis()
+        }
+    }
+    val initialHour = remember(initialDate) {
+        try { initialDate.substring(11, 13).toInt() } catch (_: Exception) { 19 }
+    }
+    val initialMinute = remember(initialDate) {
+        try { initialDate.substring(14, 16).toInt() } catch (_: Exception) { 0 }
+    }
+
+    val datePickerState = rememberDatePickerState(initialSelectedDateMillis = initialMillis)
+    val timePickerState = rememberTimePickerState(
+        initialHour = initialHour,
+        initialMinute = initialMinute
+    )
+
+    if (!showTimePicker) {
+        DatePickerDialog(
+            onDismissRequest = onDismiss,
+            confirmButton = {
+                TextButton(onClick = { showTimePicker = true }) { Text("Next") }
+            },
+            dismissButton = {
+                TextButton(onClick = onDismiss) { Text("Cancel") }
+            }
+        ) {
+            DatePicker(state = datePickerState)
+        }
+    } else {
+        AlertDialog(
+            onDismissRequest = onDismiss,
+            title = { Text("Select time") },
+            text = { TimePicker(state = timePickerState) },
+            confirmButton = {
+                TextButton(onClick = {
+                    val millis = datePickerState.selectedDateMillis ?: System.currentTimeMillis()
+                    val date = java.time.Instant.ofEpochMilli(millis)
+                        .atZone(java.time.ZoneOffset.UTC)
+                        .toLocalDate()
+                    val time = java.time.LocalTime.of(timePickerState.hour, timePickerState.minute)
+                    val iso = java.time.LocalDateTime.of(date, time)
+                        .format(java.time.format.DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss.SSS'Z'"))
+                    onConfirm(iso)
+                }) { Text("Confirm") }
+            },
+            dismissButton = {
+                TextButton(onClick = onDismiss) { Text("Cancel") }
+            }
+        )
     }
 }
 

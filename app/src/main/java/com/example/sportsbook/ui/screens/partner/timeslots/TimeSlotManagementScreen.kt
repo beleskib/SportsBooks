@@ -40,6 +40,7 @@ import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ElevatedCard
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ExposedDropdownMenuBox
+import androidx.compose.material3.MenuAnchorType
 import androidx.compose.material3.FilterChip
 import androidx.compose.material3.FilterChipDefaults
 import androidx.compose.material3.Icon
@@ -677,7 +678,7 @@ private fun HourPicker(
             onValueChange = {},
             readOnly = true,
             label = { Text(label, color = TextPrimary.copy(alpha = 0.6f)) },
-            modifier = Modifier.width(100.dp).menuAnchor(),
+            modifier = Modifier.width(100.dp).menuAnchor(MenuAnchorType.PrimaryNotEditable),
             textStyle = MaterialTheme.typography.bodyMedium.copy(color = TextPrimary),
             singleLine = true
         )

@@ -15,7 +15,7 @@ import { sendEmail } from './email.service';
 import { query } from '../config/database';
 
 const FRONTEND_URL = process.env.FRONTEND_BASE_URL ?? 'http://localhost:5173';
-const ADMIN_REVIEW_EMAIL = process.env.ADMIN_REVIEW_EMAIL ?? 'bojanbeleski@gmail.com';
+const ADMIN_REVIEW_EMAIL = process.env.ADMIN_REVIEW_EMAIL ?? '';
 
 export type ListingType = 'venue' | 'coach';
 
@@ -77,6 +77,11 @@ function shell(heading: string, bodyHtml: string, ctaLabel?: string, ctaUrl?: st
  */
 export async function notifyAdminListingSubmitted(type: ListingType, id: number): Promise<void> {
   try {
+    if (!ADMIN_REVIEW_EMAIL) {
+      console.warn('ADMIN_REVIEW_EMAIL not configured, skipping admin review email');
+      return;
+    }
+
     const meta = await loadListingMeta(type, id);
     if (!meta) return;
 

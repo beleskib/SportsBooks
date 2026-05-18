@@ -25,6 +25,9 @@ data class NotificationDeepLink(
     val bookingId: Long? = null,
     val matchId: Long? = null,
     val partyId: Long? = null,
+    val lobbyId: Long? = null,
+    val communityId: Long? = null,
+    val paymentId: Long? = null,
 )
 
 @AndroidEntryPoint
@@ -64,12 +67,18 @@ class MainActivity : ComponentActivity() {
         val bookingId = intent.getStringExtra("bookingId")?.toLongOrNull()
         val matchId = intent.getStringExtra("matchId")?.toLongOrNull()
         val partyId = intent.getStringExtra("partyId")?.toLongOrNull()
+        val lobbyId = intent.getStringExtra("lobbyId")?.toLongOrNull()
+        val communityId = intent.getStringExtra("communityId")?.toLongOrNull()
+        val paymentId = intent.getStringExtra("paymentId")?.toLongOrNull()
 
         _pendingDeepLink.value = NotificationDeepLink(
             type = type,
             bookingId = bookingId,
             matchId = matchId,
             partyId = partyId,
+            lobbyId = lobbyId,
+            communityId = communityId,
+            paymentId = paymentId,
         )
     }
 

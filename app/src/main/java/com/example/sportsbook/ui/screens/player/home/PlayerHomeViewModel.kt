@@ -16,6 +16,8 @@ import com.example.sportsbook.domain.repository.SportRepository
 import com.example.sportsbook.domain.repository.UserRepository
 import com.example.sportsbook.domain.repository.VenueRepository
 import com.example.sportsbook.domain.service.LocationService
+import com.google.firebase.firestore.FirebaseFirestore
+import com.google.firebase.firestore.ListenerRegistration
 import kotlinx.coroutines.flow.firstOrNull
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Job
@@ -41,7 +43,8 @@ data class PlayerHomeUiState(
     val notificationCount: Int = 0,
     val cityName: String? = null,
     val isLoading: Boolean = false,
-    val error: String? = null
+    val error: String? = null,
+    val matchStatusMessage: String? = null
 ) {
     /** Active matches (open, full, or in progress) — shown prominently at top */
     val activeMatches: List<Match>
@@ -133,13 +136,16 @@ class PlayerHomeViewModel @Inject constructor(
     private val authRepository: AuthRepository,
     private val notificationRepository: NotificationRepository,
     private val matchRepository: MatchRepository,
-    private val locationService: LocationService
+    private val locationService: LocationService,
+    private val firestore: FirebaseFirestore
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(PlayerHomeUiState())
     val uiState: StateFlow<PlayerHomeUiState> = _uiState.asStateFlow()
 
     private var searchJob: Job? = null
+    private val knownMatchStatuses = mutableMapOf<Long, String>()
+    private val matchListenerRegistrations = mutableListOf<ListenerRegistration>()
 
     init {
         loadData()
@@ -215,6 +221,8 @@ class PlayerHomeViewModel @Inject constructor(
                     error = error
                 )
             }
+
+            startMatchStatusListeners()
         }
     }
 
@@ -230,5 +238,50 @@ class PlayerHomeViewModel @Inject constructor(
         viewModelScope.launch {
             authRepository.signOut()
         }
+    }
+
+    fun clearMatchStatusMessage() {
+        _uiState.update { it.copy(matchStatusMessage = null) }
+    }
+
+    private fun startMatchStatusListeners() {
+        matchListenerRegistrations.forEach { it.remove() }
+        matchListenerRegistrations.clear()
+
+        val activeMatchIds = _uiState.value.activeMatches.map { it.id }
+
+        for (matchId in activeMatchIds) {
+            val registration = firestore
+                .collection("matches")
+                .document(matchId.toString())
+                .addSnapshotListener { snapshot, error ->
+                    if (error != null || snapshot == null || !snapshot.exists()) return@addSnapshotListener
+
+                    val newStatus = snapshot.getString("status") ?: return@addSnapshotListener
+                    val title = snapshot.getString("title") ?: "Match"
+                    val oldStatus = knownMatchStatuses[matchId]
+                    knownMatchStatuses[matchId] = newStatus
+
+                    // Skip the initial load — only react to real changes
+                    if (oldStatus == null || oldStatus == newStatus) return@addSnapshotListener
+
+                    val message = when (newStatus) {
+                        "full" -> "Match \"$title\" is full!"
+                        "in_progress" -> "Match \"$title\" is starting now!"
+                        "completed" -> "Match \"$title\" has been completed."
+                        "cancelled" -> "Match \"$title\" has been cancelled."
+                        else -> null
+                    }
+                    if (message != null) {
+                        _uiState.update { it.copy(matchStatusMessage = message) }
+                    }
+                }
+            matchListenerRegistrations.add(registration)
+        }
+    }
+
+    override fun onCleared() {
+        super.onCleared()
+        matchListenerRegistrations.forEach { it.remove() }
     }
 }

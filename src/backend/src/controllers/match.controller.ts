@@ -96,6 +96,77 @@ async function autoCompletePastMatches(): Promise<void> {
 }
 
 // ============================================================
+// Handle match-full side effects
+// ============================================================
+
+/**
+ * Called when a match reaches its maxPlayers capacity.
+ * Sends lobby-full notifications, creates split payment shares or
+ * links booking participants for cash_at_venue matches, and syncs
+ * the match to Firestore.
+ *
+ * This is a fire-and-forget helper — it never throws.
+ */
+async function handleMatchFull(match: matchRepo.MatchRow): Promise<void> {
+  try {
+    const approvedParticipants = match.participants
+      .filter((p) => p.status === 'approved');
+    const allUserIds = approvedParticipants.map((p) => p.userId);
+
+    // Notify all approved participants that the lobby is full
+    notificationService.notifyMatchLobbyFull(
+      match.id,
+      match.title,
+      allUserIds
+    ).catch((err) => console.error('Failed to send match-full notification:', err));
+
+    // When match fills and has split payment, auto-create split shares
+    if (match.paymentType === 'split' && match.bookingId) {
+      try {
+        const shareAmount = Math.round((match.totalPrice / approvedParticipants.length) * 100) / 100;
+
+        for (const p of approvedParticipants) {
+          // Create split payment share
+          const share = await splitRepo.createShare(
+            match.bookingId, p.userId, shareAmount, match.currency
+          );
+          // Link as booking participant
+          await participantRepo.inviteMany(match.bookingId, [p.userId]).catch(() => {});
+          await participantRepo.linkSplitPayment(match.bookingId, p.userId, share.id);
+
+          // Notify each participant to pay their share
+          notificationService.sendNotification(
+            p.userId,
+            'split_payment_request',
+            'Pay Your Share',
+            `Match "${match.title}" is full! Pay your share of ${shareAmount} ${match.currency}`,
+            { matchId: String(match.id), bookingId: String(match.bookingId), shareAmount: String(shareAmount) }
+          ).catch(() => {});
+        }
+      } catch (err) {
+        console.error('Failed to create split payments for match:', err);
+      }
+    }
+
+    // For cash_at_venue, link all approved participants to the booking
+    if (match.paymentType === 'cash_at_venue' && match.bookingId) {
+      try {
+        for (const p of approvedParticipants) {
+          await participantRepo.inviteMany(match.bookingId, [p.userId]).catch(() => {});
+        }
+      } catch (err) {
+        console.error('Failed to link booking participants for cash match:', err);
+      }
+    }
+
+    // Sync updated match state to Firestore
+    await syncMatchToFirestore(match.id);
+  } catch (err) {
+    console.error('handleMatchFull failed:', err);
+  }
+}
+
+// ============================================================
 // Matches
 // ============================================================
 
@@ -289,68 +360,15 @@ export async function joinMatch(req: Request, res: Response, next: NextFunction)
       ).catch((err) => console.error('Failed to send join notification:', err));
     }
 
-    // If the match just became full, notify all participants (including the host)
+    // If the match just became full, handle all full-match side effects
     if (autoApprove && match.currentPlayers + 1 >= match.maxPlayers) {
-      try {
-        const updatedMatch = await matchRepo.findById(match.id);
-        if (updatedMatch && updatedMatch.currentPlayers >= updatedMatch.maxPlayers) {
-          const allUserIds = updatedMatch.participants
-            .filter((p) => p.status === 'approved')
-            .map((p) => p.userId);
-          notificationService.notifyMatchLobbyFull(
-            match.id,
-            match.title,
-            allUserIds
-          ).catch((err) => console.error('Failed to send match-full notification:', err));
-
-          // When match fills and has split payment, auto-create split shares
-          if (updatedMatch.paymentType === 'split' && updatedMatch.bookingId) {
-            try {
-              const approvedParticipants = updatedMatch.participants
-                .filter(p => p.status === 'approved');
-              const shareAmount = Math.round((updatedMatch.totalPrice / approvedParticipants.length) * 100) / 100;
-
-              for (const p of approvedParticipants) {
-                // Create split payment share
-                const share = await splitRepo.createShare(
-                  updatedMatch.bookingId, p.userId, shareAmount, updatedMatch.currency
-                );
-                // Link as booking participant
-                await participantRepo.inviteMany(updatedMatch.bookingId, [p.userId]).catch(() => {});
-                await participantRepo.linkSplitPayment(updatedMatch.bookingId, p.userId, share.id);
-
-                // Notify each participant to pay their share
-                notificationService.sendNotification(
-                  p.userId,
-                  'split_payment_request',
-                  'Pay Your Share',
-                  `Match "${updatedMatch.title}" is full! Pay your share of ${shareAmount} ${updatedMatch.currency}`,
-                  { matchId: String(updatedMatch.id), bookingId: String(updatedMatch.bookingId), shareAmount: String(shareAmount) }
-                ).catch(() => {});
-              }
-            } catch (err) {
-              console.error('Failed to create split payments for match:', err);
-            }
-          }
-
-          if (updatedMatch.paymentType === 'cash_at_venue' && updatedMatch.bookingId) {
-            try {
-              const approvedParticipants = updatedMatch.participants
-                .filter(p => p.status === 'approved');
-              for (const p of approvedParticipants) {
-                await participantRepo.inviteMany(updatedMatch.bookingId, [p.userId]).catch(() => {});
-              }
-            } catch (err) {
-              console.error('Failed to link booking participants for cash match:', err);
-            }
-          }
-        }
-      } catch (err) {
-        console.error('Failed to check/send match-full notification:', err);
+      const updatedMatch = await matchRepo.findById(match.id);
+      if (updatedMatch && updatedMatch.currentPlayers >= updatedMatch.maxPlayers) {
+        await handleMatchFull(updatedMatch);
       }
+    } else {
+      syncMatchToFirestore(Number(req.params.id)).catch(() => {});
     }
-
-    syncMatchToFirestore(Number(req.params.id)).catch(() => {});
     created(res, participant, autoApprove ? 'Joined match' : 'Join request sent');
   } catch (e) { next(e); }
 }
@@ -392,60 +410,10 @@ export async function respondToJoinRequest(req: Request, res: Response, next: Ne
         match.title
       ).catch((err) => console.error('Failed to send approval notification:', err));
 
-      // If the match just became full after this approval, notify everyone
-      try {
-        const refreshedMatch = await matchRepo.findById(match.id);
-        if (refreshedMatch && refreshedMatch.currentPlayers >= refreshedMatch.maxPlayers) {
-          const allUserIds = refreshedMatch.participants
-            .filter((p) => p.status === 'approved')
-            .map((p) => p.userId);
-          notificationService.notifyMatchLobbyFull(
-            match.id,
-            match.title,
-            allUserIds
-          ).catch((err) => console.error('Failed to send match-full notification:', err));
-
-          // When match fills and has split payment, auto-create split shares
-          if (refreshedMatch.paymentType === 'split' && refreshedMatch.bookingId) {
-            try {
-              const approvedParticipants = refreshedMatch.participants
-                .filter(p => p.status === 'approved');
-              const shareAmount = Math.round((refreshedMatch.totalPrice / approvedParticipants.length) * 100) / 100;
-
-              for (const p of approvedParticipants) {
-                const share = await splitRepo.createShare(
-                  refreshedMatch.bookingId, p.userId, shareAmount, refreshedMatch.currency
-                );
-                await participantRepo.inviteMany(refreshedMatch.bookingId, [p.userId]).catch(() => {});
-                await participantRepo.linkSplitPayment(refreshedMatch.bookingId, p.userId, share.id);
-
-                notificationService.sendNotification(
-                  p.userId,
-                  'split_payment_request',
-                  'Pay Your Share',
-                  `Match "${refreshedMatch.title}" is full! Pay your share of ${shareAmount} ${refreshedMatch.currency}`,
-                  { matchId: String(refreshedMatch.id), bookingId: String(refreshedMatch.bookingId), shareAmount: String(shareAmount) }
-                ).catch(() => {});
-              }
-            } catch (err) {
-              console.error('Failed to create split payments for match:', err);
-            }
-          }
-
-          if (refreshedMatch.paymentType === 'cash_at_venue' && refreshedMatch.bookingId) {
-            try {
-              const approvedParticipants = refreshedMatch.participants
-                .filter(p => p.status === 'approved');
-              for (const p of approvedParticipants) {
-                await participantRepo.inviteMany(refreshedMatch.bookingId, [p.userId]).catch(() => {});
-              }
-            } catch (err) {
-              console.error('Failed to link booking participants for cash match:', err);
-            }
-          }
-        }
-      } catch (err) {
-        console.error('Failed to check/send match-full notification:', err);
+      // If the match just became full after this approval, handle all full-match side effects
+      const refreshedMatch = await matchRepo.findById(match.id);
+      if (refreshedMatch && refreshedMatch.currentPlayers >= refreshedMatch.maxPlayers) {
+        await handleMatchFull(refreshedMatch);
       }
     } else if (req.body.status === 'declined') {
       notificationService.notifyMatchJoinDeclined(

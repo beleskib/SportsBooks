@@ -17,7 +17,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.Close
-import androidx.compose.material3.Divider
+import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ExtendedFloatingActionButton
 import androidx.compose.material3.Icon
@@ -180,7 +180,7 @@ private fun VenueDetailContent(
 
                 Spacer(modifier = Modifier.height(16.dp))
 
-                Divider()
+                HorizontalDivider()
 
                 Spacer(modifier = Modifier.height(16.dp))
 
@@ -227,7 +227,7 @@ private fun VenueDetailContent(
             ) {
                 Spacer(modifier = Modifier.height(16.dp))
 
-                Divider()
+                HorizontalDivider()
 
                 Spacer(modifier = Modifier.height(16.dp))
 
@@ -353,7 +353,7 @@ private fun ReviewItem(
 
         Spacer(modifier = Modifier.height(8.dp))
 
-        Divider(color = MaterialTheme.colorScheme.outlineVariant)
+        HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant)
     }
 }
 

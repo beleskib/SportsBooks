@@ -32,9 +32,15 @@ import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Snackbar
+import androidx.compose.material3.SnackbarHost
+import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -166,35 +172,52 @@ fun PlayerHomeScreen(
     viewModel: PlayerHomeViewModel = hiltViewModel()
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
+    val snackbarHostState = remember { SnackbarHostState() }
 
     // Auto-reload when returning from SportsIFollow (or any screen that sets the trigger)
-    androidx.compose.runtime.LaunchedEffect(refreshTrigger) {
+    LaunchedEffect(refreshTrigger) {
         if (refreshTrigger) {
             viewModel.loadData()
             onRefreshConsumed()
         }
     }
 
-    when {
-        uiState.isLoading -> LoadingIndicator()
-        uiState.error != null -> ErrorView(
-            message = uiState.error!!,
-            onRetry = viewModel::loadData
-        )
-        else -> PlayerHomeContent(
-            uiState = uiState,
-            onSportClick = onSportClick,
-            onVenueClick = onVenueClick,
-            onCoachClick = onCoachClick,
-            onNavigateToProfile = onNavigateToProfile,
-            onNavigateToNotifications = onNavigateToNotifications,
-            onNavigateToSearch = onNavigateToSearch,
-            onNavigateToFavorites = onNavigateToFavorites,
-            onFindMatch = onFindMatch,
-            onMatchClick = onMatchClick,
-            onBrowseAllSports = onBrowseAllSports,
-            notificationCount = uiState.notificationCount
-        )
+    // Show a snackbar whenever a watched match changes status
+    LaunchedEffect(uiState.matchStatusMessage) {
+        uiState.matchStatusMessage?.let { message ->
+            snackbarHostState.showSnackbar(message)
+            viewModel.clearMatchStatusMessage()
+        }
+    }
+
+    Scaffold(
+        snackbarHost = {
+            SnackbarHost(hostState = snackbarHostState) { data ->
+                Snackbar(snackbarData = data)
+            }
+        }
+    ) { innerPadding ->
+        when {
+            uiState.isLoading -> LoadingIndicator()
+            uiState.error != null -> ErrorView(
+                message = uiState.error!!,
+                onRetry = viewModel::loadData
+            )
+            else -> PlayerHomeContent(
+                uiState = uiState,
+                onSportClick = onSportClick,
+                onVenueClick = onVenueClick,
+                onCoachClick = onCoachClick,
+                onNavigateToProfile = onNavigateToProfile,
+                onNavigateToNotifications = onNavigateToNotifications,
+                onNavigateToSearch = onNavigateToSearch,
+                onNavigateToFavorites = onNavigateToFavorites,
+                onFindMatch = onFindMatch,
+                onMatchClick = onMatchClick,
+                onBrowseAllSports = onBrowseAllSports,
+                notificationCount = uiState.notificationCount
+            )
+        }
     }
 }
 

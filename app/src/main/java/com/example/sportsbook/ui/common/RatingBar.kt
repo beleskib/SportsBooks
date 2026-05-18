@@ -4,7 +4,7 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Star
 import androidx.compose.material.icons.filled.StarBorder
-import androidx.compose.material.icons.filled.StarHalf
+import androidx.compose.material.icons.automirrored.filled.StarHalf
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
@@ -24,7 +24,7 @@ fun RatingBar(
         for (i in 1..maxStars) {
             val icon = when {
                 i <= rating.toInt() -> Icons.Default.Star
-                i - 0.5 <= rating -> Icons.Default.StarHalf
+                i - 0.5 <= rating -> Icons.AutoMirrored.Filled.StarHalf
                 else -> Icons.Default.StarBorder
             }
             Icon(

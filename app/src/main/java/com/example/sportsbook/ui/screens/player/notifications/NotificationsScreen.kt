@@ -21,7 +21,7 @@ import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.BookOnline
 import androidx.compose.material.icons.filled.DoneAll
 import androidx.compose.material.icons.filled.Group
-import androidx.compose.material.icons.filled.Message
+import androidx.compose.material.icons.automirrored.filled.Message
 import androidx.compose.material.icons.filled.Notifications
 import androidx.compose.material.icons.filled.PersonAdd
 import androidx.compose.material.icons.filled.Star
@@ -269,7 +269,7 @@ private fun notificationIcon(type: NotificationType): ImageVector = when (type) 
     NotificationType.MATCH_JOIN_REQUEST,
     NotificationType.MATCH_JOIN_APPROVED,
     NotificationType.MATCH_JOIN_DECLINED -> Icons.Default.Group
-    NotificationType.MATCH_CHAT_MESSAGE -> Icons.Default.Message
+    NotificationType.MATCH_CHAT_MESSAGE -> Icons.AutoMirrored.Filled.Message
     NotificationType.MATCH_LOBBY_FULL -> Icons.Default.Groups
     NotificationType.MATCH_STARTING_SOON,
     NotificationType.MATCH_CANCELLED -> Icons.Default.SportsScore
@@ -288,7 +288,7 @@ private fun notificationIcon(type: NotificationType): ImageVector = when (type) 
     NotificationType.PARTY_JOINED_MATCH,
     NotificationType.PARTY_DISBANDED -> Icons.Default.Group
     NotificationType.FEED_POST_LIKED -> Icons.Default.Star
-    NotificationType.FEED_POST_COMMENTED -> Icons.Default.Message
+    NotificationType.FEED_POST_COMMENTED -> Icons.AutoMirrored.Filled.Message
     NotificationType.MATCH_COMPLETED -> Icons.Default.SportsScore
     NotificationType.REVIEW_REMINDER -> Icons.Default.Star
     NotificationType.GENERAL -> Icons.Default.Notifications

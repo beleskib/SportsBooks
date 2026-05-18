@@ -85,6 +85,10 @@ class PlayHomeViewModel @Inject constructor(
         }
     }
 
+    fun retryFeed() {
+        loadFeed()
+    }
+
     fun onFromDateChanged(from: String) = _uiState.update { it.copy(fromDate = from) }
     fun onToDateChanged(to: String) = _uiState.update { it.copy(toDate = to) }
     fun onSportTypeChanged(sport: String) = _uiState.update { it.copy(sportType = sport) }

@@ -106,24 +106,55 @@ fun SportsBookNavHost(
             current.contains("PartnerDashboard") ||
             current.contains("MyBookings") ||
             current.contains("NewsFeed") ||
-            current.contains("PendingReservations")
+            current.contains("PendingReservations") ||
+            current.contains("V2PlayHome")
+        // Don't consume the deep link yet — let it survive until the user reaches a main screen
         if (!isOnMainScreen) return@LaunchedEffect
 
+        // Specific types first, then wildcard prefixes (order matters)
         when {
-            link.type.startsWith("booking_") && link.bookingId != null -> {
-                navController.navigate(Route.BookingDetail(link.bookingId))
+            // ── Booking ──
+            link.type == "booking_request" -> {
+                navController.navigate(Route.PendingReservations) { launchSingleTop = true }
             }
-            link.type == "booking_request" && link.bookingId != null -> {
-                navController.navigate(Route.PendingReservations)
+            link.type.startsWith("booking_") && link.bookingId != null -> {
+                navController.navigate(Route.BookingDetail(link.bookingId)) { launchSingleTop = true }
+            }
+
+            // ── Match (chat goes to match chat, everything else to detail) ──
+            link.type == "match_chat" && link.matchId != null -> {
+                navController.navigate(Route.MatchChat(link.matchId)) { launchSingleTop = true }
             }
             link.type.startsWith("match_") && link.matchId != null -> {
-                navController.navigate(Route.MatchDetail(link.matchId))
+                navController.navigate(Route.MatchDetail(link.matchId)) { launchSingleTop = true }
             }
+
+            // ── Party ──
             link.type.startsWith("party_") && link.partyId != null -> {
-                navController.navigate(Route.PartyDetail(link.partyId))
+                navController.navigate(Route.PartyDetail(link.partyId)) { launchSingleTop = true }
             }
+
+            // ── Friends ──
             link.type == "friend_request" || link.type == "friend_request_accepted" -> {
-                navController.navigate(Route.FriendsList)
+                navController.navigate(Route.FriendsList) { launchSingleTop = true }
+            }
+
+            // ── Payment / Split payment ──
+            link.type.startsWith("payment_") && link.paymentId != null -> {
+                navController.navigate(Route.PaymentDetail(link.paymentId)) { launchSingleTop = true }
+            }
+            link.type.startsWith("split_payment_") && link.bookingId != null -> {
+                navController.navigate(Route.BookingDetail(link.bookingId)) { launchSingleTop = true }
+            }
+
+            // ── Community ──
+            link.type.startsWith("community_") && link.communityId != null -> {
+                navController.navigate(Route.CommunityDetail(link.communityId)) { launchSingleTop = true }
+            }
+
+            // ── Lobby ──
+            link.type.startsWith("lobby_") && link.lobbyId != null -> {
+                navController.navigate(Route.LobbyDetail(link.lobbyId)) { launchSingleTop = true }
             }
         }
 
@@ -471,6 +502,9 @@ fun SportsBookNavHost(
                 MyBookingsScreen(
                     onBookingClick = { bookingId ->
                         navController.navigate(Route.BookingDetail(bookingId))
+                    },
+                    onMatchClick = { matchId ->
+                        navController.navigate(Route.MatchDetail(matchId))
                     },
                     onPayNow = { bookingId ->
                         navController.navigate(Route.PaymentCheckout(bookingId))
@@ -1025,6 +1059,9 @@ fun SportsBookNavHost(
                     onBack = { navController.popBackStack() },
                     onBrowseVenue = { venueId ->
                         navController.navigate(Route.BookingCalendar(venueId = venueId))
+                    },
+                    onMatchClick = { matchId ->
+                        navController.navigate(Route.MatchDetail(matchId))
                     }
                 )
             }

@@ -25,6 +25,7 @@ import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ExposedDropdownMenuBox
+import androidx.compose.material3.MenuAnchorType
 import androidx.compose.material3.ExposedDropdownMenuDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -227,7 +228,7 @@ private fun EntitySelectorRow(
                     trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = expanded) },
                     modifier = Modifier
                         .width(120.dp)
-                        .menuAnchor(),
+                        .menuAnchor(MenuAnchorType.PrimaryNotEditable),
                     textStyle = MaterialTheme.typography.bodySmall.copy(color = TextPrimary),
                     colors = OutlinedTextFieldDefaults.colors(
                         focusedBorderColor = GoldAccent,
@@ -271,7 +272,7 @@ private fun EntitySelectorRow(
                     trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = expanded) },
                     modifier = Modifier
                         .weight(1f)
-                        .menuAnchor(),
+                        .menuAnchor(MenuAnchorType.PrimaryNotEditable),
                     textStyle = MaterialTheme.typography.bodySmall.copy(color = TextPrimary),
                     colors = OutlinedTextFieldDefaults.colors(
                         focusedBorderColor = GoldAccent,
