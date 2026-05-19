@@ -8,6 +8,7 @@ The all-in-one platform for booking sports venues, finding coaches, and organizi
 
 [![Platforms](https://img.shields.io/badge/platforms-iOS%20%7C%20Android%20%7C%20Web-blue)]()
 [![Backend](https://img.shields.io/badge/backend-Node.js%20%7C%20PostgreSQL-green)]()
+[![Database](https://img.shields.io/badge/database-Supabase%20%7C%20PostgreSQL%2016-3ECF8E)]()
 [![Branch](https://img.shields.io/badge/branch-v2--practical--ux-orange)]()
 [![License](https://img.shields.io/badge/license-Proprietary-lightgrey)]()
 
@@ -30,9 +31,9 @@ The `v2-practical-ux` branch adds a unified home feed, one-tap rebook, split pay
 ```
 Mobile Apps (iOS + Android)
          |
-    REST API  ──────────  PostgreSQL 16
+    REST API  ──────────  Supabase (PostgreSQL 16)
          |                     |
-   Firebase Auth          58 migrations
+   Firebase Auth          61 migrations
    (token validation)     (full schema)
          |
    Stripe Connect
@@ -42,7 +43,7 @@ Mobile Apps (iOS + Android)
 - **Mobile** — Kotlin/Compose (Android), Swift/SwiftUI (iOS)
 - **Web** — React 18 + Vite + TailwindCSS (admin & partner dashboard)
 - **Backend** — Node.js + Express + TypeScript REST API
-- **Database** — PostgreSQL 16 with 58 versioned migrations
+- **Database** — Supabase-hosted PostgreSQL 16 (eu-west-1) with 61 versioned migrations, 4 stored procedures
 - **Auth** — Firebase Auth (token validation only; all business data in PostgreSQL)
 - **Payments** — Stripe Connect (direct payouts to partners)
 - **Push** — Firebase Cloud Messaging
@@ -119,7 +120,7 @@ Mobile Apps (iOS + Android)
 | Backend API | Node.js, Express, TypeScript | `src/backend/` |
 | Android | Kotlin, Jetpack Compose, Hilt, Retrofit, Coil | `app/` |
 | iOS | Swift, SwiftUI, URLSession | `src/ios/` |
-| Database | PostgreSQL 16, 58 migrations | `database/` |
+| Database | Supabase (PostgreSQL 16), 61 migrations | `database/` |
 | Shared Contracts | TypeScript interfaces & endpoint constants | `src/shared/` |
 | Auth | Firebase Auth | All platforms |
 | Storage | Firebase Storage | All platforms |
@@ -182,8 +183,11 @@ The backend exposes a comprehensive REST API. All endpoints require `Authorizati
 | `0037`–`0040` | Gamification: achievements, streaks, Stripe Connect accounts |
 | `0041`–`0049` | v2 core: partner approval gates, communities, lobbies, venue booking lobbies, skill filters, listing approval |
 | `0050`–`0058` | v2 finish: split payments, booking participants, partner reminders, SportsBooks+ subscription, triggers & constraints, direct messages |
+| `0059`–`0061` | Indexes, constraints, triggers hardening, match recurrence cleanup, availability template improvements |
 
 All tables follow PostgreSQL conventions: `BIGSERIAL` primary keys, `TIMESTAMPTZ` timestamps, explicit foreign key behaviors, check constraints, and indexed foreign keys.
+
+> **Live database**: Hosted on [Supabase](https://supabase.com) (PostgreSQL 16, eu-west-1 Ireland). All 61 migrations, 4 stored procedures, indexes, triggers, and seed data are deployed.
 
 ---
 
@@ -192,7 +196,7 @@ All tables follow PostgreSQL conventions: `BIGSERIAL` primary keys, `TIMESTAMPTZ
 ### Prerequisites
 
 - Node.js 18+
-- PostgreSQL 15+
+- Supabase project (or local PostgreSQL 15+)
 - Firebase project (Auth + Storage + Cloud Messaging)
 - Stripe account (Connect + Billing)
 
@@ -200,7 +204,7 @@ All tables follow PostgreSQL conventions: `BIGSERIAL` primary keys, `TIMESTAMPTZ
 
 ```bash
 cd src/backend
-cp .env.example .env       # fill in DATABASE_URL, FIREBASE_*, STRIPE_*
+cp .env.example .env       # fill in DATABASE_URL (Supabase pooler), FIREBASE_*, STRIPE_*
 npm install
 npm run dev
 ```
