@@ -888,12 +888,12 @@ private fun UpcomingBookingCard(booking: UpcomingBooking) {
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
                 Text(
-                    text = booking.slotDate.takeLast(2), // day
+                    text = booking.slotDate.takeLast(2),
                     style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold),
                     color = TextPrimary
                 )
                 Text(
-                    text = booking.slotDate.substring(5, 7), // month
+                    text = if (booking.slotDate.length >= 7) booking.slotDate.substring(5, 7) else "--",
                     style = MaterialTheme.typography.labelSmall,
                     color = TextSecondary
                 )
@@ -1052,8 +1052,10 @@ private fun DateTimePickerDialog(
                         .atZone(java.time.ZoneOffset.UTC)
                         .toLocalDate()
                     val time = java.time.LocalTime.of(timePickerState.hour, timePickerState.minute)
-                    val iso = java.time.LocalDateTime.of(date, time)
-                        .format(java.time.format.DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss.SSS'Z'"))
+                    val utcInstant = java.time.LocalDateTime.of(date, time)
+                        .atZone(java.time.ZoneId.systemDefault())
+                        .toInstant()
+                    val iso = java.time.format.DateTimeFormatter.ISO_INSTANT.format(utcInstant)
                     onConfirm(iso)
                 }) { Text("Confirm") }
             },

@@ -377,6 +377,9 @@ export async function joinMatch(req: Request, res: Response, next: NextFunction)
   try {
     const match = await matchRepo.findById(Number(req.params.id));
     if (!match) throw new NotFoundError('Match');
+    if (match.status !== 'open') {
+      throw new ForbiddenError('Cannot join a match that is ' + match.status);
+    }
     // Public matches auto-approve; private matches go to pending
     const autoApprove = match.visibility === 'public';
     const participant = await matchRepo.addParticipant(Number(req.params.id), req.user!.id, autoApprove);

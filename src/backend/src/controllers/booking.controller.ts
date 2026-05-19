@@ -161,26 +161,27 @@ export async function updateStatus(req: Request, res: Response, next: NextFuncti
     const existing = await bookingRepo.findById(Number(req.params.id));
     if (!existing) throw new NotFoundError('Booking');
 
-    // Check if user is the player, the partner, or an admin
-    let isOwnerOrPlayer = false;
-    if (userRole === 'admin') {
-      isOwnerOrPlayer = true;
-    } else if (Number(existing.playerId) === userId) {
-      isOwnerOrPlayer = true;
-    } else {
-      // Check partner ownership via venue or coach
-      if (existing.venueId) {
-        const venue = await venueRepo.findById(existing.venueId);
-        if (venue && Number(venue.ownerId) === userId) isOwnerOrPlayer = true;
-      }
-      if (!isOwnerOrPlayer && existing.coachId) {
-        const coach = await coachRepo.findById(existing.coachId);
-        if (coach && Number(coach.userId) === userId) isOwnerOrPlayer = true;
-      }
+    // Determine if the user is the player, a partner, or an admin
+    const isAdmin = userRole === 'admin';
+    const isPlayer = Number(existing.playerId) === userId;
+    let isPartner = false;
+    if (existing.venueId) {
+      const venue = await venueRepo.findById(existing.venueId);
+      if (venue && Number(venue.ownerId) === userId) isPartner = true;
+    }
+    if (!isPartner && existing.coachId) {
+      const coach = await coachRepo.findById(existing.coachId);
+      if (coach && Number(coach.userId) === userId) isPartner = true;
     }
 
-    if (!isOwnerOrPlayer) {
+    if (!isAdmin && !isPlayer && !isPartner) {
       throw new ForbiddenError('Forbidden');
+    }
+
+    // Players can only cancel their own bookings — status changes like
+    // completed/approved/confirmed require partner or admin role.
+    if (isPlayer && !isPartner && !isAdmin && status !== 'cancelled') {
+      throw new ForbiddenError('Players can only cancel their bookings');
     }
 
     const booking = await bookingRepo.updateStatus(Number(req.params.id), status);

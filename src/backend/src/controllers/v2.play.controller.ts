@@ -36,29 +36,39 @@ export async function searchPlay(req: Request, res: Response, next: NextFunction
       );
       interestedSports = interestedRes.rows.map((r: any) => r.sport_type);
     }
-    const interestedSportsSqlList = interestedSports.length > 0
-      ? interestedSports.map((s) => `'${s.replace(/'/g, "''")}'`).join(',')
-      : null;
-    const sportFilterSql = (col: string): string => {
-      if (sportType) return `AND ${col} = '${sportType.replace(/'/g, "''")}'`;
-      if (interestedSportsSqlList) return `AND ${col} IN (${interestedSportsSqlList})`;
-      return '';
-    };
-
-    // Distance formula uses haversine approximation via earthdistance extension.
-    // Falls back to NULL when user didn't provide lat/lng — no distance filter applied.
-    const distanceCol = (lat !== null && lng !== null)
-      ? `(6371 * acos(cos(radians($2)) * cos(radians(v.latitude)) * cos(radians(v.longitude) - radians($3)) + sin(radians($2)) * sin(radians(v.latitude))))`
-      : `NULL::DOUBLE PRECISION`;
-
-    // Build shared WHERE-clause args. Keep query parameterized; don't interpolate user input.
+    // Build parameterized sport filter instead of string interpolation
     const params: any[] = [userId];
+    let latIdx = -1, lngIdx = -1;
     if (lat !== null && lng !== null) {
       params.push(lat, lng);
+      latIdx = params.length - 1;
+      lngIdx = params.length;
     }
+    const distanceCol = (latIdx > 0)
+      ? `(6371 * acos(cos(radians($${latIdx})) * cos(radians(v.latitude)) * cos(radians(v.longitude) - radians($${lngIdx})) + sin(radians($${latIdx})) * sin(radians(v.latitude))))`
+      : `NULL::DOUBLE PRECISION`;
+
     params.push(from, to);
     const fromIdx = params.length - 1;
     const toIdx = params.length;
+
+    let sportFilterSql: (col: string) => string;
+    if (sportType) {
+      params.push(sportType);
+      const sportIdx = params.length;
+      sportFilterSql = (col: string) => `AND ${col} = $${sportIdx}`;
+    } else if (interestedSports.length > 0) {
+      const sportIdxStart = params.length + 1;
+      interestedSports.forEach(s => params.push(s));
+      const sportIdxEnd = params.length;
+      const placeholders = Array.from(
+        { length: sportIdxEnd - sportIdxStart + 1 },
+        (_, i) => `$${sportIdxStart + i}`
+      ).join(',');
+      sportFilterSql = (col: string) => `AND ${col} IN (${placeholders})`;
+    } else {
+      sportFilterSql = () => '';
+    }
 
     // --- Lobbies (community_lobbies) ---
     // NOTE: community_lobbies stores scheduled_date (DATE) + scheduled_time (TIME)
@@ -123,12 +133,18 @@ export async function searchPlay(req: Request, res: Response, next: NextFunction
     );
 
     // --- Available players count (shown as a chip, not individual cards here) ---
-    const availPlayersRes = await query(
-      `SELECT COUNT(*)::INT AS cnt
-       FROM available_players ap
-       WHERE (ap.available_until IS NULL OR ap.available_until > NOW())
-         ${sportFilterSql('ap.sport_type')}`,
-    );
+    let availPlayersSql = `SELECT COUNT(*)::INT AS cnt FROM available_players ap
+       WHERE (ap.available_until IS NULL OR ap.available_until > NOW())`;
+    let availParams: any[] = [];
+    if (sportType) {
+      availParams.push(sportType);
+      availPlayersSql += ` AND ap.sport_type = $1`;
+    } else if (interestedSports.length > 0) {
+      interestedSports.forEach((s, i) => availParams.push(s));
+      const placeholders = interestedSports.map((_, i) => `$${i + 1}`).join(',');
+      availPlayersSql += ` AND ap.sport_type IN (${placeholders})`;
+    }
+    const availPlayersRes = await query(availPlayersSql, availParams);
 
     const mapLobby = (r: any) => ({
       type: 'lobby' as const,

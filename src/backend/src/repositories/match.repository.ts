@@ -1,4 +1,5 @@
 import { query } from '../config/database';
+import { ValidationError } from '../utils/errors';
 
 // ============================================================
 // Row interfaces
@@ -414,6 +415,14 @@ export async function updateStatus(id: number, status: string): Promise<MatchRow
 // ============================================================
 
 export async function addParticipant(matchId: number, userId: number, autoApprove: boolean = false): Promise<ParticipantRow> {
+  const existing = await query(
+    `SELECT id FROM match_participants WHERE match_id = $1 AND user_id = $2`,
+    [matchId, userId]
+  );
+  if (existing.rows.length > 0) {
+    throw new ValidationError('User is already a participant in this match');
+  }
+
   const status = autoApprove ? 'approved' : 'pending';
   const result = await query(
     `INSERT INTO match_participants (match_id, user_id, status, role)
@@ -440,6 +449,13 @@ export async function addParticipant(matchId: number, userId: number, autoApprov
 }
 
 export async function updateParticipantStatus(matchId: number, participantId: number, status: string): Promise<ParticipantRow | null> {
+  const prev = await query(
+    `SELECT status FROM match_participants WHERE id = $2 AND match_id = $1`,
+    [matchId, participantId]
+  );
+  if (prev.rows.length === 0) return null;
+  const oldStatus = prev.rows[0].status;
+
   const result = await query(
     `UPDATE match_participants SET status = $3, updated_at = NOW()
      WHERE id = $2 AND match_id = $1
@@ -448,7 +464,7 @@ export async function updateParticipantStatus(matchId: number, participantId: nu
   );
   if (result.rows.length === 0) return null;
 
-  if (status === 'approved') {
+  if (status === 'approved' && oldStatus !== 'approved') {
     await query(
       `UPDATE matches SET current_players = current_players + 1, updated_at = NOW()
        WHERE id = $1`,
@@ -459,21 +475,17 @@ export async function updateParticipantStatus(matchId: number, participantId: nu
        WHERE id = $1 AND current_players >= max_players AND status = 'open'`,
       [matchId]
     );
-  } else if (status === 'declined' || status === 'left') {
-    // Only decrement if they were previously approved
-    const prev = result.rows[0];
-    if (prev.status === 'approved') {
-      await query(
-        `UPDATE matches SET current_players = GREATEST(current_players - 1, 0), updated_at = NOW()
-         WHERE id = $1`,
-        [matchId]
-      );
-      await query(
-        `UPDATE matches SET status = 'open', updated_at = NOW()
-         WHERE id = $1 AND status = 'full' AND current_players < max_players`,
-        [matchId]
-      );
-    }
+  } else if ((status === 'declined' || status === 'left') && oldStatus === 'approved') {
+    await query(
+      `UPDATE matches SET current_players = GREATEST(current_players - 1, 0), updated_at = NOW()
+       WHERE id = $1`,
+      [matchId]
+    );
+    await query(
+      `UPDATE matches SET status = 'open', updated_at = NOW()
+       WHERE id = $1 AND status = 'full' AND current_players < max_players`,
+      [matchId]
+    );
   }
 
   return mapParticipantRow(result.rows[0]);
