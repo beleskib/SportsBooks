@@ -5,6 +5,7 @@ import androidx.lifecycle.viewModelScope
 import com.example.sportsbook.domain.enums.SportType
 import com.example.sportsbook.domain.model.Coach
 import com.example.sportsbook.domain.model.Match
+import com.example.sportsbook.domain.model.Party
 import com.example.sportsbook.domain.model.Sport
 import com.example.sportsbook.domain.model.User
 import com.example.sportsbook.domain.model.Venue
@@ -12,6 +13,7 @@ import com.example.sportsbook.domain.repository.AuthRepository
 import com.example.sportsbook.domain.repository.CoachRepository
 import com.example.sportsbook.domain.repository.MatchRepository
 import com.example.sportsbook.domain.repository.NotificationRepository
+import com.example.sportsbook.domain.repository.PartyRepository
 import com.example.sportsbook.domain.repository.SportRepository
 import com.example.sportsbook.domain.repository.UserRepository
 import com.example.sportsbook.domain.repository.VenueRepository
@@ -40,6 +42,7 @@ data class PlayerHomeUiState(
     val allCoaches: List<Coach> = emptyList(),
     val selectedSportType: SportType? = null,
     val searchQuery: String = "",
+    val activeParties: List<Party> = emptyList(),
     val notificationCount: Int = 0,
     val cityName: String? = null,
     val isLoading: Boolean = false,
@@ -136,6 +139,7 @@ class PlayerHomeViewModel @Inject constructor(
     private val authRepository: AuthRepository,
     private val notificationRepository: NotificationRepository,
     private val matchRepository: MatchRepository,
+    private val partyRepository: PartyRepository,
     private val locationService: LocationService,
     private val firestore: FirebaseFirestore
 ) : ViewModel() {
@@ -194,6 +198,7 @@ class PlayerHomeViewModel @Inject constructor(
             val allVenuesDeferred = async { venueRepository.getAllVenues() }
             val allCoachesDeferred = async { coachRepository.getAllCoaches() }
             val myMatchesDeferred = async { matchRepository.getMyMatches() }
+            val partiesDeferred = async { partyRepository.getActiveParties() }
 
             val userResult = userDeferred.await()
             val sportsResult = sportsDeferred.await()
@@ -202,6 +207,7 @@ class PlayerHomeViewModel @Inject constructor(
             val allVenuesResult = allVenuesDeferred.await()
             val allCoachesResult = allCoachesDeferred.await()
             val myMatchesResult = myMatchesDeferred.await()
+            val partiesResult = partiesDeferred.await()
 
             val error = listOf(sportsResult, venueDealsResult, coachDealsResult, allVenuesResult, allCoachesResult)
                 .firstOrNull { it.isFailure }
@@ -213,6 +219,7 @@ class PlayerHomeViewModel @Inject constructor(
                     user = userResult.getOrNull() ?: current.user,
                     sports = sportsResult.getOrElse { current.sports },
                     myMatches = myMatchesResult.getOrElse { current.myMatches },
+                    activeParties = partiesResult.getOrElse { current.activeParties },
                     topDealVenues = venueDealsResult.getOrElse { current.topDealVenues },
                     topDealCoaches = coachDealsResult.getOrElse { current.topDealCoaches },
                     allVenues = allVenuesResult.getOrElse { current.allVenues },

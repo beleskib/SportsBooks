@@ -24,6 +24,8 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowForward
+import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.Groups
 import androidx.compose.material.icons.filled.MailOutline
 import androidx.compose.material.icons.filled.Notifications
 import androidx.compose.material.icons.filled.Search
@@ -160,6 +162,8 @@ fun PlayerHomeScreen(
     onNavigateToProfile: () -> Unit,
     onNavigateToNotifications: () -> Unit,
     onNavigateToChats: () -> Unit = {},
+    onNavigateToCreateParty: () -> Unit = {},
+    onNavigateToPartyDetail: (Long) -> Unit = {},
     onNavigateToSettings: () -> Unit,
     onSignOut: () -> Unit,
     onFindMatch: () -> Unit = {},
@@ -213,6 +217,8 @@ fun PlayerHomeScreen(
                 onNavigateToProfile = onNavigateToProfile,
                 onNavigateToNotifications = onNavigateToNotifications,
                 onNavigateToChats = onNavigateToChats,
+                onNavigateToCreateParty = onNavigateToCreateParty,
+                onNavigateToPartyDetail = onNavigateToPartyDetail,
                 onNavigateToSearch = onNavigateToSearch,
                 onNavigateToFavorites = onNavigateToFavorites,
                 onFindMatch = onFindMatch,
@@ -234,6 +240,8 @@ private fun PlayerHomeContent(
     onNavigateToProfile: () -> Unit,
     onNavigateToNotifications: () -> Unit,
     onNavigateToChats: () -> Unit,
+    onNavigateToCreateParty: () -> Unit,
+    onNavigateToPartyDetail: (Long) -> Unit,
     onNavigateToSearch: () -> Unit,
     onNavigateToFavorites: () -> Unit,
     onFindMatch: () -> Unit,
@@ -290,6 +298,74 @@ private fun PlayerHomeContent(
                         ActiveMatchCard(
                             match = match,
                             onClick = { onMatchClick(match.id) }
+                        )
+                    }
+                }
+            }
+        }
+
+        // ── My Parties ──
+        item {
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 16.dp, vertical = 8.dp),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                SectionLabel("My parties")
+                Text(
+                    text = "+ Create",
+                    style = MaterialTheme.typography.bodySmall,
+                    color = Color(0xFF2563EB),
+                    fontWeight = FontWeight.SemiBold,
+                    modifier = Modifier.clickable(onClick = onNavigateToCreateParty)
+                )
+            }
+        }
+        if (uiState.activeParties.isNotEmpty()) {
+            item {
+                LazyRow(
+                    contentPadding = PaddingValues(horizontal = 16.dp),
+                    horizontalArrangement = Arrangement.spacedBy(12.dp)
+                ) {
+                    items(uiState.activeParties, key = { "party-${it.id}" }) { party ->
+                        PartyCard(
+                            party = party,
+                            onClick = { onNavigateToPartyDetail(party.id) }
+                        )
+                    }
+                }
+            }
+        } else {
+            item {
+                Card(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = 16.dp)
+                        .clickable(onClick = onNavigateToCreateParty),
+                    colors = CardDefaults.cardColors(containerColor = Color.White),
+                    elevation = CardDefaults.cardElevation(defaultElevation = 1.dp),
+                    shape = RoundedCornerShape(12.dp)
+                ) {
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(16.dp),
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.Center
+                    ) {
+                        Icon(
+                            Icons.Default.Groups,
+                            contentDescription = null,
+                            tint = Color(0xFF9CA3AF),
+                            modifier = Modifier.size(20.dp)
+                        )
+                        Spacer(modifier = Modifier.width(8.dp))
+                        Text(
+                            text = "Create a party to play with friends",
+                            style = MaterialTheme.typography.bodyMedium,
+                            color = Color(0xFF6B7280)
                         )
                     }
                 }
@@ -1004,6 +1080,95 @@ private fun ActiveMatchCard(match: Match, onClick: () -> Unit) {
     }
 }
 
+// ── Party card ──
+@Composable
+private fun PartyCard(party: com.example.sportsbook.domain.model.Party, onClick: () -> Unit) {
+    val statusColor = when (party.status) {
+        "forming" -> Color(0xFF7C3AED) // purple
+        "ready" -> Color(0xFF16A34A)   // green
+        "in_match" -> Color(0xFF2563EB) // blue
+        else -> Color(0xFF6B7280)
+    }
+    val statusLabel = when (party.status) {
+        "forming" -> "Forming"
+        "ready" -> "Ready"
+        "in_match" -> "In Match"
+        else -> party.status
+    }
+    val sportVisual = party.sportType?.uppercase()?.let {
+        try { sportVisuals[com.example.sportsbook.domain.enums.SportType.valueOf(it)] } catch (_: Exception) { null }
+    }
+
+    Card(
+        onClick = onClick,
+        modifier = Modifier.width(180.dp),
+        shape = RoundedCornerShape(16.dp),
+        colors = CardDefaults.cardColors(containerColor = CardBg),
+        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
+    ) {
+        Column {
+            // Gradient header
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(48.dp)
+                    .background(
+                        Brush.linearGradient(
+                            listOf(
+                                sportVisual?.gradientStart ?: Color(0xFF7C3AED),
+                                sportVisual?.gradientEnd ?: Color(0xFF6D28D9)
+                            )
+                        )
+                    )
+                    .padding(horizontal = 12.dp, vertical = 8.dp)
+            ) {
+                Icon(
+                    Icons.Default.Groups,
+                    contentDescription = null,
+                    tint = Color.White,
+                    modifier = Modifier
+                        .size(24.dp)
+                        .align(Alignment.CenterStart)
+                )
+                Box(
+                    modifier = Modifier
+                        .align(Alignment.TopEnd)
+                        .clip(RoundedCornerShape(999.dp))
+                        .background(statusColor.copy(alpha = 0.9f))
+                        .padding(horizontal = 8.dp, vertical = 3.dp)
+                ) {
+                    Text(
+                        text = statusLabel,
+                        style = MaterialTheme.typography.labelSmall,
+                        color = Color.White,
+                        fontWeight = FontWeight.Bold,
+                        fontSize = 10.sp
+                    )
+                }
+            }
+
+            Column(modifier = Modifier.padding(12.dp)) {
+                Text(
+                    text = party.name ?: "Party",
+                    style = MaterialTheme.typography.titleSmall,
+                    color = TextPrimary,
+                    fontWeight = FontWeight.SemiBold,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis
+                )
+                Spacer(modifier = Modifier.height(4.dp))
+                Text(
+                    text = "${sportVisual?.emoji ?: "🏅"} ${party.sportType ?: "Sports"} · ${party.members.size} members",
+                    style = MaterialTheme.typography.bodySmall,
+                    color = TextSecondary,
+                    fontSize = 11.sp,
+                    maxLines = 1
+                )
+            }
+        }
+    }
+}
+
 // ── Find a Match CTA (dark card with gold text) ──
 @Composable
 private fun FindMatchCta(onClick: () -> Unit) {
@@ -1130,6 +1295,8 @@ private fun PlayerHomeScreenPreview() {
             onNavigateToProfile = {},
             onNavigateToNotifications = {},
             onNavigateToChats = {},
+            onNavigateToCreateParty = {},
+            onNavigateToPartyDetail = {},
             onNavigateToSearch = {},
             onNavigateToFavorites = {},
             onFindMatch = {},

@@ -342,6 +342,12 @@ fun SportsBookNavHost(
                     onNavigateToChats = {
                         navController.navigate(Route.ChatsList)
                     },
+                    onNavigateToCreateParty = {
+                        navController.navigate(Route.CreateParty)
+                    },
+                    onNavigateToPartyDetail = { partyId ->
+                        navController.navigate(Route.PartyDetail(partyId))
+                    },
                     onNavigateToSettings = {
                         navController.navigate(Route.Settings)
                     },
@@ -576,6 +582,9 @@ fun SportsBookNavHost(
                     },
                     onNavigateToPartyChat = { partyId ->
                         navController.navigate(Route.PartyDetail(partyId))
+                    },
+                    onCreateParty = {
+                        navController.navigate(Route.CreateParty)
                     },
                     onBack = { navController.popBackStack() },
                 )

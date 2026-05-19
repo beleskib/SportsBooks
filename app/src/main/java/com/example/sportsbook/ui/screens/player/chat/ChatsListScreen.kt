@@ -19,6 +19,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.automirrored.filled.KeyboardArrowRight
+import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.CalendarToday
 import androidx.compose.material.icons.filled.Groups
 import androidx.compose.material.icons.filled.Person
@@ -70,6 +71,7 @@ fun ChatsListScreen(
     onNavigateToMatchChat: (matchId: Long) -> Unit,
     onNavigateToFriendChat: (userId: Long, name: String, photoUrl: String?) -> Unit = { _, _, _ -> },
     onNavigateToPartyChat: (partyId: Long) -> Unit = {},
+    onCreateParty: () -> Unit = {},
     onBack: () -> Unit,
     viewModel: ChatsListViewModel = hiltViewModel(),
 ) {
@@ -94,6 +96,15 @@ fun ChatsListScreen(
                         Icon(
                             Icons.AutoMirrored.Filled.ArrowBack,
                             contentDescription = "Back",
+                            tint = TextPrimary,
+                        )
+                    }
+                },
+                actions = {
+                    IconButton(onClick = onCreateParty) {
+                        Icon(
+                            Icons.Default.Add,
+                            contentDescription = "Create Party",
                             tint = TextPrimary,
                         )
                     }
