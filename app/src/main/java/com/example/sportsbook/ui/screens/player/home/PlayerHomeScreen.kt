@@ -24,6 +24,7 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowForward
+import androidx.compose.material.icons.filled.MailOutline
 import androidx.compose.material.icons.filled.Notifications
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material.icons.filled.Star
@@ -158,6 +159,7 @@ fun PlayerHomeScreen(
     onCoachClick: (Long) -> Unit,
     onNavigateToProfile: () -> Unit,
     onNavigateToNotifications: () -> Unit,
+    onNavigateToChats: () -> Unit = {},
     onNavigateToSettings: () -> Unit,
     onSignOut: () -> Unit,
     onFindMatch: () -> Unit = {},
@@ -210,6 +212,7 @@ fun PlayerHomeScreen(
                 onCoachClick = onCoachClick,
                 onNavigateToProfile = onNavigateToProfile,
                 onNavigateToNotifications = onNavigateToNotifications,
+                onNavigateToChats = onNavigateToChats,
                 onNavigateToSearch = onNavigateToSearch,
                 onNavigateToFavorites = onNavigateToFavorites,
                 onFindMatch = onFindMatch,
@@ -230,6 +233,7 @@ private fun PlayerHomeContent(
     onCoachClick: (Long) -> Unit,
     onNavigateToProfile: () -> Unit,
     onNavigateToNotifications: () -> Unit,
+    onNavigateToChats: () -> Unit,
     onNavigateToSearch: () -> Unit,
     onNavigateToFavorites: () -> Unit,
     onFindMatch: () -> Unit,
@@ -247,6 +251,7 @@ private fun PlayerHomeContent(
         item {
             NavBar(
                 location = uiState.cityName ?: "Discover",
+                onInboxClick = onNavigateToChats,
                 onNotificationClick = onNavigateToNotifications,
                 notificationCount = notificationCount
             )
@@ -448,6 +453,7 @@ private fun PlayerHomeContent(
 @Composable
 private fun NavBar(
     location: String,
+    onInboxClick: () -> Unit,
     onNotificationClick: () -> Unit,
     notificationCount: Int = 0
 ) {
@@ -465,6 +471,15 @@ private fun NavBar(
             fontWeight = FontWeight.SemiBold
         )
         Spacer(modifier = Modifier.weight(1f))
+        IconButton(onClick = onInboxClick, modifier = Modifier.size(32.dp)) {
+            Icon(
+                Icons.Default.MailOutline,
+                contentDescription = "Inbox",
+                tint = GoldAccent,
+                modifier = Modifier.size(22.dp)
+            )
+        }
+        Spacer(modifier = Modifier.width(4.dp))
         Box {
             IconButton(onClick = onNotificationClick, modifier = Modifier.size(32.dp)) {
                 Icon(
@@ -1114,6 +1129,7 @@ private fun PlayerHomeScreenPreview() {
             onCoachClick = {},
             onNavigateToProfile = {},
             onNavigateToNotifications = {},
+            onNavigateToChats = {},
             onNavigateToSearch = {},
             onNavigateToFavorites = {},
             onFindMatch = {},

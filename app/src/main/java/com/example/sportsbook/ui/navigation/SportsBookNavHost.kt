@@ -339,6 +339,9 @@ fun SportsBookNavHost(
                     onNavigateToNotifications = {
                         navController.navigate(Route.Notifications)
                     },
+                    onNavigateToChats = {
+                        navController.navigate(Route.ChatsList)
+                    },
                     onNavigateToSettings = {
                         navController.navigate(Route.Settings)
                     },
