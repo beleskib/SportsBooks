@@ -839,7 +839,7 @@ fun SportsBookNavHost(
                 CreateMatchScreen(
                     onMatchCreated = { matchId ->
                         navController.navigate(Route.MatchDetail(matchId)) {
-                            popUpTo(Route.CreateMatch) { inclusive = true }
+                            popUpTo<Route.CreateMatch> { inclusive = true }
                         }
                     },
                     onBack = { navController.popBackStack() }
@@ -1042,7 +1042,7 @@ fun SportsBookNavHost(
                 CreateLobbyScreen(
                     onLobbyCreated = { lobbyId ->
                         navController.navigate(Route.LobbyDetail(lobbyId)) {
-                            popUpTo(Route.CreateLobby) { inclusive = true }
+                            popUpTo<Route.CreateLobby> { inclusive = true }
                         }
                     },
                     onBack = { navController.popBackStack() }
