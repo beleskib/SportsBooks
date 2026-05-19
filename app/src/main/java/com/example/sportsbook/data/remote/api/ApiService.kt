@@ -490,7 +490,7 @@ interface ApiService {
     suspend fun createParty(@Body request: CreatePartyRequestDto): ApiResponseDto<PartyDto>
 
     @GET("api/parties/active")
-    suspend fun getActiveParty(): ApiResponseDto<PartyDto?>
+    suspend fun getActiveParties(): ApiResponseDto<List<PartyDto>>
 
     @GET("api/parties/{id}")
     suspend fun getPartyById(@Path("id") id: Long): ApiResponseDto<PartyDto>

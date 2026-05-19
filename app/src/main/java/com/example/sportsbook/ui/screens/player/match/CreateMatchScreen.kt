@@ -66,6 +66,7 @@ import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.compose.material3.FilterChip
+import androidx.compose.material.icons.filled.Groups
 import com.example.sportsbook.domain.enums.MatchPaymentType
 import com.example.sportsbook.domain.enums.MatchType
 import com.example.sportsbook.domain.enums.MatchVisibility
@@ -157,6 +158,46 @@ fun CreateMatchScreen(
                         onClick = { viewModel.updateVisibility(vis) },
                         label = { Text(vis.displayName) }
                     )
+                }
+            }
+
+            // Party picker — bring your team along
+            if (uiState.activeParties.isNotEmpty()) {
+                Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(8.dp)
+                    ) {
+                        Icon(
+                            Icons.Default.Groups,
+                            contentDescription = null,
+                            tint = MaterialTheme.colorScheme.primary,
+                            modifier = Modifier.size(20.dp)
+                        )
+                        Text("Bring your party", style = MaterialTheme.typography.titleSmall)
+                    }
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.spacedBy(8.dp)
+                    ) {
+                        FilterChip(
+                            selected = uiState.selectedPartyId == null,
+                            onClick = { viewModel.selectParty(null) },
+                            label = { Text("Solo") }
+                        )
+                        uiState.activeParties.forEach { party ->
+                            FilterChip(
+                                selected = uiState.selectedPartyId == party.id,
+                                onClick = { viewModel.selectParty(party.id) },
+                                label = {
+                                    Text(
+                                        "${party.name ?: party.sportType ?: "Party"} (${party.members.size})",
+                                        maxLines = 1
+                                    )
+                                }
+                            )
+                        }
+                    }
                 }
             }
 

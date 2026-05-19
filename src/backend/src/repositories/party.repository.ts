@@ -106,8 +106,8 @@ export async function findById(id: number): Promise<PartyRow | null> {
   return { ...party, members };
 }
 
-export async function findActiveByUserId(userId: number): Promise<PartyRow | null> {
-  // Find a party where the user is either the leader or an accepted member,
+export async function findAllActiveByUserId(userId: number): Promise<PartyRow[]> {
+  // Find all parties where the user is either the leader or an accepted member,
   // and the party status is 'forming' or 'ready'
   const result = await query(
     `SELECT p.id, p.leader_id, p.name, p.sport_type, p.status, p.match_id,
@@ -123,15 +123,17 @@ export async function findActiveByUserId(userId: number): Promise<PartyRow | nul
            WHERE pm.party_id = p.id AND pm.user_id = $1 AND pm.status = 'accepted'
          )
        )
-     ORDER BY p.created_at DESC
-     LIMIT 1`,
+     ORDER BY p.created_at DESC`,
     [userId]
   );
-  if (result.rows.length === 0) return null;
 
-  const party = mapPartyRow(result.rows[0]);
-  const members = await findMembers(party.id);
-  return { ...party, members };
+  const parties: PartyRow[] = [];
+  for (const row of result.rows) {
+    const party = mapPartyRow(row);
+    const members = await findMembers(party.id);
+    parties.push({ ...party, members });
+  }
+  return parties;
 }
 
 export async function inviteMembers(

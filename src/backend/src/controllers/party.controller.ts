@@ -10,21 +10,15 @@ export async function createParty(req: Request, res: Response, next: NextFunctio
   try {
     const { name, sportType } = req.body;
 
-    // Check user has no active party
-    const activeParty = await partyRepo.findActiveByUserId(req.user!.id);
-    if (activeParty) {
-      throw new ConflictError('You already have an active party. Disband it before creating a new one.');
-    }
-
     const party = await partyRepo.create(req.user!.id, name, sportType);
     created(res, party, 'Party created');
   } catch (e) { next(e); }
 }
 
-export async function getActiveParty(req: Request, res: Response, next: NextFunction) {
+export async function getActiveParties(req: Request, res: Response, next: NextFunction) {
   try {
-    const party = await partyRepo.findActiveByUserId(req.user!.id);
-    success(res, party);
+    const parties = await partyRepo.findAllActiveByUserId(req.user!.id);
+    success(res, parties);
   } catch (e) { next(e); }
 }
 

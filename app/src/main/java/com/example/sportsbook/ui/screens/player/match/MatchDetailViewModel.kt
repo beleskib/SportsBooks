@@ -34,7 +34,7 @@ import javax.inject.Inject
 data class MatchDetailUiState(
     val match: Match? = null,
     val currentUserId: Long? = null,
-    val activeParty: Party? = null,
+    val activeParties: List<Party> = emptyList(),
     val isLoading: Boolean = false,
     val isJoining: Boolean = false,
     val isSharing: Boolean = false,
@@ -55,8 +55,10 @@ data class MatchDetailUiState(
         get() = !isParticipant && match?.status?.name == "OPEN"
     val pendingRequests: List<MatchParticipant>
         get() = match?.participants?.filter { it.status.name == "PENDING" } ?: emptyList()
+    val readyParties: List<Party>
+        get() = activeParties.filter { it.status == "ready" }
     val canJoinWithParty: Boolean
-        get() = canJoin && activeParty != null && activeParty.status == "ready"
+        get() = canJoin && readyParties.isNotEmpty()
     val isSplitMatch: Boolean get() = match?.paymentType == "split"
     val isCashAtVenue: Boolean get() = match?.paymentType == "cash_at_venue"
     val showCashAtVenueSection: Boolean get() = isCashAtVenue && (isParticipant || isHost)
@@ -232,18 +234,18 @@ class MatchDetailViewModel @Inject constructor(
 
     private fun loadActiveParty() {
         viewModelScope.launch {
-            partyRepository.getActiveParty()
-                .onSuccess { party ->
-                    _uiState.update { it.copy(activeParty = party) }
+            partyRepository.getActiveParties()
+                .onSuccess { parties ->
+                    _uiState.update { it.copy(activeParties = parties) }
                 }
         }
     }
 
-    fun joinWithParty() {
-        val partyId = _uiState.value.activeParty?.id ?: return
+    fun joinWithParty(partyId: Long? = null) {
+        val id = partyId ?: _uiState.value.readyParties.firstOrNull()?.id ?: return
         viewModelScope.launch {
             _uiState.update { it.copy(isJoining = true) }
-            partyRepository.joinMatchWithParty(matchId, partyId)
+            partyRepository.joinMatchWithParty(matchId, id)
                 .onSuccess {
                     _uiState.update { it.copy(isJoining = false, joinSuccess = true) }
                     loadMatch()

@@ -7,6 +7,7 @@ import * as bookingRepo from '../repositories/booking.repository';
 import * as splitRepo from '../repositories/splitPayment.repository';
 import * as participantRepo from '../repositories/bookingParticipant.repository';
 import * as venueRepo from '../repositories/venue.repository';
+import * as partyRepo from '../repositories/party.repository';
 import { NotFoundError, ForbiddenError, ValidationError } from '../utils/errors';
 import * as notificationService from '../services/notification.service';
 import { getFirestoreDb } from '../config/firebase';
@@ -236,6 +237,38 @@ export async function createMatch(req: Request, res: Response, next: NextFunctio
         [bookingId, match.id]
       );
       match.bookingId = bookingId;
+    }
+
+    // If partyId is provided, auto-add all accepted party members
+    const { partyId } = req.body;
+    if (partyId) {
+      const party = await partyRepo.findById(partyId);
+      if (party && party.leaderId === req.user!.id) {
+        const acceptedMembers = party.members.filter(
+          (m) => m.status === 'accepted' && m.userId !== req.user!.id
+        );
+        const spotsAvailable = match.maxPlayers - 1; // host already counted
+        const membersToAdd = acceptedMembers.slice(0, spotsAvailable);
+
+        for (const member of membersToAdd) {
+          await matchRepo.addParticipant(match.id, member.userId, true);
+        }
+
+        // Update party status to in_match
+        await partyRepo.setMatchId(partyId, match.id);
+
+        // Notify party members
+        const memberUserIds = membersToAdd.map((m) => m.userId);
+        if (memberUserIds.length > 0) {
+          notificationService.notifyPartyJoinedMatch(
+            memberUserIds,
+            match.title,
+            req.user!.id,
+            partyId,
+            match.id
+          ).catch((err) => console.error('Failed to send party joined match notifications:', err));
+        }
+      }
     }
 
     syncMatchToFirestore(match.id).catch(() => {});

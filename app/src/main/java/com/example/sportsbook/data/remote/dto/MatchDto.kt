@@ -159,7 +159,8 @@ data class CreateMatchRequestDto(
     val longitude: Double? = null,
     val isFree: Boolean = true,
     val costPerPlayer: Double = 0.0,
-    val paymentType: String? = null
+    val paymentType: String? = null,
+    val partyId: Long? = null
 )
 
 @Serializable

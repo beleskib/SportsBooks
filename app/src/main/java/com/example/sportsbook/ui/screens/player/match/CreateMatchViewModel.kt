@@ -10,8 +10,10 @@ import com.example.sportsbook.domain.enums.MatchType
 import com.example.sportsbook.domain.enums.MatchVisibility
 import com.example.sportsbook.domain.enums.SportType
 import com.example.sportsbook.domain.model.Match
+import com.example.sportsbook.domain.model.Party
 import com.example.sportsbook.domain.model.Venue
 import com.example.sportsbook.domain.repository.MatchRepository
+import com.example.sportsbook.domain.repository.PartyRepository
 import com.example.sportsbook.domain.repository.VenueRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Job
@@ -60,7 +62,10 @@ data class CreateMatchUiState(
     val availableTimeSlots: List<TimeSlotInfo> = emptyList(),
     val selectedTimeSlotId: Long? = null,
     val isLoadingTimeSlots: Boolean = false,
-    val paymentType: MatchPaymentType = MatchPaymentType.HOST_PAYS
+    val paymentType: MatchPaymentType = MatchPaymentType.HOST_PAYS,
+    // Party support
+    val activeParties: List<Party> = emptyList(),
+    val selectedPartyId: Long? = null
 ) {
     val isValid: Boolean
         get() = title.isNotBlank() && matchDate.isNotBlank() &&
@@ -72,6 +77,7 @@ data class CreateMatchUiState(
 class CreateMatchViewModel @Inject constructor(
     private val matchRepository: MatchRepository,
     private val venueRepository: VenueRepository,
+    private val partyRepository: PartyRepository,
     private val apiService: ApiService,
     savedStateHandle: SavedStateHandle
 ) : ViewModel() {
@@ -90,6 +96,20 @@ class CreateMatchViewModel @Inject constructor(
     init {
         preloadVenuesForSport(_uiState.value.sportType)
         applyPreselection()
+        loadActiveParties()
+    }
+
+    private fun loadActiveParties() {
+        viewModelScope.launch {
+            partyRepository.getActiveParties()
+                .onSuccess { parties ->
+                    _uiState.update { it.copy(activeParties = parties) }
+                }
+        }
+    }
+
+    fun selectParty(partyId: Long?) {
+        _uiState.update { it.copy(selectedPartyId = partyId) }
     }
 
     private fun applyPreselection() {
@@ -312,7 +332,8 @@ class CreateMatchViewModel @Inject constructor(
                 locationName = s.locationName.ifBlank { null },
                 address = s.address.ifBlank { null },
                 isFree = s.isFree,
-                costPerPlayer = if (s.isFree) 0.0 else s.costPerPlayer
+                costPerPlayer = if (s.isFree) 0.0 else s.costPerPlayer,
+                partyId = s.selectedPartyId
             )
             matchRepository.createMatch(request)
                 .onSuccess { match ->

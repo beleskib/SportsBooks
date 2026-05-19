@@ -77,7 +77,7 @@ class ChatsListViewModel @Inject constructor(
 
             val bookingsDeferred = async { bookingRepository.getMyBookings() }
             val matchesDeferred = async { matchRepository.getMyMatches() }
-            val partyDeferred = async { partyRepository.getActiveParty() }
+            val partyDeferred = async { partyRepository.getActiveParties() }
 
             val bookingsResult = bookingsDeferred.await()
             val matchesResult = matchesDeferred.await()
@@ -119,15 +119,13 @@ class ChatsListViewModel @Inject constructor(
 
             val partyChats = partyResult
                 .getOrNull()
-                ?.let { party ->
-                    listOf(
-                        ChatConversation(
-                            id = party.id,
-                            title = party.name ?: "My Party",
-                            subtitle = "${party.members.size} members · ${party.status}",
-                            type = ChatType.PARTY,
-                            status = party.status,
-                        )
+                ?.map { party ->
+                    ChatConversation(
+                        id = party.id,
+                        title = party.name ?: "Party",
+                        subtitle = "${party.sportType ?: "Sports"} · ${party.members.size} members · ${party.status}",
+                        type = ChatType.PARTY,
+                        status = party.status,
                     )
                 }
                 ?: emptyList()

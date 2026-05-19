@@ -4,7 +4,7 @@ import com.example.sportsbook.domain.model.Party
 
 interface PartyRepository {
     suspend fun createParty(name: String?, sportType: String?): Result<Party>
-    suspend fun getActiveParty(): Result<Party?>
+    suspend fun getActiveParties(): Result<List<Party>>
     suspend fun getPartyById(id: Long): Result<Party>
     suspend fun inviteToParty(partyId: Long, userIds: List<Long>): Result<Party>
     suspend fun respondToInvite(partyId: Long, accept: Boolean): Result<Party>

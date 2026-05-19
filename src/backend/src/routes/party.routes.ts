@@ -4,7 +4,7 @@ import * as partyController from '../controllers/party.controller';
 
 const router = Router();
 router.post('/', authenticate, partyController.createParty);
-router.get('/active', authenticate, partyController.getActiveParty);
+router.get('/active', authenticate, partyController.getActiveParties);
 router.get('/:id', authenticate, partyController.getPartyById);
 router.post('/:id/invite', authenticate, partyController.inviteToParty);
 router.post('/:id/respond', authenticate, partyController.respondToInvite);

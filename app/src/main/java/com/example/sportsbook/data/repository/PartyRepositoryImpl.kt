@@ -19,8 +19,8 @@ class PartyRepositoryImpl @Inject constructor(
         apiService.createParty(CreatePartyRequestDto(name = name, sportType = sportType)).data.toDomain()
     }
 
-    override suspend fun getActiveParty(): Result<Party?> = runCatching {
-        apiService.getActiveParty().data?.toDomain()
+    override suspend fun getActiveParties(): Result<List<Party>> = runCatching {
+        apiService.getActiveParties().data.map { it.toDomain() }
     }
 
     override suspend fun getPartyById(id: Long): Result<Party> = runCatching {
