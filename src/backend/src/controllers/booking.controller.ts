@@ -161,6 +161,19 @@ export async function updateStatus(req: Request, res: Response, next: NextFuncti
     const existing = await bookingRepo.findById(Number(req.params.id));
     if (!existing) throw new NotFoundError('Booking');
 
+    // Enforce valid state transitions
+    const VALID_TRANSITIONS: Record<string, string[]> = {
+      pending:   ['approved', 'cancelled'],
+      approved:  ['confirmed', 'cancelled'],
+      confirmed: ['completed', 'cancelled'],
+      completed: [],           // terminal
+      cancelled: [],           // terminal
+    };
+    const allowed = VALID_TRANSITIONS[existing.status] ?? [];
+    if (!allowed.includes(status)) {
+      throw new ValidationError(`Cannot transition from '${existing.status}' to '${status}'`);
+    }
+
     // Determine if the user is the player, a partner, or an admin
     const isAdmin = userRole === 'admin';
     const isPlayer = Number(existing.playerId) === userId;

@@ -98,68 +98,99 @@ fun SportsBookNavHost(
 
     // Handle notification deep links
     val deepLink = pendingDeepLink?.collectAsStateWithLifecycle()
+    val mainScreenRoutes = remember {
+        setOf(
+            Route.PlayerHome::class.qualifiedName,
+            Route.PartnerDashboard::class.qualifiedName,
+            Route.MyBookings::class.qualifiedName,
+            Route.NewsFeed::class.qualifiedName,
+            Route.PendingReservations::class.qualifiedName,
+            Route.V2PlayHome::class.qualifiedName,
+        )
+    }
     LaunchedEffect(deepLink?.value) {
         val link = deepLink?.value ?: return@LaunchedEffect
         // Only navigate if we're past the splash/login screens
         val current = navController.currentDestination?.route ?: return@LaunchedEffect
-        val isOnMainScreen = current.contains("PlayerHome") ||
-            current.contains("PartnerDashboard") ||
-            current.contains("MyBookings") ||
-            current.contains("NewsFeed") ||
-            current.contains("PendingReservations") ||
-            current.contains("V2PlayHome")
+        val isOnMainScreen = mainScreenRoutes.any { it != null && current.contains(it) }
         // Don't consume the deep link yet — let it survive until the user reaches a main screen
         if (!isOnMainScreen) return@LaunchedEffect
 
+        // Consume BEFORE navigating to prevent double-navigate on config change
+        (context as? MainActivity)?.consumeDeepLink()
+
+        val userRole = (context as? MainActivity)?.let { /* role check could go here */ }
+
         // Specific types first, then wildcard prefixes (order matters)
-        when {
+        val handled = when {
             // ── Booking ──
+            link.type == "booking_request" && link.bookingId != null -> {
+                // Route to the booking detail so both players and partners see correct screen
+                navController.navigate(Route.BookingDetail(link.bookingId)) { launchSingleTop = true }
+                true
+            }
             link.type == "booking_request" -> {
                 navController.navigate(Route.PendingReservations) { launchSingleTop = true }
+                true
             }
             link.type.startsWith("booking_") && link.bookingId != null -> {
                 navController.navigate(Route.BookingDetail(link.bookingId)) { launchSingleTop = true }
+                true
             }
 
             // ── Match (chat goes to match chat, everything else to detail) ──
-            link.type == "match_chat" && link.matchId != null -> {
+            (link.type == "match_chat" || link.type == "match_chat_message") && link.matchId != null -> {
                 navController.navigate(Route.MatchChat(link.matchId)) { launchSingleTop = true }
+                true
             }
             link.type.startsWith("match_") && link.matchId != null -> {
                 navController.navigate(Route.MatchDetail(link.matchId)) { launchSingleTop = true }
+                true
             }
 
             // ── Party ──
             link.type.startsWith("party_") && link.partyId != null -> {
                 navController.navigate(Route.PartyDetail(link.partyId)) { launchSingleTop = true }
+                true
             }
 
             // ── Friends ──
             link.type == "friend_request" || link.type == "friend_request_accepted" -> {
                 navController.navigate(Route.FriendsList) { launchSingleTop = true }
+                true
             }
 
-            // ── Payment / Split payment ──
-            link.type.startsWith("payment_") && link.paymentId != null -> {
-                navController.navigate(Route.PaymentDetail(link.paymentId)) { launchSingleTop = true }
+            // ── Payment / Split payment → MatchDetail (has payment UI) ──
+            link.type.startsWith("split_payment_") && link.matchId != null -> {
+                navController.navigate(Route.MatchDetail(link.matchId)) { launchSingleTop = true }
+                true
             }
             link.type.startsWith("split_payment_") && link.bookingId != null -> {
                 navController.navigate(Route.BookingDetail(link.bookingId)) { launchSingleTop = true }
+                true
+            }
+            link.type.startsWith("payment_") && link.paymentId != null -> {
+                navController.navigate(Route.PaymentDetail(link.paymentId)) { launchSingleTop = true }
+                true
             }
 
             // ── Community ──
             link.type.startsWith("community_") && link.communityId != null -> {
                 navController.navigate(Route.CommunityDetail(link.communityId)) { launchSingleTop = true }
+                true
             }
 
             // ── Lobby ──
             link.type.startsWith("lobby_") && link.lobbyId != null -> {
                 navController.navigate(Route.LobbyDetail(link.lobbyId)) { launchSingleTop = true }
+                true
+            }
+
+            else -> {
+                android.util.Log.w("DeepLink", "Unhandled deep link type: ${link.type}")
+                false
             }
         }
-
-        // Consume the deep link so it doesn't re-navigate
-        (context as? MainActivity)?.consumeDeepLink()
     }
 
     val currentRoute = currentBackStackEntry?.destination?.route
@@ -818,9 +849,7 @@ fun SportsBookNavHost(
                     onRatePlayers = { matchId ->
                         navController.navigate(Route.RatePlayers(matchId))
                     },
-                    onJoinWithParty = { matchId ->
-                        navController.navigate(Route.MatchDetail(matchId))
-                    },
+                    onJoinWithParty = { /* TODO: navigate to party selection screen once built */ },
                     onBrowseAvailablePlayers = { matchId, sportType, minSkill, maxSkill ->
                         navController.navigate(Route.AvailablePlayers(
                             matchId = matchId,

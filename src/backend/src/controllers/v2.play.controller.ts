@@ -21,8 +21,10 @@ export async function searchPlay(req: Request, res: Response, next: NextFunction
     const lat = req.query.latitude ? Number(req.query.latitude) : null;
     const lng = req.query.longitude ? Number(req.query.longitude) : null;
     const radiusKm = req.query.radiusKm ? Number(req.query.radiusKm) : 25;
-    const skillMin = req.query.skillLevelMin ? Number(req.query.skillLevelMin) : null;
-    const skillMax = req.query.skillLevelMax ? Number(req.query.skillLevelMax) : null;
+    const skillMinRaw = req.query.skillLevelMin ? Number(req.query.skillLevelMin) : null;
+    const skillMaxRaw = req.query.skillLevelMax ? Number(req.query.skillLevelMax) : null;
+    const skillMin = skillMinRaw !== null && !isNaN(skillMinRaw) ? skillMinRaw : null;
+    const skillMax = skillMaxRaw !== null && !isNaN(skillMaxRaw) ? skillMaxRaw : null;
     const onlyEligible = req.query.onlyEligible === 'true';
 
     // If the caller didn't pick an explicit sport, fall back to their followed
@@ -45,7 +47,7 @@ export async function searchPlay(req: Request, res: Response, next: NextFunction
       lngIdx = params.length;
     }
     const distanceCol = (latIdx > 0)
-      ? `(6371 * acos(cos(radians($${latIdx})) * cos(radians(v.latitude)) * cos(radians(v.longitude) - radians($${lngIdx})) + sin(radians($${latIdx})) * sin(radians(v.latitude))))`
+      ? `(6371 * acos(LEAST(1.0, GREATEST(-1.0, cos(radians($${latIdx})) * cos(radians(v.latitude)) * cos(radians(v.longitude) - radians($${lngIdx})) + sin(radians($${latIdx})) * sin(radians(v.latitude))))))`
       : `NULL::DOUBLE PRECISION`;
 
     params.push(from, to);

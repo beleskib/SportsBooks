@@ -112,8 +112,7 @@ private val CardBorder = Color(0xFFE5E7EB)     // gray-200
 private val TextPrimary = Color(0xFF111827)     // gray-900
 private val TextSecondary = Color(0xFF6B7280)   // gray-500
 private val TextTertiary = Color(0xFF9CA3AF)    // gray-400
-private val NavBarBg = Color(0xFF111827)        // gray-900
-private val GoldAccent = Color(0xFFFDE047)      // yellow-300
+// NavBarBg and GoldAccent imported from com.example.sportsbook.ui.theme
 private val ChipBg = Color.White
 private val ChipBorder = Color(0xFFE5E7EB)
 private val ChipActiveBg = Color(0xFF111827)
@@ -203,29 +202,31 @@ fun PlayerHomeScreen(
             }
         }
     ) { innerPadding ->
-        when {
-            uiState.isLoading -> LoadingIndicator()
-            uiState.error != null -> ErrorView(
-                message = uiState.error!!,
-                onRetry = viewModel::loadData
-            )
-            else -> PlayerHomeContent(
-                uiState = uiState,
-                onSportClick = onSportClick,
-                onVenueClick = onVenueClick,
-                onCoachClick = onCoachClick,
-                onNavigateToProfile = onNavigateToProfile,
-                onNavigateToNotifications = onNavigateToNotifications,
-                onNavigateToChats = onNavigateToChats,
-                onNavigateToCreateParty = onNavigateToCreateParty,
-                onNavigateToPartyDetail = onNavigateToPartyDetail,
-                onNavigateToSearch = onNavigateToSearch,
-                onNavigateToFavorites = onNavigateToFavorites,
-                onFindMatch = onFindMatch,
-                onMatchClick = onMatchClick,
-                onBrowseAllSports = onBrowseAllSports,
-                notificationCount = uiState.notificationCount
-            )
+        Box(modifier = Modifier.padding(innerPadding)) {
+            when {
+                uiState.isLoading -> LoadingIndicator()
+                uiState.error != null -> ErrorView(
+                    message = uiState.error!!,
+                    onRetry = viewModel::loadData
+                )
+                else -> PlayerHomeContent(
+                    uiState = uiState,
+                    onSportClick = onSportClick,
+                    onVenueClick = onVenueClick,
+                    onCoachClick = onCoachClick,
+                    onNavigateToProfile = onNavigateToProfile,
+                    onNavigateToNotifications = onNavigateToNotifications,
+                    onNavigateToChats = onNavigateToChats,
+                    onNavigateToCreateParty = onNavigateToCreateParty,
+                    onNavigateToPartyDetail = onNavigateToPartyDetail,
+                    onNavigateToSearch = onNavigateToSearch,
+                    onNavigateToFavorites = onNavigateToFavorites,
+                    onFindMatch = onFindMatch,
+                    onMatchClick = onMatchClick,
+                    onBrowseAllSports = onBrowseAllSports,
+                    notificationCount = uiState.notificationCount
+                )
+            }
         }
     }
 }
@@ -728,7 +729,8 @@ private fun VenueCard(venue: Venue, onClick: () -> Unit) {
                 // Sport pill
                 SportPill(
                     emoji = visual?.emoji ?: "",
-                    label = venue.sportType.displayName
+                    label = venue.sportType.displayName,
+                    sportType = venue.sportType
                 )
             }
             Spacer(modifier = Modifier.height(2.dp))
@@ -764,8 +766,9 @@ private fun VenueCard(venue: Venue, onClick: () -> Unit) {
 
 // ── Sport pill (small colored chip) ──
 @Composable
-private fun SportPill(emoji: String, label: String) {
-    val visual = sportVisuals.entries.find { it.value.emoji == emoji }?.value
+private fun SportPill(emoji: String, label: String, sportType: SportType? = null) {
+    val visual = sportType?.let { sportVisuals[it] }
+        ?: sportVisuals.entries.find { it.value.emoji == emoji }?.value
     val bgColor = visual?.gradientStart?.copy(alpha = 0.12f) ?: Color(0xFFE0E7FF)
     val textColor = visual?.gradientEnd ?: Color(0xFF4338CA)
 

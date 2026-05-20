@@ -25,6 +25,8 @@ enum class NotificationType(val value: String, val displayName: String) {
     FEED_POST_LIKED("feed_post_liked", "Post Liked"),
     FEED_POST_COMMENTED("feed_post_commented", "Post Comment"),
     MATCH_COMPLETED("match_completed", "Match Completed"),
+    MATCH_INVITE("match_invite", "Match Invite"),
+    SPLIT_PAYMENT_REQUEST("split_payment_request", "Split Payment"),
     REVIEW_REMINDER("review_reminder", "Rating Reminder"),
     GENERAL("general", "General");
 

@@ -187,6 +187,7 @@ class MatchDetailViewModel @Inject constructor(
      * All static fields (title, sport, dates, location, cost, etc.) stay from REST.
      */
     private fun applyFirestoreSnapshot(snapshot: FirestoreMatchSnapshot) {
+        val previousStatus = _uiState.value.match?.status
         _uiState.update { state ->
             val currentMatch = state.match ?: return@update state
             state.copy(
@@ -197,6 +198,10 @@ class MatchDetailViewModel @Inject constructor(
                     participants = snapshot.participants
                 )
             )
+        }
+        // Re-fetch payment status when match transitions to full (split shares now exist)
+        if (previousStatus != snapshot.status && snapshot.status == MatchStatus.FULL) {
+            loadPaymentStatus()
         }
     }
 

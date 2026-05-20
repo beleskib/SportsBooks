@@ -2,6 +2,7 @@ package com.example.sportsbook.ui.screens.player.home
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.example.sportsbook.domain.enums.MatchStatus
 import com.example.sportsbook.domain.enums.SportType
 import com.example.sportsbook.domain.model.Coach
 import com.example.sportsbook.domain.model.Match
@@ -52,7 +53,7 @@ data class PlayerHomeUiState(
     /** Active matches (open, full, or in progress) — shown prominently at top */
     val activeMatches: List<Match>
         get() = myMatches.filter {
-            it.status.name in listOf("OPEN", "FULL", "IN_PROGRESS")
+            it.status in listOf(MatchStatus.OPEN, MatchStatus.FULL, MatchStatus.IN_PROGRESS)
         }
 
     /** Sports the user picked during onboarding */
@@ -148,7 +149,8 @@ class PlayerHomeViewModel @Inject constructor(
     val uiState: StateFlow<PlayerHomeUiState> = _uiState.asStateFlow()
 
     private var searchJob: Job? = null
-    private val knownMatchStatuses = mutableMapOf<Long, String>()
+    private var loadJob: Job? = null
+    private val knownMatchStatuses = java.util.concurrent.ConcurrentHashMap<Long, String>()
     private val matchListenerRegistrations = mutableListOf<ListenerRegistration>()
 
     init {
@@ -178,17 +180,24 @@ class PlayerHomeViewModel @Inject constructor(
     private fun startNotificationCountPolling() {
         viewModelScope.launch {
             while (true) {
-                notificationRepository.getUnreadCount()
-                    .onSuccess { count ->
-                        _uiState.update { it.copy(notificationCount = count) }
+                try {
+                    kotlinx.coroutines.withTimeout(10_000L) {
+                        notificationRepository.getUnreadCount()
+                            .onSuccess { count ->
+                                _uiState.update { it.copy(notificationCount = count) }
+                            }
                     }
+                } catch (_: Exception) {
+                    // Timeout or network error — skip this cycle
+                }
                 delay(30_000L)
             }
         }
     }
 
     fun loadData() {
-        viewModelScope.launch {
+        loadJob?.cancel()
+        loadJob = viewModelScope.launch {
             _uiState.update { it.copy(isLoading = true, error = null) }
 
             val userDeferred = async { userRepository.getProfile() }
@@ -209,7 +218,7 @@ class PlayerHomeViewModel @Inject constructor(
             val myMatchesResult = myMatchesDeferred.await()
             val partiesResult = partiesDeferred.await()
 
-            val error = listOf(sportsResult, venueDealsResult, coachDealsResult, allVenuesResult, allCoachesResult)
+            val error = listOf(userResult, sportsResult, venueDealsResult, coachDealsResult, allVenuesResult, allCoachesResult, myMatchesResult, partiesResult)
                 .firstOrNull { it.isFailure }
                 ?.exceptionOrNull()
                 ?.message

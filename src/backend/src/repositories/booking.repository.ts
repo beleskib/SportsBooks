@@ -196,12 +196,14 @@ export async function findById(id: number): Promise<BookingRow | null> {
             v.address AS venue_address, v.price_per_hour AS venue_price_per_hour,
             c.name AS coach_name, c.sport_type AS coach_sport_type,
             c.price_per_hour AS coach_price_per_hour,
-            ts.slot_date, ts.start_time, ts.end_time
+            ts.slot_date, ts.start_time, ts.end_time,
+            m.id AS match_id, m.title AS match_title, m.status AS match_status
      FROM bookings b
      LEFT JOIN users u ON u.id = b.player_id
      LEFT JOIN venues v ON v.id = b.venue_id
      LEFT JOIN coaches c ON c.id = b.coach_id
      LEFT JOIN time_slots ts ON ts.id = b.time_slot_id
+     LEFT JOIN matches m ON m.booking_id = b.id
      WHERE b.id = $1`,
     [id]
   );
@@ -280,13 +282,13 @@ export async function declineBooking(id: number): Promise<BookingRow> {
 
     const result = await client.query(
       `UPDATE bookings SET status = 'cancelled', expires_at = NULL, updated_at = NOW()
-       WHERE id = $1 AND status = 'pending'
+       WHERE id = $1 AND status IN ('pending', 'approved')
        RETURNING time_slot_id`,
       [id]
     );
     if (result.rows.length === 0) {
       await client.query('ROLLBACK');
-      throw new NotFoundError('Booking not found or not in pending status');
+      throw new NotFoundError('Booking not found or not in a declinable status');
     }
 
     // Reopen the time slot

@@ -70,7 +70,7 @@ class SportsBookFirebaseMessagingService : FirebaseMessagingService() {
         val channelId = when {
             type.startsWith("match_chat") -> CHANNEL_ID_CHAT
             type.startsWith("match_") -> CHANNEL_ID_MATCHES
-            type.startsWith("booking_") -> CHANNEL_ID_BOOKINGS
+            type.startsWith("booking_") || type.startsWith("split_payment_") -> CHANNEL_ID_BOOKINGS
             else -> CHANNEL_ID_GENERAL
         }
 

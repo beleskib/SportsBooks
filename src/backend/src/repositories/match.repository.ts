@@ -1,4 +1,4 @@
-import { query } from '../config/database';
+import { query, withTransaction } from '../config/database';
 import { ValidationError } from '../utils/errors';
 
 // ============================================================
@@ -277,7 +277,8 @@ export async function create(hostId: number, data: {
     [match.id, hostId]
   );
 
-  return { ...match, participants: [] };
+  const participants = await findParticipants(match.id);
+  return { ...match, participants };
 }
 
 export async function findById(id: number): Promise<MatchRow | null> {
@@ -415,110 +416,128 @@ export async function updateStatus(id: number, status: string): Promise<MatchRow
 // ============================================================
 
 export async function addParticipant(matchId: number, userId: number, autoApprove: boolean = false): Promise<ParticipantRow> {
-  const existing = await query(
-    `SELECT id FROM match_participants WHERE match_id = $1 AND user_id = $2`,
-    [matchId, userId]
-  );
-  if (existing.rows.length > 0) {
-    throw new ValidationError('User is already a participant in this match');
-  }
-
-  const status = autoApprove ? 'approved' : 'pending';
-  const result = await query(
-    `INSERT INTO match_participants (match_id, user_id, status, role)
-     VALUES ($1, $2, $3, 'player')
-     RETURNING *`,
-    [matchId, userId, status]
-  );
-
-  if (autoApprove) {
-    await query(
-      `UPDATE matches SET current_players = current_players + 1, updated_at = NOW()
-       WHERE id = $1`,
+  return withTransaction(async (client) => {
+    // Lock the match row to prevent race conditions on capacity
+    const matchLock = await client.query(
+      `SELECT current_players, max_players, status FROM matches WHERE id = $1 FOR UPDATE`,
       [matchId]
     );
-    // Auto-set to full if needed
-    await query(
-      `UPDATE matches SET status = 'full', updated_at = NOW()
-       WHERE id = $1 AND current_players >= max_players AND status = 'open'`,
-      [matchId]
-    );
-  }
+    if (matchLock.rows.length === 0) throw new ValidationError('Match not found');
+    const { current_players, max_players, status: matchStatus } = matchLock.rows[0];
 
-  return mapParticipantRow(result.rows[0]);
+    if (matchStatus !== 'open') {
+      throw new ValidationError('Cannot join a match that is ' + matchStatus);
+    }
+
+    const existing = await client.query(
+      `SELECT id FROM match_participants WHERE match_id = $1 AND user_id = $2`,
+      [matchId, userId]
+    );
+    if (existing.rows.length > 0) {
+      throw new ValidationError('User is already a participant in this match');
+    }
+
+    const participantStatus = autoApprove ? 'approved' : 'pending';
+    const result = await client.query(
+      `INSERT INTO match_participants (match_id, user_id, status, role)
+       VALUES ($1, $2, $3, 'player')
+       RETURNING *`,
+      [matchId, userId, participantStatus]
+    );
+
+    if (autoApprove) {
+      const newCount = Number(current_players) + 1;
+      const newStatus = newCount >= Number(max_players) ? 'full' : 'open';
+      await client.query(
+        `UPDATE matches SET current_players = $2, status = $3, updated_at = NOW()
+         WHERE id = $1`,
+        [matchId, newCount, newStatus]
+      );
+    }
+
+    return mapParticipantRow(result.rows[0]);
+  });
 }
 
 export async function updateParticipantStatus(matchId: number, participantId: number, status: string): Promise<ParticipantRow | null> {
-  const prev = await query(
-    `SELECT status FROM match_participants WHERE id = $2 AND match_id = $1`,
-    [matchId, participantId]
-  );
-  if (prev.rows.length === 0) return null;
-  const oldStatus = prev.rows[0].status;
+  return withTransaction(async (client) => {
+    // Lock match row to serialize player count changes
+    const matchLock = await client.query(
+      `SELECT current_players, max_players, status AS match_status FROM matches WHERE id = $1 FOR UPDATE`,
+      [matchId]
+    );
+    if (matchLock.rows.length === 0) return null;
+    let { current_players, max_players, match_status } = matchLock.rows[0];
+    current_players = Number(current_players);
+    max_players = Number(max_players);
 
-  const result = await query(
-    `UPDATE match_participants SET status = $3, updated_at = NOW()
-     WHERE id = $2 AND match_id = $1
-     RETURNING *`,
-    [matchId, participantId, status]
-  );
-  if (result.rows.length === 0) return null;
+    const prev = await client.query(
+      `SELECT status FROM match_participants WHERE id = $2 AND match_id = $1`,
+      [matchId, participantId]
+    );
+    if (prev.rows.length === 0) return null;
+    const oldStatus = prev.rows[0].status;
 
-  if (status === 'approved' && oldStatus !== 'approved') {
-    await query(
-      `UPDATE matches SET current_players = current_players + 1, updated_at = NOW()
-       WHERE id = $1`,
-      [matchId]
+    const result = await client.query(
+      `UPDATE match_participants SET status = $3, updated_at = NOW()
+       WHERE id = $2 AND match_id = $1
+       RETURNING *`,
+      [matchId, participantId, status]
     );
-    await query(
-      `UPDATE matches SET status = 'full', updated_at = NOW()
-       WHERE id = $1 AND current_players >= max_players AND status = 'open'`,
-      [matchId]
-    );
-  } else if ((status === 'declined' || status === 'left') && oldStatus === 'approved') {
-    await query(
-      `UPDATE matches SET current_players = GREATEST(current_players - 1, 0), updated_at = NOW()
-       WHERE id = $1`,
-      [matchId]
-    );
-    await query(
-      `UPDATE matches SET status = 'open', updated_at = NOW()
-       WHERE id = $1 AND status = 'full' AND current_players < max_players`,
-      [matchId]
-    );
-  }
+    if (result.rows.length === 0) return null;
 
-  return mapParticipantRow(result.rows[0]);
+    if (status === 'approved' && oldStatus !== 'approved') {
+      const newCount = current_players + 1;
+      const newStatus = newCount >= max_players ? 'full' : match_status;
+      await client.query(
+        `UPDATE matches SET current_players = $2, status = $3, updated_at = NOW() WHERE id = $1`,
+        [matchId, newCount, newStatus]
+      );
+    } else if ((status === 'declined' || status === 'left') && oldStatus === 'approved') {
+      const newCount = Math.max(current_players - 1, 0);
+      const newStatus = match_status === 'full' && newCount < max_players ? 'open' : match_status;
+      await client.query(
+        `UPDATE matches SET current_players = $2, status = $3, updated_at = NOW() WHERE id = $1`,
+        [matchId, newCount, newStatus]
+      );
+    }
+
+    return mapParticipantRow(result.rows[0]);
+  });
 }
 
 export async function removeParticipant(matchId: number, userId: number): Promise<boolean> {
-  const check = await query(
-    `SELECT status FROM match_participants WHERE match_id = $1 AND user_id = $2`,
-    [matchId, userId]
-  );
-  if (check.rows.length === 0) return false;
-
-  const wasApproved = check.rows[0].status === 'approved';
-
-  await query(
-    `DELETE FROM match_participants WHERE match_id = $1 AND user_id = $2`,
-    [matchId, userId]
-  );
-
-  if (wasApproved) {
-    await query(
-      `UPDATE matches SET current_players = GREATEST(current_players - 1, 0), updated_at = NOW()
-       WHERE id = $1`,
+  return withTransaction(async (client) => {
+    const matchLock = await client.query(
+      `SELECT current_players, max_players, status FROM matches WHERE id = $1 FOR UPDATE`,
       [matchId]
     );
-    await query(
-      `UPDATE matches SET status = 'open', updated_at = NOW()
-       WHERE id = $1 AND status = 'full' AND current_players < max_players`,
-      [matchId]
-    );
-  }
 
-  return true;
+    const check = await client.query(
+      `SELECT status FROM match_participants WHERE match_id = $1 AND user_id = $2`,
+      [matchId, userId]
+    );
+    if (check.rows.length === 0) return false;
+
+    const wasApproved = check.rows[0].status === 'approved';
+
+    await client.query(
+      `DELETE FROM match_participants WHERE match_id = $1 AND user_id = $2`,
+      [matchId, userId]
+    );
+
+    if (wasApproved && matchLock.rows.length > 0) {
+      const { current_players, max_players, status: matchStatus } = matchLock.rows[0];
+      const newCount = Math.max(Number(current_players) - 1, 0);
+      const newStatus = matchStatus === 'full' && newCount < Number(max_players) ? 'open' : matchStatus;
+      await client.query(
+        `UPDATE matches SET current_players = $2, status = $3, updated_at = NOW() WHERE id = $1`,
+        [matchId, newCount, newStatus]
+      );
+    }
+
+    return true;
+  });
 }
 
 export async function findParticipants(matchId: number): Promise<ParticipantRow[]> {

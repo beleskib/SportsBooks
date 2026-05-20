@@ -21,6 +21,9 @@ data class MyBookingsUiState(
     val error: String? = null
 )
 
+private val UPCOMING_STATUSES = listOf(BookingStatus.PENDING, BookingStatus.APPROVED, BookingStatus.CONFIRMED)
+private val PAST_STATUSES = listOf(BookingStatus.COMPLETED, BookingStatus.CANCELLED, BookingStatus.NO_SHOW)
+
 @HiltViewModel
 class MyBookingsViewModel @Inject constructor(
     private val bookingRepository: BookingRepository
@@ -37,25 +40,7 @@ class MyBookingsViewModel @Inject constructor(
         viewModelScope.launch {
             _uiState.update { it.copy(isRefreshing = true, error = null) }
             bookingRepository.getMyBookings()
-                .onSuccess { bookings ->
-                    val upcoming = bookings.filter {
-                        it.status in listOf(BookingStatus.PENDING, BookingStatus.APPROVED, BookingStatus.CONFIRMED)
-                    }
-                    val past = bookings.filter {
-                        it.status in listOf(
-                            BookingStatus.COMPLETED,
-                            BookingStatus.CANCELLED,
-                            BookingStatus.NO_SHOW
-                        )
-                    }
-                    _uiState.update {
-                        it.copy(
-                            upcomingBookings = upcoming,
-                            pastBookings = past,
-                            isRefreshing = false
-                        )
-                    }
-                }
+                .onSuccess { bookings -> applyBookings(bookings, isRefresh = true) }
                 .onFailure { e ->
                     _uiState.update { it.copy(error = e.message, isRefreshing = false) }
                 }
@@ -66,28 +51,23 @@ class MyBookingsViewModel @Inject constructor(
         viewModelScope.launch {
             _uiState.update { it.copy(isLoading = true, error = null) }
             bookingRepository.getMyBookings()
-                .onSuccess { bookings ->
-                    val upcoming = bookings.filter {
-                        it.status in listOf(BookingStatus.PENDING, BookingStatus.APPROVED, BookingStatus.CONFIRMED)
-                    }
-                    val past = bookings.filter {
-                        it.status in listOf(
-                            BookingStatus.COMPLETED,
-                            BookingStatus.CANCELLED,
-                            BookingStatus.NO_SHOW
-                        )
-                    }
-                    _uiState.update {
-                        it.copy(
-                            upcomingBookings = upcoming,
-                            pastBookings = past,
-                            isLoading = false
-                        )
-                    }
-                }
+                .onSuccess { bookings -> applyBookings(bookings, isRefresh = false) }
                 .onFailure { e ->
                     _uiState.update { it.copy(error = e.message, isLoading = false) }
                 }
+        }
+    }
+
+    private fun applyBookings(bookings: List<Booking>, isRefresh: Boolean) {
+        val upcoming = bookings.filter { it.status in UPCOMING_STATUSES }
+        val past = bookings.filter { it.status in PAST_STATUSES }
+        _uiState.update {
+            it.copy(
+                upcomingBookings = upcoming,
+                pastBookings = past,
+                isLoading = if (!isRefresh) false else it.isLoading,
+                isRefreshing = if (isRefresh) false else it.isRefreshing
+            )
         }
     }
 }

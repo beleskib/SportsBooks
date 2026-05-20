@@ -120,9 +120,11 @@ class PlayHomeViewModel @Inject constructor(
     fun rebook(bookingId: Long) {
         viewModelScope.launch {
             _uiState.update { it.copy(rebookingIds = it.rebookingIds + bookingId, rebookError = null) }
-            // Default: rebook for 19:00 tomorrow
+            // Use the original booking's start time if available, otherwise default to 19:00
+            val originalTime = _uiState.value.feed?.upcoming
+                ?.find { it.id == bookingId }?.startTime?.take(5) ?: "19:00"
             val tomorrow = LocalDate.now().plusDays(1).format(dateFmt)
-            v2Repository.rebook(bookingId, slotDate = tomorrow, startTime = "19:00")
+            v2Repository.rebook(bookingId, slotDate = tomorrow, startTime = originalTime)
                 .onSuccess {
                     _uiState.update { it.copy(rebookingIds = it.rebookingIds - bookingId) }
                     loadFeed() // optimistic refresh

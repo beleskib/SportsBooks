@@ -26,6 +26,7 @@ import androidx.compose.material.icons.filled.Notifications
 import androidx.compose.material.icons.filled.PersonAdd
 import androidx.compose.material.icons.filled.Star
 import androidx.compose.material.icons.filled.Groups
+import androidx.compose.material.icons.filled.Payment
 import androidx.compose.material.icons.filled.SportsScore
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.HorizontalDivider
@@ -290,6 +291,8 @@ private fun notificationIcon(type: NotificationType): ImageVector = when (type) 
     NotificationType.FEED_POST_LIKED -> Icons.Default.Star
     NotificationType.FEED_POST_COMMENTED -> Icons.AutoMirrored.Filled.Message
     NotificationType.MATCH_COMPLETED -> Icons.Default.SportsScore
+    NotificationType.MATCH_INVITE -> Icons.Default.Group
+    NotificationType.SPLIT_PAYMENT_REQUEST -> Icons.Default.Payment
     NotificationType.REVIEW_REMINDER -> Icons.Default.Star
     NotificationType.GENERAL -> Icons.Default.Notifications
 }
@@ -320,6 +323,8 @@ private fun notificationIconColor(type: NotificationType) = when (type) {
     NotificationType.FEED_POST_LIKED -> MaterialTheme.colorScheme.tertiary
     NotificationType.FEED_POST_COMMENTED -> MaterialTheme.colorScheme.tertiary
     NotificationType.MATCH_COMPLETED -> MaterialTheme.colorScheme.secondary
+    NotificationType.MATCH_INVITE -> MaterialTheme.colorScheme.primary
+    NotificationType.SPLIT_PAYMENT_REQUEST -> MaterialTheme.colorScheme.secondary
     NotificationType.REVIEW_REMINDER -> MaterialTheme.colorScheme.tertiary
     NotificationType.GENERAL -> MaterialTheme.colorScheme.primary
 }

@@ -95,24 +95,24 @@ fun MyBookingsScreen(
                     uiState.pastBookings
                 }
 
-                if (bookingsToShow.isEmpty()) {
-                    val emptyTitle = if (selectedTabIndex == 0) {
-                        "No upcoming bookings"
+                PullToRefreshBox(
+                    isRefreshing = uiState.isRefreshing,
+                    onRefresh = { viewModel.refresh() },
+                    state = pullToRefreshState,
+                    modifier = Modifier.fillMaxSize()
+                ) {
+                    if (bookingsToShow.isEmpty()) {
+                        val emptyTitle = if (selectedTabIndex == 0) {
+                            "No upcoming bookings"
+                        } else {
+                            "No past bookings"
+                        }
+                        EmptyStateView(
+                            title = emptyTitle,
+                            subtitle = if (selectedTabIndex == 0) "Book a venue or coach to get started" else null,
+                            modifier = Modifier.fillMaxWidth()
+                        )
                     } else {
-                        "No past bookings"
-                    }
-                    EmptyStateView(
-                        title = emptyTitle,
-                        subtitle = if (selectedTabIndex == 0) "Book a venue or coach to get started" else null,
-                        modifier = Modifier.fillMaxWidth()
-                    )
-                } else {
-                    PullToRefreshBox(
-                        isRefreshing = uiState.isRefreshing,
-                        onRefresh = { viewModel.refresh() },
-                        state = pullToRefreshState,
-                        modifier = Modifier.fillMaxSize()
-                    ) {
                         LazyColumn(modifier = Modifier.fillMaxSize()) {
                             items(bookingsToShow, key = { it.id }) { booking ->
                                 BookingCard(

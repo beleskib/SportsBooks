@@ -1005,22 +1005,24 @@ private fun DateTimePickerDialog(
 ) {
     var showTimePicker by remember { mutableStateOf(false) }
 
-    val initialMillis = remember(initialDate) {
+    // Parse the UTC ISO string and convert to the user's local timezone
+    val localDateTime = remember(initialDate) {
         try {
-            java.time.LocalDate.parse(initialDate.take(10))
-                .atStartOfDay()
-                .toInstant(java.time.ZoneOffset.UTC)
-                .toEpochMilli()
+            java.time.Instant.parse(initialDate)
+                .atZone(java.time.ZoneId.systemDefault())
+                .toLocalDateTime()
         } catch (_: Exception) {
-            System.currentTimeMillis()
+            java.time.LocalDateTime.now()
         }
     }
-    val initialHour = remember(initialDate) {
-        try { initialDate.substring(11, 13).toInt() } catch (_: Exception) { 19 }
+    val initialMillis = remember(localDateTime) {
+        localDateTime.toLocalDate()
+            .atStartOfDay()
+            .toInstant(java.time.ZoneOffset.UTC)
+            .toEpochMilli()
     }
-    val initialMinute = remember(initialDate) {
-        try { initialDate.substring(14, 16).toInt() } catch (_: Exception) { 0 }
-    }
+    val initialHour = remember(localDateTime) { localDateTime.hour }
+    val initialMinute = remember(localDateTime) { localDateTime.minute }
 
     val datePickerState = rememberDatePickerState(initialSelectedDateMillis = initialMillis)
     val timePickerState = rememberTimePickerState(
