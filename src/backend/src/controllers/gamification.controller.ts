@@ -160,6 +160,43 @@ export async function redeemXp(req: Request, res: Response, next: NextFunction) 
 
 // ── Criteria evaluation ─────────────────────────────────────────────
 
+/**
+ * Award XP and check achievements for a user. Called internally after
+ * match completion, booking completion, etc. — fire-and-forget safe.
+ */
+export async function awardXpAndCheckAchievements(
+  userId: number,
+  xpAmount: number,
+  source: string,
+  referenceId: number,
+  description: string
+): Promise<void> {
+  // 1. Award XP
+  await gamificationRepo.addXpTransaction(userId, xpAmount, source, referenceId, description);
+  await gamificationRepo.updatePlayerLevel(userId);
+
+  // 2. Check achievements
+  const stats = await gamificationRepo.getPlayerStats(userId);
+  const allAchievements = await gamificationRepo.getAllAchievements();
+  const earnedAchievements = await gamificationRepo.getPlayerAchievements(userId);
+  const earnedIds = new Set(earnedAchievements.map((a) => a.achievementId));
+
+  for (const achievement of allAchievements) {
+    if (earnedIds.has(achievement.id)) continue;
+    if (!checkCriteria(achievement.criteriaType, achievement.criteriaValue, stats)) continue;
+
+    await gamificationRepo.awardAchievement(userId, achievement.id);
+    if (achievement.xpReward > 0) {
+      await gamificationRepo.addXpTransaction(
+        userId, achievement.xpReward, 'achievement_earned',
+        achievement.id, `Earned achievement: ${achievement.name}`
+      );
+    }
+  }
+  // Final level update in case achievements granted more XP
+  await gamificationRepo.updatePlayerLevel(userId);
+}
+
 function checkCriteria(
   criteriaType: string,
   criteriaValue: number,

@@ -13,6 +13,7 @@ import * as notificationService from '../services/notification.service';
 import { getFirestoreDb } from '../config/firebase';
 import { query } from '../config/database';
 import { sendNotification } from '../services/notification.service';
+import { awardXpAndCheckAchievements } from './gamification.controller';
 
 // ============================================================
 // Firestore sync helper
@@ -78,7 +79,7 @@ async function autoCompletePastMatches(): Promise<void> {
       // Sync each auto-completed match to Firestore
       syncMatchToFirestore(matchId).catch(() => {});
 
-      // Send rating reminder notification to all participants (including host)
+      // Send rating reminder + award XP/achievements to all participants (including host)
       const participantIds: number[] = row.participant_user_ids ?? [];
       const allUserIds = new Set<number>([Number(row.host_id), ...participantIds]);
       for (const userId of allUserIds) {
@@ -89,6 +90,12 @@ async function autoCompletePastMatches(): Promise<void> {
           'Don\'t forget to rate the players! You have 24 hours.',
           { matchId: String(matchId) }
         ).catch(() => {});
+
+        // Award XP and check achievements (fire-and-forget)
+        awardXpAndCheckAchievements(
+          userId, 25, 'match_completed', matchId,
+          'Completed a match'
+        ).catch((err) => console.error(`Failed to award XP for user ${userId} on match ${matchId}:`, err));
       }
     }
   } catch (e) {

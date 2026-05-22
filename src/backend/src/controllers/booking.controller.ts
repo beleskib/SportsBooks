@@ -12,6 +12,7 @@ import { sendPartnerBookingRequestEmail } from '../services/partnerApproval.serv
 import { NotFoundError, ForbiddenError, ValidationError } from '../utils/errors';
 import { query } from '../config/database';
 import { syncBookingToFirestore, syncBookingsToFirestore } from '../services/firestoreBookingSync.service';
+import { awardXpAndCheckAchievements } from './gamification.controller';
 
 /**
  * Auto-complete past confirmed/approved bookings.
@@ -199,17 +200,11 @@ export async function updateStatus(req: Request, res: Response, next: NextFuncti
 
     const booking = await bookingRepo.updateStatus(Number(req.params.id), status);
 
-    // Award XP when a booking is completed
+    // Award XP and check achievements when a booking is completed
     if (status === 'completed') {
-      try {
-        await gamificationRepo.addXpTransaction(
-          booking.playerId, 25, 'booking_completed', booking.id, 'Completed a booking'
-        );
-        await gamificationRepo.updatePlayerLevel(booking.playerId);
-      } catch (_xpErr) {
-        // XP award failure should not break the booking update
-        console.error('Failed to award XP for completed booking:', _xpErr);
-      }
+      awardXpAndCheckAchievements(
+        booking.playerId, 25, 'booking_completed', booking.id, 'Completed a booking'
+      ).catch((err) => console.error('Failed to award XP for completed booking:', err));
     }
 
     // Sync status change to Firestore
