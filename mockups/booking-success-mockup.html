@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=393, initial-scale=1.0">
+<title>Booking Success</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background: #121212; color: #fff; width: 393px; min-height: 852px; overflow-x: hidden; display: flex; flex-direction: column; }
+  .status-bar { height: 44px; display: flex; align-items: center; justify-content: space-between; padding: 0 20px; font-size: 12px; font-weight: 600; }
+  .success-content { flex: 1; display: flex; flex-direction: column; align-items: center; padding: 40px 24px; }
+  .success-circle { width: 120px; height: 120px; border-radius: 50%; background: linear-gradient(135deg, #2E7D32, #4CAF50); display: flex; align-items: center; justify-content: center; font-size: 56px; margin-bottom: 24px; box-shadow: 0 0 40px rgba(76,175,80,0.3); }
+  .success-title { font-size: 24px; font-weight: 800; margin-bottom: 8px; }
+  .success-sub { font-size: 14px; color: #888; text-align: center; margin-bottom: 32px; }
+  .booking-summary { width: 100%; background: #1E1E1E; border-radius: 16px; padding: 20px; margin-bottom: 20px; }
+  .summary-header { text-align: center; margin-bottom: 16px; }
+  .summary-header h3 { font-size: 16px; font-weight: 700; }
+  .summary-header p { font-size: 12px; color: #888; margin-top: 2px; }
+  .summary-divider { height: 1px; background: #2A2A2A; margin: 12px 0; }
+  .summary-row { display: flex; justify-content: space-between; padding: 6px 0; }
+  .summary-row .label { font-size: 13px; color: #888; }
+  .summary-row .value { font-size: 13px; font-weight: 600; }
+  .summary-row.total .value { color: #4CAF50; font-size: 16px; }
+  .booking-id { text-align: center; margin-top: 12px; padding: 8px; background: #2A2A2A; border-radius: 8px; font-size: 12px; color: #888; }
+  .booking-id span { color: #fff; font-weight: 600; }
+  .xp-earned { width: 100%; padding: 14px 16px; background: linear-gradient(135deg, #1B3A1E, #1E1E1E); border: 1px solid #2E7D32; border-radius: 12px; display: flex; align-items: center; gap: 12px; margin-bottom: 20px; }
+  .xp-badge { background: #4CAF50; padding: 6px 12px; border-radius: 8px; font-size: 14px; font-weight: 700; }
+  .xp-text { flex: 1; }
+  .xp-text .xp-title { font-size: 14px; font-weight: 600; }
+  .xp-text .xp-sub { font-size: 11px; color: #81C784; }
+  .action-buttons { width: 100%; display: flex; flex-direction: column; gap: 10px; margin-top: auto; }
+  .btn-primary { width: 100%; padding: 16px; background: #4CAF50; border-radius: 14px; font-size: 16px; font-weight: 700; color: #fff; text-align: center; }
+  .btn-secondary { width: 100%; padding: 14px; background: #1E1E1E; border-radius: 14px; font-size: 14px; font-weight: 600; color: #fff; text-align: center; }
+  .btn-outline { width: 100%; padding: 14px; background: transparent; border: 1px solid #333; border-radius: 14px; font-size: 14px; font-weight: 600; color: #888; text-align: center; }
+  .share-row { display: flex; gap: 12px; margin-top: 8px; }
+  .share-btn { flex: 1; padding: 10px; background: #1E1E1E; border-radius: 10px; text-align: center; font-size: 12px; color: #888; }
+  .share-btn .icon { font-size: 20px; margin-bottom: 4px; }
+</style>
+</head>
+<body>
+  <div class="status-bar"><span>9:41</span><span>...</span></div>
+
+  <div class="success-content">
+    <div class="success-circle">&#10003;</div>
+    <div class="success-title">Booking Confirmed!</div>
+    <div class="success-sub">Your booking at Arena Sport Center has been confirmed. See you on the court!</div>
+
+    <div class="booking-summary">
+      <div class="summary-header">
+        <h3>Arena Sport Center</h3>
+        <p>Court A - Indoor Basketball</p>
+      </div>
+      <div class="summary-divider"></div>
+      <div class="summary-row"><span class="label">Date</span><span class="value">Sun, May 25</span></div>
+      <div class="summary-row"><span class="label">Time</span><span class="value">15:00 - 16:00</span></div>
+      <div class="summary-row"><span class="label">Duration</span><span class="value">1 hour</span></div>
+      <div class="summary-divider"></div>
+      <div class="summary-row total"><span class="label">Paid</span><span class="value">800 MKD</span></div>
+      <div class="booking-id">Booking ID: <span>#BK-2026-05251</span></div>
+    </div>
+
+    <div class="xp-earned">
+      <div class="xp-badge">+50 XP</div>
+      <div class="xp-text">
+        <div class="xp-title">XP Earned!</div>
+        <div class="xp-sub">You're 120 XP from Level 8</div>
+      </div>
+    </div>
+
+    <div class="action-buttons">
+      <div class="btn-primary">View Booking Details</div>
+      <div class="btn-secondary">Invite Friends to Play</div>
+      <div class="share-row">
+        <div class="share-btn"><div class="icon">&#128172;</div>Share</div>
+        <div class="share-btn"><div class="icon">&#128197;</div>Add to Calendar</div>
+        <div class="share-btn"><div class="icon">&#128206;</div>Get Directions</div>
+      </div>
+      <div class="btn-outline">Back to Home</div>
+    </div>
+  </div>
+</body>
+</html>

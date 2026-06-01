@@ -1,0 +1,485 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Social Hub - Mockup 3 (Find Players Tab)</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    background: #121212;
+    color: #fff;
+    width: 393px;
+    min-height: 852px;
+    margin: 0 auto;
+    overflow-y: auto;
+  }
+
+  .status-bar {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 8px 24px;
+    font-size: 14px;
+    font-weight: 600;
+  }
+
+  .top-bar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 8px 16px 16px;
+  }
+  .top-bar h1 { font-size: 22px; font-weight: 700; }
+  .back-btn, .icon-btn {
+    width: 36px; height: 36px;
+    border-radius: 50%;
+    background: rgba(255,255,255,0.1);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 18px;
+  }
+  .top-actions { display: flex; gap: 8px; }
+  .icon-btn { font-size: 16px; }
+
+  .tab-bar {
+    display: flex;
+    padding: 0 16px;
+    margin-bottom: 16px;
+  }
+  .tab {
+    flex: 1;
+    text-align: center;
+    padding: 10px 0;
+    font-size: 14px;
+    font-weight: 600;
+    color: rgba(255,255,255,0.5);
+    border-bottom: 2px solid transparent;
+  }
+  .tab.active {
+    color: #4CAF50;
+    border-bottom-color: #4CAF50;
+  }
+
+  /* Search */
+  .search-bar {
+    margin: 0 16px 12px;
+    background: rgba(255,255,255,0.08);
+    border-radius: 12px;
+    padding: 12px 16px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    color: rgba(255,255,255,0.4);
+    font-size: 14px;
+  }
+
+  /* Sport filter chips */
+  .filter-chips {
+    display: flex;
+    gap: 8px;
+    padding: 0 16px;
+    margin-bottom: 16px;
+    overflow-x: auto;
+  }
+  .chip {
+    padding: 6px 14px;
+    border-radius: 20px;
+    font-size: 13px;
+    font-weight: 600;
+    white-space: nowrap;
+    background: rgba(255,255,255,0.08);
+    color: rgba(255,255,255,0.6);
+    border: 1px solid transparent;
+  }
+  .chip.active {
+    background: rgba(76,175,80,0.15);
+    color: #4CAF50;
+    border-color: rgba(76,175,80,0.3);
+  }
+
+  /* Nearby players */
+  .section-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0 16px;
+    margin-bottom: 12px;
+  }
+  .section-header h3 {
+    font-size: 16px;
+    font-weight: 700;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .see-all {
+    font-size: 13px;
+    color: #4CAF50;
+    font-weight: 600;
+  }
+
+  /* Player cards */
+  .player-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+    padding: 0 16px;
+    margin-bottom: 20px;
+  }
+  .player-card {
+    background: rgba(255,255,255,0.06);
+    border-radius: 16px;
+    padding: 16px;
+    text-align: center;
+    border: 1px solid rgba(255,255,255,0.06);
+    position: relative;
+  }
+  .player-card .avatar {
+    width: 64px; height: 64px;
+    border-radius: 50%;
+    margin: 0 auto 10px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 24px;
+    font-weight: 700;
+    position: relative;
+  }
+  .player-card .avatar.a1 { background: #E91E63; }
+  .player-card .avatar.a2 { background: #FF9800; }
+  .player-card .avatar.a3 { background: #2196F3; }
+  .player-card .avatar.a4 { background: #9C27B0; }
+  .player-card .avatar.a5 { background: #00BCD4; }
+  .player-card .avatar.a6 { background: #4CAF50; }
+  .avatar .online {
+    position: absolute;
+    bottom: 2px; right: 2px;
+    width: 14px; height: 14px;
+    border-radius: 50%;
+    background: #4CAF50;
+    border: 3px solid #1e1e1e;
+  }
+  .player-card .name {
+    font-size: 14px;
+    font-weight: 700;
+    margin-bottom: 4px;
+  }
+  .player-card .sport-tags {
+    display: flex;
+    justify-content: center;
+    gap: 4px;
+    margin-bottom: 6px;
+    flex-wrap: wrap;
+  }
+  .sport-tag {
+    font-size: 16px;
+  }
+  .player-card .level {
+    font-size: 11px;
+    color: #FFD700;
+    margin-bottom: 4px;
+  }
+  .player-card .distance {
+    font-size: 11px;
+    color: rgba(255,255,255,0.4);
+    margin-bottom: 10px;
+  }
+  .player-card .skill {
+    font-size: 11px;
+    color: rgba(255,255,255,0.5);
+    margin-bottom: 10px;
+  }
+  .player-card .add-btn {
+    background: #4CAF50;
+    color: #fff;
+    border: none;
+    border-radius: 10px;
+    padding: 8px 0;
+    width: 100%;
+    font-size: 13px;
+    font-weight: 700;
+    cursor: pointer;
+  }
+  .player-card .add-btn.sent {
+    background: rgba(255,255,255,0.1);
+    color: rgba(255,255,255,0.4);
+  }
+  .mutual-badge {
+    position: absolute;
+    top: 8px; right: 8px;
+    font-size: 10px;
+    color: rgba(255,255,255,0.5);
+    background: rgba(255,255,255,0.1);
+    padding: 2px 6px;
+    border-radius: 6px;
+  }
+
+  /* Suggested section */
+  .suggested-banner {
+    margin: 0 16px 16px;
+    background: linear-gradient(135deg, rgba(33,150,243,0.12), rgba(156,39,176,0.12));
+    border: 1px solid rgba(33,150,243,0.15);
+    border-radius: 14px;
+    padding: 14px 16px;
+  }
+  .suggested-banner h4 {
+    font-size: 14px;
+    font-weight: 700;
+    color: #64B5F6;
+    margin-bottom: 6px;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+  .suggested-banner p {
+    font-size: 12px;
+    color: rgba(255,255,255,0.5);
+    margin-bottom: 10px;
+  }
+  .suggested-row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 6px 0;
+  }
+  .suggested-avatar {
+    width: 36px; height: 36px;
+    border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 13px;
+    font-weight: 700;
+  }
+  .suggested-info { flex: 1; }
+  .suggested-name { font-size: 13px; font-weight: 600; }
+  .suggested-detail { font-size: 11px; color: rgba(255,255,255,0.4); }
+  .suggested-add {
+    background: rgba(76,175,80,0.2);
+    color: #4CAF50;
+    border: none;
+    border-radius: 8px;
+    padding: 6px 12px;
+    font-size: 12px;
+    font-weight: 700;
+    cursor: pointer;
+  }
+
+  /* Bottom nav */
+  .bottom-nav {
+    position: fixed;
+    bottom: 0;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 393px;
+    background: #1a1a1a;
+    border-top: 1px solid rgba(255,255,255,0.08);
+    display: flex;
+    padding: 8px 0 28px;
+  }
+  .nav-item {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 4px;
+    font-size: 10px;
+    color: rgba(255,255,255,0.4);
+  }
+  .nav-item.active { color: #4CAF50; }
+  .nav-icon { font-size: 22px; }
+
+  .spacer { height: 100px; }
+
+  .mockup-label {
+    text-align: center;
+    padding: 12px;
+    font-size: 11px;
+    color: rgba(255,255,255,0.3);
+    letter-spacing: 2px;
+    text-transform: uppercase;
+  }
+</style>
+</head>
+<body>
+
+<div class="mockup-label">MOCKUP 3 — SOCIAL HUB (FIND PLAYERS TAB)</div>
+
+<div class="status-bar">
+  <span>10:38</span>
+  <span>📶 🔋 100%</span>
+</div>
+
+<div class="top-bar">
+  <div class="back-btn">✕</div>
+  <h1>Social Hub</h1>
+  <div class="top-actions">
+    <div class="icon-btn">🔔</div>
+    <div class="icon-btn">⚙️</div>
+  </div>
+</div>
+
+<div class="tab-bar">
+  <div class="tab">Friends</div>
+  <div class="tab">Parties</div>
+  <div class="tab active">Find Players</div>
+</div>
+
+<!-- Search -->
+<div class="search-bar">
+  🔍 Search players by name, sport, or skill
+</div>
+
+<!-- Sport filters -->
+<div class="filter-chips">
+  <div class="chip active">All Sports</div>
+  <div class="chip">🏀 Basketball</div>
+  <div class="chip">⚽ Football</div>
+  <div class="chip">🎾 Tennis</div>
+  <div class="chip">🏐 Volleyball</div>
+</div>
+
+<!-- Suggested from matches -->
+<div class="suggested-banner">
+  <h4>🤝 People You've Played With</h4>
+  <p>Add players from your recent matches</p>
+  <div class="suggested-row">
+    <div class="suggested-avatar" style="background:#E91E63">D</div>
+    <div class="suggested-info">
+      <div class="suggested-name">Darko K.</div>
+      <div class="suggested-detail">Played together 2 days ago • Basketball</div>
+    </div>
+    <button class="suggested-add">+ Add</button>
+  </div>
+  <div class="suggested-row">
+    <div class="suggested-avatar" style="background:#FF9800">N</div>
+    <div class="suggested-info">
+      <div class="suggested-name">Nikola P.</div>
+      <div class="suggested-detail">Played together last week • Football</div>
+    </div>
+    <button class="suggested-add">+ Add</button>
+  </div>
+</div>
+
+<!-- Nearby players -->
+<div class="section-header">
+  <h3>📍 Players Near You</h3>
+  <span class="see-all">See All</span>
+</div>
+
+<div class="player-grid">
+  <div class="player-card">
+    <div class="mutual-badge">2 mutual</div>
+    <div class="avatar a1">
+      T
+      <div class="online"></div>
+    </div>
+    <div class="name">Todor M.</div>
+    <div class="sport-tags">
+      <span class="sport-tag">🏀</span>
+      <span class="sport-tag">⚽</span>
+    </div>
+    <div class="level">⚡ Level 7 • 920 XP</div>
+    <div class="distance">📍 1.2 km away</div>
+    <button class="add-btn">+ Add Friend</button>
+  </div>
+
+  <div class="player-card">
+    <div class="avatar a2">
+      E
+      <div class="online"></div>
+    </div>
+    <div class="name">Elena V.</div>
+    <div class="sport-tags">
+      <span class="sport-tag">🎾</span>
+      <span class="sport-tag">🏸</span>
+    </div>
+    <div class="level">⚡ Level 5 • 580 XP</div>
+    <div class="distance">📍 2.4 km away</div>
+    <button class="add-btn">+ Add Friend</button>
+  </div>
+
+  <div class="player-card">
+    <div class="mutual-badge">1 mutual</div>
+    <div class="avatar a3">
+      S
+    </div>
+    <div class="name">Stefan R.</div>
+    <div class="sport-tags">
+      <span class="sport-tag">⚽</span>
+    </div>
+    <div class="level">⚡ Level 4 • 410 XP</div>
+    <div class="distance">📍 3.1 km away</div>
+    <button class="add-btn sent">Request Sent</button>
+  </div>
+
+  <div class="player-card">
+    <div class="avatar a4">
+      A
+      <div class="online"></div>
+    </div>
+    <div class="name">Ana G.</div>
+    <div class="sport-tags">
+      <span class="sport-tag">🏐</span>
+      <span class="sport-tag">🏀</span>
+    </div>
+    <div class="level">⚡ Level 6 • 750 XP</div>
+    <div class="distance">📍 4.0 km away</div>
+    <button class="add-btn">+ Add Friend</button>
+  </div>
+
+  <div class="player-card">
+    <div class="avatar a5">
+      M
+    </div>
+    <div class="name">Milan K.</div>
+    <div class="sport-tags">
+      <span class="sport-tag">🏀</span>
+      <span class="sport-tag">🎾</span>
+      <span class="sport-tag">⚽</span>
+    </div>
+    <div class="level">⚡ Level 9 • 1,340 XP</div>
+    <div class="distance">📍 5.2 km away</div>
+    <button class="add-btn">+ Add Friend</button>
+  </div>
+
+  <div class="player-card">
+    <div class="mutual-badge">3 mutual</div>
+    <div class="avatar a6">
+      I
+      <div class="online"></div>
+    </div>
+    <div class="name">Igor B.</div>
+    <div class="sport-tags">
+      <span class="sport-tag">⚽</span>
+      <span class="sport-tag">🏐</span>
+    </div>
+    <div class="level">⚡ Level 3 • 290 XP</div>
+    <div class="distance">📍 6.8 km away</div>
+    <button class="add-btn">+ Add Friend</button>
+  </div>
+</div>
+
+<div class="spacer"></div>
+<div class="bottom-nav">
+  <div class="nav-item">
+    <span class="nav-icon">🏠</span>
+    <span>Home</span>
+  </div>
+  <div class="nav-item">
+    <span class="nav-icon">🔍</span>
+    <span>Explore</span>
+  </div>
+  <div class="nav-item">
+    <span class="nav-icon">🎯</span>
+    <span>Play</span>
+  </div>
+  <div class="nav-item active">
+    <span class="nav-icon">👥</span>
+    <span>Social</span>
+  </div>
+  <div class="nav-item">
+    <span class="nav-icon">👤</span>
+    <span>Profile</span>
+  </div>
+</div>
+
+</body>
+</html>

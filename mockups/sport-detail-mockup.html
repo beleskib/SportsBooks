@@ -1,0 +1,187 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Sport Detail</title>
+<style>
+  * { margin:0; padding:0; box-sizing:border-box; }
+  body { width:393px; min-height:852px; background:#121212; font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif; color:#fff; overflow-x:hidden; padding-bottom:100px; }
+
+  .hero {
+    height:200px; background:linear-gradient(135deg,#1a3a1a 0%,#0a1f0a 100%);
+    position:relative; display:flex; align-items:center; justify-content:center;
+  }
+  .hero-icon { font-size:72px; }
+  .hero-overlay { position:absolute; bottom:0; left:0; right:0; height:80px; background:linear-gradient(transparent,#121212); }
+  .back-btn { position:absolute; top:52px; left:16px; width:40px; height:40px; border-radius:50%; background:rgba(0,0,0,0.5); border:none; color:#fff; font-size:20px; display:flex; align-items:center; justify-content:center; }
+  .fav-btn { position:absolute; top:52px; right:16px; width:40px; height:40px; border-radius:50%; background:rgba(0,0,0,0.5); border:none; color:#fff; font-size:20px; display:flex; align-items:center; justify-content:center; }
+
+  .sport-header { padding:0 16px 20px; margin-top:-20px; position:relative; z-index:1; }
+  .sport-name { font-size:28px; font-weight:800; }
+  .sport-stats { display:flex; gap:16px; margin-top:8px; }
+  .sport-stat { font-size:13px; color:#888; }
+  .sport-stat strong { color:#fff; }
+
+  .quick-actions { display:flex; gap:10px; padding:0 16px; margin-bottom:20px; }
+  .qa-btn {
+    flex:1; padding:14px; border-radius:14px; text-align:center; font-size:13px;
+    font-weight:700; border:none; cursor:pointer;
+  }
+  .qa-btn.primary { background:#4CAF50; color:#fff; }
+  .qa-btn.secondary { background:#1E1E1E; color:#fff; border:1px solid #333; }
+
+  .section { margin:0 16px 20px; }
+  .section-header { display:flex; justify-content:space-between; align-items:center; margin-bottom:12px; }
+  .section-title { font-size:16px; font-weight:700; }
+  .see-all { font-size:13px; color:#4CAF50; font-weight:600; background:none; border:none; cursor:pointer; }
+
+  .venue-scroll { display:flex; gap:12px; overflow-x:auto; padding-bottom:4px; }
+  .venue-card {
+    min-width:200px; background:#1E1E1E; border-radius:16px; overflow:hidden; flex-shrink:0;
+  }
+  .venue-img { height:110px; background:#252525; display:flex; align-items:center; justify-content:center; font-size:36px; }
+  .venue-info { padding:12px; }
+  .venue-name { font-size:14px; font-weight:700; }
+  .venue-meta { font-size:12px; color:#888; margin-top:4px; }
+  .venue-price { font-size:13px; color:#4CAF50; font-weight:700; margin-top:6px; }
+
+  .coach-item {
+    display:flex; gap:14px; background:#1E1E1E; border-radius:14px; padding:14px; margin-bottom:10px;
+  }
+  .coach-avatar { width:52px; height:52px; border-radius:50%; background:#252525; display:flex; align-items:center; justify-content:center; font-size:24px; flex-shrink:0; }
+  .coach-info { flex:1; }
+  .coach-name { font-size:14px; font-weight:700; }
+  .coach-spec { font-size:12px; color:#888; margin-top:2px; }
+  .coach-rating { font-size:12px; color:#FFD700; margin-top:4px; }
+  .coach-price { font-size:13px; color:#2196F3; font-weight:700; margin-left:auto; align-self:center; }
+
+  .match-card {
+    background:#1E1E1E; border-radius:14px; padding:14px; margin-bottom:10px;
+    display:flex; align-items:center; gap:14px;
+  }
+  .match-icon-wrap { width:44px; height:44px; border-radius:12px; background:rgba(156,39,176,0.15); display:flex; align-items:center; justify-content:center; font-size:20px; }
+  .match-info { flex:1; }
+  .match-title { font-size:14px; font-weight:700; }
+  .match-meta { font-size:12px; color:#888; margin-top:2px; }
+  .match-players { font-size:12px; color:#4CAF50; font-weight:600; margin-top:4px; }
+
+  .bottom-nav { position:fixed; bottom:0; left:0; width:393px; height:80px; background:#1A1A1A; border-top:1px solid #2A2A2A; display:flex; }
+  .nav-item { flex:1; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:4px; color:#666; font-size:10px; }
+  .nav-item.active { color:#4CAF50; }
+  .nav-icon { font-size:22px; }
+</style>
+</head>
+<body>
+  <div class="hero">
+    <span class="hero-icon">🎾</span>
+    <div class="hero-overlay"></div>
+    <button class="back-btn">&#8249;</button>
+    <button class="fav-btn">♡</button>
+  </div>
+
+  <div class="sport-header">
+    <div class="sport-name">Tennis</div>
+    <div class="sport-stats">
+      <span class="sport-stat"><strong>24</strong> venues</span>
+      <span class="sport-stat"><strong>12</strong> coaches</span>
+      <span class="sport-stat"><strong>8</strong> open matches</span>
+    </div>
+  </div>
+
+  <div class="quick-actions">
+    <button class="qa-btn primary">Book Venue</button>
+    <button class="qa-btn secondary">Find Match</button>
+    <button class="qa-btn secondary">Find Coach</button>
+  </div>
+
+  <div class="section">
+    <div class="section-header">
+      <span class="section-title">Nearby Venues</span>
+      <button class="see-all">See All →</button>
+    </div>
+    <div class="venue-scroll">
+      <div class="venue-card">
+        <div class="venue-img">🏟️</div>
+        <div class="venue-info">
+          <div class="venue-name">Champions Tennis Club</div>
+          <div class="venue-meta">📍 1.2 km • ★ 4.8</div>
+          <div class="venue-price">From $50/h</div>
+        </div>
+      </div>
+      <div class="venue-card">
+        <div class="venue-img">🏟️</div>
+        <div class="venue-info">
+          <div class="venue-name">Royal Tennis Academy</div>
+          <div class="venue-meta">📍 3.5 km • ★ 4.6</div>
+          <div class="venue-price">From $40/h</div>
+        </div>
+      </div>
+      <div class="venue-card">
+        <div class="venue-img">🏟️</div>
+        <div class="venue-info">
+          <div class="venue-name">Park Tennis Courts</div>
+          <div class="venue-meta">📍 5.1 km • ★ 4.3</div>
+          <div class="venue-price">From $30/h</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="section">
+    <div class="section-header">
+      <span class="section-title">Top Coaches</span>
+      <button class="see-all">See All →</button>
+    </div>
+    <div class="coach-item">
+      <div class="coach-avatar">🏋️</div>
+      <div class="coach-info">
+        <div class="coach-name">Coach Maria Santos</div>
+        <div class="coach-spec">Tennis specialist • 8 years exp</div>
+        <div class="coach-rating">★ 4.9 (127 reviews)</div>
+      </div>
+      <div class="coach-price">$60/h</div>
+    </div>
+    <div class="coach-item">
+      <div class="coach-avatar">🏋️</div>
+      <div class="coach-info">
+        <div class="coach-name">Coach James Wilson</div>
+        <div class="coach-spec">Tennis & Paddle • 5 years exp</div>
+        <div class="coach-rating">★ 4.7 (89 reviews)</div>
+      </div>
+      <div class="coach-price">$55/h</div>
+    </div>
+  </div>
+
+  <div class="section">
+    <div class="section-header">
+      <span class="section-title">Open Matches</span>
+      <button class="see-all">See All →</button>
+    </div>
+    <div class="match-card">
+      <div class="match-icon-wrap">⚡</div>
+      <div class="match-info">
+        <div class="match-title">Tennis Doubles — Casual</div>
+        <div class="match-meta">Jun 8 • 17:00 • Champions Club</div>
+        <div class="match-players">2/4 players joined</div>
+      </div>
+    </div>
+    <div class="match-card">
+      <div class="match-icon-wrap">⚡</div>
+      <div class="match-info">
+        <div class="match-title">Singles Challenge — Competitive</div>
+        <div class="match-meta">Jun 10 • 19:00 • Royal Academy</div>
+        <div class="match-players">1/2 players joined</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="bottom-nav">
+    <div class="nav-item"><span class="nav-icon">🏠</span>Home</div>
+    <div class="nav-item active"><span class="nav-icon">🔍</span>Explore</div>
+    <div class="nav-item"><span class="nav-icon">⚡</span>Play</div>
+    <div class="nav-item"><span class="nav-icon">👥</span>Social</div>
+    <div class="nav-item"><span class="nav-icon">☰</span>More</div>
+  </div>
+</body>
+</html>

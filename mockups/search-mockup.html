@@ -1,0 +1,169 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Search</title>
+<style>
+  * { margin:0; padding:0; box-sizing:border-box; }
+  body { width:393px; min-height:852px; background:#121212; font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif; color:#fff; overflow-x:hidden; padding-bottom:100px; }
+
+  .status-bar { height:44px; }
+  .search-header { padding:8px 16px 16px; display:flex; align-items:center; gap:12px; }
+  .back-btn { width:40px; height:40px; border-radius:50%; background:#1E1E1E; border:none; color:#fff; font-size:20px; display:flex; align-items:center; justify-content:center; }
+  .search-input-wrap {
+    flex:1; display:flex; align-items:center; gap:10px; background:#1E1E1E;
+    border-radius:14px; padding:12px 16px; border:1px solid #333;
+  }
+  .search-icon { color:#888; font-size:16px; }
+  .search-input { flex:1; background:none; border:none; color:#fff; font-size:15px; outline:none; }
+  .search-input::placeholder { color:#555; }
+  .clear-btn { color:#555; font-size:16px; cursor:pointer; background:none; border:none; }
+
+  .filter-row { display:flex; gap:8px; padding:0 16px; margin-bottom:16px; overflow-x:auto; }
+  .filter-chip {
+    padding:8px 16px; border-radius:20px; background:#1E1E1E; color:#888;
+    font-size:13px; font-weight:600; white-space:nowrap; border:none; cursor:pointer;
+  }
+  .filter-chip.active { background:#4CAF50; color:#fff; }
+
+  .section { margin:0 16px 20px; }
+  .section-title { font-size:14px; font-weight:700; color:#888; margin-bottom:12px; text-transform:uppercase; letter-spacing:0.5px; }
+
+  .result-item {
+    display:flex; align-items:center; gap:14px; padding:12px 0;
+    border-bottom:1px solid #1A1A1A; cursor:pointer;
+  }
+  .result-icon {
+    width:48px; height:48px; border-radius:12px; display:flex;
+    align-items:center; justify-content:center; font-size:22px; flex-shrink:0;
+  }
+  .result-icon.venue { background:rgba(76,175,80,0.15); }
+  .result-icon.coach { background:rgba(33,150,243,0.15); }
+  .result-icon.player { background:rgba(255,152,0,0.15); }
+  .result-icon.match { background:rgba(156,39,176,0.15); }
+  .result-content { flex:1; }
+  .result-name { font-size:15px; font-weight:600; }
+  .result-meta { font-size:13px; color:#888; margin-top:2px; }
+  .result-type { font-size:11px; padding:3px 8px; border-radius:6px; font-weight:600; }
+  .type-venue { background:rgba(76,175,80,0.15); color:#4CAF50; }
+  .type-coach { background:rgba(33,150,243,0.15); color:#2196F3; }
+  .type-player { background:rgba(255,152,0,0.15); color:#FF9800; }
+  .type-match { background:rgba(156,39,176,0.15); color:#AB47BC; }
+
+  .recent-item {
+    display:flex; align-items:center; gap:12px; padding:10px 0;
+  }
+  .recent-icon { font-size:16px; color:#555; }
+  .recent-text { font-size:14px; color:#aaa; flex:1; }
+  .recent-remove { color:#555; font-size:14px; background:none; border:none; cursor:pointer; }
+
+  .trending { display:flex; flex-wrap:wrap; gap:8px; }
+  .trend-chip {
+    padding:8px 14px; border-radius:20px; background:#1E1E1E; color:#aaa;
+    font-size:13px; border:none; cursor:pointer;
+  }
+
+  .bottom-nav { position:fixed; bottom:0; left:0; width:393px; height:80px; background:#1A1A1A; border-top:1px solid #2A2A2A; display:flex; }
+  .nav-item { flex:1; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:4px; color:#666; font-size:10px; }
+  .nav-item.active { color:#4CAF50; }
+  .nav-icon { font-size:22px; }
+</style>
+</head>
+<body>
+  <div class="status-bar"></div>
+  <div class="search-header">
+    <button class="back-btn">&#8249;</button>
+    <div class="search-input-wrap">
+      <span class="search-icon">🔍</span>
+      <input class="search-input" placeholder="Search venues, coaches, players..." value="tennis">
+      <button class="clear-btn">✕</button>
+    </div>
+  </div>
+
+  <div class="filter-row">
+    <button class="filter-chip active">All</button>
+    <button class="filter-chip">Venues</button>
+    <button class="filter-chip">Coaches</button>
+    <button class="filter-chip">Players</button>
+    <button class="filter-chip">Matches</button>
+  </div>
+
+  <div class="section">
+    <div class="section-title">Results for "tennis"</div>
+
+    <div class="result-item">
+      <div class="result-icon venue">🎾</div>
+      <div class="result-content">
+        <div class="result-name">Champions Tennis Club</div>
+        <div class="result-meta">📍 1.2 km • ★ 4.8 • $50/h</div>
+      </div>
+      <span class="result-type type-venue">Venue</span>
+    </div>
+
+    <div class="result-item">
+      <div class="result-icon venue">🎾</div>
+      <div class="result-content">
+        <div class="result-name">Royal Tennis Academy</div>
+        <div class="result-meta">📍 3.5 km • ★ 4.6 • $40/h</div>
+      </div>
+      <span class="result-type type-venue">Venue</span>
+    </div>
+
+    <div class="result-item">
+      <div class="result-icon coach">🏋️</div>
+      <div class="result-content">
+        <div class="result-name">Coach Maria Santos</div>
+        <div class="result-meta">Tennis • ★ 4.9 • 200+ sessions</div>
+      </div>
+      <span class="result-type type-coach">Coach</span>
+    </div>
+
+    <div class="result-item">
+      <div class="result-icon player">👤</div>
+      <div class="result-content">
+        <div class="result-name">Elena Rossi</div>
+        <div class="result-meta">Tennis • Advanced • Lvl 12</div>
+      </div>
+      <span class="result-type type-player">Player</span>
+    </div>
+
+    <div class="result-item">
+      <div class="result-icon match">⚡</div>
+      <div class="result-content">
+        <div class="result-name">Tennis Doubles — Jun 8</div>
+        <div class="result-meta">Champions Club • 2/4 players • $12.50</div>
+      </div>
+      <span class="result-type type-match">Match</span>
+    </div>
+
+    <div class="result-item">
+      <div class="result-icon coach">🏋️</div>
+      <div class="result-content">
+        <div class="result-name">Coach James Wilson</div>
+        <div class="result-meta">Tennis, Paddle • ★ 4.7 • 150+ sessions</div>
+      </div>
+      <span class="result-type type-coach">Coach</span>
+    </div>
+  </div>
+
+  <div class="section">
+    <div class="section-title">Trending</div>
+    <div class="trending">
+      <button class="trend-chip">🔥 Football 5v5</button>
+      <button class="trend-chip">🏀 Basketball</button>
+      <button class="trend-chip">🏸 Paddle</button>
+      <button class="trend-chip">🎾 Tennis doubles</button>
+      <button class="trend-chip">🏐 Beach volleyball</button>
+    </div>
+  </div>
+
+  <div class="bottom-nav">
+    <div class="nav-item"><span class="nav-icon">🏠</span>Home</div>
+    <div class="nav-item active"><span class="nav-icon">🔍</span>Explore</div>
+    <div class="nav-item"><span class="nav-icon">⚡</span>Play</div>
+    <div class="nav-item"><span class="nav-icon">👥</span>Social</div>
+    <div class="nav-item"><span class="nav-icon">☰</span>More</div>
+  </div>
+</body>
+</html>

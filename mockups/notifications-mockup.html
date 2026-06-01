@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=393, initial-scale=1.0">
+<title>Notifications</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background: #121212; color: #fff; width: 393px; min-height: 852px; }
+  .status-bar { height: 44px; display: flex; align-items: center; justify-content: space-between; padding: 0 20px; font-size: 12px; font-weight: 600; }
+  .header { display: flex; align-items: center; padding: 8px 16px 16px; gap: 12px; }
+  .back-btn { width: 36px; height: 36px; background: #1E1E1E; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 18px; }
+  .header h1 { font-size: 20px; font-weight: 700; flex: 1; }
+  .mark-read { font-size: 13px; color: #4CAF50; font-weight: 600; }
+  .section-label { font-size: 12px; color: #888; font-weight: 600; padding: 8px 16px; text-transform: uppercase; letter-spacing: 0.5px; }
+  .notif-item { display: flex; gap: 12px; padding: 14px 16px; border-bottom: 1px solid #1E1E1E; }
+  .notif-item.unread { background: #1A1F1A; }
+  .notif-icon { width: 44px; height: 44px; border-radius: 12px; display: flex; align-items: center; justify-content: center; font-size: 20px; flex-shrink: 0; }
+  .notif-content { flex: 1; }
+  .notif-content .title { font-size: 14px; font-weight: 600; margin-bottom: 2px; }
+  .notif-content .desc { font-size: 13px; color: #aaa; line-height: 1.3; }
+  .notif-content .time { font-size: 11px; color: #555; margin-top: 4px; }
+  .notif-dot { width: 8px; height: 8px; border-radius: 50%; background: #4CAF50; margin-top: 6px; flex-shrink: 0; }
+  .notif-action { margin-top: 8px; display: flex; gap: 8px; }
+  .notif-btn { padding: 6px 14px; border-radius: 8px; font-size: 12px; font-weight: 600; }
+  .notif-btn.accept { background: #4CAF50; }
+  .notif-btn.decline { background: #2A2A2A; color: #888; }
+</style>
+</head>
+<body>
+  <div class="status-bar"><span>9:41</span><span>...</span></div>
+  <div class="header"><div class="back-btn">&#8592;</div><h1>Notifications</h1><div class="mark-read">Mark all read</div></div>
+
+  <div class="section-label">New</div>
+
+  <div class="notif-item unread">
+    <div class="notif-icon" style="background:#1B3A1E;">&#127936;</div>
+    <div class="notif-content">
+      <div class="title">Booking Confirmed</div>
+      <div class="desc">Your booking at Arena Sport Center for today at 18:00 has been confirmed.</div>
+      <div class="time">5 minutes ago</div>
+    </div>
+    <div class="notif-dot"></div>
+  </div>
+
+  <div class="notif-item unread">
+    <div class="notif-icon" style="background:#1B2D3A;">&#128101;</div>
+    <div class="notif-content">
+      <div class="title">Friend Request</div>
+      <div class="desc">Marko T. wants to be your friend</div>
+      <div class="notif-action">
+        <div class="notif-btn accept">Accept</div>
+        <div class="notif-btn decline">Decline</div>
+      </div>
+      <div class="time">12 minutes ago</div>
+    </div>
+    <div class="notif-dot"></div>
+  </div>
+
+  <div class="notif-item unread">
+    <div class="notif-icon" style="background:#3A2E1B;">&#127941;</div>
+    <div class="notif-content">
+      <div class="title">Achievement Unlocked!</div>
+      <div class="desc">You earned "Court Regular" - Book 10 venues. +100 XP!</div>
+      <div class="time">1 hour ago</div>
+    </div>
+    <div class="notif-dot"></div>
+  </div>
+
+  <div class="notif-item unread">
+    <div class="notif-icon" style="background:#1B3A1E;">&#9876;</div>
+    <div class="notif-content">
+      <div class="title">Match Invitation</div>
+      <div class="desc">Stefan M. invited you to "Sunday Basketball Showdown" at 15:00</div>
+      <div class="notif-action">
+        <div class="notif-btn accept">Join Match</div>
+        <div class="notif-btn decline">Decline</div>
+      </div>
+      <div class="time">2 hours ago</div>
+    </div>
+    <div class="notif-dot"></div>
+  </div>
+
+  <div class="section-label">Earlier Today</div>
+
+  <div class="notif-item">
+    <div class="notif-icon" style="background:#1E1E1E;">&#128172;</div>
+    <div class="notif-content">
+      <div class="title">New Message</div>
+      <div class="desc">Stefan M.: "Let's warm up at 14:45" in Sunday Basketball Showdown</div>
+      <div class="time">3 hours ago</div>
+    </div>
+  </div>
+
+  <div class="notif-item">
+    <div class="notif-icon" style="background:#1E1E1E;">&#127881;</div>
+    <div class="notif-content">
+      <div class="title">Party Invite</div>
+      <div class="desc">Marko T. invited you to join "Skopje Ballers" party</div>
+      <div class="time">5 hours ago</div>
+    </div>
+  </div>
+
+  <div class="section-label">Yesterday</div>
+
+  <div class="notif-item">
+    <div class="notif-icon" style="background:#1E1E1E;">&#11088;</div>
+    <div class="notif-content">
+      <div class="title">New Review</div>
+      <div class="desc">Arena Sport Center received a new 5-star review from Kalanx</div>
+      <div class="time">Yesterday, 14:30</div>
+    </div>
+  </div>
+
+  <div class="notif-item">
+    <div class="notif-icon" style="background:#1E1E1E;">&#128176;</div>
+    <div class="notif-content">
+      <div class="title">Payment Received</div>
+      <div class="desc">Split payment of 375 MKD received from Marko T. for FC Arena booking</div>
+      <div class="time">Yesterday, 10:15</div>
+    </div>
+  </div>
+
+  <div class="notif-item">
+    <div class="notif-icon" style="background:#1E1E1E;">&#127942;</div>
+    <div class="notif-content">
+      <div class="title">Match Completed</div>
+      <div class="desc">Your match "Friday Night Football" is complete. Rate your teammates!</div>
+      <div class="time">Yesterday, 22:00</div>
+    </div>
+  </div>
+
+  <div class="notif-item">
+    <div class="notif-icon" style="background:#1E1E1E;">&#128293;</div>
+    <div class="notif-content">
+      <div class="title">Deal Alert</div>
+      <div class="desc">Tennis Club Vardar: 30% off weekend bookings! Limited time.</div>
+      <div class="time">Yesterday, 09:00</div>
+    </div>
+  </div>
+</body>
+</html>

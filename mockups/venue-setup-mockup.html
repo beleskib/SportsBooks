@@ -1,0 +1,180 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Venue Setup</title>
+<style>
+  * { margin:0; padding:0; box-sizing:border-box; }
+  body { width:393px; min-height:852px; background:#121212; font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif; color:#fff; overflow-x:hidden; padding-bottom:100px; }
+
+  .status-bar { height:44px; }
+  .header { padding:8px 16px 16px; display:flex; align-items:center; gap:16px; }
+  .back-btn { width:40px; height:40px; border-radius:50%; background:#1E1E1E; border:none; color:#fff; font-size:20px; display:flex; align-items:center; justify-content:center; }
+  .header-title { font-size:18px; font-weight:700; }
+
+  .progress { margin:0 16px 24px; }
+  .progress-label { font-size:13px; color:#888; margin-bottom:8px; display:flex; justify-content:space-between; }
+  .progress-track { height:6px; background:#1E1E1E; border-radius:3px; overflow:hidden; }
+  .progress-fill { height:100%; background:linear-gradient(90deg,#4CAF50,#81C784); border-radius:3px; transition:width 0.3s; }
+
+  .step-title { padding:0 16px; font-size:20px; font-weight:800; margin-bottom:4px; }
+  .step-desc { padding:0 16px; font-size:13px; color:#888; margin-bottom:20px; }
+
+  .form-section { padding:0 16px; }
+  .input-group { margin-bottom:16px; }
+  .input-label { font-size:13px; color:#888; margin-bottom:6px; display:block; }
+  .input-field {
+    width:100%; padding:14px 16px; background:#1E1E1E; border:1px solid #333;
+    border-radius:12px; color:#fff; font-size:15px; outline:none;
+  }
+  .input-field::placeholder { color:#555; }
+  .input-field:focus { border-color:#4CAF50; }
+
+  .textarea-field {
+    width:100%; padding:14px 16px; background:#1E1E1E; border:1px solid #333;
+    border-radius:12px; color:#fff; font-size:14px; outline:none; resize:none;
+    height:100px; font-family:inherit;
+  }
+  .textarea-field::placeholder { color:#555; }
+
+  .photo-upload {
+    border:2px dashed #333; border-radius:16px; padding:32px; text-align:center;
+    background:#1E1E1E; cursor:pointer; margin-bottom:16px;
+  }
+  .photo-icon { font-size:40px; margin-bottom:8px; }
+  .photo-title { font-size:14px; font-weight:600; }
+  .photo-desc { font-size:12px; color:#888; margin-top:4px; }
+  .photo-previews { display:flex; gap:8px; margin-top:12px; justify-content:center; }
+  .photo-thumb { width:56px; height:56px; border-radius:10px; background:#252525; display:flex; align-items:center; justify-content:center; font-size:24px; position:relative; }
+
+  .sport-chips { display:flex; flex-wrap:wrap; gap:8px; }
+  .sport-chip {
+    padding:10px 16px; border-radius:12px; background:#1E1E1E; border:1px solid #333;
+    color:#888; font-size:13px; font-weight:600; cursor:pointer;
+  }
+  .sport-chip.selected { border-color:#4CAF50; background:rgba(76,175,80,0.1); color:#4CAF50; }
+
+  .row-2 { display:flex; gap:12px; }
+  .row-2 .input-group { flex:1; }
+
+  .amenity-grid { display:grid; grid-template-columns:1fr 1fr; gap:8px; }
+  .amenity-item {
+    display:flex; align-items:center; gap:10px; background:#1E1E1E;
+    border-radius:12px; padding:12px 14px; border:1px solid #333; cursor:pointer;
+  }
+  .amenity-item.selected { border-color:#4CAF50; background:rgba(76,175,80,0.08); }
+  .amenity-check { width:20px; height:20px; border-radius:6px; border:2px solid #333; display:flex; align-items:center; justify-content:center; font-size:12px; }
+  .amenity-item.selected .amenity-check { border-color:#4CAF50; background:#4CAF50; }
+  .amenity-label { font-size:13px; }
+
+  .action-bar {
+    position:fixed; bottom:0; left:0; width:393px; padding:16px;
+    background:linear-gradient(transparent, #121212 30%); display:flex; gap:12px;
+  }
+  .btn-back { flex:0.4; padding:16px; border-radius:14px; border:1px solid #333; background:#1E1E1E; color:#fff; font-size:15px; font-weight:600; cursor:pointer; text-align:center; }
+  .btn-next {
+    flex:1; padding:16px; border-radius:14px; border:none;
+    background:linear-gradient(135deg,#4CAF50,#2E7D32); color:#fff;
+    font-size:15px; font-weight:700; cursor:pointer; text-align:center;
+  }
+</style>
+</head>
+<body>
+  <div class="status-bar"></div>
+  <div class="header">
+    <button class="back-btn">&#8249;</button>
+    <span class="header-title">Register Venue</span>
+  </div>
+
+  <div class="progress">
+    <div class="progress-label"><span>Step 1 of 4</span><span>Basic Info</span></div>
+    <div class="progress-track"><div class="progress-fill" style="width:25%"></div></div>
+  </div>
+
+  <div class="step-title">Basic Information</div>
+  <div class="step-desc">Tell us about your venue</div>
+
+  <div class="form-section">
+    <div class="input-group">
+      <label class="input-label">Venue Name *</label>
+      <input class="input-field" placeholder="e.g. Champions Tennis Club" value="Champions Tennis Club">
+    </div>
+
+    <div class="input-group">
+      <label class="input-label">Description</label>
+      <textarea class="textarea-field" placeholder="Describe your venue, facilities, and what makes it special...">Premium tennis facility with 6 indoor and outdoor courts. Professional lighting, equipment rental available.</textarea>
+    </div>
+
+    <div class="input-group">
+      <label class="input-label">Photos</label>
+      <div class="photo-upload">
+        <div class="photo-icon">📸</div>
+        <div class="photo-title">Upload venue photos</div>
+        <div class="photo-desc">Add at least 3 photos • JPG, PNG up to 10MB</div>
+        <div class="photo-previews">
+          <div class="photo-thumb">🏟️</div>
+          <div class="photo-thumb">🎾</div>
+          <div class="photo-thumb">+</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="input-group">
+      <label class="input-label">Sports Offered *</label>
+      <div class="sport-chips">
+        <span class="sport-chip selected">🎾 Tennis</span>
+        <span class="sport-chip selected">🏸 Paddle</span>
+        <span class="sport-chip">⚽ Football</span>
+        <span class="sport-chip">🏀 Basketball</span>
+        <span class="sport-chip">🏐 Volleyball</span>
+        <span class="sport-chip">🏸 Badminton</span>
+      </div>
+    </div>
+
+    <div class="input-group">
+      <label class="input-label">Address *</label>
+      <input class="input-field" placeholder="Street address" value="123 Sport Avenue">
+    </div>
+
+    <div class="row-2">
+      <div class="input-group">
+        <label class="input-label">City *</label>
+        <input class="input-field" placeholder="City" value="Downtown">
+      </div>
+      <div class="input-group">
+        <label class="input-label">Zip Code</label>
+        <input class="input-field" placeholder="10001" value="10001">
+      </div>
+    </div>
+
+    <div class="row-2">
+      <div class="input-group">
+        <label class="input-label">Number of Courts *</label>
+        <input class="input-field" type="number" placeholder="0" value="6">
+      </div>
+      <div class="input-group">
+        <label class="input-label">Price per Hour ($) *</label>
+        <input class="input-field" type="number" placeholder="0" value="50">
+      </div>
+    </div>
+
+    <div class="input-group">
+      <label class="input-label">Amenities</label>
+      <div class="amenity-grid">
+        <div class="amenity-item selected"><div class="amenity-check">✓</div><span class="amenity-label">Parking</span></div>
+        <div class="amenity-item selected"><div class="amenity-check">✓</div><span class="amenity-label">Showers</span></div>
+        <div class="amenity-item selected"><div class="amenity-check">✓</div><span class="amenity-label">Lockers</span></div>
+        <div class="amenity-item"><div class="amenity-check"></div><span class="amenity-label">Café</span></div>
+        <div class="amenity-item selected"><div class="amenity-check">✓</div><span class="amenity-label">Equipment</span></div>
+        <div class="amenity-item"><div class="amenity-check"></div><span class="amenity-label">WiFi</span></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="action-bar">
+    <button class="btn-back">Back</button>
+    <button class="btn-next">Next: Schedule →</button>
+  </div>
+</body>
+</html>

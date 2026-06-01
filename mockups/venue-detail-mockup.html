@@ -1,0 +1,833 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Arena Sport Center - Venue Detail</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    background: #121212;
+    color: #fff;
+    width: 393px;
+    min-height: 852px;
+    margin: 0 auto;
+    overflow-y: auto;
+  }
+
+  /* Hero image area */
+  .hero {
+    height: 240px;
+    background: linear-gradient(180deg, rgba(18,18,18,0) 0%, #121212 100%),
+                linear-gradient(135deg, #1a3a1a 0%, #1a2a3a 100%);
+    position: relative;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  .hero-emoji {
+    font-size: 80px;
+    opacity: 0.6;
+  }
+  .hero-overlay {
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 44px 16px 0;
+  }
+  .hero-btn {
+    width: 38px; height: 38px;
+    border-radius: 50%;
+    background: rgba(0,0,0,0.5);
+    backdrop-filter: blur(10px);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 18px;
+  }
+  .hero-right { display: flex; gap: 8px; }
+  .hero-gallery {
+    position: absolute;
+    bottom: 12px; right: 16px;
+    background: rgba(0,0,0,0.6);
+    backdrop-filter: blur(8px);
+    padding: 5px 12px;
+    border-radius: 8px;
+    font-size: 12px;
+    font-weight: 600;
+    color: rgba(255,255,255,0.8);
+  }
+  .hero-discount {
+    position: absolute;
+    top: 52px; left: 16px;
+    background: #E91E63;
+    color: #fff;
+    padding: 4px 12px;
+    border-radius: 8px;
+    font-size: 13px;
+    font-weight: 700;
+  }
+
+  /* Venue header info */
+  .venue-header {
+    padding: 0 16px 16px;
+    margin-top: -20px;
+    position: relative;
+  }
+  .venue-name {
+    font-size: 24px;
+    font-weight: 800;
+    margin-bottom: 6px;
+  }
+  .venue-rating-row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 8px;
+  }
+  .stars {
+    color: #FFD700;
+    font-size: 14px;
+    font-weight: 700;
+  }
+  .rating-text {
+    font-size: 13px;
+    color: rgba(255,255,255,0.5);
+  }
+  .venue-location {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 14px;
+    color: rgba(255,255,255,0.5);
+    margin-bottom: 10px;
+  }
+  .venue-tags {
+    display: flex;
+    gap: 6px;
+    flex-wrap: wrap;
+    margin-bottom: 14px;
+  }
+  .vtag {
+    padding: 5px 12px;
+    border-radius: 8px;
+    font-size: 12px;
+    font-weight: 600;
+  }
+  .vtag.sport { background: rgba(76,175,80,0.12); color: #4CAF50; }
+  .vtag.indoor { background: rgba(156,39,176,0.12); color: #CE93D8; }
+  .vtag.equip { background: rgba(33,150,243,0.12); color: #64B5F6; }
+  .vtag.parking { background: rgba(255,152,0,0.12); color: #FFB74D; }
+  .vtag.wifi { background: rgba(0,188,212,0.12); color: #4DD0E1; }
+
+  /* Action buttons */
+  .action-row {
+    display: flex;
+    gap: 10px;
+    padding: 0 16px;
+    margin-bottom: 20px;
+  }
+  .action-btn {
+    flex: 1;
+    padding: 12px;
+    border-radius: 14px;
+    text-align: center;
+    font-size: 14px;
+    font-weight: 700;
+    border: none;
+    cursor: pointer;
+  }
+  .action-btn.primary {
+    background: #4CAF50;
+    color: #fff;
+  }
+  .action-btn.secondary {
+    background: rgba(255,255,255,0.08);
+    color: rgba(255,255,255,0.8);
+  }
+
+  /* Quick info cards */
+  .info-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    gap: 8px;
+    padding: 0 16px;
+    margin-bottom: 20px;
+  }
+  .info-card {
+    background: rgba(255,255,255,0.05);
+    border-radius: 12px;
+    padding: 12px;
+    text-align: center;
+    border: 1px solid rgba(255,255,255,0.04);
+  }
+  .info-icon { font-size: 22px; margin-bottom: 6px; }
+  .info-value {
+    font-size: 15px;
+    font-weight: 800;
+    margin-bottom: 2px;
+  }
+  .info-value.green { color: #4CAF50; }
+  .info-value.gold { color: #FFD700; }
+  .info-value.blue { color: #64B5F6; }
+  .info-label {
+    font-size: 10px;
+    color: rgba(255,255,255,0.4);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+  }
+
+  /* Divider */
+  .divider {
+    height: 8px;
+    background: rgba(255,255,255,0.02);
+    margin-bottom: 16px;
+  }
+
+  /* Section header */
+  .section-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0 16px;
+    margin-bottom: 12px;
+  }
+  .section-header h3 {
+    font-size: 17px;
+    font-weight: 700;
+  }
+  .see-all {
+    font-size: 13px;
+    color: #4CAF50;
+    font-weight: 600;
+  }
+
+  /* Available time slots */
+  .date-chips {
+    display: flex;
+    gap: 6px;
+    padding: 0 16px;
+    margin-bottom: 12px;
+    overflow-x: auto;
+  }
+  .date-chip {
+    padding: 8px 14px;
+    border-radius: 10px;
+    font-size: 12px;
+    font-weight: 600;
+    white-space: nowrap;
+    background: rgba(255,255,255,0.05);
+    color: rgba(255,255,255,0.5);
+    border: 1px solid transparent;
+  }
+  .date-chip.active {
+    background: rgba(76,175,80,0.12);
+    color: #4CAF50;
+    border-color: rgba(76,175,80,0.25);
+  }
+
+  .time-slots-row {
+    display: flex;
+    gap: 6px;
+    padding: 0 16px;
+    overflow-x: auto;
+    margin-bottom: 16px;
+  }
+  .ts {
+    padding: 10px 16px;
+    border-radius: 10px;
+    text-align: center;
+    background: rgba(255,255,255,0.04);
+    border: 1px solid rgba(255,255,255,0.05);
+    flex-shrink: 0;
+    min-width: 72px;
+  }
+  .ts .t-time {
+    font-size: 14px;
+    font-weight: 700;
+    color: rgba(255,255,255,0.7);
+  }
+  .ts .t-price {
+    font-size: 11px;
+    color: rgba(255,255,255,0.35);
+    margin-top: 2px;
+  }
+  .ts.available {
+    border-color: rgba(76,175,80,0.2);
+  }
+  .ts.available .t-time { color: #4CAF50; }
+  .ts.available .t-price { color: #4CAF50; }
+  .ts.booked {
+    opacity: 0.3;
+  }
+  .ts.booked .t-time { text-decoration: line-through; }
+  .ts.deal {
+    border-color: rgba(233,30,99,0.2);
+    background: rgba(233,30,99,0.06);
+  }
+  .ts.deal .t-time { color: #FF6B9D; }
+  .ts.deal .t-price { color: #E91E63; }
+  .ts.deal .t-deal {
+    font-size: 9px;
+    color: #E91E63;
+    font-weight: 700;
+    margin-top: 2px;
+  }
+
+  /* About section */
+  .about-text {
+    padding: 0 16px;
+    margin-bottom: 18px;
+    font-size: 14px;
+    color: rgba(255,255,255,0.6);
+    line-height: 1.6;
+  }
+  .read-more {
+    color: #4CAF50;
+    font-weight: 600;
+    font-size: 13px;
+  }
+
+  /* Amenities */
+  .amenities-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
+    padding: 0 16px;
+    margin-bottom: 20px;
+  }
+  .amenity {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 10px 12px;
+    background: rgba(255,255,255,0.04);
+    border-radius: 10px;
+  }
+  .amenity-icon {
+    font-size: 18px;
+  }
+  .amenity-text {
+    font-size: 13px;
+    color: rgba(255,255,255,0.6);
+  }
+
+  /* Sports available */
+  .sports-row {
+    display: flex;
+    gap: 10px;
+    padding: 0 16px;
+    margin-bottom: 20px;
+  }
+  .sport-card {
+    flex: 1;
+    background: rgba(255,255,255,0.04);
+    border-radius: 14px;
+    padding: 14px;
+    text-align: center;
+    border: 1px solid rgba(255,255,255,0.04);
+  }
+  .sport-card-icon { font-size: 28px; margin-bottom: 6px; }
+  .sport-card-name {
+    font-size: 13px;
+    font-weight: 700;
+    margin-bottom: 2px;
+  }
+  .sport-card-price {
+    font-size: 12px;
+    color: #4CAF50;
+    font-weight: 600;
+  }
+  .sport-card-courts {
+    font-size: 10px;
+    color: rgba(255,255,255,0.35);
+    margin-top: 2px;
+  }
+
+  /* Reviews */
+  .review-summary {
+    margin: 0 16px 14px;
+    background: rgba(255,215,0,0.05);
+    border: 1px solid rgba(255,215,0,0.1);
+    border-radius: 14px;
+    padding: 14px;
+    display: flex;
+    align-items: center;
+    gap: 14px;
+  }
+  .review-score {
+    text-align: center;
+  }
+  .review-big {
+    font-size: 36px;
+    font-weight: 800;
+    color: #FFD700;
+    line-height: 1;
+  }
+  .review-stars {
+    font-size: 12px;
+    color: #FFD700;
+    margin-top: 4px;
+  }
+  .review-count {
+    font-size: 11px;
+    color: rgba(255,255,255,0.4);
+    margin-top: 2px;
+  }
+  .review-bars { flex: 1; }
+  .bar-row {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    margin-bottom: 3px;
+  }
+  .bar-label {
+    font-size: 11px;
+    color: rgba(255,255,255,0.4);
+    width: 12px;
+    text-align: right;
+  }
+  .bar-bg {
+    flex: 1;
+    height: 6px;
+    background: rgba(255,255,255,0.06);
+    border-radius: 3px;
+  }
+  .bar-fill {
+    height: 100%;
+    border-radius: 3px;
+    background: #FFD700;
+  }
+  .bar-num {
+    font-size: 10px;
+    color: rgba(255,255,255,0.3);
+    width: 18px;
+  }
+
+  /* Review cards */
+  .review-list {
+    padding: 0 16px;
+    margin-bottom: 20px;
+  }
+  .review-card {
+    background: rgba(255,255,255,0.04);
+    border-radius: 14px;
+    padding: 14px;
+    margin-bottom: 10px;
+  }
+  .review-header {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 8px;
+  }
+  .review-avatar {
+    width: 36px; height: 36px;
+    border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 14px;
+    font-weight: 700;
+    color: #fff;
+  }
+  .review-user { flex: 1; }
+  .review-name {
+    font-size: 14px;
+    font-weight: 700;
+  }
+  .review-date {
+    font-size: 11px;
+    color: rgba(255,255,255,0.35);
+  }
+  .review-rating {
+    font-size: 12px;
+    color: #FFD700;
+  }
+  .review-body {
+    font-size: 13px;
+    color: rgba(255,255,255,0.6);
+    line-height: 1.5;
+  }
+
+  /* Location map placeholder */
+  .map-section {
+    margin: 0 16px 20px;
+    background: linear-gradient(135deg, #1a2a1a, #1a2030);
+    border-radius: 16px;
+    height: 140px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    position: relative;
+    border: 1px solid rgba(255,255,255,0.06);
+  }
+  .map-pin {
+    font-size: 32px;
+  }
+  .map-address {
+    position: absolute;
+    bottom: 10px; left: 14px;
+    font-size: 12px;
+    color: rgba(255,255,255,0.6);
+    background: rgba(0,0,0,0.5);
+    padding: 4px 10px;
+    border-radius: 6px;
+  }
+  .map-directions {
+    position: absolute;
+    bottom: 10px; right: 14px;
+    background: #4CAF50;
+    color: #fff;
+    padding: 6px 12px;
+    border-radius: 8px;
+    font-size: 12px;
+    font-weight: 700;
+    border: none;
+  }
+
+  /* Nearby matches at this venue */
+  .nearby-match {
+    margin: 0 16px 10px;
+    background: rgba(76,175,80,0.06);
+    border: 1px solid rgba(76,175,80,0.12);
+    border-radius: 14px;
+    padding: 12px 14px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+  .nm-icon {
+    width: 42px; height: 42px;
+    border-radius: 12px;
+    background: rgba(76,175,80,0.12);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 20px;
+  }
+  .nm-info { flex: 1; }
+  .nm-name {
+    font-size: 14px;
+    font-weight: 700;
+  }
+  .nm-detail {
+    font-size: 12px;
+    color: rgba(255,255,255,0.4);
+  }
+  .nm-btn {
+    background: #4CAF50;
+    color: #fff;
+    border: none;
+    border-radius: 10px;
+    padding: 7px 14px;
+    font-size: 12px;
+    font-weight: 700;
+  }
+
+  /* Sticky bottom booking bar */
+  .booking-bar {
+    position: fixed;
+    bottom: 0;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 393px;
+    background: #1a1a1a;
+    border-top: 1px solid rgba(255,255,255,0.08);
+    padding: 12px 16px 32px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+  .booking-price-info {
+    display: flex;
+    flex-direction: column;
+  }
+  .booking-from {
+    font-size: 11px;
+    color: rgba(255,255,255,0.4);
+  }
+  .booking-price {
+    font-size: 20px;
+    font-weight: 800;
+    color: #4CAF50;
+  }
+  .booking-price span {
+    font-size: 12px;
+    font-weight: 400;
+    color: rgba(255,255,255,0.4);
+  }
+  .booking-old {
+    font-size: 12px;
+    color: rgba(255,255,255,0.3);
+    text-decoration: line-through;
+  }
+  .book-now-btn {
+    background: #4CAF50;
+    color: #fff;
+    border: none;
+    border-radius: 14px;
+    padding: 14px 32px;
+    font-size: 16px;
+    font-weight: 800;
+    cursor: pointer;
+  }
+
+  .spacer { height: 100px; }
+
+  .mockup-label {
+    text-align: center;
+    padding: 8px;
+    font-size: 11px;
+    color: rgba(255,255,255,0.3);
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    position: absolute;
+    top: 44px;
+    left: 50%;
+    transform: translateX(-50%);
+    z-index: 10;
+    white-space: nowrap;
+  }
+</style>
+</head>
+<body>
+
+<!-- Hero -->
+<div class="hero">
+  <div class="mockup-label">VENUE DETAIL — ARENA SPORT CENTER</div>
+  <div class="hero-emoji">🏟️</div>
+  <div class="hero-overlay">
+    <div class="hero-btn">←</div>
+    <div class="hero-right">
+      <div class="hero-btn">♡</div>
+      <div class="hero-btn">↗</div>
+    </div>
+  </div>
+  <div class="hero-discount">-25% This Week</div>
+  <div class="hero-gallery">📷 12 Photos</div>
+</div>
+
+<!-- Venue Header -->
+<div class="venue-header">
+  <div class="venue-name">Arena Sport Center</div>
+  <div class="venue-rating-row">
+    <span class="stars">⭐ 4.8</span>
+    <span class="rating-text">(127 reviews)</span>
+    <span class="rating-text">•</span>
+    <span class="rating-text">🏆 Top Rated</span>
+  </div>
+  <div class="venue-location">
+    📍 Bul. Partizanski Odredi 17, Centar, Skopje • 1.2 km
+  </div>
+  <div class="venue-tags">
+    <span class="vtag sport">🏀 Basketball</span>
+    <span class="vtag sport">⚽ Football</span>
+    <span class="vtag indoor">🏢 Indoor</span>
+    <span class="vtag equip">🏋️ Equipment</span>
+    <span class="vtag parking">🅿️ Parking</span>
+    <span class="vtag wifi">📶 WiFi</span>
+  </div>
+</div>
+
+<!-- Action buttons -->
+<div class="action-row">
+  <button class="action-btn primary">📅 Book Now</button>
+  <button class="action-btn secondary">📞 Call</button>
+  <button class="action-btn secondary">💬 Chat</button>
+</div>
+
+<!-- Quick info -->
+<div class="info-grid">
+  <div class="info-card">
+    <div class="info-icon">💰</div>
+    <div class="info-value green">750 MKD</div>
+    <div class="info-label">From / hour</div>
+  </div>
+  <div class="info-card">
+    <div class="info-icon">⏰</div>
+    <div class="info-value blue">09–22h</div>
+    <div class="info-label">Open Hours</div>
+  </div>
+  <div class="info-card">
+    <div class="info-icon">🏀</div>
+    <div class="info-value gold">3</div>
+    <div class="info-label">Courts</div>
+  </div>
+</div>
+
+<div class="divider"></div>
+
+<!-- Available Slots -->
+<div class="section-header">
+  <h3>🕐 Available Slots</h3>
+  <span class="see-all">All Dates</span>
+</div>
+<div class="date-chips">
+  <div class="date-chip active">Today, May 24</div>
+  <div class="date-chip">Sun, May 25</div>
+  <div class="date-chip">Mon, May 26</div>
+  <div class="date-chip">Tue, May 27</div>
+</div>
+<div class="time-slots-row">
+  <div class="ts booked"><div class="t-time">09:00</div><div class="t-price">Booked</div></div>
+  <div class="ts booked"><div class="t-time">10:00</div><div class="t-price">Booked</div></div>
+  <div class="ts deal"><div class="t-time">11:00</div><div class="t-price">750 MKD</div><div class="t-deal">-25% DEAL</div></div>
+  <div class="ts deal"><div class="t-time">12:00</div><div class="t-price">750 MKD</div><div class="t-deal">-25% DEAL</div></div>
+  <div class="ts available"><div class="t-time">13:00</div><div class="t-price">1,000 MKD</div></div>
+  <div class="ts available"><div class="t-time">14:00</div><div class="t-price">1,000 MKD</div></div>
+  <div class="ts"><div class="t-time">15:00</div><div class="t-price">1,000 MKD</div></div>
+  <div class="ts"><div class="t-time">16:00</div><div class="t-price">1,000 MKD</div></div>
+  <div class="ts booked"><div class="t-time">17:00</div><div class="t-price">Booked</div></div>
+  <div class="ts available"><div class="t-time">18:00</div><div class="t-price">1,000 MKD</div></div>
+  <div class="ts available"><div class="t-time">19:00</div><div class="t-price">1,000 MKD</div></div>
+  <div class="ts booked"><div class="t-time">20:00</div><div class="t-price">Booked</div></div>
+</div>
+
+<div class="divider"></div>
+
+<!-- Sports Available -->
+<div class="section-header">
+  <h3>🏅 Sports Available</h3>
+</div>
+<div class="sports-row">
+  <div class="sport-card">
+    <div class="sport-card-icon">🏀</div>
+    <div class="sport-card-name">Basketball</div>
+    <div class="sport-card-price">750 – 1,000 MKD</div>
+    <div class="sport-card-courts">2 courts</div>
+  </div>
+  <div class="sport-card">
+    <div class="sport-card-icon">⚽</div>
+    <div class="sport-card-name">Football</div>
+    <div class="sport-card-price">800 – 1,200 MKD</div>
+    <div class="sport-card-courts">1 field</div>
+  </div>
+  <div class="sport-card">
+    <div class="sport-card-icon">🏐</div>
+    <div class="sport-card-name">Volleyball</div>
+    <div class="sport-card-price">600 – 900 MKD</div>
+    <div class="sport-card-courts">1 court</div>
+  </div>
+</div>
+
+<div class="divider"></div>
+
+<!-- Matches at this venue -->
+<div class="section-header">
+  <h3>🎯 Open Matches Here</h3>
+  <span class="see-all">See All</span>
+</div>
+<div class="nearby-match">
+  <div class="nm-icon">🏀</div>
+  <div class="nm-info">
+    <div class="nm-name">Pickup Basketball</div>
+    <div class="nm-detail">Today 20:00 • 6/10 players • Free</div>
+  </div>
+  <button class="nm-btn">Join</button>
+</div>
+<div class="nearby-match">
+  <div class="nm-icon">⚽</div>
+  <div class="nm-info">
+    <div class="nm-name">5-a-side Futsal</div>
+    <div class="nm-detail">Sun 18:00 • 9/10 players • 500 MKD</div>
+  </div>
+  <button class="nm-btn">View</button>
+</div>
+
+<div class="divider"></div>
+
+<!-- About -->
+<div class="section-header">
+  <h3>ℹ️ About</h3>
+</div>
+<div class="about-text">
+  Arena Sport Center is a premium multi-sport facility in the heart of Skopje. Featuring state-of-the-art indoor courts for basketball, football, and volleyball with professional-grade flooring and lighting.
+  <span class="read-more">Read more</span>
+</div>
+
+<!-- Amenities -->
+<div class="section-header">
+  <h3>✨ Amenities</h3>
+</div>
+<div class="amenities-grid">
+  <div class="amenity"><span class="amenity-icon">🏋️</span><span class="amenity-text">Equipment rental</span></div>
+  <div class="amenity"><span class="amenity-icon">🚿</span><span class="amenity-text">Showers</span></div>
+  <div class="amenity"><span class="amenity-icon">🅿️</span><span class="amenity-text">Free parking</span></div>
+  <div class="amenity"><span class="amenity-icon">📶</span><span class="amenity-text">Free WiFi</span></div>
+  <div class="amenity"><span class="amenity-icon">🔒</span><span class="amenity-text">Lockers</span></div>
+  <div class="amenity"><span class="amenity-icon">☕</span><span class="amenity-text">Café / Bar</span></div>
+</div>
+
+<div class="divider"></div>
+
+<!-- Location -->
+<div class="section-header">
+  <h3>📍 Location</h3>
+</div>
+<div class="map-section">
+  <div class="map-pin">📍</div>
+  <div class="map-address">Bul. Partizanski Odredi 17, Skopje</div>
+  <button class="map-directions">🧭 Directions</button>
+</div>
+
+<div class="divider"></div>
+
+<!-- Reviews -->
+<div class="section-header">
+  <h3>⭐ Reviews</h3>
+  <span class="see-all">All 127</span>
+</div>
+<div class="review-summary">
+  <div class="review-score">
+    <div class="review-big">4.8</div>
+    <div class="review-stars">⭐⭐⭐⭐⭐</div>
+    <div class="review-count">127 reviews</div>
+  </div>
+  <div class="review-bars">
+    <div class="bar-row"><span class="bar-label">5</span><div class="bar-bg"><div class="bar-fill" style="width:78%"></div></div><span class="bar-num">99</span></div>
+    <div class="bar-row"><span class="bar-label">4</span><div class="bar-bg"><div class="bar-fill" style="width:14%"></div></div><span class="bar-num">18</span></div>
+    <div class="bar-row"><span class="bar-label">3</span><div class="bar-bg"><div class="bar-fill" style="width:5%"></div></div><span class="bar-num">6</span></div>
+    <div class="bar-row"><span class="bar-label">2</span><div class="bar-bg"><div class="bar-fill" style="width:2%"></div></div><span class="bar-num">3</span></div>
+    <div class="bar-row"><span class="bar-label">1</span><div class="bar-bg"><div class="bar-fill" style="width:1%"></div></div><span class="bar-num">1</span></div>
+  </div>
+</div>
+
+<div class="review-list">
+  <div class="review-card">
+    <div class="review-header">
+      <div class="review-avatar" style="background:#E91E63">K</div>
+      <div class="review-user">
+        <div class="review-name">Kalanx</div>
+        <div class="review-date">2 days ago</div>
+      </div>
+      <div class="review-rating">⭐⭐⭐⭐⭐</div>
+    </div>
+    <div class="review-body">Amazing courts! The basketball floor is top quality and the lighting is perfect for evening games. Will definitely come back.</div>
+  </div>
+  <div class="review-card">
+    <div class="review-header">
+      <div class="review-avatar" style="background:#2196F3">M</div>
+      <div class="review-user">
+        <div class="review-name">Marko T.</div>
+        <div class="review-date">1 week ago</div>
+      </div>
+      <div class="review-rating">⭐⭐⭐⭐</div>
+    </div>
+    <div class="review-body">Great facility overall. Equipment rental is convenient. Only wish they had more evening slots available.</div>
+  </div>
+</div>
+
+<div class="spacer"></div>
+
+<!-- Sticky Booking Bar -->
+<div class="booking-bar">
+  <div class="booking-price-info">
+    <span class="booking-from">From</span>
+    <div>
+      <span class="booking-old">1,000 MKD</span>
+      <span class="booking-price">750 MKD <span>/hour</span></span>
+    </div>
+  </div>
+  <button class="book-now-btn">Book Now</button>
+</div>
+
+</body>
+</html>

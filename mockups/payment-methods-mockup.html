@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=393, initial-scale=1.0">
+<title>Payment Methods</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background: #121212; color: #fff; width: 393px; min-height: 852px; }
+  .status-bar { height: 44px; display: flex; align-items: center; justify-content: space-between; padding: 0 20px; font-size: 12px; font-weight: 600; }
+  .header { display: flex; align-items: center; padding: 8px 16px 20px; gap: 12px; }
+  .back-btn { width: 36px; height: 36px; background: #1E1E1E; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 18px; }
+  .header h1 { font-size: 20px; font-weight: 700; flex: 1; }
+
+  .section-label { font-size: 12px; color: #888; font-weight: 600; padding: 12px 16px 8px; text-transform: uppercase; letter-spacing: 0.5px; }
+
+  .card-list { padding: 0 16px; }
+  .card-item { display: flex; align-items: center; gap: 14px; padding: 16px; background: #1E1E1E; border-radius: 14px; margin-bottom: 10px; position: relative; }
+  .card-item.default { border: 1px solid #4CAF50; }
+  .card-brand { width: 48px; height: 32px; border-radius: 6px; display: flex; align-items: center; justify-content: center; font-size: 12px; font-weight: 800; color: #fff; }
+  .brand-visa { background: linear-gradient(135deg, #1A237E, #283593); }
+  .brand-mastercard { background: linear-gradient(135deg, #E65100, #FF6D00); }
+  .brand-amex { background: linear-gradient(135deg, #0277BD, #0288D1); }
+  .card-info { flex: 1; }
+  .card-info .card-number { font-size: 15px; font-weight: 600; letter-spacing: 0.5px; }
+  .card-info .card-meta { font-size: 12px; color: #888; margin-top: 2px; }
+  .default-badge { padding: 3px 8px; background: #1B3A1E; border-radius: 6px; font-size: 10px; color: #4CAF50; font-weight: 600; }
+  .card-menu { width: 28px; height: 28px; display: flex; align-items: center; justify-content: center; font-size: 18px; color: #555; }
+
+  .add-card-btn { margin: 8px 16px 20px; padding: 16px; background: #1E1E1E; border-radius: 14px; display: flex; align-items: center; justify-content: center; gap: 10px; border: 1px dashed #333; }
+  .add-card-btn .plus { width: 32px; height: 32px; background: #4CAF50; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 20px; font-weight: 700; }
+  .add-card-btn .text { font-size: 15px; font-weight: 600; }
+
+  .other-methods { padding: 0 16px; }
+  .method-item { display: flex; align-items: center; gap: 14px; padding: 14px 16px; background: #1E1E1E; border-radius: 12px; margin-bottom: 8px; }
+  .method-icon { width: 40px; height: 40px; border-radius: 10px; display: flex; align-items: center; justify-content: center; font-size: 20px; }
+  .method-info { flex: 1; }
+  .method-info .name { font-size: 14px; font-weight: 600; }
+  .method-info .desc { font-size: 12px; color: #888; }
+  .method-arrow { font-size: 16px; color: #444; }
+
+  .info-card { margin: 16px; padding: 14px 16px; background: #1B2D3A; border-radius: 12px; display: flex; gap: 10px; }
+  .info-icon { font-size: 18px; flex-shrink: 0; margin-top: 1px; }
+  .info-text { font-size: 12px; color: #64B5F6; line-height: 1.4; }
+</style>
+</head>
+<body>
+  <div class="status-bar"><span>9:41</span><span>...</span></div>
+  <div class="header"><div class="back-btn">&#8592;</div><h1>Payment Methods</h1></div>
+
+  <div class="section-label">Saved Cards</div>
+  <div class="card-list">
+    <div class="card-item default">
+      <div class="card-brand brand-visa">VISA</div>
+      <div class="card-info">
+        <div class="card-number">**** **** **** 4242</div>
+        <div class="card-meta">Expires 12/28</div>
+      </div>
+      <div class="default-badge">Default</div>
+      <div class="card-menu">&#8942;</div>
+    </div>
+
+    <div class="card-item">
+      <div class="card-brand brand-mastercard">MC</div>
+      <div class="card-info">
+        <div class="card-number">**** **** **** 8210</div>
+        <div class="card-meta">Expires 06/27</div>
+      </div>
+      <div class="card-menu">&#8942;</div>
+    </div>
+  </div>
+
+  <div class="add-card-btn">
+    <div class="plus">+</div>
+    <div class="text">Add New Card</div>
+  </div>
+
+  <div class="section-label">Other Payment Methods</div>
+  <div class="other-methods">
+    <div class="method-item">
+      <div class="method-icon" style="background: #1B3A1E;">&#128176;</div>
+      <div class="method-info"><div class="name">Cash at Venue</div><div class="desc">Pay when you arrive</div></div>
+      <div class="method-arrow">&#8250;</div>
+    </div>
+    <div class="method-item">
+      <div class="method-icon" style="background: #3A2E1B;">&#127775;</div>
+      <div class="method-info"><div class="name">Redeem XP</div><div class="desc">Use 500 XP for 100 MKD discount</div></div>
+      <div class="method-arrow">&#8250;</div>
+    </div>
+  </div>
+
+  <div class="info-card">
+    <div class="info-icon">&#128274;</div>
+    <div class="info-text">Your payment information is securely stored by Stripe. We never see or store your full card number.</div>
+  </div>
+</body>
+</html>

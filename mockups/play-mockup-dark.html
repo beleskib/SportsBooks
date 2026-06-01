@@ -1,0 +1,772 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Play - Dark Mode</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    background: #121212;
+    color: #fff;
+    width: 393px;
+    min-height: 852px;
+    margin: 0 auto;
+    overflow-y: auto;
+  }
+
+  .status-bar {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 8px 24px;
+    font-size: 14px;
+    font-weight: 600;
+  }
+
+  .top-bar {
+    padding: 4px 16px 6px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+  .top-bar h1 { font-size: 28px; font-weight: 800; }
+  .top-actions { display: flex; gap: 8px; }
+  .icon-btn {
+    width: 40px; height: 40px;
+    border-radius: 50%;
+    background: rgba(255,255,255,0.08);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 18px;
+  }
+
+  /* Mode Toggle */
+  .mode-toggle {
+    display: flex;
+    margin: 12px 16px 16px;
+    background: rgba(255,255,255,0.06);
+    border-radius: 14px;
+    padding: 4px;
+  }
+  .mode-btn {
+    flex: 1;
+    text-align: center;
+    padding: 10px 0;
+    font-size: 14px;
+    font-weight: 700;
+    border-radius: 11px;
+    color: rgba(255,255,255,0.5);
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+  .mode-btn.active {
+    background: #4CAF50;
+    color: #fff;
+    box-shadow: 0 2px 8px rgba(76,175,80,0.3);
+  }
+
+  /* Section header */
+  .section-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0 16px;
+    margin-bottom: 12px;
+  }
+  .section-header h3 {
+    font-size: 18px;
+    font-weight: 700;
+  }
+  .see-all {
+    font-size: 13px;
+    color: #4CAF50;
+    font-weight: 600;
+  }
+  .filter-row {
+    display: flex;
+    gap: 6px;
+  }
+  .filter-chip {
+    padding: 5px 12px;
+    border-radius: 8px;
+    font-size: 12px;
+    font-weight: 600;
+    background: rgba(255,255,255,0.06);
+    color: rgba(255,255,255,0.5);
+  }
+  .filter-chip.active {
+    background: rgba(76,175,80,0.15);
+    color: #4CAF50;
+  }
+
+  /* Create Match CTA */
+  .create-cta {
+    margin: 0 16px 16px;
+    background: linear-gradient(135deg, #4CAF50, #2196F3);
+    border-radius: 18px;
+    padding: 20px;
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    cursor: pointer;
+    position: relative;
+    overflow: hidden;
+  }
+  .create-cta::after {
+    content: '';
+    position: absolute;
+    top: -20px; right: -20px;
+    width: 100px; height: 100px;
+    border-radius: 50%;
+    background: rgba(255,255,255,0.08);
+  }
+  .cta-icon {
+    width: 56px; height: 56px;
+    border-radius: 16px;
+    background: rgba(255,255,255,0.2);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 28px;
+    z-index: 1;
+  }
+  .cta-text { z-index: 1; flex: 1; }
+  .cta-text h3 {
+    font-size: 18px;
+    font-weight: 800;
+    margin-bottom: 4px;
+  }
+  .cta-text p {
+    font-size: 13px;
+    color: rgba(255,255,255,0.8);
+  }
+
+  /* Sport filter pills */
+  .sport-scroll {
+    display: flex;
+    gap: 8px;
+    padding: 0 16px;
+    margin-bottom: 14px;
+    overflow-x: auto;
+  }
+  .sport-pill {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    padding: 7px 14px;
+    border-radius: 20px;
+    font-size: 13px;
+    font-weight: 600;
+    white-space: nowrap;
+    background: rgba(255,255,255,0.06);
+    color: rgba(255,255,255,0.5);
+    border: 1px solid transparent;
+  }
+  .sport-pill.active {
+    background: rgba(76,175,80,0.12);
+    color: #4CAF50;
+    border-color: rgba(76,175,80,0.25);
+  }
+
+  /* Match Cards */
+  .match-list {
+    padding: 0 16px;
+    margin-bottom: 20px;
+  }
+  .match-card {
+    background: rgba(255,255,255,0.05);
+    border: 1px solid rgba(255,255,255,0.06);
+    border-radius: 18px;
+    padding: 16px;
+    margin-bottom: 12px;
+    position: relative;
+  }
+  .match-card.featured {
+    border-color: rgba(76,175,80,0.2);
+    background: linear-gradient(135deg, rgba(76,175,80,0.06), rgba(33,150,243,0.04));
+  }
+  .match-top {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    margin-bottom: 10px;
+  }
+  .match-sport-icon {
+    font-size: 32px;
+    margin-right: 10px;
+  }
+  .match-info { flex: 1; }
+  .match-title {
+    font-size: 16px;
+    font-weight: 800;
+    margin-bottom: 2px;
+  }
+  .match-type {
+    font-size: 12px;
+    color: rgba(255,255,255,0.4);
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+  .match-status-badge {
+    padding: 4px 10px;
+    border-radius: 8px;
+    font-size: 11px;
+    font-weight: 700;
+  }
+  .match-status-badge.open {
+    background: rgba(76,175,80,0.15);
+    color: #4CAF50;
+  }
+  .match-status-badge.full {
+    background: rgba(33,150,243,0.15);
+    color: #64B5F6;
+  }
+  .match-status-badge.starting {
+    background: rgba(255,152,0,0.15);
+    color: #FFB74D;
+  }
+  .match-details {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 12px;
+    margin-bottom: 12px;
+  }
+  .match-detail {
+    font-size: 13px;
+    color: rgba(255,255,255,0.5);
+    display: flex;
+    align-items: center;
+    gap: 5px;
+  }
+  .match-bottom {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+  .match-players {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+  .m-stack { display: flex; }
+  .m-av {
+    width: 28px; height: 28px;
+    border-radius: 50%;
+    border: 2px solid #1a1a1a;
+    margin-left: -6px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 10px;
+    font-weight: 700;
+    color: #fff;
+  }
+  .m-av:first-child { margin-left: 0; }
+  .m-av.a1 { background: #E91E63; }
+  .m-av.a2 { background: #2196F3; }
+  .m-av.a3 { background: #FF9800; }
+  .m-av.a4 { background: #9C27B0; }
+  .m-av.a5 { background: #00BCD4; }
+  .m-av.more { background: rgba(255,255,255,0.15); color: rgba(255,255,255,0.5); font-size: 9px; }
+  .m-count {
+    font-size: 12px;
+    color: rgba(255,255,255,0.4);
+  }
+  .match-join-btn {
+    background: #4CAF50;
+    color: #fff;
+    border: none;
+    border-radius: 10px;
+    padding: 8px 20px;
+    font-size: 13px;
+    font-weight: 700;
+  }
+  .match-join-btn.view {
+    background: rgba(255,255,255,0.1);
+    color: rgba(255,255,255,0.7);
+  }
+  .match-join-btn.request {
+    background: rgba(255,152,0,0.2);
+    color: #FFB74D;
+  }
+
+  /* Skill level indicator */
+  .skill-row {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    margin-bottom: 12px;
+  }
+  .skill-label {
+    font-size: 11px;
+    color: rgba(255,255,255,0.4);
+  }
+  .skill-dots {
+    display: flex;
+    gap: 3px;
+  }
+  .skill-dot {
+    width: 8px; height: 8px;
+    border-radius: 50%;
+    background: rgba(255,255,255,0.1);
+  }
+  .skill-dot.filled { background: #4CAF50; }
+  .skill-dot.filled.med { background: #FF9800; }
+  .skill-dot.filled.high { background: #E91E63; }
+
+  /* Host badge */
+  .host-tag {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    padding: 2px 8px;
+    border-radius: 6px;
+    font-size: 10px;
+    font-weight: 600;
+    background: rgba(255,215,0,0.12);
+    color: #FFD700;
+    margin-left: 6px;
+  }
+
+  /* Price tag */
+  .price-tag {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    font-size: 13px;
+    font-weight: 700;
+    color: #4CAF50;
+  }
+  .price-tag.free {
+    color: #64B5F6;
+  }
+  .price-per {
+    font-size: 10px;
+    color: rgba(255,255,255,0.3);
+    font-weight: 400;
+  }
+
+  /* Booking section */
+  .book-section {
+    margin: 0 16px 16px;
+    background: rgba(33,150,243,0.06);
+    border: 1px solid rgba(33,150,243,0.12);
+    border-radius: 16px;
+    padding: 16px;
+  }
+  .book-header {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 14px;
+  }
+  .book-icon {
+    width: 44px; height: 44px;
+    border-radius: 12px;
+    background: rgba(33,150,243,0.15);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 22px;
+  }
+  .book-title {
+    font-size: 16px;
+    font-weight: 700;
+  }
+  .book-subtitle {
+    font-size: 12px;
+    color: rgba(255,255,255,0.4);
+  }
+  .book-quick-row {
+    display: flex;
+    gap: 8px;
+  }
+  .book-quick-item {
+    flex: 1;
+    background: rgba(255,255,255,0.05);
+    border-radius: 12px;
+    padding: 12px;
+    text-align: center;
+    cursor: pointer;
+    border: 1px solid rgba(255,255,255,0.04);
+  }
+  .book-quick-icon {
+    font-size: 24px;
+    margin-bottom: 6px;
+  }
+  .book-quick-label {
+    font-size: 12px;
+    font-weight: 600;
+    color: rgba(255,255,255,0.7);
+  }
+  .book-quick-count {
+    font-size: 10px;
+    color: rgba(255,255,255,0.35);
+    margin-top: 2px;
+  }
+
+  /* My matches section */
+  .my-match-row {
+    margin: 0 16px 10px;
+    background: rgba(255,255,255,0.05);
+    border-radius: 14px;
+    padding: 12px 14px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    border: 1px solid rgba(255,255,255,0.04);
+  }
+  .my-match-icon {
+    width: 44px; height: 44px;
+    border-radius: 12px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 22px;
+  }
+  .my-match-icon.basketball { background: rgba(255,152,0,0.12); }
+  .my-match-icon.football { background: rgba(76,175,80,0.12); }
+  .my-match-icon.tennis { background: rgba(33,150,243,0.12); }
+  .my-match-info { flex: 1; }
+  .my-match-name {
+    font-size: 14px;
+    font-weight: 700;
+  }
+  .my-match-detail {
+    font-size: 12px;
+    color: rgba(255,255,255,0.4);
+    margin-top: 2px;
+  }
+  .my-match-status {
+    padding: 4px 10px;
+    border-radius: 8px;
+    font-size: 11px;
+    font-weight: 700;
+  }
+  .my-match-status.live {
+    background: rgba(76,175,80,0.15);
+    color: #4CAF50;
+    animation: pulse-text 2s infinite;
+  }
+  .my-match-status.upcoming {
+    background: rgba(33,150,243,0.15);
+    color: #64B5F6;
+  }
+  @keyframes pulse-text {
+    0%,100% { opacity: 1; }
+    50% { opacity: 0.6; }
+  }
+
+  /* Bottom nav */
+  .bottom-nav {
+    position: fixed;
+    bottom: 0;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 393px;
+    background: #1a1a1a;
+    border-top: 1px solid rgba(255,255,255,0.08);
+    display: flex;
+    padding: 8px 0 28px;
+  }
+  .nav-item {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 4px;
+    font-size: 10px;
+    color: rgba(255,255,255,0.4);
+  }
+  .nav-item.active { color: #4CAF50; }
+  .nav-icon { font-size: 22px; }
+
+  .spacer { height: 100px; }
+
+  .mockup-label {
+    text-align: center;
+    padding: 12px;
+    font-size: 11px;
+    color: rgba(255,255,255,0.3);
+    letter-spacing: 2px;
+    text-transform: uppercase;
+  }
+
+  .divider {
+    height: 1px;
+    background: rgba(255,255,255,0.05);
+    margin: 6px 16px 16px;
+  }
+</style>
+</head>
+<body>
+
+<div class="mockup-label">PLAY SCREEN — DARK MODE</div>
+
+<div class="status-bar">
+  <span>10:38</span>
+  <span>📶 🔋 100%</span>
+</div>
+
+<div class="top-bar">
+  <h1>Play</h1>
+  <div class="top-actions">
+    <div class="icon-btn">🔍</div>
+    <div class="icon-btn">📍</div>
+  </div>
+</div>
+
+<!-- Mode Toggle: Matches vs Book -->
+<div class="mode-toggle">
+  <div class="mode-btn active">🎯 Find Matches</div>
+  <div class="mode-btn">📅 Book Venue</div>
+</div>
+
+<!-- Create Match CTA -->
+<div class="create-cta">
+  <div class="cta-icon">⚡</div>
+  <div class="cta-text">
+    <h3>Create a Match</h3>
+    <p>Pick a sport, set rules, invite players</p>
+  </div>
+</div>
+
+<!-- My Active Matches -->
+<div class="section-header">
+  <h3>🎮 My Active Matches</h3>
+  <span class="see-all">See All</span>
+</div>
+<div class="my-match-row">
+  <div class="my-match-icon basketball">🏀</div>
+  <div class="my-match-info">
+    <div class="my-match-name">Friday Night Hoops</div>
+    <div class="my-match-detail">Today 19:00 • Arena Sport • 8/10</div>
+  </div>
+  <div class="my-match-status live">● Live</div>
+</div>
+<div class="my-match-row">
+  <div class="my-match-icon football">⚽</div>
+  <div class="my-match-info">
+    <div class="my-match-name">Sunday Futsal</div>
+    <div class="my-match-detail">Sun 18:00 • Goal Arena • 9/10</div>
+  </div>
+  <div class="my-match-status upcoming">In 2 days</div>
+</div>
+
+<div class="divider"></div>
+
+<!-- Sport filter -->
+<div class="section-header">
+  <h3>🔥 Open Matches</h3>
+  <div class="filter-row">
+    <div class="filter-chip active">Nearby</div>
+    <div class="filter-chip">Today</div>
+  </div>
+</div>
+<div class="sport-scroll">
+  <div class="sport-pill active">All</div>
+  <div class="sport-pill">🏀 Basketball</div>
+  <div class="sport-pill">⚽ Football</div>
+  <div class="sport-pill">🎾 Tennis</div>
+  <div class="sport-pill">🏸 Paddle</div>
+  <div class="sport-pill">🏐 Volleyball</div>
+</div>
+
+<!-- Match Cards -->
+<div class="match-list">
+
+  <!-- Match 1 - Open, joinable -->
+  <div class="match-card featured">
+    <div class="match-top">
+      <span class="match-sport-icon">🏀</span>
+      <div class="match-info">
+        <div class="match-title">Pickup Basketball <span class="host-tag">👑 Kalanx</span></div>
+        <div class="match-type">Pickup Game • Open to all</div>
+      </div>
+      <div class="match-status-badge open">Open</div>
+    </div>
+    <div class="skill-row">
+      <span class="skill-label">Skill:</span>
+      <div class="skill-dots">
+        <div class="skill-dot filled"></div>
+        <div class="skill-dot filled"></div>
+        <div class="skill-dot filled"></div>
+        <div class="skill-dot"></div>
+        <div class="skill-dot"></div>
+      </div>
+      <span class="skill-label">Intermediate</span>
+    </div>
+    <div class="match-details">
+      <div class="match-detail">📍 Arena Sport Center</div>
+      <div class="match-detail">🕐 Today, 20:00</div>
+      <div class="match-detail">⏱️ 1 hour</div>
+    </div>
+    <div class="match-bottom">
+      <div class="match-players">
+        <div class="m-stack">
+          <div class="m-av a1">K</div>
+          <div class="m-av a2">D</div>
+          <div class="m-av a3">M</div>
+          <div class="m-av more">+3</div>
+        </div>
+        <span class="m-count">6/10</span>
+      </div>
+      <div style="display:flex;align-items:center;gap:10px;">
+        <div class="price-tag free">Free</div>
+        <button class="match-join-btn">Join</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Match 2 - Almost full -->
+  <div class="match-card">
+    <div class="match-top">
+      <span class="match-sport-icon">⚽</span>
+      <div class="match-info">
+        <div class="match-title">5-a-side Futsal</div>
+        <div class="match-type">Competitive • Invite only</div>
+      </div>
+      <div class="match-status-badge starting">1 spot left</div>
+    </div>
+    <div class="skill-row">
+      <span class="skill-label">Skill:</span>
+      <div class="skill-dots">
+        <div class="skill-dot filled med"></div>
+        <div class="skill-dot filled med"></div>
+        <div class="skill-dot filled med"></div>
+        <div class="skill-dot filled med"></div>
+        <div class="skill-dot"></div>
+      </div>
+      <span class="skill-label">Advanced</span>
+    </div>
+    <div class="match-details">
+      <div class="match-detail">📍 Goal Sports Arena</div>
+      <div class="match-detail">🕐 Tomorrow, 19:00</div>
+      <div class="match-detail">⏱️ 1.5 hours</div>
+    </div>
+    <div class="match-bottom">
+      <div class="match-players">
+        <div class="m-stack">
+          <div class="m-av a4">S</div>
+          <div class="m-av a5">N</div>
+          <div class="m-av a1">A</div>
+          <div class="m-av a2">B</div>
+          <div class="m-av more">+5</div>
+        </div>
+        <span class="m-count">9/10</span>
+      </div>
+      <div style="display:flex;align-items:center;gap:10px;">
+        <div class="price-tag">500 MKD <span class="price-per">/person</span></div>
+        <button class="match-join-btn request">Request</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Match 3 - Full -->
+  <div class="match-card">
+    <div class="match-top">
+      <span class="match-sport-icon">🎾</span>
+      <div class="match-info">
+        <div class="match-title">Tennis Doubles</div>
+        <div class="match-type">Casual • Open to all</div>
+      </div>
+      <div class="match-status-badge full">Full</div>
+    </div>
+    <div class="skill-row">
+      <span class="skill-label">Skill:</span>
+      <div class="skill-dots">
+        <div class="skill-dot filled"></div>
+        <div class="skill-dot filled"></div>
+        <div class="skill-dot"></div>
+        <div class="skill-dot"></div>
+        <div class="skill-dot"></div>
+      </div>
+      <span class="skill-label">Beginner</span>
+    </div>
+    <div class="match-details">
+      <div class="match-detail">📍 Tennis Club Skopje</div>
+      <div class="match-detail">🕐 Sat, 10:00</div>
+      <div class="match-detail">⏱️ 1 hour</div>
+    </div>
+    <div class="match-bottom">
+      <div class="match-players">
+        <div class="m-stack">
+          <div class="m-av a3">E</div>
+          <div class="m-av a4">T</div>
+          <div class="m-av a5">M</div>
+          <div class="m-av a1">J</div>
+        </div>
+        <span class="m-count">4/4</span>
+      </div>
+      <div style="display:flex;align-items:center;gap:10px;">
+        <div class="price-tag">300 MKD <span class="price-per">/person</span></div>
+        <button class="match-join-btn view">View</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Match 4 -->
+  <div class="match-card">
+    <div class="match-top">
+      <span class="match-sport-icon">🏐</span>
+      <div class="match-info">
+        <div class="match-title">Beach Volleyball <span class="host-tag">👑 You</span></div>
+        <div class="match-type">Casual • Open to all</div>
+      </div>
+      <div class="match-status-badge open">Open</div>
+    </div>
+    <div class="skill-row">
+      <span class="skill-label">Skill:</span>
+      <div class="skill-dots">
+        <div class="skill-dot filled"></div>
+        <div class="skill-dot filled"></div>
+        <div class="skill-dot filled"></div>
+        <div class="skill-dot"></div>
+        <div class="skill-dot"></div>
+      </div>
+      <span class="skill-label">Intermediate</span>
+    </div>
+    <div class="match-details">
+      <div class="match-detail">📍 Matka Sports</div>
+      <div class="match-detail">🕐 Sun, 16:00</div>
+      <div class="match-detail">⏱️ 2 hours</div>
+    </div>
+    <div class="match-bottom">
+      <div class="match-players">
+        <div class="m-stack">
+          <div class="m-av a2">B</div>
+          <div class="m-av a3">K</div>
+        </div>
+        <span class="m-count">2/8</span>
+      </div>
+      <div style="display:flex;align-items:center;gap:10px;">
+        <div class="price-tag free">Free</div>
+        <button class="match-join-btn view">Manage</button>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<div class="spacer"></div>
+
+<!-- Bottom Nav -->
+<div class="bottom-nav">
+  <div class="nav-item">
+    <span class="nav-icon">🏠</span>
+    <span>Home</span>
+  </div>
+  <div class="nav-item">
+    <span class="nav-icon">🔍</span>
+    <span>Explore</span>
+  </div>
+  <div class="nav-item active">
+    <span class="nav-icon">🎯</span>
+    <span>Play</span>
+  </div>
+  <div class="nav-item">
+    <span class="nav-icon">👥</span>
+    <span>Social</span>
+  </div>
+  <div class="nav-item">
+    <span class="nav-icon">☰</span>
+    <span>More</span>
+  </div>
+</div>
+
+</body>
+</html>

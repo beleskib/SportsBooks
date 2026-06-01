@@ -1,0 +1,177 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Payment History</title>
+<style>
+  * { margin:0; padding:0; box-sizing:border-box; }
+  body { width:393px; min-height:852px; background:#121212; font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif; color:#fff; overflow-x:hidden; padding-bottom:100px; }
+
+  .status-bar { height:44px; }
+  .header { padding:8px 16px 16px; display:flex; align-items:center; gap:16px; }
+  .back-btn { width:40px; height:40px; border-radius:50%; background:#1E1E1E; border:none; color:#fff; font-size:20px; display:flex; align-items:center; justify-content:center; }
+  .header-title { font-size:18px; font-weight:700; }
+
+  .summary-cards { display:flex; gap:12px; padding:0 16px; margin-bottom:20px; }
+  .sum-card { flex:1; background:#1E1E1E; border-radius:14px; padding:16px; text-align:center; }
+  .sum-value { font-size:22px; font-weight:800; }
+  .sum-value.green { color:#4CAF50; }
+  .sum-label { font-size:11px; color:#888; margin-top:4px; text-transform:uppercase; }
+
+  .filter-row { display:flex; gap:8px; padding:0 16px; margin-bottom:16px; overflow-x:auto; }
+  .filter-chip {
+    padding:8px 16px; border-radius:20px; background:#1E1E1E; color:#888;
+    font-size:13px; font-weight:600; white-space:nowrap; border:none; cursor:pointer;
+  }
+  .filter-chip.active { background:#4CAF50; color:#fff; }
+
+  .month-label { padding:0 16px; font-size:13px; color:#888; font-weight:600; margin-bottom:10px; text-transform:uppercase; letter-spacing:1px; }
+
+  .payment-item {
+    display:flex; align-items:center; gap:14px; padding:14px 16px;
+    margin:0 16px 8px; background:#1E1E1E; border-radius:14px; cursor:pointer;
+  }
+  .pay-icon { width:44px; height:44px; border-radius:12px; background:#252525; display:flex; align-items:center; justify-content:center; font-size:22px; flex-shrink:0; }
+  .pay-details { flex:1; }
+  .pay-venue { font-size:14px; font-weight:600; }
+  .pay-date { font-size:12px; color:#888; margin-top:2px; }
+  .pay-right { text-align:right; }
+  .pay-amount { font-size:15px; font-weight:700; }
+  .pay-status { font-size:11px; margin-top:2px; }
+  .pay-status.paid { color:#4CAF50; }
+  .pay-status.refunded { color:#FF9800; }
+  .pay-status.failed { color:#ef5350; }
+
+  .bottom-nav { position:fixed; bottom:0; left:0; width:393px; height:80px; background:#1A1A1A; border-top:1px solid #2A2A2A; display:flex; }
+  .nav-item { flex:1; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:4px; color:#666; font-size:10px; }
+  .nav-item.active { color:#4CAF50; }
+  .nav-icon { font-size:22px; }
+</style>
+</head>
+<body>
+  <div class="status-bar"></div>
+  <div class="header">
+    <button class="back-btn">&#8249;</button>
+    <span class="header-title">Payment History</span>
+  </div>
+
+  <div class="summary-cards">
+    <div class="sum-card">
+      <div class="sum-value green">$847</div>
+      <div class="sum-label">This month</div>
+    </div>
+    <div class="sum-card">
+      <div class="sum-value">$3,240</div>
+      <div class="sum-label">Total spent</div>
+    </div>
+    <div class="sum-card">
+      <div class="sum-value" style="color:#FF9800;">$45</div>
+      <div class="sum-label">Refunded</div>
+    </div>
+  </div>
+
+  <div class="filter-row">
+    <button class="filter-chip active">All</button>
+    <button class="filter-chip">Completed</button>
+    <button class="filter-chip">Pending</button>
+    <button class="filter-chip">Refunded</button>
+  </div>
+
+  <div class="month-label">June 2026</div>
+
+  <div class="payment-item">
+    <div class="pay-icon">🎾</div>
+    <div class="pay-details">
+      <div class="pay-venue">Champions Tennis Club</div>
+      <div class="pay-date">Jun 5 • Court 3 • 1h</div>
+    </div>
+    <div class="pay-right">
+      <div class="pay-amount">$42.00</div>
+      <div class="pay-status paid">Paid ✓</div>
+    </div>
+  </div>
+
+  <div class="payment-item">
+    <div class="pay-icon">⚽</div>
+    <div class="pay-details">
+      <div class="pay-venue">City Football Arena</div>
+      <div class="pay-date">Jun 3 • Field 1 • 2h</div>
+    </div>
+    <div class="pay-right">
+      <div class="pay-amount">$75.00</div>
+      <div class="pay-status paid">Paid ✓</div>
+    </div>
+  </div>
+
+  <div class="payment-item">
+    <div class="pay-icon">🏋️</div>
+    <div class="pay-details">
+      <div class="pay-venue">Coach Maria Session</div>
+      <div class="pay-date">Jun 1 • Training • 1h</div>
+    </div>
+    <div class="pay-right">
+      <div class="pay-amount">$60.00</div>
+      <div class="pay-status paid">Paid ✓</div>
+    </div>
+  </div>
+
+  <div class="month-label" style="margin-top:8px;">May 2026</div>
+
+  <div class="payment-item">
+    <div class="pay-icon">🏀</div>
+    <div class="pay-details">
+      <div class="pay-venue">Downtown Basketball</div>
+      <div class="pay-date">May 28 • Court A • 1h</div>
+    </div>
+    <div class="pay-right">
+      <div class="pay-amount">$35.00</div>
+      <div class="pay-status paid">Paid ✓</div>
+    </div>
+  </div>
+
+  <div class="payment-item">
+    <div class="pay-icon">🎾</div>
+    <div class="pay-details">
+      <div class="pay-venue">Champions Tennis Club</div>
+      <div class="pay-date">May 25 • Court 1 • 1h</div>
+    </div>
+    <div class="pay-right">
+      <div class="pay-amount">$45.00</div>
+      <div class="pay-status refunded">Refunded</div>
+    </div>
+  </div>
+
+  <div class="payment-item">
+    <div class="pay-icon">🏐</div>
+    <div class="pay-details">
+      <div class="pay-venue">Beach Volleyball Center</div>
+      <div class="pay-date">May 20 • Sand 2 • 2h</div>
+    </div>
+    <div class="pay-right">
+      <div class="pay-amount">$55.00</div>
+      <div class="pay-status paid">Paid ✓</div>
+    </div>
+  </div>
+
+  <div class="payment-item">
+    <div class="pay-icon">🏸</div>
+    <div class="pay-details">
+      <div class="pay-venue">Badminton World</div>
+      <div class="pay-date">May 15 • Court 4 • 1h</div>
+    </div>
+    <div class="pay-right">
+      <div class="pay-amount">$28.00</div>
+      <div class="pay-status paid">Paid ✓</div>
+    </div>
+  </div>
+
+  <div class="bottom-nav">
+    <div class="nav-item"><span class="nav-icon">🏠</span>Home</div>
+    <div class="nav-item"><span class="nav-icon">🔍</span>Explore</div>
+    <div class="nav-item"><span class="nav-icon">⚡</span>Play</div>
+    <div class="nav-item"><span class="nav-icon">👥</span>Social</div>
+    <div class="nav-item active"><span class="nav-icon">☰</span>More</div>
+  </div>
+</body>
+</html>

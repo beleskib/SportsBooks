@@ -1,0 +1,135 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=393, initial-scale=1.0">
+<title>Create Match</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background: #121212; color: #fff; width: 393px; min-height: 852px; }
+  .status-bar { height: 44px; display: flex; align-items: center; justify-content: space-between; padding: 0 20px; font-size: 12px; font-weight: 600; }
+  .header { display: flex; align-items: center; padding: 8px 16px 20px; gap: 12px; }
+  .back-btn { width: 36px; height: 36px; background: #1E1E1E; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 18px; }
+  .header h1 { font-size: 18px; font-weight: 700; flex: 1; }
+  .form-section { padding: 0 16px; margin-bottom: 20px; }
+  .form-label { font-size: 13px; font-weight: 600; color: #888; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 8px; }
+  .form-input { width: 100%; padding: 14px 16px; background: #1E1E1E; border: 1px solid #2A2A2A; border-radius: 12px; color: #fff; font-size: 15px; }
+  .form-input.placeholder { color: #555; }
+  .sport-selector { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; }
+  .sport-opt { padding: 12px 4px; background: #1E1E1E; border-radius: 12px; text-align: center; border: 1px solid #2A2A2A; }
+  .sport-opt.active { background: #1B3A1E; border-color: #4CAF50; }
+  .sport-opt .emoji { font-size: 24px; margin-bottom: 4px; }
+  .sport-opt .name { font-size: 11px; }
+  .match-type-row { display: flex; gap: 8px; }
+  .type-card { flex: 1; padding: 16px 12px; background: #1E1E1E; border-radius: 12px; text-align: center; border: 1px solid #2A2A2A; }
+  .type-card.active { background: #1B3A1E; border-color: #4CAF50; }
+  .type-card .emoji { font-size: 28px; margin-bottom: 6px; }
+  .type-card .title { font-size: 13px; font-weight: 600; }
+  .type-card .desc { font-size: 10px; color: #888; margin-top: 2px; }
+  .row { display: flex; gap: 10px; }
+  .row .form-input { flex: 1; }
+  .skill-dots { display: flex; gap: 6px; align-items: center; }
+  .skill-dot { width: 32px; height: 32px; border-radius: 50%; background: #2A2A2A; display: flex; align-items: center; justify-content: center; font-size: 10px; font-weight: 700; }
+  .skill-dot.active { background: #4CAF50; }
+  .skill-labels { display: flex; justify-content: space-between; margin-top: 4px; }
+  .skill-labels span { font-size: 10px; color: #555; }
+  .venue-picker { padding: 14px 16px; background: #1E1E1E; border-radius: 12px; display: flex; align-items: center; gap: 12px; border: 1px solid #2A2A2A; }
+  .venue-picker-img { width: 44px; height: 44px; background: linear-gradient(135deg, #2E7D32, #4CAF50); border-radius: 8px; display: flex; align-items: center; justify-content: center; font-size: 18px; }
+  .venue-picker-info { flex: 1; }
+  .venue-picker-info h4 { font-size: 14px; font-weight: 600; }
+  .venue-picker-info p { font-size: 12px; color: #888; }
+  .venue-picker-arrow { color: #555; font-size: 18px; }
+  .toggle-row { display: flex; justify-content: space-between; align-items: center; padding: 14px 16px; background: #1E1E1E; border-radius: 12px; margin-bottom: 8px; }
+  .toggle-label h4 { font-size: 14px; font-weight: 600; }
+  .toggle-label p { font-size: 11px; color: #888; }
+  .toggle { width: 44px; height: 24px; background: #4CAF50; border-radius: 12px; position: relative; }
+  .toggle .knob { width: 20px; height: 20px; background: #fff; border-radius: 50%; position: absolute; right: 2px; top: 2px; }
+  .toggle.off { background: #333; }
+  .toggle.off .knob { left: 2px; right: auto; }
+  .payment-toggle { display: flex; gap: 8px; }
+  .pay-opt { flex: 1; padding: 12px; background: #1E1E1E; border-radius: 10px; text-align: center; font-size: 13px; border: 1px solid #2A2A2A; }
+  .pay-opt.active { background: #1B3A1E; border-color: #4CAF50; }
+  .bottom-bar { position: fixed; bottom: 0; left: 0; width: 393px; padding: 12px 16px; background: #1A1A1A; border-top: 1px solid #2A2A2A; }
+  .create-btn { width: 100%; padding: 16px; background: #4CAF50; border-radius: 14px; font-size: 16px; font-weight: 700; color: #fff; text-align: center; }
+  .spacer { height: 80px; }
+</style>
+</head>
+<body>
+  <div class="status-bar"><span>9:41</span><span>...</span></div>
+  <div class="header"><div class="back-btn">&#8592;</div><h1>Create a Match</h1></div>
+
+  <div class="form-section">
+    <div class="form-label">Sport</div>
+    <div class="sport-selector">
+      <div class="sport-opt active"><div class="emoji">&#127936;</div><div class="name">Basketball</div></div>
+      <div class="sport-opt"><div class="emoji">&#9917;</div><div class="name">Football</div></div>
+      <div class="sport-opt"><div class="emoji">&#127934;</div><div class="name">Tennis</div></div>
+      <div class="sport-opt"><div class="emoji">&#127952;</div><div class="name">Volleyball</div></div>
+    </div>
+  </div>
+
+  <div class="form-section">
+    <div class="form-label">Match Type</div>
+    <div class="match-type-row">
+      <div class="type-card active"><div class="emoji">&#9876;</div><div class="title">Competitive</div><div class="desc">Ranked match</div></div>
+      <div class="type-card"><div class="emoji">&#127881;</div><div class="title">Casual</div><div class="desc">Just for fun</div></div>
+      <div class="type-card"><div class="emoji">&#127941;</div><div class="title">Tournament</div><div class="desc">Bracket play</div></div>
+    </div>
+  </div>
+
+  <div class="form-section">
+    <div class="form-label">Date & Time</div>
+    <div class="row" style="margin-bottom: 8px;">
+      <div class="form-input">&#128197; Sun, May 25</div>
+      <div class="form-input">&#128336; 15:00</div>
+    </div>
+    <div class="form-input">&#9201; Duration: 1.5 hours</div>
+  </div>
+
+  <div class="form-section">
+    <div class="form-label">Players</div>
+    <div class="row">
+      <div class="form-input">Min: 6 players</div>
+      <div class="form-input">Max: 10 players</div>
+    </div>
+  </div>
+
+  <div class="form-section">
+    <div class="form-label">Skill Level Required</div>
+    <div class="skill-dots">
+      <div class="skill-dot active">1</div>
+      <div class="skill-dot active">2</div>
+      <div class="skill-dot active">3</div>
+      <div class="skill-dot">4</div>
+      <div class="skill-dot">5</div>
+    </div>
+    <div class="skill-labels"><span>Beginner</span><span>Intermediate</span><span>Pro</span></div>
+  </div>
+
+  <div class="form-section">
+    <div class="form-label">Venue</div>
+    <div class="venue-picker">
+      <div class="venue-picker-img">&#127939;</div>
+      <div class="venue-picker-info"><h4>Arena Sport Center</h4><p>Court A - Indoor</p></div>
+      <div class="venue-picker-arrow">&#8250;</div>
+    </div>
+  </div>
+
+  <div class="form-section">
+    <div class="form-label">Payment</div>
+    <div class="payment-toggle">
+      <div class="pay-opt active">&#128176; Split Equally</div>
+      <div class="pay-opt">&#128179; Host Pays</div>
+      <div class="pay-opt">&#128722; Per Player</div>
+    </div>
+  </div>
+
+  <div class="form-section">
+    <div class="toggle-row"><div class="toggle-label"><h4>Public Match</h4><p>Anyone can join</p></div><div class="toggle"><div class="knob"></div></div></div>
+    <div class="toggle-row"><div class="toggle-label"><h4>Auto-approve</h4><p>No approval needed</p></div><div class="toggle off"><div class="knob"></div></div></div>
+  </div>
+
+  <div class="spacer"></div>
+  <div class="bottom-bar"><div class="create-btn">Create Match</div></div>
+</body>
+</html>

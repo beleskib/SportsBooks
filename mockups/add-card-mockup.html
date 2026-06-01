@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=393, initial-scale=1.0">
+<title>Add Card</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background: #121212; color: #fff; width: 393px; min-height: 852px; }
+  .status-bar { height: 44px; display: flex; align-items: center; justify-content: space-between; padding: 0 20px; font-size: 12px; font-weight: 600; }
+  .header { display: flex; align-items: center; padding: 8px 16px 20px; gap: 12px; }
+  .back-btn { width: 36px; height: 36px; background: #1E1E1E; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 18px; }
+  .header h1 { font-size: 18px; font-weight: 700; flex: 1; }
+
+  .card-preview { margin: 0 16px 24px; padding: 24px 20px; background: linear-gradient(135deg, #1A237E, #283593, #3949AB); border-radius: 16px; height: 200px; display: flex; flex-direction: column; justify-content: space-between; position: relative; overflow: hidden; }
+  .card-preview::before { content: ''; position: absolute; top: -30px; right: -30px; width: 120px; height: 120px; background: rgba(255,255,255,0.05); border-radius: 50%; }
+  .card-preview::after { content: ''; position: absolute; bottom: -40px; left: 40px; width: 160px; height: 160px; background: rgba(255,255,255,0.03); border-radius: 50%; }
+  .card-top { display: flex; justify-content: space-between; align-items: center; position: relative; z-index: 1; }
+  .chip { width: 36px; height: 28px; background: linear-gradient(135deg, #FFD54F, #FFC107); border-radius: 6px; }
+  .contactless { font-size: 22px; color: rgba(255,255,255,0.6); }
+  .card-number-preview { font-size: 20px; font-weight: 600; letter-spacing: 3px; position: relative; z-index: 1; }
+  .card-bottom { display: flex; justify-content: space-between; align-items: flex-end; position: relative; z-index: 1; }
+  .card-holder { font-size: 11px; color: rgba(255,255,255,0.5); text-transform: uppercase; letter-spacing: 0.5px; }
+  .card-holder-name { font-size: 14px; font-weight: 600; margin-top: 2px; }
+  .card-expiry-label { font-size: 9px; color: rgba(255,255,255,0.5); text-transform: uppercase; }
+  .card-expiry-value { font-size: 14px; font-weight: 600; margin-top: 2px; }
+  .card-brand-logo { font-size: 14px; font-weight: 800; color: rgba(255,255,255,0.8); }
+
+  .form-section { padding: 0 16px; margin-bottom: 16px; }
+  .form-label { font-size: 13px; font-weight: 600; color: #888; margin-bottom: 6px; display: flex; align-items: center; gap: 6px; }
+  .form-label .required { color: #F44336; }
+  .form-input { width: 100%; padding: 14px 16px; background: #1E1E1E; border: 1px solid #2A2A2A; border-radius: 12px; color: #fff; font-size: 16px; letter-spacing: 1px; }
+  .form-input.active { border-color: #4CAF50; }
+  .form-input.placeholder { color: #444; }
+  .form-row { display: flex; gap: 10px; }
+  .form-row .form-field { flex: 1; }
+
+  .stripe-badge { display: flex; align-items: center; justify-content: center; gap: 8px; padding: 12px; margin: 0 16px 16px; }
+  .stripe-badge .powered { font-size: 11px; color: #555; }
+  .stripe-badge .stripe-logo { font-size: 16px; font-weight: 800; color: #635BFF; }
+
+  .toggle-row { display: flex; justify-content: space-between; align-items: center; padding: 14px 16px; margin: 0 16px 16px; background: #1E1E1E; border-radius: 12px; }
+  .toggle-label { font-size: 14px; font-weight: 500; }
+  .toggle { width: 44px; height: 24px; background: #4CAF50; border-radius: 12px; position: relative; }
+  .toggle .knob { width: 20px; height: 20px; background: #fff; border-radius: 50%; position: absolute; right: 2px; top: 2px; }
+
+  .security-info { margin: 0 16px 20px; padding: 12px 14px; background: #1B3A1E; border-radius: 10px; display: flex; gap: 8px; align-items: flex-start; }
+  .security-icon { font-size: 16px; flex-shrink: 0; margin-top: 1px; }
+  .security-text { font-size: 12px; color: #81C784; line-height: 1.4; }
+
+  .bottom-bar { position: fixed; bottom: 0; left: 0; width: 393px; padding: 12px 16px 28px; background: #1A1A1A; border-top: 1px solid #2A2A2A; }
+  .save-btn { width: 100%; padding: 16px; background: #4CAF50; border-radius: 14px; font-size: 16px; font-weight: 700; color: #fff; text-align: center; }
+  .spacer { height: 100px; }
+</style>
+</head>
+<body>
+  <div class="status-bar"><span>9:41</span><span>...</span></div>
+  <div class="header"><div class="back-btn">&#8592;</div><h1>Add New Card</h1></div>
+
+  <div class="card-preview">
+    <div class="card-top">
+      <div class="chip"></div>
+      <div class="contactless">&#8801;</div>
+    </div>
+    <div class="card-number-preview">4242 &bull;&bull;&bull;&bull; &bull;&bull;&bull;&bull; &bull;&bull;&bull;&bull;</div>
+    <div class="card-bottom">
+      <div>
+        <div class="card-holder">Card Holder</div>
+        <div class="card-holder-name">BOJAN BELESKI</div>
+      </div>
+      <div style="text-align: right;">
+        <div class="card-expiry-label">Expires</div>
+        <div class="card-expiry-value">12/28</div>
+      </div>
+      <div class="card-brand-logo">VISA</div>
+    </div>
+  </div>
+
+  <div class="form-section">
+    <div class="form-label">Card Number <span class="required">*</span></div>
+    <div class="form-input active">4242 4242 4242 4242</div>
+  </div>
+
+  <div class="form-section">
+    <div class="form-label">Cardholder Name <span class="required">*</span></div>
+    <div class="form-input">BOJAN BELESKI</div>
+  </div>
+
+  <div class="form-section">
+    <div class="form-row">
+      <div class="form-field">
+        <div class="form-label">Expiry Date <span class="required">*</span></div>
+        <div class="form-input">12 / 28</div>
+      </div>
+      <div class="form-field">
+        <div class="form-label">CVC <span class="required">*</span></div>
+        <div class="form-input">123</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="stripe-badge">
+    <span class="powered">Powered by</span>
+    <span class="stripe-logo">stripe</span>
+  </div>
+
+  <div class="toggle-row">
+    <div class="toggle-label">Set as default payment</div>
+    <div class="toggle"><div class="knob"></div></div>
+  </div>
+
+  <div class="security-info">
+    <div class="security-icon">&#128274;</div>
+    <div class="security-text">Your card details are encrypted and securely processed by Stripe. We never store your full card number on our servers.</div>
+  </div>
+
+  <div class="spacer"></div>
+  <div class="bottom-bar">
+    <div class="save-btn">Save Card</div>
+  </div>
+</body>
+</html>

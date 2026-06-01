@@ -28,6 +28,7 @@ import v2Routes from './v2.routes';
 import directMessageRoutes from './directMessage.routes';
 import adminRoutes from './admin.routes';
 import subscriptionRoutes from './subscription.routes';
+import cardRoutes from './card.routes';
 
 const router = Router();
 
@@ -60,5 +61,6 @@ router.use('/', v2Routes);  // v2-practical-ux: /home/feed, /play/search, /booki
 router.use('/dm', directMessageRoutes);  // friend-to-friend direct messages
 router.use('/admin', adminRoutes);  // owner admin dashboard (admin role only)
 router.use('/subscription', subscriptionRoutes);  // SportsBooks+ subscription management
+router.use('/cards', cardRoutes);  // Saved payment methods (cards) management
 
 export default router;

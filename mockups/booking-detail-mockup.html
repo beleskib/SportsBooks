@@ -1,0 +1,197 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Booking Detail</title>
+<style>
+  * { margin:0; padding:0; box-sizing:border-box; }
+  body { width:393px; min-height:852px; background:#121212; font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif; color:#fff; overflow-x:hidden; padding-bottom:100px; }
+
+  .status-bar { height:44px; background:#121212; }
+  .header { padding:8px 16px 16px; display:flex; align-items:center; justify-content:space-between; }
+  .back-btn { width:40px; height:40px; border-radius:50%; background:#1E1E1E; border:none; color:#fff; font-size:20px; display:flex; align-items:center; justify-content:center; }
+  .header-title { font-size:18px; font-weight:700; }
+  .more-btn { width:40px; height:40px; border-radius:50%; background:#1E1E1E; border:none; color:#fff; font-size:20px; display:flex; align-items:center; justify-content:center; }
+
+  .status-banner {
+    margin:0 16px 16px; padding:12px 16px; border-radius:12px;
+    background:rgba(76,175,80,0.15); border:1px solid rgba(76,175,80,0.3);
+    display:flex; align-items:center; gap:10px;
+  }
+  .status-dot { width:10px; height:10px; border-radius:50%; background:#4CAF50; }
+  .status-text { font-size:14px; font-weight:600; color:#4CAF50; }
+  .status-id { font-size:12px; color:#888; margin-left:auto; }
+
+  .venue-card {
+    margin:0 16px 16px; border-radius:16px; overflow:hidden; background:#1E1E1E;
+  }
+  .venue-img { width:100%; height:160px; background:linear-gradient(135deg,#1a3a1a,#0d2b0d); display:flex; align-items:center; justify-content:center; font-size:48px; }
+  .venue-info { padding:16px; }
+  .venue-name { font-size:18px; font-weight:700; }
+  .venue-loc { font-size:13px; color:#888; margin-top:4px; }
+
+  .detail-grid {
+    display:grid; grid-template-columns:1fr 1fr; gap:12px;
+    margin:0 16px 16px;
+  }
+  .detail-item {
+    background:#1E1E1E; border-radius:14px; padding:16px;
+  }
+  .detail-icon { font-size:24px; margin-bottom:8px; }
+  .detail-label { font-size:11px; color:#888; text-transform:uppercase; letter-spacing:0.5px; }
+  .detail-value { font-size:15px; font-weight:700; margin-top:4px; }
+
+  .section { margin:0 16px 16px; }
+  .section-title { font-size:16px; font-weight:700; margin-bottom:12px; }
+
+  .participant-list { display:flex; flex-direction:column; gap:10px; }
+  .participant {
+    display:flex; align-items:center; gap:12px; background:#1E1E1E;
+    border-radius:12px; padding:12px 16px;
+  }
+  .participant-avatar { width:40px; height:40px; border-radius:50%; background:#333; display:flex; align-items:center; justify-content:center; font-size:16px; }
+  .participant-name { font-size:14px; font-weight:600; }
+  .participant-status { font-size:12px; color:#888; }
+  .participant-tag { margin-left:auto; font-size:11px; padding:4px 8px; border-radius:6px; background:rgba(76,175,80,0.15); color:#4CAF50; font-weight:600; }
+
+  .payment-summary {
+    background:#1E1E1E; border-radius:14px; padding:16px; margin:0 16px 16px;
+  }
+  .pay-row { display:flex; justify-content:space-between; margin-bottom:8px; font-size:14px; color:#aaa; }
+  .pay-row:last-child { margin-bottom:0; padding-top:8px; border-top:1px solid #333; color:#fff; font-weight:700; }
+
+  .chat-preview {
+    background:#1E1E1E; border-radius:14px; padding:16px; margin:0 16px 16px; cursor:pointer;
+  }
+  .chat-header { display:flex; justify-content:space-between; align-items:center; margin-bottom:12px; }
+  .chat-badge { font-size:11px; padding:4px 8px; border-radius:6px; background:#4CAF50; color:#fff; font-weight:600; }
+  .chat-msg { display:flex; gap:10px; align-items:flex-start; }
+  .chat-avatar { width:32px; height:32px; border-radius:50%; background:#333; display:flex; align-items:center; justify-content:center; font-size:12px; flex-shrink:0; }
+  .chat-bubble { background:#252525; border-radius:12px; padding:10px 14px; font-size:13px; color:#ccc; }
+
+  .action-bar {
+    position:fixed; bottom:0; left:0; width:393px; padding:16px;
+    background:linear-gradient(transparent, #121212 30%); display:flex; gap:12px;
+  }
+  .btn-secondary {
+    flex:1; padding:14px; border-radius:14px; border:1px solid #333;
+    background:#1E1E1E; color:#fff; font-size:14px; font-weight:600; cursor:pointer;
+    text-align:center;
+  }
+  .btn-primary {
+    flex:1; padding:14px; border-radius:14px; border:none;
+    background:linear-gradient(135deg,#4CAF50,#2E7D32); color:#fff;
+    font-size:14px; font-weight:600; cursor:pointer; text-align:center;
+  }
+  .btn-danger {
+    flex:1; padding:14px; border-radius:14px; border:1px solid #c62828;
+    background:rgba(198,40,40,0.1); color:#ef5350;
+    font-size:14px; font-weight:600; cursor:pointer; text-align:center;
+  }
+</style>
+</head>
+<body>
+  <div class="status-bar"></div>
+  <div class="header">
+    <button class="back-btn">&#8249;</button>
+    <span class="header-title">Booking Details</span>
+    <button class="more-btn">&#8943;</button>
+  </div>
+
+  <div class="status-banner">
+    <div class="status-dot"></div>
+    <span class="status-text">Confirmed</span>
+    <span class="status-id">#BK-2847</span>
+  </div>
+
+  <div class="venue-card">
+    <div class="venue-img">&#127934;</div>
+    <div class="venue-info">
+      <div class="venue-name">Champions Tennis Club</div>
+      <div class="venue-loc">📍 123 Sport Ave, Downtown</div>
+    </div>
+  </div>
+
+  <div class="detail-grid">
+    <div class="detail-item">
+      <div class="detail-icon">📅</div>
+      <div class="detail-label">Date</div>
+      <div class="detail-value">Jun 5, 2026</div>
+    </div>
+    <div class="detail-item">
+      <div class="detail-icon">⏰</div>
+      <div class="detail-label">Time</div>
+      <div class="detail-value">18:00 – 19:00</div>
+    </div>
+    <div class="detail-item">
+      <div class="detail-icon">🏟️</div>
+      <div class="detail-label">Court</div>
+      <div class="detail-value">Court 3</div>
+    </div>
+    <div class="detail-item">
+      <div class="detail-icon">⏱️</div>
+      <div class="detail-label">Duration</div>
+      <div class="detail-value">1 hour</div>
+    </div>
+  </div>
+
+  <div class="section">
+    <div class="section-title">Participants (3/4)</div>
+    <div class="participant-list">
+      <div class="participant">
+        <div class="participant-avatar">🧑</div>
+        <div>
+          <div class="participant-name">You</div>
+          <div class="participant-status">Organizer</div>
+        </div>
+        <span class="participant-tag">Host</span>
+      </div>
+      <div class="participant">
+        <div class="participant-avatar">👤</div>
+        <div>
+          <div class="participant-name">Marco Silva</div>
+          <div class="participant-status">Paid • $12.50</div>
+        </div>
+      </div>
+      <div class="participant">
+        <div class="participant-avatar">👤</div>
+        <div>
+          <div class="participant-name">Elena Rossi</div>
+          <div class="participant-status">Pending payment</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="section">
+    <div class="section-title">Payment</div>
+  </div>
+  <div class="payment-summary">
+    <div class="pay-row"><span>Court rental (1h)</span><span>$50.00</span></div>
+    <div class="pay-row"><span>Split (4 ways)</span><span>$12.50/person</span></div>
+    <div class="pay-row"><span>Your share</span><span>$12.50</span></div>
+    <div class="pay-row"><span>Status</span><span style="color:#4CAF50;">Paid ✓</span></div>
+  </div>
+
+  <div class="section">
+    <div class="section-title">Booking Chat</div>
+  </div>
+  <div class="chat-preview">
+    <div class="chat-header">
+      <span style="font-size:13px; color:#888;">3 messages</span>
+      <span class="chat-badge">2 new</span>
+    </div>
+    <div class="chat-msg">
+      <div class="chat-avatar">M</div>
+      <div class="chat-bubble">I'll bring the extra rackets! See you at 6 🎾</div>
+    </div>
+  </div>
+
+  <div class="action-bar">
+    <button class="btn-danger">Cancel</button>
+    <button class="btn-secondary">Reschedule</button>
+    <button class="btn-primary">Directions</button>
+  </div>
+</body>
+</html>

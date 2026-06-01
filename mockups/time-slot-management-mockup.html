@@ -1,0 +1,200 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Time Slot Management</title>
+<style>
+  * { margin:0; padding:0; box-sizing:border-box; }
+  body { width:393px; min-height:852px; background:#121212; font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif; color:#fff; overflow-x:hidden; padding-bottom:100px; }
+
+  .status-bar { height:44px; }
+  .header { padding:8px 16px 16px; display:flex; align-items:center; justify-content:space-between; }
+  .back-btn { width:40px; height:40px; border-radius:50%; background:#1E1E1E; border:none; color:#fff; font-size:20px; display:flex; align-items:center; justify-content:center; }
+  .header-title { font-size:18px; font-weight:700; }
+  .add-btn { width:40px; height:40px; border-radius:50%; background:#4CAF50; border:none; color:#fff; font-size:22px; display:flex; align-items:center; justify-content:center; }
+
+  .date-strip { display:flex; gap:8px; padding:0 16px; margin-bottom:16px; overflow-x:auto; }
+  .date-item {
+    display:flex; flex-direction:column; align-items:center; padding:10px 14px;
+    border-radius:14px; background:#1E1E1E; min-width:56px; cursor:pointer;
+  }
+  .date-item.active { background:#4CAF50; }
+  .date-day { font-size:11px; color:#888; text-transform:uppercase; }
+  .date-item.active .date-day { color:rgba(255,255,255,0.8); }
+  .date-num { font-size:18px; font-weight:800; margin-top:4px; }
+  .date-dot { width:6px; height:6px; border-radius:50%; background:#4CAF50; margin-top:4px; }
+  .date-item.active .date-dot { background:#fff; }
+
+  .court-tabs { display:flex; gap:8px; padding:0 16px; margin-bottom:16px; overflow-x:auto; }
+  .court-tab {
+    padding:8px 16px; border-radius:10px; background:#1E1E1E; border:1px solid #333;
+    color:#888; font-size:13px; font-weight:600; white-space:nowrap; cursor:pointer;
+  }
+  .court-tab.active { border-color:#4CAF50; color:#4CAF50; background:rgba(76,175,80,0.1); }
+
+  .summary-bar {
+    margin:0 16px 16px; padding:12px 16px; background:#1E1E1E; border-radius:12px;
+    display:flex; justify-content:space-between; font-size:13px;
+  }
+  .sum-item { text-align:center; }
+  .sum-val { font-weight:800; font-size:16px; }
+  .sum-val.green { color:#4CAF50; }
+  .sum-val.orange { color:#FF9800; }
+  .sum-val.red { color:#ef5350; }
+  .sum-label { font-size:10px; color:#888; margin-top:2px; }
+
+  .timeline { padding:0 16px; }
+  .time-row {
+    display:flex; align-items:stretch; gap:12px; margin-bottom:4px; min-height:52px;
+  }
+  .time-label { width:50px; font-size:12px; color:#555; padding-top:14px; text-align:right; flex-shrink:0; }
+  .time-slot {
+    flex:1; border-radius:10px; padding:10px 14px; position:relative; cursor:pointer;
+    display:flex; align-items:center; justify-content:space-between;
+  }
+  .time-slot.available { background:rgba(76,175,80,0.1); border:1px solid rgba(76,175,80,0.3); }
+  .time-slot.booked { background:rgba(33,150,243,0.1); border:1px solid rgba(33,150,243,0.3); }
+  .time-slot.blocked { background:rgba(239,83,80,0.08); border:1px solid rgba(239,83,80,0.2); }
+  .time-slot.pending { background:rgba(255,152,0,0.08); border:1px solid rgba(255,152,0,0.2); }
+  .slot-info { font-size:13px; font-weight:600; }
+  .slot-info.available-text { color:#4CAF50; }
+  .slot-info.booked-text { color:#2196F3; }
+  .slot-info.blocked-text { color:#ef5350; }
+  .slot-info.pending-text { color:#FF9800; }
+  .slot-sub { font-size:11px; color:#888; margin-top:2px; }
+  .slot-price { font-size:13px; font-weight:700; }
+  .slot-price.green { color:#4CAF50; }
+
+  .legend { display:flex; gap:16px; padding:16px; justify-content:center; }
+  .legend-item { display:flex; align-items:center; gap:6px; font-size:11px; color:#888; }
+  .legend-dot { width:10px; height:10px; border-radius:3px; }
+
+  .bottom-nav { position:fixed; bottom:0; left:0; width:393px; height:80px; background:#1A1A1A; border-top:1px solid #2A2A2A; display:flex; }
+  .nav-item { flex:1; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:4px; color:#666; font-size:10px; }
+  .nav-item.active { color:#4CAF50; }
+  .nav-icon { font-size:22px; }
+</style>
+</head>
+<body>
+  <div class="status-bar"></div>
+  <div class="header">
+    <button class="back-btn">&#8249;</button>
+    <span class="header-title">Manage Slots</span>
+    <button class="add-btn">+</button>
+  </div>
+
+  <div class="date-strip">
+    <div class="date-item"><span class="date-day">Mon</span><span class="date-num">1</span></div>
+    <div class="date-item"><span class="date-day">Tue</span><span class="date-num">2</span><div class="date-dot"></div></div>
+    <div class="date-item active"><span class="date-day">Wed</span><span class="date-num">3</span><div class="date-dot"></div></div>
+    <div class="date-item"><span class="date-day">Thu</span><span class="date-num">4</span><div class="date-dot"></div></div>
+    <div class="date-item"><span class="date-day">Fri</span><span class="date-num">5</span><div class="date-dot"></div></div>
+    <div class="date-item"><span class="date-day">Sat</span><span class="date-num">6</span></div>
+    <div class="date-item"><span class="date-day">Sun</span><span class="date-num">7</span></div>
+  </div>
+
+  <div class="court-tabs">
+    <button class="court-tab active">All Courts</button>
+    <button class="court-tab">Court 1</button>
+    <button class="court-tab">Court 2</button>
+    <button class="court-tab">Court 3</button>
+    <button class="court-tab">Court 4</button>
+    <button class="court-tab">Court 5</button>
+    <button class="court-tab">Court 6</button>
+  </div>
+
+  <div class="summary-bar">
+    <div class="sum-item"><div class="sum-val green">8</div><div class="sum-label">Available</div></div>
+    <div class="sum-item"><div class="sum-val" style="color:#2196F3">4</div><div class="sum-label">Booked</div></div>
+    <div class="sum-item"><div class="sum-val orange">1</div><div class="sum-label">Pending</div></div>
+    <div class="sum-item"><div class="sum-val red">2</div><div class="sum-label">Blocked</div></div>
+  </div>
+
+  <div class="timeline">
+    <div class="time-row">
+      <div class="time-label">09:00</div>
+      <div class="time-slot booked">
+        <div><div class="slot-info booked-text">Marco Silva</div><div class="slot-sub">Court 1 • Tennis</div></div>
+        <div class="slot-price green">$50</div>
+      </div>
+    </div>
+    <div class="time-row">
+      <div class="time-label">10:00</div>
+      <div class="time-slot booked">
+        <div><div class="slot-info booked-text">Elena Rossi</div><div class="slot-sub">Court 1 • Tennis</div></div>
+        <div class="slot-price green">$50</div>
+      </div>
+    </div>
+    <div class="time-row">
+      <div class="time-label">11:00</div>
+      <div class="time-slot available">
+        <div><div class="slot-info available-text">Available</div><div class="slot-sub">Courts 1-6</div></div>
+        <div class="slot-price green">$50</div>
+      </div>
+    </div>
+    <div class="time-row">
+      <div class="time-label">12:00</div>
+      <div class="time-slot available">
+        <div><div class="slot-info available-text">Available</div><div class="slot-sub">Courts 1-6</div></div>
+        <div class="slot-price green">$50</div>
+      </div>
+    </div>
+    <div class="time-row">
+      <div class="time-label">13:00</div>
+      <div class="time-slot blocked">
+        <div><div class="slot-info blocked-text">Blocked — Maintenance</div><div class="slot-sub">All courts</div></div>
+      </div>
+    </div>
+    <div class="time-row">
+      <div class="time-label">14:00</div>
+      <div class="time-slot blocked">
+        <div><div class="slot-info blocked-text">Blocked — Maintenance</div><div class="slot-sub">All courts</div></div>
+      </div>
+    </div>
+    <div class="time-row">
+      <div class="time-label">15:00</div>
+      <div class="time-slot pending">
+        <div><div class="slot-info pending-text">James Lee — Pending</div><div class="slot-sub">Court 2 • Tennis</div></div>
+        <div class="slot-price green">$50</div>
+      </div>
+    </div>
+    <div class="time-row">
+      <div class="time-label">16:00</div>
+      <div class="time-slot available">
+        <div><div class="slot-info available-text">Available</div><div class="slot-sub">Courts 1-6</div></div>
+        <div class="slot-price green">$50</div>
+      </div>
+    </div>
+    <div class="time-row">
+      <div class="time-label">17:00</div>
+      <div class="time-slot booked">
+        <div><div class="slot-info booked-text">Alex Kramer</div><div class="slot-sub">Court 3 • Tennis</div></div>
+        <div class="slot-price green">$50</div>
+      </div>
+    </div>
+    <div class="time-row">
+      <div class="time-label">18:00</div>
+      <div class="time-slot booked">
+        <div><div class="slot-info booked-text">Group Booking</div><div class="slot-sub">Court 1,2 • Tennis</div></div>
+        <div class="slot-price green">$100</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="legend">
+    <span class="legend-item"><span class="legend-dot" style="background:#4CAF50"></span>Available</span>
+    <span class="legend-item"><span class="legend-dot" style="background:#2196F3"></span>Booked</span>
+    <span class="legend-item"><span class="legend-dot" style="background:#FF9800"></span>Pending</span>
+    <span class="legend-item"><span class="legend-dot" style="background:#ef5350"></span>Blocked</span>
+  </div>
+
+  <div class="bottom-nav">
+    <div class="nav-item"><span class="nav-icon">📊</span>Dashboard</div>
+    <div class="nav-item"><span class="nav-icon">📅</span>Bookings</div>
+    <div class="nav-item active"><span class="nav-icon">⏰</span>Slots</div>
+    <div class="nav-item"><span class="nav-icon">💰</span>Revenue</div>
+    <div class="nav-item"><span class="nav-icon">⚙</span>Settings</div>
+  </div>
+</body>
+</html>

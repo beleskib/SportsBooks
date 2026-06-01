@@ -1,0 +1,589 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Play - Book Venue Tab</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    background: #121212;
+    color: #fff;
+    width: 393px;
+    min-height: 852px;
+    margin: 0 auto;
+    overflow-y: auto;
+  }
+
+  .status-bar {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 8px 24px;
+    font-size: 14px;
+    font-weight: 600;
+  }
+  .top-bar {
+    padding: 4px 16px 6px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+  .top-bar h1 { font-size: 28px; font-weight: 800; }
+  .top-actions { display: flex; gap: 8px; }
+  .icon-btn {
+    width: 40px; height: 40px;
+    border-radius: 50%;
+    background: rgba(255,255,255,0.08);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 18px;
+  }
+
+  .mode-toggle {
+    display: flex;
+    margin: 12px 16px 16px;
+    background: rgba(255,255,255,0.06);
+    border-radius: 14px;
+    padding: 4px;
+  }
+  .mode-btn {
+    flex: 1;
+    text-align: center;
+    padding: 10px 0;
+    font-size: 14px;
+    font-weight: 700;
+    border-radius: 11px;
+    color: rgba(255,255,255,0.5);
+  }
+  .mode-btn.active {
+    background: #2196F3;
+    color: #fff;
+    box-shadow: 0 2px 8px rgba(33,150,243,0.3);
+  }
+
+  .section-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0 16px;
+    margin-bottom: 12px;
+  }
+  .section-header h3 { font-size: 18px; font-weight: 700; }
+  .see-all { font-size: 13px; color: #2196F3; font-weight: 600; }
+
+  /* Date picker strip */
+  .date-strip {
+    display: flex;
+    gap: 6px;
+    padding: 0 16px;
+    margin-bottom: 16px;
+    overflow-x: auto;
+  }
+  .date-item {
+    min-width: 52px;
+    padding: 10px 6px;
+    border-radius: 14px;
+    text-align: center;
+    background: rgba(255,255,255,0.05);
+    border: 1px solid rgba(255,255,255,0.05);
+    flex-shrink: 0;
+  }
+  .date-item.active {
+    background: rgba(33,150,243,0.15);
+    border-color: rgba(33,150,243,0.3);
+  }
+  .date-item .day-name {
+    font-size: 10px;
+    font-weight: 600;
+    color: rgba(255,255,255,0.4);
+    margin-bottom: 4px;
+  }
+  .date-item.active .day-name { color: #64B5F6; }
+  .date-item .day-num {
+    font-size: 18px;
+    font-weight: 800;
+    color: rgba(255,255,255,0.7);
+  }
+  .date-item.active .day-num { color: #2196F3; }
+  .date-item .slots {
+    font-size: 9px;
+    color: rgba(255,255,255,0.3);
+    margin-top: 4px;
+  }
+  .date-item.active .slots { color: #64B5F6; }
+
+  /* Sport filter */
+  .sport-scroll {
+    display: flex;
+    gap: 8px;
+    padding: 0 16px;
+    margin-bottom: 14px;
+    overflow-x: auto;
+  }
+  .sport-pill {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    padding: 7px 14px;
+    border-radius: 20px;
+    font-size: 13px;
+    font-weight: 600;
+    white-space: nowrap;
+    background: rgba(255,255,255,0.06);
+    color: rgba(255,255,255,0.5);
+    border: 1px solid transparent;
+  }
+  .sport-pill.active {
+    background: rgba(33,150,243,0.12);
+    color: #2196F3;
+    border-color: rgba(33,150,243,0.25);
+  }
+
+  /* Time slot selector */
+  .time-header {
+    padding: 0 16px;
+    margin-bottom: 10px;
+  }
+  .time-header h4 {
+    font-size: 15px;
+    font-weight: 700;
+    color: rgba(255,255,255,0.7);
+  }
+  .time-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 6px;
+    padding: 0 16px;
+    margin-bottom: 18px;
+  }
+  .time-slot {
+    padding: 10px 4px;
+    border-radius: 10px;
+    text-align: center;
+    background: rgba(255,255,255,0.04);
+    border: 1px solid rgba(255,255,255,0.05);
+    cursor: pointer;
+  }
+  .time-slot .time {
+    font-size: 13px;
+    font-weight: 700;
+    color: rgba(255,255,255,0.7);
+  }
+  .time-slot .avail {
+    font-size: 9px;
+    color: rgba(255,255,255,0.3);
+    margin-top: 2px;
+  }
+  .time-slot.selected {
+    background: rgba(33,150,243,0.15);
+    border-color: #2196F3;
+  }
+  .time-slot.selected .time { color: #2196F3; }
+  .time-slot.selected .avail { color: #64B5F6; }
+  .time-slot.booked {
+    background: rgba(255,255,255,0.02);
+    opacity: 0.35;
+  }
+  .time-slot.booked .time { text-decoration: line-through; }
+
+  /* Venue Cards for booking */
+  .venue-list {
+    padding: 0 16px;
+    margin-bottom: 20px;
+  }
+  .venue-book-card {
+    background: rgba(255,255,255,0.05);
+    border: 1px solid rgba(255,255,255,0.06);
+    border-radius: 16px;
+    padding: 14px;
+    margin-bottom: 10px;
+    display: flex;
+    gap: 12px;
+  }
+  .venue-thumb {
+    width: 80px; height: 80px;
+    border-radius: 12px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 36px;
+    flex-shrink: 0;
+  }
+  .venue-thumb.v1 { background: rgba(76,175,80,0.1); }
+  .venue-thumb.v2 { background: rgba(33,150,243,0.1); }
+  .venue-thumb.v3 { background: rgba(255,152,0,0.1); }
+  .venue-thumb.v4 { background: rgba(156,39,176,0.1); }
+  .venue-details { flex: 1; }
+  .venue-name {
+    font-size: 15px;
+    font-weight: 700;
+    margin-bottom: 2px;
+  }
+  .venue-meta {
+    font-size: 12px;
+    color: rgba(255,255,255,0.4);
+    margin-bottom: 6px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .venue-rating {
+    color: #FFD700;
+    font-weight: 600;
+  }
+  .venue-tags {
+    display: flex;
+    gap: 4px;
+    margin-bottom: 8px;
+    flex-wrap: wrap;
+  }
+  .vtag {
+    font-size: 10px;
+    padding: 3px 8px;
+    border-radius: 6px;
+    font-weight: 600;
+  }
+  .vtag.sport { background: rgba(76,175,80,0.12); color: #4CAF50; }
+  .vtag.equip { background: rgba(33,150,243,0.12); color: #64B5F6; }
+  .vtag.indoor { background: rgba(156,39,176,0.12); color: #CE93D8; }
+  .vtag.deal { background: rgba(233,30,99,0.12); color: #E91E63; }
+  .venue-bottom {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+  .venue-price {
+    font-size: 16px;
+    font-weight: 800;
+    color: #4CAF50;
+  }
+  .venue-price span {
+    font-size: 11px;
+    font-weight: 400;
+    color: rgba(255,255,255,0.3);
+  }
+  .venue-book-btn {
+    background: #2196F3;
+    color: #fff;
+    border: none;
+    border-radius: 10px;
+    padding: 8px 18px;
+    font-size: 13px;
+    font-weight: 700;
+  }
+
+  /* Also available for coaches */
+  .coach-book-section {
+    margin: 0 16px 16px;
+    background: rgba(255,152,0,0.06);
+    border: 1px solid rgba(255,152,0,0.1);
+    border-radius: 14px;
+    padding: 14px;
+  }
+  .coach-book-header {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 12px;
+  }
+  .coach-book-icon {
+    width: 40px; height: 40px;
+    border-radius: 12px;
+    background: rgba(255,152,0,0.15);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 20px;
+  }
+  .coach-book-text h4 {
+    font-size: 14px;
+    font-weight: 700;
+    color: #FFB74D;
+  }
+  .coach-book-text p {
+    font-size: 12px;
+    color: rgba(255,255,255,0.4);
+  }
+  .coach-mini-scroll {
+    display: flex;
+    gap: 10px;
+    overflow-x: auto;
+  }
+  .coach-mini {
+    min-width: 110px;
+    text-align: center;
+    flex-shrink: 0;
+  }
+  .coach-mini-av {
+    width: 48px; height: 48px;
+    border-radius: 50%;
+    margin: 0 auto 6px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 18px;
+    font-weight: 700;
+    color: #fff;
+  }
+  .coach-mini-name {
+    font-size: 12px;
+    font-weight: 600;
+    margin-bottom: 2px;
+  }
+  .coach-mini-sport {
+    font-size: 10px;
+    color: rgba(255,255,255,0.4);
+  }
+  .coach-mini-price {
+    font-size: 11px;
+    color: #FFB74D;
+    font-weight: 600;
+    margin-top: 2px;
+  }
+
+  .bottom-nav {
+    position: fixed;
+    bottom: 0;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 393px;
+    background: #1a1a1a;
+    border-top: 1px solid rgba(255,255,255,0.08);
+    display: flex;
+    padding: 8px 0 28px;
+  }
+  .nav-item {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 4px;
+    font-size: 10px;
+    color: rgba(255,255,255,0.4);
+  }
+  .nav-item.active { color: #4CAF50; }
+  .nav-icon { font-size: 22px; }
+
+  .spacer { height: 100px; }
+  .mockup-label {
+    text-align: center;
+    padding: 12px;
+    font-size: 11px;
+    color: rgba(255,255,255,0.3);
+    letter-spacing: 2px;
+    text-transform: uppercase;
+  }
+</style>
+</head>
+<body>
+
+<div class="mockup-label">PLAY — BOOK VENUE TAB</div>
+
+<div class="status-bar">
+  <span>10:38</span>
+  <span>📶 🔋 100%</span>
+</div>
+
+<div class="top-bar">
+  <h1>Play</h1>
+  <div class="top-actions">
+    <div class="icon-btn">🔍</div>
+    <div class="icon-btn">📍</div>
+  </div>
+</div>
+
+<!-- Mode Toggle -->
+<div class="mode-toggle">
+  <div class="mode-btn">🎯 Find Matches</div>
+  <div class="mode-btn active">📅 Book Venue</div>
+</div>
+
+<!-- Date Strip -->
+<div class="section-header">
+  <h3>📅 Select Date</h3>
+</div>
+<div class="date-strip">
+  <div class="date-item">
+    <div class="day-name">SAT</div>
+    <div class="day-num">24</div>
+    <div class="slots">12 slots</div>
+  </div>
+  <div class="date-item active">
+    <div class="day-name">SUN</div>
+    <div class="day-num">25</div>
+    <div class="slots">8 slots</div>
+  </div>
+  <div class="date-item">
+    <div class="day-name">MON</div>
+    <div class="day-num">26</div>
+    <div class="slots">15 slots</div>
+  </div>
+  <div class="date-item">
+    <div class="day-name">TUE</div>
+    <div class="day-num">27</div>
+    <div class="slots">14 slots</div>
+  </div>
+  <div class="date-item">
+    <div class="day-name">WED</div>
+    <div class="day-num">28</div>
+    <div class="slots">16 slots</div>
+  </div>
+  <div class="date-item">
+    <div class="day-name">THU</div>
+    <div class="day-num">29</div>
+    <div class="slots">13 slots</div>
+  </div>
+  <div class="date-item">
+    <div class="day-name">FRI</div>
+    <div class="day-num">30</div>
+    <div class="slots">10 slots</div>
+  </div>
+</div>
+
+<!-- Sport filter -->
+<div class="sport-scroll">
+  <div class="sport-pill active">All Sports</div>
+  <div class="sport-pill">🏀 Basketball</div>
+  <div class="sport-pill">⚽ Football</div>
+  <div class="sport-pill">🎾 Tennis</div>
+  <div class="sport-pill">🏸 Paddle</div>
+</div>
+
+<!-- Time slots -->
+<div class="time-header">
+  <h4>🕐 Available Times — Sun, May 25</h4>
+</div>
+<div class="time-grid">
+  <div class="time-slot booked"><div class="time">09:00</div><div class="avail">Booked</div></div>
+  <div class="time-slot booked"><div class="time">10:00</div><div class="avail">Booked</div></div>
+  <div class="time-slot"><div class="time">11:00</div><div class="avail">3 venues</div></div>
+  <div class="time-slot"><div class="time">12:00</div><div class="avail">5 venues</div></div>
+  <div class="time-slot"><div class="time">13:00</div><div class="avail">4 venues</div></div>
+  <div class="time-slot"><div class="time">14:00</div><div class="avail">6 venues</div></div>
+  <div class="time-slot"><div class="time">15:00</div><div class="avail">5 venues</div></div>
+  <div class="time-slot"><div class="time">16:00</div><div class="avail">4 venues</div></div>
+  <div class="time-slot"><div class="time">17:00</div><div class="avail">3 venues</div></div>
+  <div class="time-slot selected"><div class="time">18:00</div><div class="avail">4 venues</div></div>
+  <div class="time-slot"><div class="time">19:00</div><div class="avail">2 venues</div></div>
+  <div class="time-slot"><div class="time">20:00</div><div class="avail">3 venues</div></div>
+</div>
+
+<!-- Available Venues -->
+<div class="section-header">
+  <h3>🏟️ Available at 18:00</h3>
+  <span class="see-all">Map View</span>
+</div>
+
+<div class="venue-list">
+  <div class="venue-book-card">
+    <div class="venue-thumb v1">🏟️</div>
+    <div class="venue-details">
+      <div class="venue-name">Arena Sport Center</div>
+      <div class="venue-meta">
+        <span>📍 1.2 km</span>
+        <span class="venue-rating">⭐ 4.8</span>
+      </div>
+      <div class="venue-tags">
+        <span class="vtag sport">🏀 Basketball</span>
+        <span class="vtag equip">Equipment</span>
+        <span class="vtag deal">-25%</span>
+      </div>
+      <div class="venue-bottom">
+        <div class="venue-price">750 MKD <span>/hour</span></div>
+        <button class="venue-book-btn">Book</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="venue-book-card">
+    <div class="venue-thumb v2">🎾</div>
+    <div class="venue-details">
+      <div class="venue-name">Tennis Club Skopje</div>
+      <div class="venue-meta">
+        <span>📍 3.4 km</span>
+        <span class="venue-rating">⭐ 4.6</span>
+      </div>
+      <div class="venue-tags">
+        <span class="vtag sport">🎾 Tennis</span>
+        <span class="vtag indoor">Indoor</span>
+      </div>
+      <div class="venue-bottom">
+        <div class="venue-price">1,200 MKD <span>/hour</span></div>
+        <button class="venue-book-btn">Book</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="venue-book-card">
+    <div class="venue-thumb v3">⚽</div>
+    <div class="venue-details">
+      <div class="venue-name">Goal Sports Arena</div>
+      <div class="venue-meta">
+        <span>📍 5.1 km</span>
+        <span class="venue-rating">⭐ 4.5</span>
+      </div>
+      <div class="venue-tags">
+        <span class="vtag sport">⚽ Football</span>
+        <span class="vtag equip">Equipment</span>
+      </div>
+      <div class="venue-bottom">
+        <div class="venue-price">600 MKD <span>/hour</span></div>
+        <button class="venue-book-btn">Book</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Book a Coach -->
+<div class="coach-book-section">
+  <div class="coach-book-header">
+    <div class="coach-book-icon">🏋️</div>
+    <div class="coach-book-text">
+      <h4>Book a Coach Instead?</h4>
+      <p>Private sessions available Sun, May 25</p>
+    </div>
+  </div>
+  <div class="coach-mini-scroll">
+    <div class="coach-mini">
+      <div class="coach-mini-av" style="background:#E91E63">M</div>
+      <div class="coach-mini-name">Marko P.</div>
+      <div class="coach-mini-sport">🏀 Basketball</div>
+      <div class="coach-mini-price">600 MKD/h</div>
+    </div>
+    <div class="coach-mini">
+      <div class="coach-mini-av" style="background:#2196F3">E</div>
+      <div class="coach-mini-name">Elena K.</div>
+      <div class="coach-mini-sport">🎾 Tennis</div>
+      <div class="coach-mini-price">800 MKD/h</div>
+    </div>
+    <div class="coach-mini">
+      <div class="coach-mini-av" style="background:#FF9800">S</div>
+      <div class="coach-mini-name">Stefan D.</div>
+      <div class="coach-mini-sport">🏸 Paddle</div>
+      <div class="coach-mini-price">700 MKD/h</div>
+    </div>
+  </div>
+</div>
+
+<div class="spacer"></div>
+
+<div class="bottom-nav">
+  <div class="nav-item">
+    <span class="nav-icon">🏠</span>
+    <span>Home</span>
+  </div>
+  <div class="nav-item">
+    <span class="nav-icon">🔍</span>
+    <span>Explore</span>
+  </div>
+  <div class="nav-item active">
+    <span class="nav-icon">🎯</span>
+    <span>Play</span>
+  </div>
+  <div class="nav-item">
+    <span class="nav-icon">👥</span>
+    <span>Social</span>
+  </div>
+  <div class="nav-item">
+    <span class="nav-icon">☰</span>
+    <span>More</span>
+  </div>
+</div>
+
+</body>
+</html>

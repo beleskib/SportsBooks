@@ -1,0 +1,205 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Partner Analytics</title>
+<style>
+  * { margin:0; padding:0; box-sizing:border-box; }
+  body { width:393px; min-height:852px; background:#121212; font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif; color:#fff; overflow-x:hidden; padding-bottom:100px; }
+
+  .status-bar { height:44px; }
+  .header { padding:8px 16px 16px; display:flex; align-items:center; justify-content:space-between; }
+  .back-btn { width:40px; height:40px; border-radius:50%; background:#1E1E1E; border:none; color:#fff; font-size:20px; display:flex; align-items:center; justify-content:center; }
+  .header-title { font-size:18px; font-weight:700; }
+  .period-btn { padding:8px 14px; border-radius:10px; background:#1E1E1E; border:1px solid #333; color:#888; font-size:13px; font-weight:600; }
+
+  .kpi-grid { display:grid; grid-template-columns:1fr 1fr; gap:12px; padding:0 16px; margin-bottom:20px; }
+  .kpi-card { background:#1E1E1E; border-radius:16px; padding:18px; }
+  .kpi-label { font-size:11px; color:#888; text-transform:uppercase; letter-spacing:0.5px; }
+  .kpi-value { font-size:26px; font-weight:800; margin-top:6px; }
+  .kpi-change { font-size:12px; margin-top:6px; display:flex; align-items:center; gap:4px; }
+  .kpi-change.up { color:#4CAF50; }
+  .kpi-change.down { color:#ef5350; }
+
+  .chart-card { background:#1E1E1E; border-radius:16px; padding:20px; margin:0 16px 20px; }
+  .chart-header { display:flex; justify-content:space-between; align-items:center; margin-bottom:16px; }
+  .chart-title { font-size:15px; font-weight:700; }
+  .chart-tabs { display:flex; gap:4px; }
+  .chart-tab { padding:6px 12px; border-radius:8px; background:none; border:none; color:#555; font-size:12px; font-weight:600; cursor:pointer; }
+  .chart-tab.active { background:#252525; color:#fff; }
+
+  .line-chart { height:140px; position:relative; display:flex; align-items:flex-end; }
+  .chart-bars { display:flex; align-items:flex-end; gap:4px; flex:1; height:100%; }
+  .chart-bar { flex:1; border-radius:3px 3px 0 0; min-height:4px; transition:height 0.3s; }
+  .chart-bar.revenue { background:linear-gradient(#4CAF50, #2E7D32); }
+  .chart-bar.bookings { background:linear-gradient(#2196F3, #1565C0); }
+  .chart-y { position:absolute; left:-4px; top:0; bottom:0; display:flex; flex-direction:column; justify-content:space-between; }
+  .chart-y span { font-size:10px; color:#555; }
+  .chart-x { display:flex; justify-content:space-between; margin-top:8px; }
+  .chart-x span { font-size:10px; color:#555; }
+
+  .section { margin:0 16px 20px; }
+  .section-title { font-size:16px; font-weight:700; margin-bottom:12px; }
+
+  .occ-card { background:#1E1E1E; border-radius:16px; padding:20px; margin:0 16px 20px; }
+  .occ-row { display:flex; align-items:center; gap:12px; margin-bottom:12px; }
+  .occ-row:last-child { margin-bottom:0; }
+  .occ-label { width:70px; font-size:13px; color:#888; }
+  .occ-bar-wrap { flex:1; height:12px; background:#252525; border-radius:6px; overflow:hidden; }
+  .occ-bar { height:100%; border-radius:6px; }
+  .occ-pct { width:40px; text-align:right; font-size:13px; font-weight:700; }
+
+  .top-list { }
+  .top-item {
+    display:flex; align-items:center; gap:12px; padding:12px 0;
+    border-bottom:1px solid #1A1A1A;
+  }
+  .top-rank { width:28px; height:28px; border-radius:50%; background:#252525; display:flex; align-items:center; justify-content:center; font-size:13px; font-weight:800; flex-shrink:0; }
+  .top-rank.gold { background:rgba(255,215,0,0.15); color:#FFD700; }
+  .top-rank.silver { background:rgba(192,192,192,0.15); color:#C0C0C0; }
+  .top-rank.bronze { background:rgba(205,127,50,0.15); color:#CD7F32; }
+  .top-info { flex:1; }
+  .top-name { font-size:14px; font-weight:600; }
+  .top-meta { font-size:12px; color:#888; }
+  .top-value { font-size:14px; font-weight:700; color:#4CAF50; }
+
+  .rating-summary { background:#1E1E1E; border-radius:16px; padding:20px; margin:0 16px 20px; }
+  .rating-big { display:flex; align-items:center; gap:16px; margin-bottom:16px; }
+  .rating-number { font-size:48px; font-weight:800; }
+  .rating-detail { flex:1; }
+  .rating-stars { font-size:18px; color:#FFD700; }
+  .rating-count { font-size:13px; color:#888; margin-top:2px; }
+  .rating-bar-row { display:flex; align-items:center; gap:8px; margin-bottom:6px; }
+  .rating-bar-label { font-size:12px; color:#888; width:16px; }
+  .rating-bar-wrap { flex:1; height:6px; background:#252525; border-radius:3px; }
+  .rating-bar-fill { height:100%; border-radius:3px; background:#FFD700; }
+  .rating-bar-count { font-size:11px; color:#555; width:28px; text-align:right; }
+
+  .bottom-nav { position:fixed; bottom:0; left:0; width:393px; height:80px; background:#1A1A1A; border-top:1px solid #2A2A2A; display:flex; }
+  .nav-item { flex:1; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:4px; color:#666; font-size:10px; }
+  .nav-item.active { color:#4CAF50; }
+  .nav-icon { font-size:22px; }
+</style>
+</head>
+<body>
+  <div class="status-bar"></div>
+  <div class="header">
+    <button class="back-btn">&#8249;</button>
+    <span class="header-title">Analytics</span>
+    <button class="period-btn">This Month ▾</button>
+  </div>
+
+  <div class="kpi-grid">
+    <div class="kpi-card">
+      <div class="kpi-label">Revenue</div>
+      <div class="kpi-value" style="color:#4CAF50">$12,840</div>
+      <div class="kpi-change up">↑ 18% vs last month</div>
+    </div>
+    <div class="kpi-card">
+      <div class="kpi-label">Bookings</div>
+      <div class="kpi-value" style="color:#2196F3">248</div>
+      <div class="kpi-change up">↑ 12% vs last month</div>
+    </div>
+    <div class="kpi-card">
+      <div class="kpi-label">Avg Occupancy</div>
+      <div class="kpi-value" style="color:#FF9800">73%</div>
+      <div class="kpi-change up">↑ 5% vs last month</div>
+    </div>
+    <div class="kpi-card">
+      <div class="kpi-label">New Customers</div>
+      <div class="kpi-value" style="color:#AB47BC">34</div>
+      <div class="kpi-change down">↓ 3% vs last month</div>
+    </div>
+  </div>
+
+  <div class="chart-card">
+    <div class="chart-header">
+      <span class="chart-title">Revenue Trend</span>
+      <div class="chart-tabs">
+        <button class="chart-tab">1W</button>
+        <button class="chart-tab active">1M</button>
+        <button class="chart-tab">3M</button>
+        <button class="chart-tab">1Y</button>
+      </div>
+    </div>
+    <div class="chart-bars">
+      <div class="chart-bar revenue" style="height:45%"></div>
+      <div class="chart-bar revenue" style="height:55%"></div>
+      <div class="chart-bar revenue" style="height:40%"></div>
+      <div class="chart-bar revenue" style="height:65%"></div>
+      <div class="chart-bar revenue" style="height:58%"></div>
+      <div class="chart-bar revenue" style="height:72%"></div>
+      <div class="chart-bar revenue" style="height:68%"></div>
+      <div class="chart-bar revenue" style="height:80%"></div>
+      <div class="chart-bar revenue" style="height:75%"></div>
+      <div class="chart-bar revenue" style="height:85%"></div>
+      <div class="chart-bar revenue" style="height:78%"></div>
+      <div class="chart-bar revenue" style="height:92%"></div>
+      <div class="chart-bar revenue" style="height:88%"></div>
+      <div class="chart-bar revenue" style="height:95%"></div>
+    </div>
+    <div class="chart-x">
+      <span>Week 1</span><span>Week 2</span><span>Week 3</span><span>Week 4</span>
+    </div>
+  </div>
+
+  <div class="occ-card">
+    <div class="chart-header">
+      <span class="chart-title">Occupancy by Day</span>
+    </div>
+    <div class="occ-row"><span class="occ-label">Monday</span><div class="occ-bar-wrap"><div class="occ-bar" style="width:65%;background:#4CAF50"></div></div><span class="occ-pct" style="color:#4CAF50">65%</span></div>
+    <div class="occ-row"><span class="occ-label">Tuesday</span><div class="occ-bar-wrap"><div class="occ-bar" style="width:58%;background:#4CAF50"></div></div><span class="occ-pct" style="color:#4CAF50">58%</span></div>
+    <div class="occ-row"><span class="occ-label">Wednesday</span><div class="occ-bar-wrap"><div class="occ-bar" style="width:72%;background:#FF9800"></div></div><span class="occ-pct" style="color:#FF9800">72%</span></div>
+    <div class="occ-row"><span class="occ-label">Thursday</span><div class="occ-bar-wrap"><div class="occ-bar" style="width:68%;background:#FF9800"></div></div><span class="occ-pct" style="color:#FF9800">68%</span></div>
+    <div class="occ-row"><span class="occ-label">Friday</span><div class="occ-bar-wrap"><div class="occ-bar" style="width:88%;background:#ef5350"></div></div><span class="occ-pct" style="color:#ef5350">88%</span></div>
+    <div class="occ-row"><span class="occ-label">Saturday</span><div class="occ-bar-wrap"><div class="occ-bar" style="width:95%;background:#ef5350"></div></div><span class="occ-pct" style="color:#ef5350">95%</span></div>
+    <div class="occ-row"><span class="occ-label">Sunday</span><div class="occ-bar-wrap"><div class="occ-bar" style="width:0%;background:#555"></div></div><span class="occ-pct" style="color:#555">—</span></div>
+  </div>
+
+  <div class="section">
+    <div class="section-title">Top Customers</div>
+    <div class="top-list">
+      <div class="top-item">
+        <div class="top-rank gold">1</div>
+        <div class="top-info"><div class="top-name">Marco Silva</div><div class="top-meta">28 bookings</div></div>
+        <div class="top-value">$1,400</div>
+      </div>
+      <div class="top-item">
+        <div class="top-rank silver">2</div>
+        <div class="top-info"><div class="top-name">Elena Rossi</div><div class="top-meta">22 bookings</div></div>
+        <div class="top-value">$1,100</div>
+      </div>
+      <div class="top-item">
+        <div class="top-rank bronze">3</div>
+        <div class="top-info"><div class="top-name">Alex Kramer</div><div class="top-meta">18 bookings</div></div>
+        <div class="top-value">$900</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="rating-summary">
+    <div class="chart-title" style="margin-bottom:16px">Reviews</div>
+    <div class="rating-big">
+      <div class="rating-number">4.8</div>
+      <div class="rating-detail">
+        <div class="rating-stars">★★★★★</div>
+        <div class="rating-count">127 reviews</div>
+      </div>
+    </div>
+    <div class="rating-bar-row"><span class="rating-bar-label">5</span><div class="rating-bar-wrap"><div class="rating-bar-fill" style="width:78%"></div></div><span class="rating-bar-count">99</span></div>
+    <div class="rating-bar-row"><span class="rating-bar-label">4</span><div class="rating-bar-wrap"><div class="rating-bar-fill" style="width:15%"></div></div><span class="rating-bar-count">19</span></div>
+    <div class="rating-bar-row"><span class="rating-bar-label">3</span><div class="rating-bar-wrap"><div class="rating-bar-fill" style="width:5%"></div></div><span class="rating-bar-count">6</span></div>
+    <div class="rating-bar-row"><span class="rating-bar-label">2</span><div class="rating-bar-wrap"><div class="rating-bar-fill" style="width:2%"></div></div><span class="rating-bar-count">2</span></div>
+    <div class="rating-bar-row"><span class="rating-bar-label">1</span><div class="rating-bar-wrap"><div class="rating-bar-fill" style="width:1%"></div></div><span class="rating-bar-count">1</span></div>
+  </div>
+
+  <div class="bottom-nav">
+    <div class="nav-item"><span class="nav-icon">📊</span>Dashboard</div>
+    <div class="nav-item"><span class="nav-icon">📅</span>Bookings</div>
+    <div class="nav-item"><span class="nav-icon">⏰</span>Slots</div>
+    <div class="nav-item active"><span class="nav-icon">💰</span>Revenue</div>
+    <div class="nav-item"><span class="nav-icon">⚙</span>Settings</div>
+  </div>
+</body>
+</html>

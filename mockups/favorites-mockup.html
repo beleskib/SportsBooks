@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Favorites</title>
+<style>
+  * { margin:0; padding:0; box-sizing:border-box; }
+  body { width:393px; min-height:852px; background:#121212; font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif; color:#fff; overflow-x:hidden; padding-bottom:100px; }
+
+  .status-bar { height:44px; }
+  .header { padding:8px 16px 16px; display:flex; align-items:center; gap:16px; }
+  .back-btn { width:40px; height:40px; border-radius:50%; background:#1E1E1E; border:none; color:#fff; font-size:20px; display:flex; align-items:center; justify-content:center; }
+  .header-title { font-size:20px; font-weight:800; }
+
+  .tabs { display:flex; gap:0; margin:0 16px 16px; background:#1E1E1E; border-radius:12px; padding:4px; }
+  .tab {
+    flex:1; padding:10px; text-align:center; border-radius:10px; font-size:13px;
+    font-weight:600; color:#888; cursor:pointer; border:none; background:none;
+  }
+  .tab.active { background:#4CAF50; color:#fff; }
+
+  .fav-card {
+    margin:0 16px 12px; background:#1E1E1E; border-radius:16px; overflow:hidden;
+  }
+  .fav-img { height:140px; background:#252525; display:flex; align-items:center; justify-content:center; font-size:44px; position:relative; }
+  .fav-heart { position:absolute; top:12px; right:12px; width:36px; height:36px; border-radius:50%; background:rgba(0,0,0,0.5); border:none; font-size:18px; display:flex; align-items:center; justify-content:center; }
+  .fav-info { padding:14px 16px; }
+  .fav-top { display:flex; justify-content:space-between; align-items:center; }
+  .fav-name { font-size:16px; font-weight:700; }
+  .fav-rating { font-size:13px; color:#FFD700; }
+  .fav-meta { font-size:13px; color:#888; margin-top:4px; }
+  .fav-bottom { display:flex; justify-content:space-between; align-items:center; margin-top:10px; }
+  .fav-price { font-size:14px; color:#4CAF50; font-weight:700; }
+  .fav-book { padding:8px 20px; background:#4CAF50; border:none; border-radius:10px; color:#fff; font-size:13px; font-weight:700; cursor:pointer; }
+  .fav-tag { display:inline-block; padding:4px 8px; border-radius:6px; font-size:11px; font-weight:600; margin-top:8px; }
+  .tag-open { background:rgba(76,175,80,0.15); color:#4CAF50; }
+  .tag-busy { background:rgba(255,152,0,0.15); color:#FF9800; }
+
+  .coach-fav {
+    display:flex; gap:14px; margin:0 16px 12px; background:#1E1E1E;
+    border-radius:16px; padding:16px; align-items:center;
+  }
+  .coach-avatar { width:60px; height:60px; border-radius:50%; background:#252525; display:flex; align-items:center; justify-content:center; font-size:28px; flex-shrink:0; }
+  .coach-info { flex:1; }
+  .coach-name { font-size:15px; font-weight:700; }
+  .coach-spec { font-size:12px; color:#888; margin-top:2px; }
+  .coach-stats { font-size:12px; color:#FFD700; margin-top:4px; }
+  .coach-price { font-size:14px; color:#2196F3; font-weight:700; }
+  .coach-heart { font-size:18px; color:#ef5350; }
+
+  .bottom-nav { position:fixed; bottom:0; left:0; width:393px; height:80px; background:#1A1A1A; border-top:1px solid #2A2A2A; display:flex; }
+  .nav-item { flex:1; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:4px; color:#666; font-size:10px; }
+  .nav-item.active { color:#4CAF50; }
+  .nav-icon { font-size:22px; }
+</style>
+</head>
+<body>
+  <div class="status-bar"></div>
+  <div class="header">
+    <button class="back-btn">&#8249;</button>
+    <span class="header-title">Favorites</span>
+  </div>
+
+  <div class="tabs">
+    <button class="tab active">Venues</button>
+    <button class="tab">Coaches</button>
+  </div>
+
+  <div class="fav-card">
+    <div class="fav-img">🎾 <button class="fav-heart">❤️</button></div>
+    <div class="fav-info">
+      <div class="fav-top">
+        <span class="fav-name">Champions Tennis Club</span>
+        <span class="fav-rating">★ 4.8</span>
+      </div>
+      <div class="fav-meta">📍 1.2 km • 6 courts • Indoor/Outdoor</div>
+      <span class="fav-tag tag-open">Open Now</span>
+      <div class="fav-bottom">
+        <span class="fav-price">From $50/h</span>
+        <button class="fav-book">Book</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="fav-card">
+    <div class="fav-img">⚽ <button class="fav-heart">❤️</button></div>
+    <div class="fav-info">
+      <div class="fav-top">
+        <span class="fav-name">City Football Arena</span>
+        <span class="fav-rating">★ 4.6</span>
+      </div>
+      <div class="fav-meta">📍 2.8 km • 3 fields • Outdoor</div>
+      <span class="fav-tag tag-busy">Busy Today</span>
+      <div class="fav-bottom">
+        <span class="fav-price">From $75/h</span>
+        <button class="fav-book">Book</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="fav-card">
+    <div class="fav-img">🏀 <button class="fav-heart">❤️</button></div>
+    <div class="fav-info">
+      <div class="fav-top">
+        <span class="fav-name">Downtown Basketball</span>
+        <span class="fav-rating">★ 4.3</span>
+      </div>
+      <div class="fav-meta">📍 0.8 km • 2 courts • Indoor</div>
+      <span class="fav-tag tag-open">Open Now</span>
+      <div class="fav-bottom">
+        <span class="fav-price">From $35/h</span>
+        <button class="fav-book">Book</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="bottom-nav">
+    <div class="nav-item"><span class="nav-icon">🏠</span>Home</div>
+    <div class="nav-item"><span class="nav-icon">🔍</span>Explore</div>
+    <div class="nav-item"><span class="nav-icon">⚡</span>Play</div>
+    <div class="nav-item"><span class="nav-icon">👥</span>Social</div>
+    <div class="nav-item active"><span class="nav-icon">☰</span>More</div>
+  </div>
+</body>
+</html>

@@ -1,0 +1,137 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=393, initial-scale=1.0">
+<title>My Bookings</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background: #121212; color: #fff; width: 393px; min-height: 852px; }
+  .status-bar { height: 44px; display: flex; align-items: center; justify-content: space-between; padding: 0 20px; font-size: 12px; font-weight: 600; }
+  .header { display: flex; align-items: center; padding: 8px 16px 16px; gap: 12px; }
+  .back-btn { width: 36px; height: 36px; background: #1E1E1E; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 18px; }
+  .header h1 { font-size: 20px; font-weight: 700; flex: 1; }
+  .filter-btn { padding: 8px 14px; background: #1E1E1E; border-radius: 10px; font-size: 13px; }
+  .tabs { display: flex; gap: 0; padding: 0 16px; margin-bottom: 16px; background: #1E1E1E; border-radius: 12px; overflow: hidden; }
+  .tab { flex: 1; padding: 12px; text-align: center; font-size: 13px; font-weight: 600; color: #888; }
+  .tab.active { background: #4CAF50; color: #fff; border-radius: 10px; }
+  .section-date { font-size: 13px; color: #888; font-weight: 600; padding: 0 16px; margin-bottom: 8px; }
+  .booking-card { margin: 0 16px 10px; padding: 14px; background: #1E1E1E; border-radius: 14px; }
+  .booking-top { display: flex; gap: 12px; margin-bottom: 10px; }
+  .booking-img { width: 56px; height: 56px; border-radius: 10px; display: flex; align-items: center; justify-content: center; font-size: 24px; }
+  .booking-info { flex: 1; }
+  .booking-info h4 { font-size: 15px; font-weight: 600; }
+  .booking-info .type { font-size: 12px; color: #888; margin-top: 1px; }
+  .status-pill { padding: 4px 10px; border-radius: 6px; font-size: 11px; font-weight: 600; align-self: flex-start; }
+  .status-confirmed { background: #1B3A1E; color: #4CAF50; }
+  .status-pending { background: #3A2E1B; color: #FFA726; }
+  .status-completed { background: #1E1E1E; color: #888; border: 1px solid #333; }
+  .status-cancelled { background: #3A1B1B; color: #F44336; }
+  .booking-meta { display: flex; gap: 16px; margin-bottom: 10px; }
+  .booking-meta-item { font-size: 12px; color: #aaa; }
+  .booking-meta-item span { margin-right: 4px; }
+  .booking-actions { display: flex; gap: 8px; border-top: 1px solid #2A2A2A; padding-top: 10px; }
+  .b-action { flex: 1; padding: 8px; text-align: center; border-radius: 8px; font-size: 12px; font-weight: 600; }
+  .b-action.primary { background: #4CAF50; }
+  .b-action.secondary { background: #2A2A2A; color: #aaa; }
+  .b-action.danger { background: transparent; border: 1px solid #F44336; color: #F44336; }
+  .nav-bar { position: fixed; bottom: 0; left: 0; width: 393px; height: 64px; background: #1A1A1A; border-top: 1px solid #2A2A2A; display: flex; align-items: center; justify-content: space-around; }
+  .nav-item { display: flex; flex-direction: column; align-items: center; gap: 2px; font-size: 10px; color: #555; }
+  .nav-item .icon { font-size: 20px; }
+  .spacer { height: 80px; }
+</style>
+</head>
+<body>
+  <div class="status-bar"><span>9:41</span><span>...</span></div>
+  <div class="header"><div class="back-btn">&#8592;</div><h1>My Bookings</h1><div class="filter-btn">&#9776; Filter</div></div>
+
+  <div class="tabs">
+    <div class="tab active">Upcoming</div>
+    <div class="tab">Past</div>
+    <div class="tab">Cancelled</div>
+  </div>
+
+  <div class="section-date">Today - May 24</div>
+  <div class="booking-card">
+    <div class="booking-top">
+      <div class="booking-img" style="background: linear-gradient(135deg, #1B5E20, #4CAF50);">&#127936;</div>
+      <div class="booking-info">
+        <h4>Arena Sport Center</h4>
+        <div class="type">Court A - Basketball</div>
+      </div>
+      <div class="status-pill status-confirmed">Confirmed</div>
+    </div>
+    <div class="booking-meta">
+      <div class="booking-meta-item"><span>&#128197;</span>Today, 18:00 - 19:00</div>
+      <div class="booking-meta-item"><span>&#128176;</span>800 MKD</div>
+    </div>
+    <div class="booking-actions">
+      <div class="b-action primary">View Details</div>
+      <div class="b-action secondary">Get Directions</div>
+      <div class="b-action danger">Cancel</div>
+    </div>
+  </div>
+
+  <div class="section-date">Tomorrow - May 25</div>
+  <div class="booking-card">
+    <div class="booking-top">
+      <div class="booking-img" style="background: linear-gradient(135deg, #0D47A1, #2196F3);">&#127934;</div>
+      <div class="booking-info">
+        <h4>Tennis Club Vardar</h4>
+        <div class="type">Court 2 - Outdoor Tennis</div>
+      </div>
+      <div class="status-pill status-confirmed">Confirmed</div>
+    </div>
+    <div class="booking-meta">
+      <div class="booking-meta-item"><span>&#128197;</span>Sun, 10:00 - 11:00</div>
+      <div class="booking-meta-item"><span>&#128176;</span>600 MKD</div>
+    </div>
+    <div class="booking-actions">
+      <div class="b-action primary">View Details</div>
+      <div class="b-action secondary">Get Directions</div>
+      <div class="b-action danger">Cancel</div>
+    </div>
+  </div>
+
+  <div class="booking-card">
+    <div class="booking-top">
+      <div class="booking-img" style="background: linear-gradient(135deg, #4A148C, #9C27B0);">&#128075;</div>
+      <div class="booking-info">
+        <h4>Coach Aleksandar P.</h4>
+        <div class="type">Basketball Training Session</div>
+      </div>
+      <div class="status-pill status-pending">Pending</div>
+    </div>
+    <div class="booking-meta">
+      <div class="booking-meta-item"><span>&#128197;</span>Sun, 15:00 - 16:00</div>
+      <div class="booking-meta-item"><span>&#128176;</span>1,200 MKD</div>
+    </div>
+    <div class="booking-actions">
+      <div class="b-action secondary">Waiting for approval...</div>
+    </div>
+  </div>
+
+  <div class="section-date">Next Week</div>
+  <div class="booking-card">
+    <div class="booking-top">
+      <div class="booking-img" style="background: linear-gradient(135deg, #E65100, #FF9800);">&#9917;</div>
+      <div class="booking-info">
+        <h4>FC Arena Skopje</h4>
+        <div class="type">Field 1 - Football 5v5</div>
+      </div>
+      <div class="status-pill status-confirmed">Confirmed</div>
+    </div>
+    <div class="booking-meta">
+      <div class="booking-meta-item"><span>&#128197;</span>Wed May 28, 20:00</div>
+      <div class="booking-meta-item"><span>&#128176;</span>1,500 MKD</div>
+      <div class="booking-meta-item"><span>&#128101;</span>Split (4)</div>
+    </div>
+    <div class="booking-actions">
+      <div class="b-action primary">View Details</div>
+      <div class="b-action danger">Cancel</div>
+    </div>
+  </div>
+
+  <div class="spacer"></div>
+</body>
+</html>

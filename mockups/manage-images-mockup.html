@@ -1,0 +1,166 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Manage Photos</title>
+<style>
+  * { margin:0; padding:0; box-sizing:border-box; }
+  body { width:393px; min-height:852px; background:#121212; font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif; color:#fff; overflow-x:hidden; padding-bottom:100px; }
+
+  .status-bar { height:44px; }
+  .header { padding:8px 16px 16px; display:flex; align-items:center; justify-content:space-between; }
+  .back-btn { width:40px; height:40px; border-radius:50%; background:#1E1E1E; border:none; color:#fff; font-size:20px; display:flex; align-items:center; justify-content:center; }
+  .header-title { font-size:18px; font-weight:700; }
+  .done-btn { padding:8px 20px; border-radius:10px; background:#4CAF50; border:none; color:#fff; font-size:14px; font-weight:600; }
+
+  .info-bar {
+    margin:0 16px 16px; padding:12px 16px; background:#1E1E1E; border-radius:12px;
+    display:flex; justify-content:space-between; align-items:center;
+  }
+  .info-text { font-size:13px; color:#888; }
+  .info-count { font-size:13px; color:#4CAF50; font-weight:600; }
+
+  .upload-area {
+    margin:0 16px 20px; border:2px dashed #333; border-radius:16px; padding:40px 20px;
+    text-align:center; background:#1E1E1E; cursor:pointer;
+  }
+  .upload-icon { font-size:44px; margin-bottom:8px; }
+  .upload-title { font-size:15px; font-weight:600; }
+  .upload-desc { font-size:12px; color:#888; margin-top:4px; }
+
+  .section-label { padding:0 16px; font-size:13px; color:#888; font-weight:600; margin-bottom:10px; }
+
+  .photo-grid { display:grid; grid-template-columns:1fr 1fr; gap:10px; padding:0 16px; margin-bottom:20px; }
+  .photo-card {
+    border-radius:14px; overflow:hidden; position:relative; background:#1E1E1E;
+  }
+  .photo-img {
+    width:100%; aspect-ratio:1; background:#252525; display:flex;
+    align-items:center; justify-content:center; font-size:44px;
+  }
+  .photo-cover-badge {
+    position:absolute; top:8px; left:8px; padding:4px 8px; border-radius:6px;
+    background:#4CAF50; font-size:10px; font-weight:700; color:#fff;
+  }
+  .photo-actions {
+    position:absolute; top:8px; right:8px; display:flex; gap:4px;
+  }
+  .photo-action-btn {
+    width:30px; height:30px; border-radius:8px; background:rgba(0,0,0,0.6);
+    border:none; color:#fff; font-size:14px; display:flex; align-items:center;
+    justify-content:center; cursor:pointer;
+  }
+  .photo-footer { padding:10px 12px; }
+  .photo-name { font-size:12px; font-weight:600; }
+  .photo-size { font-size:11px; color:#888; }
+  .photo-drag { position:absolute; bottom:10px; right:10px; font-size:16px; color:#555; cursor:grab; }
+
+  .photo-card.cover { border:2px solid #4CAF50; }
+
+  .reorder-hint {
+    text-align:center; font-size:12px; color:#555; padding:0 16px; margin-bottom:16px;
+  }
+
+  .action-bar { position:fixed; bottom:0; left:0; width:393px; padding:16px; background:linear-gradient(transparent, #121212 30%); display:flex; gap:12px; }
+  .btn-secondary { flex:1; padding:14px; border-radius:14px; border:1px solid #333; background:#1E1E1E; color:#fff; font-size:14px; font-weight:600; cursor:pointer; text-align:center; }
+  .btn-primary { flex:1; padding:14px; border-radius:14px; border:none; background:linear-gradient(135deg,#4CAF50,#2E7D32); color:#fff; font-size:14px; font-weight:700; cursor:pointer; text-align:center; }
+</style>
+</head>
+<body>
+  <div class="status-bar"></div>
+  <div class="header">
+    <button class="back-btn">&#8249;</button>
+    <span class="header-title">Manage Photos</span>
+    <button class="done-btn">Done</button>
+  </div>
+
+  <div class="info-bar">
+    <span class="info-text">Drag to reorder • First photo is cover</span>
+    <span class="info-count">5 / 10 photos</span>
+  </div>
+
+  <div class="upload-area">
+    <div class="upload-icon">📸</div>
+    <div class="upload-title">Upload New Photos</div>
+    <div class="upload-desc">JPG, PNG up to 10MB each • Max 10 photos</div>
+  </div>
+
+  <div class="section-label">Current Photos</div>
+
+  <div class="photo-grid">
+    <div class="photo-card cover">
+      <div class="photo-img">🏟️</div>
+      <span class="photo-cover-badge">COVER</span>
+      <div class="photo-actions">
+        <button class="photo-action-btn">✏️</button>
+        <button class="photo-action-btn" style="color:#ef5350">🗑</button>
+      </div>
+      <div class="photo-footer">
+        <div class="photo-name">Main entrance</div>
+        <div class="photo-size">2.4 MB</div>
+      </div>
+      <span class="photo-drag">⋮⋮</span>
+    </div>
+
+    <div class="photo-card">
+      <div class="photo-img">🎾</div>
+      <div class="photo-actions">
+        <button class="photo-action-btn">⭐</button>
+        <button class="photo-action-btn" style="color:#ef5350">🗑</button>
+      </div>
+      <div class="photo-footer">
+        <div class="photo-name">Court 1</div>
+        <div class="photo-size">1.8 MB</div>
+      </div>
+      <span class="photo-drag">⋮⋮</span>
+    </div>
+
+    <div class="photo-card">
+      <div class="photo-img">🏋️</div>
+      <div class="photo-actions">
+        <button class="photo-action-btn">⭐</button>
+        <button class="photo-action-btn" style="color:#ef5350">🗑</button>
+      </div>
+      <div class="photo-footer">
+        <div class="photo-name">Equipment area</div>
+        <div class="photo-size">3.1 MB</div>
+      </div>
+      <span class="photo-drag">⋮⋮</span>
+    </div>
+
+    <div class="photo-card">
+      <div class="photo-img">🚿</div>
+      <div class="photo-actions">
+        <button class="photo-action-btn">⭐</button>
+        <button class="photo-action-btn" style="color:#ef5350">🗑</button>
+      </div>
+      <div class="photo-footer">
+        <div class="photo-name">Locker rooms</div>
+        <div class="photo-size">2.2 MB</div>
+      </div>
+      <span class="photo-drag">⋮⋮</span>
+    </div>
+
+    <div class="photo-card">
+      <div class="photo-img">🌙</div>
+      <div class="photo-actions">
+        <button class="photo-action-btn">⭐</button>
+        <button class="photo-action-btn" style="color:#ef5350">🗑</button>
+      </div>
+      <div class="photo-footer">
+        <div class="photo-name">Night view</div>
+        <div class="photo-size">2.7 MB</div>
+      </div>
+      <span class="photo-drag">⋮⋮</span>
+    </div>
+  </div>
+
+  <div class="reorder-hint">Hold and drag ⋮⋮ to reorder photos</div>
+
+  <div class="action-bar">
+    <button class="btn-secondary">📸 Camera</button>
+    <button class="btn-primary">📁 Gallery</button>
+  </div>
+</body>
+</html>

@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=393, initial-scale=1.0">
+<title>Achievements</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background: #121212; color: #fff; width: 393px; min-height: 852px; }
+  .status-bar { height: 44px; display: flex; align-items: center; justify-content: space-between; padding: 0 20px; font-size: 12px; font-weight: 600; }
+  .header { display: flex; align-items: center; padding: 8px 16px 16px; gap: 12px; }
+  .back-btn { width: 36px; height: 36px; background: #1E1E1E; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 18px; }
+  .header h1 { font-size: 20px; font-weight: 700; flex: 1; }
+  .progress-badge { padding: 6px 12px; background: #1B3A1E; border-radius: 10px; font-size: 12px; color: #4CAF50; font-weight: 600; }
+  .level-card { margin: 0 16px 20px; padding: 20px; background: linear-gradient(135deg, #1B5E20, #2E7D32); border-radius: 16px; text-align: center; }
+  .level-icon { font-size: 48px; margin-bottom: 8px; }
+  .level-title { font-size: 20px; font-weight: 800; }
+  .level-sub { font-size: 13px; color: rgba(255,255,255,0.7); margin-top: 2px; }
+  .xp-bar { height: 8px; background: rgba(255,255,255,0.2); border-radius: 4px; margin: 12px 0 6px; overflow: hidden; }
+  .xp-fill { height: 100%; width: 72%; background: #81C784; border-radius: 4px; }
+  .xp-info { display: flex; justify-content: space-between; font-size: 12px; color: rgba(255,255,255,0.7); }
+  .category-tabs { display: flex; gap: 8px; padding: 0 16px; margin-bottom: 16px; overflow-x: auto; }
+  .cat-tab { padding: 8px 16px; background: #1E1E1E; border-radius: 20px; font-size: 13px; white-space: nowrap; }
+  .cat-tab.active { background: #4CAF50; }
+  .ach-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; padding: 0 16px; }
+  .ach-card { background: #1E1E1E; border-radius: 14px; padding: 16px; text-align: center; position: relative; }
+  .ach-card.locked { opacity: 0.5; }
+  .ach-card.new { border: 1px solid #4CAF50; }
+  .new-badge { position: absolute; top: 8px; right: 8px; background: #4CAF50; padding: 2px 8px; border-radius: 6px; font-size: 9px; font-weight: 700; }
+  .ach-emoji { font-size: 36px; margin-bottom: 8px; }
+  .ach-name { font-size: 13px; font-weight: 700; margin-bottom: 2px; }
+  .ach-desc { font-size: 11px; color: #888; margin-bottom: 8px; line-height: 1.3; }
+  .ach-progress { height: 4px; background: #2A2A2A; border-radius: 2px; overflow: hidden; margin-bottom: 4px; }
+  .ach-progress-fill { height: 100%; background: #4CAF50; border-radius: 2px; }
+  .ach-progress-text { font-size: 10px; color: #888; }
+  .ach-xp { display: inline-block; padding: 3px 8px; background: #2A2A2A; border-radius: 6px; font-size: 11px; color: #4CAF50; font-weight: 600; }
+  .ach-card.earned .ach-xp { background: #1B3A1E; }
+  .lock-icon { font-size: 20px; color: #555; }
+</style>
+</head>
+<body>
+  <div class="status-bar"><span>9:41</span><span>...</span></div>
+  <div class="header"><div class="back-btn">&#8592;</div><h1>Achievements</h1><div class="progress-badge">12/28</div></div>
+
+  <div class="level-card">
+    <div class="level-icon">&#127775;</div>
+    <div class="level-title">Level 7 - Rising Player</div>
+    <div class="level-sub">1,830 / 2,500 XP to Level 8</div>
+    <div class="xp-bar"><div class="xp-fill"></div></div>
+    <div class="xp-info"><span>1,830 XP</span><span>2,500 XP</span></div>
+  </div>
+
+  <div class="category-tabs">
+    <div class="cat-tab active">All</div>
+    <div class="cat-tab">Matches</div>
+    <div class="cat-tab">Bookings</div>
+    <div class="cat-tab">Social</div>
+    <div class="cat-tab">Streaks</div>
+  </div>
+
+  <div class="ach-grid">
+    <div class="ach-card earned new">
+      <div class="new-badge">NEW</div>
+      <div class="ach-emoji">&#127942;</div>
+      <div class="ach-name">Court Regular</div>
+      <div class="ach-desc">Book 10 venues</div>
+      <div class="ach-progress"><div class="ach-progress-fill" style="width:100%;"></div></div>
+      <div class="ach-progress-text">10/10 Complete</div>
+      <div class="ach-xp">+100 XP</div>
+    </div>
+    <div class="ach-card earned">
+      <div class="ach-emoji">&#9876;</div>
+      <div class="ach-name">First Win</div>
+      <div class="ach-desc">Win your first match</div>
+      <div class="ach-progress"><div class="ach-progress-fill" style="width:100%;"></div></div>
+      <div class="ach-progress-text">Complete!</div>
+      <div class="ach-xp">+50 XP</div>
+    </div>
+    <div class="ach-card earned">
+      <div class="ach-emoji">&#128293;</div>
+      <div class="ach-name">On Fire</div>
+      <div class="ach-desc">Win 5 matches in a row</div>
+      <div class="ach-progress"><div class="ach-progress-fill" style="width:100%;"></div></div>
+      <div class="ach-progress-text">Complete!</div>
+      <div class="ach-xp">+200 XP</div>
+    </div>
+    <div class="ach-card">
+      <div class="ach-emoji">&#128101;</div>
+      <div class="ach-name">Team Player</div>
+      <div class="ach-desc">Play with 20 different people</div>
+      <div class="ach-progress"><div class="ach-progress-fill" style="width:75%;"></div></div>
+      <div class="ach-progress-text">15/20 players</div>
+      <div class="ach-xp">+150 XP</div>
+    </div>
+    <div class="ach-card">
+      <div class="ach-emoji">&#127775;</div>
+      <div class="ach-name">Rising Star</div>
+      <div class="ach-desc">Reach Level 10</div>
+      <div class="ach-progress"><div class="ach-progress-fill" style="width:70%;"></div></div>
+      <div class="ach-progress-text">Level 7/10</div>
+      <div class="ach-xp">+300 XP</div>
+    </div>
+    <div class="ach-card">
+      <div class="ach-emoji">&#128176;</div>
+      <div class="ach-name">Big Spender</div>
+      <div class="ach-desc">Spend 50,000 MKD on bookings</div>
+      <div class="ach-progress"><div class="ach-progress-fill" style="width:45%;"></div></div>
+      <div class="ach-progress-text">22,500/50,000 MKD</div>
+      <div class="ach-xp">+250 XP</div>
+    </div>
+    <div class="ach-card locked">
+      <div class="ach-emoji">&#128274;</div>
+      <div class="ach-name">Party Leader</div>
+      <div class="ach-desc">Create 5 parties</div>
+      <div class="ach-progress"><div class="ach-progress-fill" style="width:20%;"></div></div>
+      <div class="ach-progress-text">1/5 parties</div>
+      <div class="ach-xp">+100 XP</div>
+    </div>
+    <div class="ach-card locked">
+      <div class="ach-emoji">&#128274;</div>
+      <div class="ach-name">Social Butterfly</div>
+      <div class="ach-desc">Add 50 friends</div>
+      <div class="ach-progress"><div class="ach-progress-fill" style="width:68%;"></div></div>
+      <div class="ach-progress-text">34/50 friends</div>
+      <div class="ach-xp">+200 XP</div>
+    </div>
+  </div>
+</body>
+</html>

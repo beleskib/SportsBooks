@@ -1,0 +1,158 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=393, initial-scale=1.0">
+<title>Party Detail</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background: #121212; color: #fff; width: 393px; min-height: 852px; }
+  .status-bar { height: 44px; display: flex; align-items: center; justify-content: space-between; padding: 0 20px; font-size: 12px; font-weight: 600; }
+  .header { display: flex; align-items: center; padding: 8px 16px 12px; gap: 12px; }
+  .back-btn { width: 36px; height: 36px; background: #1E1E1E; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 18px; }
+  .header-right { margin-left: auto; display: flex; gap: 8px; }
+  .icon-btn { width: 36px; height: 36px; background: #1E1E1E; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 16px; }
+  .party-hero { margin: 0 16px 16px; padding: 20px; background: linear-gradient(135deg, #E65100, #FF9800, #FFB74D); border-radius: 16px; }
+  .party-sport { display: flex; align-items: center; gap: 8px; margin-bottom: 10px; }
+  .party-sport .emoji { font-size: 24px; }
+  .party-badge { padding: 4px 10px; background: rgba(0,0,0,0.2); border-radius: 6px; font-size: 11px; font-weight: 600; }
+  .status-active { background: #4CAF50; }
+  .party-hero h2 { font-size: 22px; font-weight: 800; margin-bottom: 4px; }
+  .party-hero .desc { font-size: 13px; color: rgba(255,255,255,0.8); }
+  .party-stats { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; padding: 0 16px; margin-bottom: 16px; }
+  .p-stat { background: #1E1E1E; border-radius: 12px; padding: 12px; text-align: center; }
+  .p-stat .value { font-size: 18px; font-weight: 800; }
+  .p-stat .label { font-size: 10px; color: #888; margin-top: 2px; }
+  .section { padding: 0 16px; margin-bottom: 20px; }
+  .section-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; }
+  .section-header h3 { font-size: 16px; font-weight: 700; }
+  .section-header span { font-size: 13px; color: #4CAF50; }
+  .member-list { display: flex; flex-direction: column; gap: 8px; }
+  .member-row { display: flex; align-items: center; gap: 12px; padding: 10px 12px; background: #1E1E1E; border-radius: 10px; }
+  .member-avatar { width: 40px; height: 40px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 14px; position: relative; }
+  .online-dot { position: absolute; bottom: 0; right: 0; width: 12px; height: 12px; border-radius: 50%; border: 2px solid #1E1E1E; }
+  .online-dot.on { background: #4CAF50; }
+  .online-dot.off { background: #555; }
+  .member-info { flex: 1; }
+  .member-info .name { font-size: 14px; font-weight: 600; }
+  .member-info .meta { font-size: 11px; color: #888; }
+  .role-tag { padding: 3px 8px; border-radius: 6px; font-size: 10px; font-weight: 700; }
+  .role-leader { background: #FFA726; color: #000; }
+  .role-you { background: #4CAF50; }
+  .match-card { padding: 14px; background: #1E1E1E; border-radius: 12px; margin-bottom: 8px; }
+  .match-top { display: flex; align-items: center; gap: 10px; margin-bottom: 8px; }
+  .match-icon { width: 36px; height: 36px; border-radius: 8px; display: flex; align-items: center; justify-content: center; font-size: 16px; }
+  .match-info { flex: 1; }
+  .match-info h4 { font-size: 14px; font-weight: 600; }
+  .match-info p { font-size: 12px; color: #888; }
+  .match-status { padding: 4px 10px; border-radius: 6px; font-size: 11px; font-weight: 600; }
+  .status-upcoming { background: #1B3A1E; color: #4CAF50; }
+  .status-looking { background: #3A2E1B; color: #FFA726; }
+  .action-btns { display: flex; gap: 8px; padding: 0 16px; margin-bottom: 16px; }
+  .act-btn { flex: 1; padding: 12px; border-radius: 12px; text-align: center; font-size: 13px; font-weight: 600; }
+  .act-btn.primary { background: #FF9800; color: #000; }
+  .act-btn.secondary { background: #1E1E1E; }
+  .act-btn.outline { background: transparent; border: 1px solid #333; color: #aaa; }
+  .chat-section { margin: 0 16px; padding: 14px; background: #1E1E1E; border-radius: 12px; margin-bottom: 20px; }
+  .chat-msg { display: flex; gap: 8px; margin-bottom: 8px; }
+  .chat-avatar { width: 24px; height: 24px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 9px; font-weight: 700; flex-shrink: 0; }
+  .chat-bubble { background: #2A2A2A; padding: 6px 10px; border-radius: 10px; font-size: 12px; }
+  .chat-bubble .author { font-size: 10px; color: #FF9800; font-weight: 600; }
+  .open-chat-btn { text-align: center; padding: 8px; font-size: 13px; color: #FF9800; font-weight: 600; }
+</style>
+</head>
+<body>
+  <div class="status-bar"><span>9:41</span><span>...</span></div>
+  <div class="header">
+    <div class="back-btn">&#8592;</div>
+    <div class="header-right"><div class="icon-btn">&#8599;</div><div class="icon-btn">&#8942;</div></div>
+  </div>
+
+  <div class="party-hero">
+    <div class="party-sport">
+      <div class="emoji">&#127936;</div>
+      <div class="party-badge">Basketball</div>
+      <div class="party-badge status-active">Active</div>
+    </div>
+    <h2>Skopje Ballers</h2>
+    <div class="desc">Weekly basketball crew. Games every weekend at Arena Sport Center.</div>
+  </div>
+
+  <div class="party-stats">
+    <div class="p-stat"><div class="value">5/8</div><div class="label">Members</div></div>
+    <div class="p-stat"><div class="value">12</div><div class="label">Matches</div></div>
+    <div class="p-stat"><div class="value">8W-4L</div><div class="label">Record</div></div>
+  </div>
+
+  <div class="action-btns">
+    <div class="act-btn primary">&#128269; Find Match</div>
+    <div class="act-btn secondary">&#128101; Invite</div>
+    <div class="act-btn outline">&#128172; Chat</div>
+  </div>
+
+  <div class="section">
+    <div class="section-header"><h3>Members (5/8)</h3><span>Invite +</span></div>
+    <div class="member-list">
+      <div class="member-row">
+        <div class="member-avatar" style="background:#FFA726;"><div class="online-dot on"></div>S</div>
+        <div class="member-info"><div class="name">Stefan M.</div><div class="meta">Level 12 &bull; Online</div></div>
+        <div class="role-tag role-leader">LEADER</div>
+      </div>
+      <div class="member-row">
+        <div class="member-avatar" style="background:#4CAF50;"><div class="online-dot on"></div>B</div>
+        <div class="member-info"><div class="name">Bojan B.</div><div class="meta">Level 7 &bull; Online</div></div>
+        <div class="role-tag role-you">YOU</div>
+      </div>
+      <div class="member-row">
+        <div class="member-avatar" style="background:#2196F3;"><div class="online-dot on"></div>M</div>
+        <div class="member-info"><div class="name">Marko T.</div><div class="meta">Level 9 &bull; Online</div></div>
+      </div>
+      <div class="member-row">
+        <div class="member-avatar" style="background:#E91E63;"><div class="online-dot off"></div>K</div>
+        <div class="member-info"><div class="name">Kristina V.</div><div class="meta">Level 6 &bull; Last seen 2h ago</div></div>
+      </div>
+      <div class="member-row">
+        <div class="member-avatar" style="background:#9C27B0;"><div class="online-dot off"></div>D</div>
+        <div class="member-info"><div class="name">Dimitar P.</div><div class="meta">Level 5 &bull; Last seen 5h ago</div></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="section">
+    <div class="section-header"><h3>Upcoming Matches</h3><span>See All</span></div>
+    <div class="match-card">
+      <div class="match-top">
+        <div class="match-icon" style="background:#1B3A1E;">&#127936;</div>
+        <div class="match-info"><h4>Sunday Basketball Showdown</h4><p>Sun, May 25 &bull; 15:00 &bull; Arena Sport Center</p></div>
+        <div class="match-status status-upcoming">Upcoming</div>
+      </div>
+    </div>
+    <div class="match-card">
+      <div class="match-top">
+        <div class="match-icon" style="background:#3A2E1B;">&#127936;</div>
+        <div class="match-info"><h4>Wednesday Night Hoops</h4><p>Wed, May 28 &bull; 20:00 &bull; TBD</p></div>
+        <div class="match-status status-looking">Looking for venue</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="section">
+    <div class="section-header"><h3>Party Chat</h3></div>
+    <div class="chat-section" style="margin:0; padding:14px;">
+      <div class="chat-msg">
+        <div class="chat-avatar" style="background:#FFA726;">S</div>
+        <div class="chat-bubble"><div class="author">Stefan M.</div>Who's in for Sunday?</div>
+      </div>
+      <div class="chat-msg">
+        <div class="chat-avatar" style="background:#2196F3;">M</div>
+        <div class="chat-bubble"><div class="author">Marko T.</div>I'm in! Same time?</div>
+      </div>
+      <div class="chat-msg">
+        <div class="chat-avatar" style="background:#4CAF50;">B</div>
+        <div class="chat-bubble"><div class="author">You</div>Count me in!</div>
+      </div>
+      <div class="open-chat-btn">Open Chat &#8594;</div>
+    </div>
+  </div>
+</body>
+</html>

@@ -1,0 +1,713 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Explore - Dark Mode</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    background: #121212;
+    color: #fff;
+    width: 393px;
+    min-height: 852px;
+    margin: 0 auto;
+    overflow-y: auto;
+  }
+
+  .status-bar {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 8px 24px;
+    font-size: 14px;
+    font-weight: 600;
+  }
+
+  /* Top bar */
+  .top-bar {
+    padding: 4px 16px 12px;
+  }
+  .top-bar h1 {
+    font-size: 28px;
+    font-weight: 800;
+  }
+  .top-bar .subtitle {
+    font-size: 13px;
+    color: rgba(255,255,255,0.4);
+    margin-top: 2px;
+  }
+
+  /* Search */
+  .search-bar {
+    margin: 0 16px 14px;
+    background: rgba(255,255,255,0.08);
+    border-radius: 14px;
+    padding: 13px 16px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-size: 15px;
+    color: rgba(255,255,255,0.35);
+  }
+
+  /* Category pills */
+  .category-scroll {
+    display: flex;
+    gap: 8px;
+    padding: 0 16px 16px;
+    overflow-x: auto;
+  }
+  .cat-pill {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 8px 16px;
+    border-radius: 24px;
+    font-size: 13px;
+    font-weight: 600;
+    white-space: nowrap;
+    background: rgba(255,255,255,0.07);
+    color: rgba(255,255,255,0.6);
+    border: 1px solid rgba(255,255,255,0.06);
+  }
+  .cat-pill.active {
+    background: rgba(76,175,80,0.15);
+    color: #4CAF50;
+    border-color: rgba(76,175,80,0.3);
+  }
+
+  /* Map banner */
+  .map-banner {
+    margin: 0 16px 16px;
+    height: 140px;
+    border-radius: 16px;
+    background: linear-gradient(135deg, #1a2a1a, #1a2030);
+    position: relative;
+    overflow: hidden;
+    display: flex;
+    align-items: flex-end;
+    padding: 14px;
+    border: 1px solid rgba(255,255,255,0.06);
+  }
+  .map-dots {
+    position: absolute;
+    top: 0; left: 0; right: 0; bottom: 0;
+  }
+  .map-dot {
+    position: absolute;
+    width: 10px; height: 10px;
+    border-radius: 50%;
+    background: #4CAF50;
+    box-shadow: 0 0 8px rgba(76,175,80,0.6);
+  }
+  .map-dot.d1 { top: 25%; left: 30%; }
+  .map-dot.d2 { top: 40%; left: 55%; }
+  .map-dot.d3 { top: 60%; left: 20%; }
+  .map-dot.d4 { top: 35%; left: 75%; }
+  .map-dot.d5 { top: 70%; left: 60%; width: 12px; height: 12px; background: #2196F3; box-shadow: 0 0 8px rgba(33,150,243,0.6); }
+  .map-dot.d6 { top: 50%; left: 40%; }
+  .map-dot.d7 { top: 20%; left: 65%; width: 8px; height: 8px; }
+  .map-pulse {
+    position: absolute;
+    width: 24px; height: 24px;
+    border-radius: 50%;
+    border: 2px solid rgba(76,175,80,0.4);
+    top: calc(70% - 7px); left: calc(60% - 7px);
+    animation: pulse 2s infinite;
+  }
+  @keyframes pulse {
+    0% { transform: scale(1); opacity: 1; }
+    100% { transform: scale(2); opacity: 0; }
+  }
+  .map-grid-line {
+    position: absolute;
+    background: rgba(255,255,255,0.03);
+  }
+  .map-grid-line.h1 { top: 33%; left: 0; right: 0; height: 1px; }
+  .map-grid-line.h2 { top: 66%; left: 0; right: 0; height: 1px; }
+  .map-grid-line.v1 { left: 33%; top: 0; bottom: 0; width: 1px; }
+  .map-grid-line.v2 { left: 66%; top: 0; bottom: 0; width: 1px; }
+  .map-info {
+    position: relative;
+    z-index: 2;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    width: 100%;
+  }
+  .map-text {
+    font-size: 13px;
+    font-weight: 600;
+    color: rgba(255,255,255,0.8);
+  }
+  .map-text span {
+    color: #4CAF50;
+    font-weight: 700;
+  }
+  .map-btn {
+    background: #4CAF50;
+    color: #fff;
+    border: none;
+    border-radius: 10px;
+    padding: 8px 14px;
+    font-size: 12px;
+    font-weight: 700;
+    cursor: pointer;
+  }
+
+  /* Section header */
+  .section-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0 16px;
+    margin-bottom: 12px;
+  }
+  .section-header h3 {
+    font-size: 18px;
+    font-weight: 700;
+  }
+  .see-all {
+    font-size: 13px;
+    color: #4CAF50;
+    font-weight: 600;
+  }
+
+  /* Sport categories grid */
+  .sports-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 10px;
+    padding: 0 16px;
+    margin-bottom: 20px;
+  }
+  .sport-item {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 6px;
+    cursor: pointer;
+  }
+  .sport-icon {
+    width: 56px; height: 56px;
+    border-radius: 16px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 28px;
+    border: 1px solid rgba(255,255,255,0.06);
+  }
+  .sport-icon.s1 { background: rgba(255,152,0,0.12); }
+  .sport-icon.s2 { background: rgba(76,175,80,0.12); }
+  .sport-icon.s3 { background: rgba(33,150,243,0.12); }
+  .sport-icon.s4 { background: rgba(156,39,176,0.12); }
+  .sport-icon.s5 { background: rgba(244,67,54,0.12); }
+  .sport-icon.s6 { background: rgba(0,188,212,0.12); }
+  .sport-icon.s7 { background: rgba(255,87,34,0.12); }
+  .sport-icon.s8 { background: rgba(96,125,139,0.12); }
+  .sport-name {
+    font-size: 11px;
+    font-weight: 600;
+    color: rgba(255,255,255,0.6);
+    text-align: center;
+  }
+
+  /* Horizontal venue cards */
+  .venue-scroll {
+    display: flex;
+    gap: 12px;
+    padding: 0 16px;
+    overflow-x: auto;
+    margin-bottom: 22px;
+  }
+  .venue-card {
+    min-width: 240px;
+    background: rgba(255,255,255,0.06);
+    border-radius: 16px;
+    overflow: hidden;
+    border: 1px solid rgba(255,255,255,0.06);
+    flex-shrink: 0;
+  }
+  .venue-img {
+    height: 120px;
+    background: linear-gradient(135deg, #2a3a2a, #1a2a3a);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 40px;
+    position: relative;
+  }
+  .venue-discount {
+    position: absolute;
+    top: 8px; left: 8px;
+    background: #E91E63;
+    color: #fff;
+    padding: 3px 8px;
+    border-radius: 6px;
+    font-size: 11px;
+    font-weight: 700;
+  }
+  .venue-rating {
+    position: absolute;
+    top: 8px; right: 8px;
+    background: rgba(0,0,0,0.6);
+    color: #FFD700;
+    padding: 3px 8px;
+    border-radius: 6px;
+    font-size: 11px;
+    font-weight: 700;
+    display: flex;
+    align-items: center;
+    gap: 3px;
+  }
+  .venue-body {
+    padding: 12px;
+  }
+  .venue-name {
+    font-size: 15px;
+    font-weight: 700;
+    margin-bottom: 4px;
+  }
+  .venue-meta {
+    font-size: 12px;
+    color: rgba(255,255,255,0.4);
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    margin-bottom: 6px;
+  }
+  .venue-tags {
+    display: flex;
+    gap: 4px;
+  }
+  .venue-tag {
+    font-size: 10px;
+    padding: 3px 8px;
+    border-radius: 6px;
+    font-weight: 600;
+  }
+  .venue-tag.sport { background: rgba(76,175,80,0.15); color: #4CAF50; }
+  .venue-tag.price { background: rgba(33,150,243,0.15); color: #64B5F6; }
+  .venue-tag.deal { background: rgba(255,152,0,0.15); color: #FFB74D; }
+
+  /* Coach cards horizontal */
+  .coach-scroll {
+    display: flex;
+    gap: 12px;
+    padding: 0 16px;
+    overflow-x: auto;
+    margin-bottom: 22px;
+  }
+  .coach-card {
+    min-width: 160px;
+    background: rgba(255,255,255,0.06);
+    border-radius: 16px;
+    padding: 16px;
+    text-align: center;
+    border: 1px solid rgba(255,255,255,0.06);
+    flex-shrink: 0;
+  }
+  .coach-avatar {
+    width: 64px; height: 64px;
+    border-radius: 50%;
+    margin: 0 auto 10px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 24px;
+    font-weight: 700;
+    color: #fff;
+    border: 3px solid;
+  }
+  .coach-avatar.c1 { background: #E91E63; border-color: #E91E63; }
+  .coach-avatar.c2 { background: #2196F3; border-color: #2196F3; }
+  .coach-avatar.c3 { background: #FF9800; border-color: #FF9800; }
+  .coach-name {
+    font-size: 14px;
+    font-weight: 700;
+    margin-bottom: 2px;
+  }
+  .coach-sport {
+    font-size: 12px;
+    color: rgba(255,255,255,0.4);
+    margin-bottom: 6px;
+  }
+  .coach-rating {
+    font-size: 12px;
+    color: #FFD700;
+    font-weight: 600;
+    margin-bottom: 8px;
+  }
+  .coach-price {
+    font-size: 11px;
+    color: #64B5F6;
+    font-weight: 600;
+    background: rgba(33,150,243,0.1);
+    padding: 4px 10px;
+    border-radius: 8px;
+    display: inline-block;
+  }
+
+  /* Top Deals banner */
+  .deals-banner {
+    margin: 0 16px 20px;
+    background: linear-gradient(135deg, rgba(233,30,99,0.12), rgba(255,152,0,0.12));
+    border: 1px solid rgba(233,30,99,0.15);
+    border-radius: 16px;
+    padding: 16px;
+    display: flex;
+    align-items: center;
+    gap: 14px;
+  }
+  .deals-icon {
+    width: 50px; height: 50px;
+    border-radius: 14px;
+    background: rgba(233,30,99,0.2);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 26px;
+  }
+  .deals-text { flex: 1; }
+  .deals-text h4 {
+    font-size: 15px;
+    font-weight: 700;
+    color: #FF6B9D;
+    margin-bottom: 2px;
+  }
+  .deals-text p {
+    font-size: 12px;
+    color: rgba(255,255,255,0.5);
+  }
+  .deals-btn {
+    background: #E91E63;
+    color: #fff;
+    border: none;
+    border-radius: 10px;
+    padding: 8px 14px;
+    font-size: 12px;
+    font-weight: 700;
+  }
+
+  /* Popular near you - list style */
+  .popular-list {
+    padding: 0 16px;
+    margin-bottom: 20px;
+  }
+  .popular-row {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 10px 0;
+    border-bottom: 1px solid rgba(255,255,255,0.05);
+  }
+  .popular-rank {
+    font-size: 16px;
+    font-weight: 800;
+    width: 28px;
+    text-align: center;
+    color: rgba(255,255,255,0.3);
+  }
+  .popular-rank.r1 { color: #FFD700; }
+  .popular-rank.r2 { color: #C0C0C0; }
+  .popular-rank.r3 { color: #CD7F32; }
+  .popular-thumb {
+    width: 52px; height: 52px;
+    border-radius: 12px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 24px;
+  }
+  .popular-thumb.t1 { background: rgba(76,175,80,0.12); }
+  .popular-thumb.t2 { background: rgba(33,150,243,0.12); }
+  .popular-thumb.t3 { background: rgba(255,152,0,0.12); }
+  .popular-info { flex: 1; }
+  .popular-name {
+    font-size: 14px;
+    font-weight: 700;
+  }
+  .popular-detail {
+    font-size: 12px;
+    color: rgba(255,255,255,0.4);
+    margin-top: 2px;
+  }
+  .popular-price {
+    font-size: 13px;
+    font-weight: 700;
+    color: #4CAF50;
+  }
+
+  /* Bottom nav */
+  .bottom-nav {
+    position: fixed;
+    bottom: 0;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 393px;
+    background: #1a1a1a;
+    border-top: 1px solid rgba(255,255,255,0.08);
+    display: flex;
+    padding: 8px 0 28px;
+  }
+  .nav-item {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 4px;
+    font-size: 10px;
+    color: rgba(255,255,255,0.4);
+  }
+  .nav-item.active { color: #4CAF50; }
+  .nav-icon { font-size: 22px; }
+
+  .spacer { height: 100px; }
+
+  .mockup-label {
+    text-align: center;
+    padding: 12px;
+    font-size: 11px;
+    color: rgba(255,255,255,0.3);
+    letter-spacing: 2px;
+    text-transform: uppercase;
+  }
+</style>
+</head>
+<body>
+
+<div class="mockup-label">EXPLORE — DARK MODE</div>
+
+<div class="status-bar">
+  <span>10:38</span>
+  <span>📶 🔋 100%</span>
+</div>
+
+<div class="top-bar">
+  <h1>Explore</h1>
+  <div class="subtitle">Discover venues, coaches & deals near you</div>
+</div>
+
+<!-- Search -->
+<div class="search-bar">
+  🔍 Search venues, coaches, sports...
+</div>
+
+<!-- Category pills -->
+<div class="category-scroll">
+  <div class="cat-pill active">🔥 All</div>
+  <div class="cat-pill">🏟️ Venues</div>
+  <div class="cat-pill">🏋️ Coaches</div>
+  <div class="cat-pill">🏷️ Deals</div>
+  <div class="cat-pill">⭐ Top Rated</div>
+</div>
+
+<!-- Map Banner -->
+<div class="map-banner">
+  <div class="map-dots">
+    <div class="map-grid-line h1"></div>
+    <div class="map-grid-line h2"></div>
+    <div class="map-grid-line v1"></div>
+    <div class="map-grid-line v2"></div>
+    <div class="map-dot d1"></div>
+    <div class="map-dot d2"></div>
+    <div class="map-dot d3"></div>
+    <div class="map-dot d4"></div>
+    <div class="map-dot d5"></div>
+    <div class="map-dot d6"></div>
+    <div class="map-dot d7"></div>
+    <div class="map-pulse"></div>
+  </div>
+  <div class="map-info">
+    <div class="map-text"><span>14 venues</span> near Skopje</div>
+    <button class="map-btn">📍 Open Map</button>
+  </div>
+</div>
+
+<!-- Sports Grid -->
+<div class="section-header">
+  <h3>Browse by Sport</h3>
+</div>
+<div class="sports-grid">
+  <div class="sport-item">
+    <div class="sport-icon s1">🏀</div>
+    <span class="sport-name">Basketball</span>
+  </div>
+  <div class="sport-item">
+    <div class="sport-icon s2">⚽</div>
+    <span class="sport-name">Football</span>
+  </div>
+  <div class="sport-item">
+    <div class="sport-icon s3">🎾</div>
+    <span class="sport-name">Tennis</span>
+  </div>
+  <div class="sport-item">
+    <div class="sport-icon s4">🏸</div>
+    <span class="sport-name">Paddle</span>
+  </div>
+  <div class="sport-item">
+    <div class="sport-icon s5">🏐</div>
+    <span class="sport-name">Volleyball</span>
+  </div>
+  <div class="sport-item">
+    <div class="sport-icon s6">🏊</div>
+    <span class="sport-name">Swimming</span>
+  </div>
+  <div class="sport-item">
+    <div class="sport-icon s7">🏋️</div>
+    <span class="sport-name">Gym</span>
+  </div>
+  <div class="sport-item">
+    <div class="sport-icon s8">➕</div>
+    <span class="sport-name">More</span>
+  </div>
+</div>
+
+<!-- Top Deals -->
+<div class="deals-banner">
+  <div class="deals-icon">🔥</div>
+  <div class="deals-text">
+    <h4>Top Deals This Week</h4>
+    <p>Up to 40% off at 6 venues near you</p>
+  </div>
+  <button class="deals-btn">View</button>
+</div>
+
+<!-- Featured Venues -->
+<div class="section-header">
+  <h3>Featured Venues</h3>
+  <span class="see-all">See All</span>
+</div>
+<div class="venue-scroll">
+  <div class="venue-card">
+    <div class="venue-img">
+      🏟️
+      <div class="venue-discount">-25%</div>
+      <div class="venue-rating">⭐ 4.8</div>
+    </div>
+    <div class="venue-body">
+      <div class="venue-name">Arena Sport Center</div>
+      <div class="venue-meta">📍 1.2 km • Centar, Skopje</div>
+      <div class="venue-tags">
+        <span class="venue-tag sport">🏀 Basketball</span>
+        <span class="venue-tag price">800 MKD/h</span>
+      </div>
+    </div>
+  </div>
+  <div class="venue-card">
+    <div class="venue-img">
+      🎾
+      <div class="venue-rating">⭐ 4.6</div>
+    </div>
+    <div class="venue-body">
+      <div class="venue-name">Tennis Club Skopje</div>
+      <div class="venue-meta">📍 3.4 km • Karposh</div>
+      <div class="venue-tags">
+        <span class="venue-tag sport">🎾 Tennis</span>
+        <span class="venue-tag price">1200 MKD/h</span>
+      </div>
+    </div>
+  </div>
+  <div class="venue-card">
+    <div class="venue-img">
+      ⚽
+      <div class="venue-discount">-15%</div>
+      <div class="venue-rating">⭐ 4.5</div>
+    </div>
+    <div class="venue-body">
+      <div class="venue-name">Goal Sports Arena</div>
+      <div class="venue-meta">📍 5.1 km • Aerodrom</div>
+      <div class="venue-tags">
+        <span class="venue-tag sport">⚽ Football</span>
+        <span class="venue-tag deal">🏷️ Deal</span>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Top Coaches -->
+<div class="section-header">
+  <h3>Top Coaches</h3>
+  <span class="see-all">See All</span>
+</div>
+<div class="coach-scroll">
+  <div class="coach-card">
+    <div class="coach-avatar c1">M</div>
+    <div class="coach-name">Marko P.</div>
+    <div class="coach-sport">🏀 Basketball Coach</div>
+    <div class="coach-rating">⭐ 4.9 (42 reviews)</div>
+    <div class="coach-price">600 MKD/h</div>
+  </div>
+  <div class="coach-card">
+    <div class="coach-avatar c2">E</div>
+    <div class="coach-name">Elena K.</div>
+    <div class="coach-sport">🎾 Tennis Coach</div>
+    <div class="coach-rating">⭐ 4.7 (28 reviews)</div>
+    <div class="coach-price">800 MKD/h</div>
+  </div>
+  <div class="coach-card">
+    <div class="coach-avatar c3">S</div>
+    <div class="coach-name">Stefan D.</div>
+    <div class="coach-sport">🏸 Paddle Coach</div>
+    <div class="coach-rating">⭐ 4.8 (35 reviews)</div>
+    <div class="coach-price">700 MKD/h</div>
+  </div>
+</div>
+
+<!-- Popular Near You -->
+<div class="section-header">
+  <h3>🔥 Popular Near You</h3>
+  <span class="see-all">See All</span>
+</div>
+<div class="popular-list">
+  <div class="popular-row">
+    <div class="popular-rank r1">1</div>
+    <div class="popular-thumb t1">🏟️</div>
+    <div class="popular-info">
+      <div class="popular-name">Arena Sport Center</div>
+      <div class="popular-detail">Basketball, Football • 1.2 km</div>
+    </div>
+    <div class="popular-price">800 MKD</div>
+  </div>
+  <div class="popular-row">
+    <div class="popular-rank r2">2</div>
+    <div class="popular-thumb t2">🎾</div>
+    <div class="popular-info">
+      <div class="popular-name">Tennis Club Skopje</div>
+      <div class="popular-detail">Tennis, Paddle • 3.4 km</div>
+    </div>
+    <div class="popular-price">1,200 MKD</div>
+  </div>
+  <div class="popular-row">
+    <div class="popular-rank r3">3</div>
+    <div class="popular-thumb t3">⚽</div>
+    <div class="popular-info">
+      <div class="popular-name">Goal Sports Arena</div>
+      <div class="popular-detail">Football, Futsal • 5.1 km</div>
+    </div>
+    <div class="popular-price">600 MKD</div>
+  </div>
+</div>
+
+<div class="spacer"></div>
+
+<!-- Bottom Nav -->
+<div class="bottom-nav">
+  <div class="nav-item">
+    <span class="nav-icon">🏠</span>
+    <span>Home</span>
+  </div>
+  <div class="nav-item active">
+    <span class="nav-icon">🔍</span>
+    <span>Explore</span>
+  </div>
+  <div class="nav-item">
+    <span class="nav-icon">🎯</span>
+    <span>Play</span>
+  </div>
+  <div class="nav-item">
+    <span class="nav-icon">👥</span>
+    <span>Social</span>
+  </div>
+  <div class="nav-item">
+    <span class="nav-icon">☰</span>
+    <span>More</span>
+  </div>
+</div>
+
+</body>
+</html>

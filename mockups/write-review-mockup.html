@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Write Review</title>
+<style>
+  * { margin:0; padding:0; box-sizing:border-box; }
+  body { width:393px; min-height:852px; background:#121212; font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif; color:#fff; overflow-x:hidden; padding-bottom:100px; }
+
+  .status-bar { height:44px; }
+  .header { padding:8px 16px 16px; display:flex; align-items:center; justify-content:space-between; }
+  .back-btn { width:40px; height:40px; border-radius:50%; background:#1E1E1E; border:none; color:#fff; font-size:20px; display:flex; align-items:center; justify-content:center; }
+  .header-title { font-size:18px; font-weight:700; }
+  .header-spacer { width:40px; }
+
+  .venue-preview {
+    margin:0 16px 24px; background:#1E1E1E; border-radius:14px; padding:16px;
+    display:flex; gap:14px; align-items:center;
+  }
+  .venue-thumb { width:56px; height:56px; border-radius:12px; background:#252525; display:flex; align-items:center; justify-content:center; font-size:28px; }
+  .venue-name { font-size:15px; font-weight:700; }
+  .venue-date { font-size:13px; color:#888; margin-top:2px; }
+
+  .rating-section { text-align:center; margin:0 16px 28px; }
+  .rating-label { font-size:16px; font-weight:700; margin-bottom:16px; }
+  .stars { display:flex; justify-content:center; gap:12px; }
+  .star { font-size:44px; cursor:pointer; opacity:0.3; transition:all 0.2s; }
+  .star.filled { opacity:1; transform:scale(1.1); }
+  .rating-text { font-size:14px; color:#4CAF50; margin-top:8px; font-weight:600; }
+
+  .criteria { margin:0 16px 24px; }
+  .criteria-title { font-size:14px; font-weight:700; margin-bottom:12px; }
+  .criteria-item {
+    display:flex; align-items:center; justify-content:space-between;
+    background:#1E1E1E; border-radius:12px; padding:14px 16px; margin-bottom:8px;
+  }
+  .criteria-name { font-size:14px; }
+  .criteria-stars { display:flex; gap:4px; }
+  .mini-star { font-size:18px; opacity:0.3; }
+  .mini-star.filled { opacity:1; }
+
+  .review-input-section { margin:0 16px 20px; }
+  .review-label { font-size:14px; font-weight:700; margin-bottom:10px; }
+  .review-textarea {
+    width:100%; height:140px; padding:16px; background:#1E1E1E; border:1px solid #333;
+    border-radius:14px; color:#fff; font-size:14px; resize:none; outline:none;
+    font-family:inherit; line-height:1.5;
+  }
+  .review-textarea::placeholder { color:#555; }
+  .char-count { text-align:right; font-size:12px; color:#555; margin-top:6px; }
+
+  .photo-section { margin:0 16px 20px; }
+  .photo-label { font-size:14px; font-weight:700; margin-bottom:10px; }
+  .photo-row { display:flex; gap:10px; }
+  .photo-add {
+    width:72px; height:72px; border-radius:12px; border:1px dashed #555;
+    background:#1E1E1E; display:flex; align-items:center; justify-content:center;
+    font-size:24px; color:#555; cursor:pointer;
+  }
+  .photo-thumb {
+    width:72px; height:72px; border-radius:12px; background:#252525;
+    display:flex; align-items:center; justify-content:center; font-size:28px;
+    position:relative;
+  }
+  .photo-remove { position:absolute; top:-6px; right:-6px; width:20px; height:20px; border-radius:50%; background:#ef5350; font-size:12px; display:flex; align-items:center; justify-content:center; border:none; color:#fff; }
+
+  .submit-bar {
+    position:fixed; bottom:0; left:0; width:393px; padding:16px;
+    background:linear-gradient(transparent, #121212 30%);
+  }
+  .submit-btn {
+    width:100%; padding:18px; border-radius:16px; border:none;
+    background:linear-gradient(135deg,#4CAF50,#2E7D32);
+    color:#fff; font-size:16px; font-weight:700; cursor:pointer;
+  }
+</style>
+</head>
+<body>
+  <div class="status-bar"></div>
+  <div class="header">
+    <button class="back-btn">&#8249;</button>
+    <span class="header-title">Write Review</span>
+    <div class="header-spacer"></div>
+  </div>
+
+  <div class="venue-preview">
+    <div class="venue-thumb">🎾</div>
+    <div>
+      <div class="venue-name">Champions Tennis Club</div>
+      <div class="venue-date">Visited Jun 5, 2026</div>
+    </div>
+  </div>
+
+  <div class="rating-section">
+    <div class="rating-label">How was your experience?</div>
+    <div class="stars">
+      <span class="star filled">★</span>
+      <span class="star filled">★</span>
+      <span class="star filled">★</span>
+      <span class="star filled">★</span>
+      <span class="star">★</span>
+    </div>
+    <div class="rating-text">Great!</div>
+  </div>
+
+  <div class="criteria">
+    <div class="criteria-title">Rate specific areas</div>
+    <div class="criteria-item">
+      <span class="criteria-name">Court Quality</span>
+      <div class="criteria-stars">
+        <span class="mini-star filled">★</span><span class="mini-star filled">★</span><span class="mini-star filled">★</span><span class="mini-star filled">★</span><span class="mini-star filled">★</span>
+      </div>
+    </div>
+    <div class="criteria-item">
+      <span class="criteria-name">Cleanliness</span>
+      <div class="criteria-stars">
+        <span class="mini-star filled">★</span><span class="mini-star filled">★</span><span class="mini-star filled">★</span><span class="mini-star filled">★</span><span class="mini-star">★</span>
+      </div>
+    </div>
+    <div class="criteria-item">
+      <span class="criteria-name">Staff</span>
+      <div class="criteria-stars">
+        <span class="mini-star filled">★</span><span class="mini-star filled">★</span><span class="mini-star filled">★</span><span class="mini-star">★</span><span class="mini-star">★</span>
+      </div>
+    </div>
+    <div class="criteria-item">
+      <span class="criteria-name">Value for Money</span>
+      <div class="criteria-stars">
+        <span class="mini-star filled">★</span><span class="mini-star filled">★</span><span class="mini-star filled">★</span><span class="mini-star filled">★</span><span class="mini-star">★</span>
+      </div>
+    </div>
+  </div>
+
+  <div class="review-input-section">
+    <div class="review-label">Your Review</div>
+    <textarea class="review-textarea" placeholder="Share your experience with others...">Great courts and nice atmosphere. The surface was well-maintained and the lighting was perfect for an evening game. Only downside was limited parking.</textarea>
+    <div class="char-count">156 / 500</div>
+  </div>
+
+  <div class="photo-section">
+    <div class="photo-label">Add Photos (optional)</div>
+    <div class="photo-row">
+      <div class="photo-thumb">📸<button class="photo-remove">×</button></div>
+      <div class="photo-add">+</div>
+    </div>
+  </div>
+
+  <div class="submit-bar">
+    <button class="submit-btn">Submit Review</button>
+  </div>
+</body>
+</html>

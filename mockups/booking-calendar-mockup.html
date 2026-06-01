@@ -1,0 +1,168 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=393, initial-scale=1.0">
+<title>Booking Calendar</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background: #121212; color: #fff; width: 393px; min-height: 852px; overflow-x: hidden; }
+  .status-bar { height: 44px; display: flex; align-items: center; justify-content: space-between; padding: 0 20px; font-size: 12px; font-weight: 600; }
+  .header { display: flex; align-items: center; padding: 8px 16px 16px; gap: 12px; }
+  .back-btn { width: 36px; height: 36px; background: #1E1E1E; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 18px; }
+  .header-title { flex: 1; }
+  .header-title h1 { font-size: 18px; font-weight: 700; }
+  .header-title p { font-size: 12px; color: #888; margin-top: 2px; }
+  .fav-btn { width: 36px; height: 36px; background: #1E1E1E; border-radius: 50%; display: flex; align-items: center; justify-content: center; }
+  .venue-mini { display: flex; align-items: center; gap: 12px; padding: 12px 16px; margin: 0 16px 16px; background: #1E1E1E; border-radius: 12px; }
+  .venue-mini-img { width: 48px; height: 48px; background: linear-gradient(135deg, #2E7D32, #4CAF50); border-radius: 8px; display: flex; align-items: center; justify-content: center; font-size: 20px; }
+  .venue-mini-info h3 { font-size: 14px; font-weight: 600; }
+  .venue-mini-info p { font-size: 12px; color: #888; }
+  .section-label { font-size: 16px; font-weight: 700; padding: 0 16px; margin-bottom: 12px; }
+  .date-strip { display: flex; gap: 8px; padding: 0 16px; margin-bottom: 20px; overflow-x: auto; }
+  .date-item { display: flex; flex-direction: column; align-items: center; padding: 10px 14px; background: #1E1E1E; border-radius: 12px; min-width: 52px; }
+  .date-item.active { background: #4CAF50; }
+  .date-item .day-name { font-size: 10px; color: #888; text-transform: uppercase; }
+  .date-item.active .day-name { color: rgba(255,255,255,0.8); }
+  .date-item .day-num { font-size: 18px; font-weight: 700; margin: 2px 0; }
+  .date-item .month { font-size: 9px; color: #888; }
+  .date-item.active .month { color: rgba(255,255,255,0.8); }
+  .sport-chips { display: flex; gap: 8px; padding: 0 16px; margin-bottom: 16px; overflow-x: auto; }
+  .sport-chip { padding: 6px 14px; background: #1E1E1E; border-radius: 20px; font-size: 13px; white-space: nowrap; }
+  .sport-chip.active { background: #4CAF50; }
+  .time-section { padding: 0 16px; margin-bottom: 20px; }
+  .time-label { font-size: 13px; color: #888; margin-bottom: 8px; }
+  .time-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; }
+  .time-slot { padding: 10px 4px; background: #1E1E1E; border-radius: 10px; text-align: center; font-size: 13px; font-weight: 600; }
+  .time-slot.available { border: 1px solid #333; }
+  .time-slot.selected { background: #4CAF50; border: 1px solid #4CAF50; }
+  .time-slot.booked { background: #2A2A2A; color: #555; text-decoration: line-through; }
+  .time-slot .price { font-size: 10px; color: #888; margin-top: 2px; font-weight: 400; }
+  .time-slot.selected .price { color: rgba(255,255,255,0.8); }
+  .duration-section { padding: 0 16px; margin-bottom: 20px; }
+  .duration-options { display: flex; gap: 8px; }
+  .duration-opt { flex: 1; padding: 12px; background: #1E1E1E; border-radius: 10px; text-align: center; }
+  .duration-opt.active { background: #1B3A1E; border: 1px solid #4CAF50; }
+  .duration-opt .dur-time { font-size: 16px; font-weight: 700; }
+  .duration-opt .dur-price { font-size: 12px; color: #888; margin-top: 2px; }
+  .duration-opt.active .dur-price { color: #4CAF50; }
+  .court-section { padding: 0 16px; margin-bottom: 20px; }
+  .court-card { display: flex; align-items: center; gap: 12px; padding: 12px; background: #1E1E1E; border-radius: 12px; margin-bottom: 8px; }
+  .court-card.selected { border: 1px solid #4CAF50; background: #1B3A1E; }
+  .court-icon { width: 40px; height: 40px; background: #2A2A2A; border-radius: 8px; display: flex; align-items: center; justify-content: center; font-size: 18px; }
+  .court-info { flex: 1; }
+  .court-info h4 { font-size: 14px; font-weight: 600; }
+  .court-info p { font-size: 12px; color: #888; }
+  .court-check { width: 22px; height: 22px; border-radius: 50%; border: 2px solid #444; }
+  .court-card.selected .court-check { background: #4CAF50; border-color: #4CAF50; display: flex; align-items: center; justify-content: center; font-size: 12px; }
+  .bottom-bar { position: fixed; bottom: 0; left: 0; width: 393px; padding: 12px 16px; background: #1A1A1A; border-top: 1px solid #2A2A2A; display: flex; align-items: center; justify-content: space-between; }
+  .price-info .old-price { font-size: 12px; color: #888; text-decoration: line-through; }
+  .price-info .new-price { font-size: 22px; font-weight: 800; color: #4CAF50; }
+  .price-info .new-price span { font-size: 13px; font-weight: 400; color: #888; }
+  .continue-btn { padding: 14px 32px; background: #4CAF50; border-radius: 12px; font-size: 16px; font-weight: 700; color: #fff; }
+  .spacer { height: 80px; }
+</style>
+</head>
+<body>
+  <div class="status-bar"><span>9:41</span><span>...</span></div>
+
+  <div class="header">
+    <div class="back-btn">&#8592;</div>
+    <div class="header-title">
+      <h1>Book a Slot</h1>
+      <p>Select date, time & court</p>
+    </div>
+    <div class="fav-btn">&#9825;</div>
+  </div>
+
+  <div class="venue-mini">
+    <div class="venue-mini-img">&#9917;</div>
+    <div class="venue-mini-info">
+      <h3>Arena Sport Center</h3>
+      <p>Bul. Partizanski Odredi 17</p>
+    </div>
+  </div>
+
+  <div class="section-label">Select Date</div>
+  <div class="date-strip">
+    <div class="date-item"><span class="day-name">Sat</span><span class="day-num">24</span><span class="month">May</span></div>
+    <div class="date-item active"><span class="day-name">Sun</span><span class="day-num">25</span><span class="month">May</span></div>
+    <div class="date-item"><span class="day-name">Mon</span><span class="day-num">26</span><span class="month">May</span></div>
+    <div class="date-item"><span class="day-name">Tue</span><span class="day-num">27</span><span class="month">May</span></div>
+    <div class="date-item"><span class="day-name">Wed</span><span class="day-num">28</span><span class="month">May</span></div>
+    <div class="date-item"><span class="day-name">Thu</span><span class="day-num">29</span><span class="month">May</span></div>
+    <div class="date-item"><span class="day-name">Fri</span><span class="day-num">30</span><span class="month">May</span></div>
+  </div>
+
+  <div class="section-label">Select Sport</div>
+  <div class="sport-chips">
+    <div class="sport-chip active">Basketball</div>
+    <div class="sport-chip">Football</div>
+    <div class="sport-chip">Tennis</div>
+    <div class="sport-chip">Volleyball</div>
+  </div>
+
+  <div class="time-section">
+    <div class="section-label" style="padding:0; margin-bottom: 12px;">Select Time</div>
+    <div class="time-label">Morning</div>
+    <div class="time-grid" style="margin-bottom: 12px;">
+      <div class="time-slot available">09:00<div class="price">750 MKD</div></div>
+      <div class="time-slot booked">10:00<div class="price">Booked</div></div>
+      <div class="time-slot available">11:00<div class="price">750 MKD</div></div>
+      <div class="time-slot booked">12:00<div class="price">Booked</div></div>
+    </div>
+    <div class="time-label">Afternoon</div>
+    <div class="time-grid" style="margin-bottom: 12px;">
+      <div class="time-slot available">13:00<div class="price">800 MKD</div></div>
+      <div class="time-slot available">14:00<div class="price">800 MKD</div></div>
+      <div class="time-slot selected">15:00<div class="price">800 MKD</div></div>
+      <div class="time-slot available">16:00<div class="price">900 MKD</div></div>
+    </div>
+    <div class="time-label">Evening</div>
+    <div class="time-grid">
+      <div class="time-slot available">17:00<div class="price">900 MKD</div></div>
+      <div class="time-slot available">18:00<div class="price">1000 MKD</div></div>
+      <div class="time-slot booked">19:00<div class="price">Booked</div></div>
+      <div class="time-slot available">20:00<div class="price">1000 MKD</div></div>
+    </div>
+  </div>
+
+  <div class="duration-section">
+    <div class="section-label" style="padding:0; margin-bottom: 10px;">Duration</div>
+    <div class="duration-options">
+      <div class="duration-opt active"><div class="dur-time">1h</div><div class="dur-price">800 MKD</div></div>
+      <div class="duration-opt"><div class="dur-time">1.5h</div><div class="dur-price">1,150 MKD</div></div>
+      <div class="duration-opt"><div class="dur-time">2h</div><div class="dur-price">1,500 MKD</div></div>
+    </div>
+  </div>
+
+  <div class="court-section">
+    <div class="section-label" style="padding:0; margin-bottom: 10px;">Select Court</div>
+    <div class="court-card selected">
+      <div class="court-icon">&#127936;</div>
+      <div class="court-info"><h4>Court A - Indoor</h4><p>Full-size basketball &bull; Wood floor</p></div>
+      <div class="court-check">&#10003;</div>
+    </div>
+    <div class="court-card">
+      <div class="court-icon">&#127936;</div>
+      <div class="court-info"><h4>Court B - Indoor</h4><p>Full-size basketball &bull; Rubber floor</p></div>
+      <div class="court-check"></div>
+    </div>
+    <div class="court-card">
+      <div class="court-icon">&#127936;</div>
+      <div class="court-info"><h4>Court C - Outdoor</h4><p>Half court &bull; Concrete</p></div>
+      <div class="court-check"></div>
+    </div>
+  </div>
+
+  <div class="spacer"></div>
+
+  <div class="bottom-bar">
+    <div class="price-info">
+      <div class="old-price">1,000 MKD</div>
+      <div class="new-price">800 MKD <span>/hour</span></div>
+    </div>
+    <div class="continue-btn">Continue</div>
+  </div>
+</body>
+</html>

@@ -1,0 +1,180 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Coach Setup</title>
+<style>
+  * { margin:0; padding:0; box-sizing:border-box; }
+  body { width:393px; min-height:852px; background:#121212; font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif; color:#fff; overflow-x:hidden; padding-bottom:100px; }
+
+  .status-bar { height:44px; }
+  .header { padding:8px 16px 16px; display:flex; align-items:center; gap:16px; }
+  .back-btn { width:40px; height:40px; border-radius:50%; background:#1E1E1E; border:none; color:#fff; font-size:20px; display:flex; align-items:center; justify-content:center; }
+  .header-title { font-size:18px; font-weight:700; }
+
+  .progress { margin:0 16px 24px; }
+  .progress-label { font-size:13px; color:#888; margin-bottom:8px; display:flex; justify-content:space-between; }
+  .progress-track { height:6px; background:#1E1E1E; border-radius:3px; }
+  .progress-fill { height:100%; background:linear-gradient(90deg,#2196F3,#64B5F6); border-radius:3px; }
+
+  .step-title { padding:0 16px; font-size:20px; font-weight:800; margin-bottom:4px; }
+  .step-desc { padding:0 16px; font-size:13px; color:#888; margin-bottom:20px; }
+
+  .avatar-upload { text-align:center; margin:0 16px 24px; }
+  .avatar-circle {
+    width:100px; height:100px; border-radius:50%; background:#1E1E1E;
+    border:3px dashed #2196F3; display:inline-flex; align-items:center;
+    justify-content:center; font-size:40px; cursor:pointer; position:relative;
+  }
+  .avatar-edit { position:absolute; bottom:0; right:0; width:32px; height:32px; border-radius:50%; background:#2196F3; display:flex; align-items:center; justify-content:center; font-size:14px; border:3px solid #121212; }
+  .avatar-hint { font-size:12px; color:#888; margin-top:8px; }
+
+  .form-section { padding:0 16px; }
+  .input-group { margin-bottom:16px; }
+  .input-label { font-size:13px; color:#888; margin-bottom:6px; display:block; }
+  .input-field {
+    width:100%; padding:14px 16px; background:#1E1E1E; border:1px solid #333;
+    border-radius:12px; color:#fff; font-size:15px; outline:none;
+  }
+  .input-field::placeholder { color:#555; }
+  .textarea-field { width:100%; padding:14px 16px; background:#1E1E1E; border:1px solid #333; border-radius:12px; color:#fff; font-size:14px; outline:none; resize:none; height:100px; font-family:inherit; }
+  .textarea-field::placeholder { color:#555; }
+
+  .sport-chips { display:flex; flex-wrap:wrap; gap:8px; }
+  .sport-chip {
+    padding:10px 16px; border-radius:12px; background:#1E1E1E; border:1px solid #333;
+    color:#888; font-size:13px; font-weight:600; cursor:pointer;
+  }
+  .sport-chip.selected { border-color:#2196F3; background:rgba(33,150,243,0.1); color:#2196F3; }
+
+  .cert-list { display:flex; flex-direction:column; gap:8px; }
+  .cert-item {
+    display:flex; align-items:center; gap:10px; background:#1E1E1E;
+    border-radius:12px; padding:12px 16px;
+  }
+  .cert-icon { font-size:18px; }
+  .cert-name { flex:1; font-size:14px; }
+  .cert-remove { color:#555; font-size:16px; cursor:pointer; background:none; border:none; }
+  .add-cert {
+    display:flex; align-items:center; justify-content:center; gap:8px;
+    background:#1E1E1E; border:1px dashed #333; border-radius:12px; padding:12px;
+    color:#2196F3; font-size:14px; font-weight:600; cursor:pointer;
+  }
+
+  .row-2 { display:flex; gap:12px; }
+  .row-2 .input-group { flex:1; }
+
+  .exp-selector { display:flex; gap:8px; }
+  .exp-chip {
+    flex:1; padding:12px; border-radius:12px; background:#1E1E1E; border:1px solid #333;
+    color:#888; font-size:13px; font-weight:600; text-align:center; cursor:pointer;
+  }
+  .exp-chip.selected { border-color:#2196F3; background:rgba(33,150,243,0.1); color:#2196F3; }
+
+  .action-bar {
+    position:fixed; bottom:0; left:0; width:393px; padding:16px;
+    background:linear-gradient(transparent, #121212 30%); display:flex; gap:12px;
+  }
+  .btn-back { flex:0.4; padding:16px; border-radius:14px; border:1px solid #333; background:#1E1E1E; color:#fff; font-size:15px; font-weight:600; cursor:pointer; text-align:center; }
+  .btn-next { flex:1; padding:16px; border-radius:14px; border:none; background:linear-gradient(135deg,#2196F3,#1565C0); color:#fff; font-size:15px; font-weight:700; cursor:pointer; text-align:center; }
+</style>
+</head>
+<body>
+  <div class="status-bar"></div>
+  <div class="header">
+    <button class="back-btn">&#8249;</button>
+    <span class="header-title">Coach Registration</span>
+  </div>
+
+  <div class="progress">
+    <div class="progress-label"><span>Step 1 of 3</span><span>Profile</span></div>
+    <div class="progress-track"><div class="progress-fill" style="width:33%"></div></div>
+  </div>
+
+  <div class="step-title">Your Profile</div>
+  <div class="step-desc">Set up your coaching profile</div>
+
+  <div class="avatar-upload">
+    <div class="avatar-circle">🏋️<div class="avatar-edit">📷</div></div>
+    <div class="avatar-hint">Tap to upload profile photo</div>
+  </div>
+
+  <div class="form-section">
+    <div class="row-2">
+      <div class="input-group">
+        <label class="input-label">First Name *</label>
+        <input class="input-field" value="Maria">
+      </div>
+      <div class="input-group">
+        <label class="input-label">Last Name *</label>
+        <input class="input-field" value="Santos">
+      </div>
+    </div>
+
+    <div class="input-group">
+      <label class="input-label">Bio</label>
+      <textarea class="textarea-field" placeholder="Tell potential clients about yourself...">Professional tennis coach with 8 years of experience. Specialized in technique refinement and competitive preparation. Former national-level player.</textarea>
+    </div>
+
+    <div class="input-group">
+      <label class="input-label">Sports *</label>
+      <div class="sport-chips">
+        <span class="sport-chip selected">🎾 Tennis</span>
+        <span class="sport-chip">🏸 Paddle</span>
+        <span class="sport-chip">⚽ Football</span>
+        <span class="sport-chip">🏀 Basketball</span>
+        <span class="sport-chip">🏐 Volleyball</span>
+      </div>
+    </div>
+
+    <div class="input-group">
+      <label class="input-label">Experience Level *</label>
+      <div class="exp-selector">
+        <div class="exp-chip">1-3 years</div>
+        <div class="exp-chip">3-5 years</div>
+        <div class="exp-chip selected">5-10 years</div>
+        <div class="exp-chip">10+ years</div>
+      </div>
+    </div>
+
+    <div class="input-group">
+      <label class="input-label">Certifications</label>
+      <div class="cert-list">
+        <div class="cert-item">
+          <span class="cert-icon">🏅</span>
+          <span class="cert-name">ITF Level 2 Coaching</span>
+          <button class="cert-remove">✕</button>
+        </div>
+        <div class="cert-item">
+          <span class="cert-icon">🏅</span>
+          <span class="cert-name">Sports Science BSc</span>
+          <button class="cert-remove">✕</button>
+        </div>
+        <div class="add-cert">+ Add certification</div>
+      </div>
+    </div>
+
+    <div class="row-2">
+      <div class="input-group">
+        <label class="input-label">Hourly Rate ($) *</label>
+        <input class="input-field" type="number" value="60">
+      </div>
+      <div class="input-group">
+        <label class="input-label">Session Duration</label>
+        <input class="input-field" value="60 min">
+      </div>
+    </div>
+
+    <div class="input-group">
+      <label class="input-label">Location / Service Area</label>
+      <input class="input-field" placeholder="Where do you coach?" value="Downtown area, willing to travel">
+    </div>
+  </div>
+
+  <div class="action-bar">
+    <button class="btn-back">Back</button>
+    <button class="btn-next">Next: Schedule →</button>
+  </div>
+</body>
+</html>

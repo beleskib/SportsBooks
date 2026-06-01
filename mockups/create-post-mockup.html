@@ -1,0 +1,147 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=393, initial-scale=1.0">
+<title>Create Post</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background: #121212; color: #fff; width: 393px; min-height: 852px; }
+  .status-bar { height: 44px; display: flex; align-items: center; justify-content: space-between; padding: 0 20px; font-size: 12px; font-weight: 600; }
+  .header { display: flex; align-items: center; padding: 8px 16px 16px; gap: 12px; }
+  .cancel-btn { font-size: 15px; color: #888; }
+  .header h1 { font-size: 18px; font-weight: 700; flex: 1; text-align: center; }
+  .post-btn { padding: 8px 20px; background: #4CAF50; border-radius: 20px; font-size: 14px; font-weight: 700; }
+  .post-btn.disabled { background: #2A2A2A; color: #555; }
+
+  .user-row { display: flex; align-items: center; gap: 12px; padding: 12px 16px; }
+  .user-avatar { width: 44px; height: 44px; border-radius: 50%; background: linear-gradient(135deg, #2E7D32, #4CAF50); display: flex; align-items: center; justify-content: center; font-size: 18px; font-weight: 700; }
+  .user-info .name { font-size: 15px; font-weight: 600; }
+  .visibility { display: flex; align-items: center; gap: 4px; margin-top: 2px; padding: 3px 8px; background: #1E1E1E; border-radius: 6px; font-size: 11px; color: #888; width: fit-content; }
+
+  .post-input { padding: 12px 16px; min-height: 120px; }
+  .post-input .placeholder { font-size: 17px; color: #555; line-height: 1.5; }
+  .post-input .typed-text { font-size: 17px; color: #fff; line-height: 1.5; }
+
+  .photo-preview { padding: 0 16px; margin-bottom: 16px; }
+  .photo-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 4px; border-radius: 12px; overflow: hidden; }
+  .photo-item { height: 160px; position: relative; }
+  .photo-item img { width: 100%; height: 100%; object-fit: cover; }
+  .photo-placeholder { width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; font-size: 32px; }
+  .photo-remove { position: absolute; top: 8px; right: 8px; width: 24px; height: 24px; background: rgba(0,0,0,0.6); border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 12px; }
+
+  .tag-section { padding: 12px 16px; border-top: 1px solid #1E1E1E; }
+  .tag-label { font-size: 13px; color: #888; margin-bottom: 8px; }
+  .tag-chips { display: flex; gap: 8px; flex-wrap: wrap; }
+  .tag-chip { padding: 6px 12px; background: #1E1E1E; border-radius: 8px; font-size: 13px; display: flex; align-items: center; gap: 6px; }
+  .tag-chip.active { background: #1B3A1E; border: 1px solid #4CAF50; color: #4CAF50; }
+  .tag-chip .emoji { font-size: 14px; }
+
+  .attach-section { border-top: 1px solid #1E1E1E; padding: 12px 16px; }
+  .attach-row { display: flex; gap: 12px; }
+  .attach-item { display: flex; align-items: center; gap: 8px; padding: 10px 16px; background: #1E1E1E; border-radius: 10px; font-size: 13px; }
+  .attach-item .emoji { font-size: 18px; }
+  .attach-item.photo { color: #4CAF50; }
+  .attach-item.sport { color: #2196F3; }
+  .attach-item.location { color: #FF9800; }
+  .attach-item.tag { color: #E91E63; }
+
+  .activity-link { margin: 0 16px; padding: 14px; background: #1E1E1E; border-radius: 12px; border: 1px solid #2A2A2A; }
+  .activity-link-header { display: flex; align-items: center; gap: 8px; margin-bottom: 8px; }
+  .activity-link-header .emoji { font-size: 16px; }
+  .activity-link-header .text { font-size: 13px; color: #4CAF50; font-weight: 600; }
+  .linked-card { display: flex; align-items: center; gap: 10px; padding: 10px; background: #2A2A2A; border-radius: 10px; }
+  .linked-icon { width: 36px; height: 36px; background: #1B3A1E; border-radius: 8px; display: flex; align-items: center; justify-content: center; font-size: 16px; }
+  .linked-info { flex: 1; }
+  .linked-info h4 { font-size: 13px; font-weight: 600; }
+  .linked-info p { font-size: 11px; color: #888; }
+  .linked-remove { font-size: 14px; color: #555; }
+
+  .divider { height: 1px; background: #1E1E1E; margin: 8px 0; }
+
+  .bottom-toolbar { position: fixed; bottom: 0; left: 0; width: 393px; padding: 8px 16px 28px; background: #1A1A1A; border-top: 1px solid #2A2A2A; }
+  .toolbar-icons { display: flex; gap: 20px; align-items: center; }
+  .tool-icon { width: 40px; height: 40px; border-radius: 10px; display: flex; align-items: center; justify-content: center; font-size: 20px; }
+  .char-count { margin-left: auto; font-size: 12px; color: #555; }
+</style>
+</head>
+<body>
+  <div class="status-bar"><span>9:41</span><span>...</span></div>
+
+  <div class="header">
+    <div class="cancel-btn">Cancel</div>
+    <h1>New Post</h1>
+    <div class="post-btn">Post</div>
+  </div>
+
+  <div class="user-row">
+    <div class="user-avatar">B</div>
+    <div>
+      <div class="user-info"><div class="name">Bojan Beleski</div></div>
+      <div class="visibility">&#127760; Public &#9662;</div>
+    </div>
+  </div>
+
+  <div class="post-input">
+    <div class="typed-text">Just finished an amazing basketball session at Arena Sport Center! The courts are in perfect condition &#128170;&#127936;</div>
+  </div>
+
+  <div class="photo-preview">
+    <div class="photo-grid">
+      <div class="photo-item">
+        <div class="photo-placeholder" style="background: linear-gradient(135deg, #1B5E20, #4CAF50);">&#127936;</div>
+        <div class="photo-remove">&#10005;</div>
+      </div>
+      <div class="photo-item">
+        <div class="photo-placeholder" style="background: linear-gradient(135deg, #0D47A1, #2196F3);">&#127939;</div>
+        <div class="photo-remove">&#10005;</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="activity-link">
+    <div class="activity-link-header">
+      <div class="emoji">&#128279;</div>
+      <div class="text">Linked Activity</div>
+    </div>
+    <div class="linked-card">
+      <div class="linked-icon">&#127936;</div>
+      <div class="linked-info">
+        <h4>Friday Night Basketball</h4>
+        <p>Match &bull; Won &bull; May 23 at Arena Sport Center</p>
+      </div>
+      <div class="linked-remove">&#10005;</div>
+    </div>
+  </div>
+
+  <div class="tag-section">
+    <div class="tag-label">Tag a sport</div>
+    <div class="tag-chips">
+      <div class="tag-chip active"><span class="emoji">&#127936;</span> Basketball</div>
+      <div class="tag-chip"><span class="emoji">&#9917;</span> Football</div>
+      <div class="tag-chip"><span class="emoji">&#127934;</span> Tennis</div>
+      <div class="tag-chip"><span class="emoji">&#127952;</span> Volleyball</div>
+    </div>
+  </div>
+
+  <div class="attach-section">
+    <div class="attach-row">
+      <div class="attach-item photo"><span class="emoji">&#128247;</span> Photo</div>
+      <div class="attach-item sport"><span class="emoji">&#127942;</span> Activity</div>
+      <div class="attach-item location"><span class="emoji">&#128205;</span> Venue</div>
+      <div class="attach-item tag"><span class="emoji">&#128100;</span> Tag</div>
+    </div>
+  </div>
+
+  <div class="bottom-toolbar">
+    <div class="toolbar-icons">
+      <div class="tool-icon">&#128247;</div>
+      <div class="tool-icon">&#127912;</div>
+      <div class="tool-icon">&#128205;</div>
+      <div class="tool-icon">&#128100;</div>
+      <div class="tool-icon">&#128279;</div>
+      <div class="char-count">82/500</div>
+    </div>
+  </div>
+</body>
+</html>

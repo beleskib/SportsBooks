@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=393, initial-scale=1.0">
+<title>Player Profile</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background: #121212; color: #fff; width: 393px; min-height: 852px; }
+  .status-bar { height: 44px; display: flex; align-items: center; justify-content: space-between; padding: 0 20px; font-size: 12px; font-weight: 600; }
+  .header { display: flex; align-items: center; padding: 8px 16px 16px; gap: 12px; }
+  .back-btn { width: 36px; height: 36px; background: #1E1E1E; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 18px; }
+  .header h1 { font-size: 18px; font-weight: 700; flex: 1; }
+  .edit-btn { padding: 8px 16px; background: #1E1E1E; border-radius: 10px; font-size: 13px; font-weight: 600; }
+  .profile-section { text-align: center; padding: 0 16px 20px; }
+  .avatar-large { width: 90px; height: 90px; border-radius: 50%; background: linear-gradient(135deg, #2E7D32, #4CAF50); display: flex; align-items: center; justify-content: center; font-size: 36px; font-weight: 700; margin: 0 auto 12px; position: relative; }
+  .level-badge { position: absolute; bottom: -4px; right: -4px; background: #FFC107; color: #000; padding: 3px 8px; border-radius: 10px; font-size: 11px; font-weight: 800; border: 2px solid #121212; }
+  .profile-name { font-size: 22px; font-weight: 800; }
+  .profile-handle { font-size: 13px; color: #888; margin-top: 2px; }
+  .xp-bar-container { margin: 12px auto; max-width: 260px; }
+  .xp-label { display: flex; justify-content: space-between; font-size: 11px; color: #888; margin-bottom: 4px; }
+  .xp-bar { height: 6px; background: #2A2A2A; border-radius: 3px; overflow: hidden; }
+  .xp-fill { height: 100%; width: 72%; background: linear-gradient(90deg, #4CAF50, #81C784); border-radius: 3px; }
+  .stats-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; padding: 0 16px; margin-bottom: 20px; }
+  .stat { background: #1E1E1E; border-radius: 12px; padding: 12px 8px; text-align: center; }
+  .stat .value { font-size: 18px; font-weight: 800; }
+  .stat .label { font-size: 10px; color: #888; margin-top: 2px; }
+  .action-row { display: flex; gap: 8px; padding: 0 16px; margin-bottom: 20px; }
+  .action-btn { flex: 1; padding: 12px; border-radius: 12px; text-align: center; font-size: 14px; font-weight: 600; }
+  .action-btn.green { background: #4CAF50; }
+  .action-btn.dark { background: #1E1E1E; }
+  .section { padding: 0 16px; margin-bottom: 20px; }
+  .section-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; }
+  .section-header h3 { font-size: 16px; font-weight: 700; }
+  .section-header span { font-size: 13px; color: #4CAF50; }
+  .sport-tags { display: flex; gap: 8px; flex-wrap: wrap; }
+  .sport-tag { display: flex; align-items: center; gap: 6px; padding: 8px 14px; background: #1E1E1E; border-radius: 10px; font-size: 13px; }
+  .skill-bar { height: 4px; background: #2A2A2A; border-radius: 2px; margin-top: 4px; overflow: hidden; }
+  .skill-fill { height: 100%; border-radius: 2px; }
+  .achievement-row { display: flex; gap: 8px; overflow-x: auto; }
+  .achievement { width: 80px; flex-shrink: 0; text-align: center; }
+  .ach-icon { width: 56px; height: 56px; border-radius: 12px; display: flex; align-items: center; justify-content: center; font-size: 24px; margin: 0 auto 6px; }
+  .ach-name { font-size: 10px; color: #aaa; }
+  .recent-matches { display: flex; flex-direction: column; gap: 8px; }
+  .match-row { display: flex; align-items: center; gap: 10px; padding: 10px 12px; background: #1E1E1E; border-radius: 10px; }
+  .match-sport { width: 36px; height: 36px; border-radius: 8px; display: flex; align-items: center; justify-content: center; font-size: 16px; }
+  .match-info { flex: 1; }
+  .match-info .name { font-size: 13px; font-weight: 600; }
+  .match-info .meta { font-size: 11px; color: #888; }
+  .match-result { padding: 4px 10px; border-radius: 6px; font-size: 11px; font-weight: 700; }
+  .result-win { background: #1B3A1E; color: #4CAF50; }
+  .result-loss { background: #3A1B1B; color: #F44336; }
+</style>
+</head>
+<body>
+  <div class="status-bar"><span>9:41</span><span>...</span></div>
+  <div class="header"><div class="back-btn">&#8592;</div><h1>Profile</h1><div class="edit-btn">&#9998; Edit</div></div>
+
+  <div class="profile-section">
+    <div class="avatar-large">B<div class="level-badge">Lv.7</div></div>
+    <div class="profile-name">Bojan Beleski</div>
+    <div class="profile-handle">@bojanb &bull; Skopje, MK</div>
+    <div class="xp-bar-container">
+      <div class="xp-label"><span>Level 7 &bull; 1,830 XP</span><span>2,500 XP</span></div>
+      <div class="xp-bar"><div class="xp-fill"></div></div>
+    </div>
+  </div>
+
+  <div class="stats-grid">
+    <div class="stat"><div class="value">47</div><div class="label">Matches</div></div>
+    <div class="stat"><div class="value">23</div><div class="label">Bookings</div></div>
+    <div class="stat"><div class="value">12</div><div class="label">Awards</div></div>
+    <div class="stat"><div class="value">34</div><div class="label">Friends</div></div>
+  </div>
+
+  <div class="action-row">
+    <div class="action-btn green">&#128101; Add Friend</div>
+    <div class="action-btn dark">&#128172; Message</div>
+    <div class="action-btn dark">&#9876; Challenge</div>
+  </div>
+
+  <div class="section">
+    <div class="section-header"><h3>Sports & Skills</h3></div>
+    <div class="sport-tags">
+      <div class="sport-tag" style="flex-direction:column; align-items:flex-start; gap:4px; padding:10px 14px;">
+        <div>&#127936; Basketball</div>
+        <div class="skill-bar" style="width:100%;"><div class="skill-fill" style="width:65%; background:#4CAF50;"></div></div>
+        <div style="font-size:10px; color:#888;">Intermediate</div>
+      </div>
+      <div class="sport-tag" style="flex-direction:column; align-items:flex-start; gap:4px; padding:10px 14px;">
+        <div>&#9917; Football</div>
+        <div class="skill-bar" style="width:100%;"><div class="skill-fill" style="width:45%; background:#FF9800;"></div></div>
+        <div style="font-size:10px; color:#888;">Beginner</div>
+      </div>
+      <div class="sport-tag" style="flex-direction:column; align-items:flex-start; gap:4px; padding:10px 14px;">
+        <div>&#127934; Tennis</div>
+        <div class="skill-bar" style="width:100%;"><div class="skill-fill" style="width:30%; background:#FF9800;"></div></div>
+        <div style="font-size:10px; color:#888;">Beginner</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="section">
+    <div class="section-header"><h3>Achievements</h3><span>See All (12)</span></div>
+    <div class="achievement-row">
+      <div class="achievement"><div class="ach-icon" style="background:#1B3A1E;">&#127942;</div><div class="ach-name">First Win</div></div>
+      <div class="achievement"><div class="ach-icon" style="background:#3A2E1B;">&#128293;</div><div class="ach-name">On Fire</div></div>
+      <div class="achievement"><div class="ach-icon" style="background:#1B2D3A;">&#128101;</div><div class="ach-name">Team Player</div></div>
+      <div class="achievement"><div class="ach-icon" style="background:#3A1B3A;">&#127775;</div><div class="ach-name">Rising Star</div></div>
+    </div>
+  </div>
+
+  <div class="section">
+    <div class="section-header"><h3>Recent Matches</h3><span>See All</span></div>
+    <div class="recent-matches">
+      <div class="match-row">
+        <div class="match-sport" style="background:#1B3A1E;">&#127936;</div>
+        <div class="match-info"><div class="name">Friday Night Basketball</div><div class="meta">May 23 &bull; Arena Sport Center</div></div>
+        <div class="match-result result-win">W</div>
+      </div>
+      <div class="match-row">
+        <div class="match-sport" style="background:#3A2E1B;">&#9917;</div>
+        <div class="match-info"><div class="name">Casual Football 5v5</div><div class="meta">May 21 &bull; FC Arena Skopje</div></div>
+        <div class="match-result result-loss">L</div>
+      </div>
+      <div class="match-row">
+        <div class="match-sport" style="background:#1B3A1E;">&#127936;</div>
+        <div class="match-info"><div class="name">Wednesday Hoops</div><div class="meta">May 19 &bull; Arena Sport Center</div></div>
+        <div class="match-result result-win">W</div>
+      </div>
+    </div>
+  </div>
+</body>
+</html>

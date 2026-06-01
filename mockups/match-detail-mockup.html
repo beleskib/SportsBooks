@@ -1,0 +1,166 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=393, initial-scale=1.0">
+<title>Match Detail</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background: #121212; color: #fff; width: 393px; min-height: 852px; }
+  .status-bar { height: 44px; display: flex; align-items: center; justify-content: space-between; padding: 0 20px; font-size: 12px; font-weight: 600; }
+  .header { display: flex; align-items: center; padding: 8px 16px 12px; gap: 12px; }
+  .back-btn { width: 36px; height: 36px; background: #1E1E1E; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 18px; }
+  .header-right { margin-left: auto; display: flex; gap: 8px; }
+  .icon-btn { width: 36px; height: 36px; background: #1E1E1E; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 16px; }
+  .match-hero { margin: 0 16px 16px; padding: 20px; background: linear-gradient(135deg, #1B5E20, #2E7D32); border-radius: 16px; }
+  .match-sport { display: flex; align-items: center; gap: 8px; margin-bottom: 12px; }
+  .sport-icon { font-size: 28px; }
+  .match-badge { padding: 4px 10px; background: rgba(255,255,255,0.15); border-radius: 6px; font-size: 11px; font-weight: 600; }
+  .live-badge { background: #F44336; animation: pulse 2s infinite; }
+  @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.7; } }
+  .match-hero h2 { font-size: 20px; font-weight: 800; margin-bottom: 4px; }
+  .match-hero .host { font-size: 13px; color: rgba(255,255,255,0.7); }
+  .match-meta { display: flex; gap: 16px; margin-top: 12px; }
+  .meta-item { font-size: 12px; color: rgba(255,255,255,0.8); }
+  .meta-item span { margin-right: 4px; }
+  .info-cards { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; padding: 0 16px; margin-bottom: 16px; }
+  .info-card { background: #1E1E1E; border-radius: 12px; padding: 12px; text-align: center; }
+  .info-card .ic-icon { font-size: 20px; margin-bottom: 4px; }
+  .info-card .ic-value { font-size: 14px; font-weight: 700; }
+  .info-card .ic-label { font-size: 10px; color: #888; }
+  .section { padding: 0 16px; margin-bottom: 20px; }
+  .section-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; }
+  .section-header h3 { font-size: 16px; font-weight: 700; }
+  .section-header span { font-size: 13px; color: #4CAF50; }
+  .player-list { display: flex; flex-direction: column; gap: 8px; }
+  .player-row { display: flex; align-items: center; gap: 12px; padding: 10px 12px; background: #1E1E1E; border-radius: 10px; }
+  .player-avatar { width: 40px; height: 40px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 14px; }
+  .player-info { flex: 1; }
+  .player-info .name { font-size: 14px; font-weight: 600; }
+  .player-info .meta { font-size: 11px; color: #888; }
+  .host-tag { padding: 3px 8px; background: #FFA726; border-radius: 6px; font-size: 10px; font-weight: 700; color: #000; }
+  .you-tag { padding: 3px 8px; background: #4CAF50; border-radius: 6px; font-size: 10px; font-weight: 700; }
+  .skill-dots { display: flex; gap: 3px; }
+  .skill-d { width: 8px; height: 8px; border-radius: 50%; background: #333; }
+  .skill-d.filled { background: #4CAF50; }
+  .venue-card { padding: 14px; background: #1E1E1E; border-radius: 12px; display: flex; gap: 12px; }
+  .venue-img { width: 60px; height: 60px; background: linear-gradient(135deg, #2E7D32, #4CAF50); border-radius: 10px; display: flex; align-items: center; justify-content: center; font-size: 24px; }
+  .venue-info { flex: 1; }
+  .venue-info h4 { font-size: 14px; font-weight: 600; }
+  .venue-info p { font-size: 12px; color: #888; margin-top: 2px; }
+  .venue-actions { display: flex; gap: 8px; margin-top: 8px; }
+  .venue-action-btn { padding: 6px 12px; background: #2A2A2A; border-radius: 8px; font-size: 11px; color: #aaa; }
+  .chat-preview { padding: 14px; background: #1E1E1E; border-radius: 12px; }
+  .chat-msg { display: flex; gap: 10px; margin-bottom: 10px; }
+  .chat-avatar { width: 28px; height: 28px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 10px; font-weight: 700; flex-shrink: 0; }
+  .chat-bubble { background: #2A2A2A; padding: 8px 12px; border-radius: 12px; font-size: 13px; }
+  .chat-bubble .author { font-size: 11px; color: #4CAF50; font-weight: 600; margin-bottom: 2px; }
+  .chat-bubble .time { font-size: 10px; color: #555; margin-top: 2px; }
+  .open-chat { text-align: center; padding: 10px; font-size: 13px; color: #4CAF50; font-weight: 600; }
+  .bottom-bar { position: fixed; bottom: 0; left: 0; width: 393px; padding: 12px 16px; background: #1A1A1A; border-top: 1px solid #2A2A2A; display: flex; gap: 10px; }
+  .btn-chat { flex: 1; padding: 14px; background: #1E1E1E; border-radius: 12px; text-align: center; font-size: 14px; font-weight: 600; }
+  .btn-join { flex: 2; padding: 14px; background: #4CAF50; border-radius: 12px; text-align: center; font-size: 16px; font-weight: 700; }
+  .spacer { height: 80px; }
+</style>
+</head>
+<body>
+  <div class="status-bar"><span>9:41</span><span>...</span></div>
+  <div class="header">
+    <div class="back-btn">&#8592;</div>
+    <div class="header-right">
+      <div class="icon-btn">&#128276;</div>
+      <div class="icon-btn">&#8942;</div>
+    </div>
+  </div>
+
+  <div class="match-hero">
+    <div class="match-sport">
+      <div class="sport-icon">&#127936;</div>
+      <div class="match-badge">Competitive</div>
+      <div class="match-badge live-badge">&#9679; LIVE</div>
+    </div>
+    <h2>Sunday Basketball Showdown</h2>
+    <div class="host">Hosted by Stefan M.</div>
+    <div class="match-meta">
+      <div class="meta-item"><span>&#128197;</span>Sun, May 25</div>
+      <div class="meta-item"><span>&#128336;</span>15:00 - 16:30</div>
+      <div class="meta-item"><span>&#127919;</span>Skill 2-4</div>
+    </div>
+  </div>
+
+  <div class="info-cards">
+    <div class="info-card"><div class="ic-icon">&#128101;</div><div class="ic-value">7/10</div><div class="ic-label">Players</div></div>
+    <div class="info-card"><div class="ic-icon">&#128176;</div><div class="ic-value">150 MKD</div><div class="ic-label">Per player</div></div>
+    <div class="info-card"><div class="ic-icon">&#9201;</div><div class="ic-value">1.5h</div><div class="ic-label">Duration</div></div>
+  </div>
+
+  <div class="section">
+    <div class="section-header"><h3>Players (7/10)</h3><span>Invite +</span></div>
+    <div class="player-list">
+      <div class="player-row">
+        <div class="player-avatar" style="background:#FFA726;">S</div>
+        <div class="player-info">
+          <div class="name">Stefan M.</div>
+          <div class="meta">Level 12 &bull; 2,450 XP</div>
+        </div>
+        <div class="host-tag">HOST</div>
+        <div class="skill-dots"><div class="skill-d filled"></div><div class="skill-d filled"></div><div class="skill-d filled"></div><div class="skill-d filled"></div><div class="skill-d"></div></div>
+      </div>
+      <div class="player-row">
+        <div class="player-avatar" style="background:#4CAF50;">B</div>
+        <div class="player-info">
+          <div class="name">Bojan B.</div>
+          <div class="meta">Level 7 &bull; 1,830 XP</div>
+        </div>
+        <div class="you-tag">YOU</div>
+        <div class="skill-dots"><div class="skill-d filled"></div><div class="skill-d filled"></div><div class="skill-d filled"></div><div class="skill-d"></div><div class="skill-d"></div></div>
+      </div>
+      <div class="player-row">
+        <div class="player-avatar" style="background:#2196F3;">M</div>
+        <div class="player-info"><div class="name">Marko T.</div><div class="meta">Level 9 &bull; 2,100 XP</div></div>
+        <div class="skill-dots"><div class="skill-d filled"></div><div class="skill-d filled"></div><div class="skill-d filled"></div><div class="skill-d filled"></div><div class="skill-d"></div></div>
+      </div>
+      <div class="player-row" style="opacity: 0.5; border: 1px dashed #333; background: transparent;">
+        <div class="player-avatar" style="background:#333;">?</div>
+        <div class="player-info"><div class="name" style="color: #555;">3 spots remaining</div><div class="meta">Waiting for players...</div></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="section">
+    <div class="section-header"><h3>Venue</h3></div>
+    <div class="venue-card">
+      <div class="venue-img">&#127939;</div>
+      <div class="venue-info">
+        <h4>Arena Sport Center</h4>
+        <p>Court A - Indoor &bull; 1.2 km away</p>
+        <div class="venue-actions">
+          <div class="venue-action-btn">&#128205; Directions</div>
+          <div class="venue-action-btn">&#128222; Call</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="section">
+    <div class="section-header"><h3>Match Chat</h3><span>3 messages</span></div>
+    <div class="chat-preview">
+      <div class="chat-msg">
+        <div class="chat-avatar" style="background:#FFA726;">S</div>
+        <div class="chat-bubble"><div class="author">Stefan M.</div>Let's warm up at 14:45, be there early!<div class="time">2 min ago</div></div>
+      </div>
+      <div class="chat-msg">
+        <div class="chat-avatar" style="background:#2196F3;">M</div>
+        <div class="chat-bubble"><div class="author">Marko T.</div>I'm bringing extra balls<div class="time">5 min ago</div></div>
+      </div>
+      <div class="open-chat">Open Chat &#8594;</div>
+    </div>
+  </div>
+
+  <div class="spacer"></div>
+  <div class="bottom-bar">
+    <div class="btn-chat">&#128172; Chat</div>
+    <div class="btn-join">Join Match - 150 MKD</div>
+  </div>
+</body>
+</html>

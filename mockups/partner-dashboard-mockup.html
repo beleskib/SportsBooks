@@ -1,0 +1,221 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Partner Dashboard</title>
+<style>
+  * { margin:0; padding:0; box-sizing:border-box; }
+  body { width:393px; min-height:852px; background:#121212; font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif; color:#fff; overflow-x:hidden; padding-bottom:100px; }
+
+  .status-bar { height:44px; }
+  .header { padding:8px 16px 20px; }
+  .greeting { font-size:14px; color:#888; }
+  .header-name { font-size:24px; font-weight:800; margin-top:4px; }
+  .header-venue { font-size:13px; color:#4CAF50; margin-top:4px; display:flex; align-items:center; gap:6px; }
+
+  .quick-stats { display:grid; grid-template-columns:1fr 1fr; gap:12px; padding:0 16px; margin-bottom:20px; }
+  .stat-card { background:#1E1E1E; border-radius:16px; padding:18px; }
+  .stat-icon { font-size:24px; margin-bottom:8px; }
+  .stat-value { font-size:28px; font-weight:800; }
+  .stat-value.green { color:#4CAF50; }
+  .stat-value.blue { color:#2196F3; }
+  .stat-value.orange { color:#FF9800; }
+  .stat-label { font-size:11px; color:#888; margin-top:4px; text-transform:uppercase; letter-spacing:0.5px; }
+  .stat-change { font-size:11px; margin-top:6px; }
+  .stat-change.up { color:#4CAF50; }
+  .stat-change.down { color:#ef5350; }
+
+  .section { margin:0 16px 20px; }
+  .section-header { display:flex; justify-content:space-between; align-items:center; margin-bottom:12px; }
+  .section-title { font-size:16px; font-weight:700; }
+  .see-all { font-size:13px; color:#4CAF50; font-weight:600; background:none; border:none; cursor:pointer; }
+
+  .revenue-card {
+    background:#1E1E1E; border-radius:16px; padding:20px; margin:0 16px 20px;
+  }
+  .rev-header { display:flex; justify-content:space-between; align-items:center; margin-bottom:16px; }
+  .rev-title { font-size:14px; font-weight:700; }
+  .rev-period { font-size:12px; color:#888; padding:6px 10px; background:#252525; border-radius:8px; }
+  .rev-amount { font-size:32px; font-weight:800; color:#4CAF50; }
+  .rev-sub { font-size:13px; color:#888; margin-top:4px; }
+  .rev-chart { display:flex; align-items:flex-end; gap:6px; height:80px; margin-top:16px; }
+  .rev-bar { flex:1; border-radius:3px 3px 0 0; background:#2E7D32; min-height:4px; }
+  .rev-bar.today { background:#4CAF50; }
+
+  .booking-item {
+    display:flex; align-items:center; gap:14px; background:#1E1E1E;
+    border-radius:14px; padding:14px; margin-bottom:8px;
+  }
+  .booking-time {
+    width:56px; text-align:center; flex-shrink:0;
+  }
+  .booking-hour { font-size:16px; font-weight:800; }
+  .booking-ampm { font-size:11px; color:#888; }
+  .booking-divider { width:2px; height:40px; background:#333; border-radius:1px; flex-shrink:0; }
+  .booking-divider.live { background:#4CAF50; box-shadow:0 0 8px rgba(76,175,80,0.5); }
+  .booking-info { flex:1; }
+  .booking-name { font-size:14px; font-weight:600; }
+  .booking-meta { font-size:12px; color:#888; margin-top:2px; }
+  .booking-status { font-size:11px; padding:4px 8px; border-radius:6px; font-weight:600; }
+  .status-confirmed { background:rgba(76,175,80,0.15); color:#4CAF50; }
+  .status-pending { background:rgba(255,152,0,0.15); color:#FF9800; }
+  .status-live { background:rgba(244,67,54,0.15); color:#ef5350; }
+
+  .actions-grid { display:grid; grid-template-columns:1fr 1fr 1fr; gap:10px; }
+  .action-card {
+    background:#1E1E1E; border-radius:14px; padding:16px; text-align:center; cursor:pointer;
+  }
+  .action-icon { font-size:28px; margin-bottom:8px; }
+  .action-label { font-size:12px; font-weight:600; }
+  .action-badge { display:inline-block; padding:2px 6px; border-radius:4px; background:#ef5350; font-size:10px; font-weight:700; margin-top:4px; }
+
+  .occupancy-bar { margin-top:12px; }
+  .occ-header { display:flex; justify-content:space-between; font-size:12px; color:#888; margin-bottom:6px; }
+  .occ-track { height:8px; background:#252525; border-radius:4px; overflow:hidden; }
+  .occ-fill { height:100%; border-radius:4px; background:linear-gradient(90deg,#4CAF50,#FFD700); }
+
+  .bottom-nav { position:fixed; bottom:0; left:0; width:393px; height:80px; background:#1A1A1A; border-top:1px solid #2A2A2A; display:flex; }
+  .nav-item { flex:1; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:4px; color:#666; font-size:10px; }
+  .nav-item.active { color:#4CAF50; }
+  .nav-icon { font-size:22px; }
+</style>
+</head>
+<body>
+  <div class="status-bar"></div>
+  <div class="header">
+    <div class="greeting">Good morning 👋</div>
+    <div class="header-name">Champions Tennis Club</div>
+    <div class="header-venue">🟢 Open • 6 courts available</div>
+  </div>
+
+  <div class="quick-stats">
+    <div class="stat-card">
+      <div class="stat-icon">📅</div>
+      <div class="stat-value green">12</div>
+      <div class="stat-label">Today's Bookings</div>
+      <div class="stat-change up">↑ 20% vs last week</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-icon">💰</div>
+      <div class="stat-value blue">$580</div>
+      <div class="stat-label">Today's Revenue</div>
+      <div class="stat-change up">↑ $45 vs yesterday</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-icon">⏳</div>
+      <div class="stat-value orange">3</div>
+      <div class="stat-label">Pending</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-icon">⭐</div>
+      <div class="stat-value">4.8</div>
+      <div class="stat-label">Rating</div>
+      <div class="stat-change up">+0.1 this month</div>
+    </div>
+  </div>
+
+  <div class="revenue-card">
+    <div class="rev-header">
+      <span class="rev-title">Revenue</span>
+      <span class="rev-period">This Week</span>
+    </div>
+    <div class="rev-amount">$3,240</div>
+    <div class="rev-sub">↑ 15% compared to last week</div>
+    <div class="rev-chart">
+      <div class="rev-bar" style="height:40%"></div>
+      <div class="rev-bar" style="height:65%"></div>
+      <div class="rev-bar" style="height:55%"></div>
+      <div class="rev-bar" style="height:80%"></div>
+      <div class="rev-bar" style="height:72%"></div>
+      <div class="rev-bar" style="height:90%"></div>
+      <div class="rev-bar today" style="height:60%"></div>
+    </div>
+    <div class="occ-header" style="margin-top:16px">
+      <span>Mon</span><span>Tue</span><span>Wed</span><span>Thu</span><span>Fri</span><span>Sat</span><span style="color:#4CAF50;font-weight:700">Today</span>
+    </div>
+  </div>
+
+  <div class="section">
+    <div class="section-header">
+      <span class="section-title">Today's Schedule</span>
+      <button class="see-all">View All →</button>
+    </div>
+
+    <div class="booking-item">
+      <div class="booking-time"><div class="booking-hour">10:00</div><div class="booking-ampm">AM</div></div>
+      <div class="booking-divider live"></div>
+      <div class="booking-info">
+        <div class="booking-name">Marco Silva</div>
+        <div class="booking-meta">Court 1 • 1h • Tennis</div>
+      </div>
+      <span class="booking-status status-live">● Live</span>
+    </div>
+    <div class="booking-item">
+      <div class="booking-time"><div class="booking-hour">11:00</div><div class="booking-ampm">AM</div></div>
+      <div class="booking-divider"></div>
+      <div class="booking-info">
+        <div class="booking-name">Elena Rossi</div>
+        <div class="booking-meta">Court 3 • 2h • Tennis</div>
+      </div>
+      <span class="booking-status status-confirmed">Confirmed</span>
+    </div>
+    <div class="booking-item">
+      <div class="booking-time"><div class="booking-hour">14:00</div><div class="booking-ampm">PM</div></div>
+      <div class="booking-divider"></div>
+      <div class="booking-info">
+        <div class="booking-name">James Lee</div>
+        <div class="booking-meta">Court 2 • 1h • Tennis</div>
+      </div>
+      <span class="booking-status status-pending">Pending</span>
+    </div>
+  </div>
+
+  <div class="section">
+    <div class="section-title">Quick Actions</div>
+    <div class="actions-grid">
+      <div class="action-card">
+        <div class="action-icon">📋</div>
+        <div class="action-label">Manage Slots</div>
+      </div>
+      <div class="action-card">
+        <div class="action-icon">⏳</div>
+        <div class="action-label">Pending</div>
+        <span class="action-badge">3</span>
+      </div>
+      <div class="action-card">
+        <div class="action-icon">📊</div>
+        <div class="action-label">Analytics</div>
+      </div>
+      <div class="action-card">
+        <div class="action-icon">✏️</div>
+        <div class="action-label">Edit Venue</div>
+      </div>
+      <div class="action-card">
+        <div class="action-icon">📸</div>
+        <div class="action-label">Photos</div>
+      </div>
+      <div class="action-card">
+        <div class="action-icon">💳</div>
+        <div class="action-label">Payouts</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="section">
+    <div class="section-title">Today's Occupancy</div>
+    <div class="occupancy-bar">
+      <div class="occ-header"><span>0%</span><span>73% booked</span><span>100%</span></div>
+      <div class="occ-track"><div class="occ-fill" style="width:73%"></div></div>
+    </div>
+  </div>
+
+  <div class="bottom-nav">
+    <div class="nav-item active"><span class="nav-icon">📊</span>Dashboard</div>
+    <div class="nav-item"><span class="nav-icon">📅</span>Bookings</div>
+    <div class="nav-item"><span class="nav-icon">⏰</span>Slots</div>
+    <div class="nav-item"><span class="nav-icon">💰</span>Revenue</div>
+    <div class="nav-item"><span class="nav-icon">⚙</span>Settings</div>
+  </div>
+</body>
+</html>

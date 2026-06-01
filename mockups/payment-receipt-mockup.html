@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Payment Receipt</title>
+<style>
+  * { margin:0; padding:0; box-sizing:border-box; }
+  body { width:393px; min-height:852px; background:#121212; font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif; color:#fff; overflow-x:hidden; padding-bottom:40px; }
+
+  .status-bar { height:44px; }
+  .header { padding:8px 16px 16px; display:flex; align-items:center; gap:16px; }
+  .back-btn { width:40px; height:40px; border-radius:50%; background:#1E1E1E; border:none; color:#fff; font-size:20px; display:flex; align-items:center; justify-content:center; }
+  .header-title { font-size:18px; font-weight:700; }
+  .share-btn { margin-left:auto; width:40px; height:40px; border-radius:50%; background:#1E1E1E; border:none; color:#fff; font-size:18px; display:flex; align-items:center; justify-content:center; }
+
+  .receipt-card {
+    margin:0 16px; background:#1E1E1E; border-radius:20px; overflow:hidden;
+  }
+
+  .receipt-header {
+    padding:32px 24px; text-align:center;
+    background:linear-gradient(135deg, rgba(76,175,80,0.15), rgba(76,175,80,0.05));
+  }
+  .receipt-check { width:64px; height:64px; border-radius:50%; background:rgba(76,175,80,0.2); display:inline-flex; align-items:center; justify-content:center; font-size:32px; margin-bottom:12px; }
+  .receipt-amount { font-size:36px; font-weight:800; }
+  .receipt-status { font-size:14px; color:#4CAF50; font-weight:600; margin-top:4px; }
+
+  .receipt-body { padding:24px; }
+
+  .receipt-row {
+    display:flex; justify-content:space-between; padding:12px 0;
+    border-bottom:1px solid #252525; font-size:14px;
+  }
+  .receipt-row:last-child { border-bottom:none; }
+  .receipt-label { color:#888; }
+  .receipt-value { font-weight:600; text-align:right; }
+
+  .receipt-divider { height:1px; background:#333; margin:8px 0; }
+
+  .receipt-breakdown { margin-top:16px; }
+  .breakdown-title { font-size:13px; color:#888; text-transform:uppercase; letter-spacing:1px; margin-bottom:12px; }
+  .breakdown-row { display:flex; justify-content:space-between; padding:8px 0; font-size:14px; color:#aaa; }
+  .breakdown-row.discount { color:#4CAF50; }
+  .breakdown-row.total { padding-top:12px; border-top:1px solid #333; font-size:16px; font-weight:700; color:#fff; }
+
+  .receipt-footer {
+    padding:20px 24px; border-top:1px dashed #333; text-align:center;
+  }
+  .receipt-id { font-size:12px; color:#555; font-family:monospace; }
+
+  .action-btns { padding:20px 16px; display:flex; gap:12px; }
+  .action-btn {
+    flex:1; padding:14px; border-radius:14px; border:1px solid #333;
+    background:#1E1E1E; color:#fff; font-size:14px; font-weight:600;
+    text-align:center; cursor:pointer; display:flex; align-items:center; justify-content:center; gap:8px;
+  }
+  .action-btn.primary { border:none; background:linear-gradient(135deg,#4CAF50,#2E7D32); }
+</style>
+</head>
+<body>
+  <div class="status-bar"></div>
+  <div class="header">
+    <button class="back-btn">&#8249;</button>
+    <span class="header-title">Receipt</span>
+    <button class="share-btn">↗</button>
+  </div>
+
+  <div class="receipt-card">
+    <div class="receipt-header">
+      <div class="receipt-check">✓</div>
+      <div class="receipt-amount">$42.00</div>
+      <div class="receipt-status">Payment Successful</div>
+    </div>
+
+    <div class="receipt-body">
+      <div class="receipt-row">
+        <span class="receipt-label">Venue</span>
+        <span class="receipt-value">Champions Tennis Club</span>
+      </div>
+      <div class="receipt-row">
+        <span class="receipt-label">Date</span>
+        <span class="receipt-value">Jun 5, 2026</span>
+      </div>
+      <div class="receipt-row">
+        <span class="receipt-label">Time</span>
+        <span class="receipt-value">18:00 – 19:00</span>
+      </div>
+      <div class="receipt-row">
+        <span class="receipt-label">Court</span>
+        <span class="receipt-value">Court 3</span>
+      </div>
+      <div class="receipt-row">
+        <span class="receipt-label">Payment Method</span>
+        <span class="receipt-value">VISA •••• 4242</span>
+      </div>
+      <div class="receipt-row">
+        <span class="receipt-label">Paid On</span>
+        <span class="receipt-value">Jun 4, 2026 14:23</span>
+      </div>
+
+      <div class="receipt-breakdown">
+        <div class="breakdown-title">Breakdown</div>
+        <div class="breakdown-row"><span>Court rental (1h)</span><span>$50.00</span></div>
+        <div class="breakdown-row"><span>Service fee</span><span>$2.50</span></div>
+        <div class="breakdown-row discount"><span>SUMMER20</span><span>-$10.50</span></div>
+        <div class="breakdown-row total"><span>Total</span><span>$42.00</span></div>
+      </div>
+    </div>
+
+    <div class="receipt-footer">
+      <div class="receipt-id">TXN-2026-0605-BK2847-PM42</div>
+    </div>
+  </div>
+
+  <div class="action-btns">
+    <button class="action-btn">📧 Email</button>
+    <button class="action-btn">📄 PDF</button>
+    <button class="action-btn primary">↗ Share</button>
+  </div>
+</body>
+</html>
