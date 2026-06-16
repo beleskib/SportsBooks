@@ -1,5 +1,8 @@
 package com.example.sportsbook.ui.screens.player.friends
 
+import androidx.compose.foundation.background
+import androidx.compose.foundation.border
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -10,248 +13,409 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.text.BasicTextField
+import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
-import androidx.compose.material.icons.filled.PersonAdd
-import androidx.compose.material.icons.filled.PersonSearch
-import androidx.compose.material.icons.filled.Search
-import androidx.compose.material3.Button
-import androidx.compose.material3.Card
-import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
-import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedTextField
-import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
-import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Brush
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.SolidColor
+import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.input.KeyboardType
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.example.sportsbook.domain.model.Friendship
+import com.example.sportsbook.ui.theme.DarkBg
+import com.example.sportsbook.ui.theme.DarkBorder
+import com.example.sportsbook.ui.theme.DarkSurface
+import com.example.sportsbook.ui.theme.DarkTextPrimary
+import com.example.sportsbook.ui.theme.DarkTextSecondary
+import com.example.sportsbook.ui.theme.GreenAccent
+import com.example.sportsbook.ui.theme.GreenDark
 
-@OptIn(ExperimentalMaterial3Api::class)
+// ── Sample data for pending / suggested sections ──────────────────────────────
+
+private data class SuggestedPlayer(
+    val name: String, val sport: String, val level: String,
+    val mutual: String, val initial: String, val color: Color,
+)
+
+private val sampleSuggested = listOf(
+    SuggestedPlayer("Alex Kramer", "⚽", "Advanced", "3 mutual friends", "A", Color(0xFF4CAF50)),
+    SuggestedPlayer("Nina Park", "🎾", "Intermediate", "5 mutual friends", "N", Color(0xFFAB47BC)),
+    SuggestedPlayer("David Chen", "🏀", "Advanced", "Played together 2x", "D", Color(0xFFFF6B35)),
+    SuggestedPlayer("Lisa Johnson", "🏐", "Beginner", "1 mutual friend", "L", Color(0xFF2196F3)),
+)
+
+private data class PendingRequest(val name: String, val sport: String, val level: String, val initial: String, val color: Color)
+
+private val samplePending = listOf(
+    PendingRequest("James Lee", "🏀", "Lvl 8", "J", Color(0xFFFF9800)),
+    PendingRequest("Sofia Martinez", "🎾", "Lvl 5", "S", Color(0xFFE91E63)),
+)
+
+// ── Screen ───────────────────────────────────────────────────────────────────
+
 @Composable
 fun AddFriendScreen(
     onBack: () -> Unit,
-    viewModel: AddFriendViewModel = hiltViewModel()
+    viewModel: AddFriendViewModel = hiltViewModel(),
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
 
-    Scaffold(
-        topBar = {
-            TopAppBar(
-                title = { Text("Add Friend") },
-                navigationIcon = {
-                    IconButton(onClick = onBack) {
-                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back")
-                    }
-                }
-            )
-        }
-    ) { padding ->
-        Column(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(padding)
-                .padding(horizontal = 16.dp)
-        ) {
-            Spacer(modifier = Modifier.height(8.dp))
-            OutlinedTextField(
-                value = uiState.query,
-                onValueChange = viewModel::onQueryChange,
-                modifier = Modifier.fillMaxWidth(),
-                placeholder = { Text("Search by name...") },
-                leadingIcon = {
-                    Icon(Icons.Default.Search, contentDescription = "Search")
-                },
-                singleLine = true
-            )
-            Spacer(modifier = Modifier.height(16.dp))
-
-            when {
-                uiState.isSearching -> {
-                    Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                        CircularProgressIndicator()
-                    }
-                }
-
-                uiState.query.length < 2 -> {
-                    Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                        Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                            Icon(
-                                imageVector = Icons.Default.PersonSearch,
-                                contentDescription = null,
-                                modifier = Modifier.size(64.dp),
-                                tint = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.5f)
-                            )
-                            Spacer(modifier = Modifier.height(16.dp))
-                            Text(
-                                text = "Search for players to add",
-                                style = MaterialTheme.typography.bodyLarge,
-                                color = MaterialTheme.colorScheme.onSurfaceVariant
-                            )
-                        }
-                    }
-                }
-
-                uiState.searchResults.isEmpty() -> {
-                    Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                        Text(
-                            text = "No players found for \"${uiState.query}\"",
-                            style = MaterialTheme.typography.bodyLarge,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant
-                        )
-                    }
-                }
-
-                else -> {
-                    LazyColumn(
-                        modifier = Modifier.fillMaxSize(),
-                        verticalArrangement = Arrangement.spacedBy(8.dp)
-                    ) {
-                        items(uiState.searchResults, key = { it.friendId }) { result ->
-                            UserSearchResultCard(
-                                result = result,
-                                alreadySent = result.friendId in uiState.sentRequests,
-                                onSendRequest = { viewModel.sendRequest(result.friendId) }
-                            )
-                        }
-                        item { Spacer(modifier = Modifier.height(16.dp)) }
-                    }
-                }
-            }
-        }
-    }
-}
-
-@Composable
-private fun UserSearchResultCard(
-    result: Friendship,
-    alreadySent: Boolean,
-    onSendRequest: () -> Unit,
-    modifier: Modifier = Modifier
-) {
-    Card(
-        modifier = modifier.fillMaxWidth(),
-        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
-        elevation = CardDefaults.cardElevation(defaultElevation = 1.dp)
+    Column(
+        modifier = Modifier
+            .fillMaxSize()
+            .background(DarkBg),
     ) {
+        // ── Header ───────────────────────────────────────────────────────
         Row(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(12.dp),
+                .padding(start = 16.dp, end = 16.dp, top = 56.dp, bottom = 16.dp),
             verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.spacedBy(12.dp)
         ) {
-            FriendAvatar(photoUrl = result.friendPhotoUrl)
-            Column(modifier = Modifier.weight(1f)) {
-                Text(
-                    text = result.friendName ?: "Unknown Player",
-                    style = MaterialTheme.typography.bodyLarge.copy(fontWeight = FontWeight.Medium)
-                )
+            Box(
+                modifier = Modifier
+                    .size(40.dp)
+                    .clip(CircleShape)
+                    .background(DarkSurface)
+                    .clickable(onClick = onBack),
+                contentAlignment = Alignment.Center,
+            ) {
+                Icon(Icons.AutoMirrored.Filled.ArrowBack, "Back", tint = DarkTextPrimary, modifier = Modifier.size(20.dp))
             }
-            if (alreadySent) {
-                Text(
-                    text = "Sent",
-                    style = MaterialTheme.typography.labelMedium,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
-                )
-            } else {
-                Button(onClick = onSendRequest) {
-                    Icon(
-                        imageVector = Icons.Default.PersonAdd,
-                        contentDescription = null,
-                        modifier = Modifier.size(16.dp)
-                    )
-                    Spacer(modifier = Modifier.size(4.dp))
-                    Text("Add")
-                }
+            Spacer(modifier = Modifier.width(16.dp))
+            Text("Add Friends", fontSize = 18.sp, fontWeight = FontWeight.Bold, color = DarkTextPrimary)
+        }
+
+        // ── Search bar ───────────────────────────────────────────────────
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 16.dp)
+                .clip(RoundedCornerShape(14.dp))
+                .background(DarkSurface)
+                .border(1.dp, DarkBorder, RoundedCornerShape(14.dp))
+                .padding(horizontal = 14.dp, vertical = 12.dp),
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            Text("🔍", fontSize = 16.sp)
+            Spacer(modifier = Modifier.width(10.dp))
+            BasicTextField(
+                value = uiState.query,
+                onValueChange = viewModel::onQueryChange,
+                singleLine = true,
+                textStyle = TextStyle(color = DarkTextPrimary, fontSize = 15.sp),
+                cursorBrush = SolidColor(GreenAccent),
+                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Text),
+                modifier = Modifier.weight(1f),
+                decorationBox = { inner ->
+                    Box {
+                        if (uiState.query.isEmpty()) {
+                            Text("Search by name or username...", fontSize = 15.sp, color = Color(0xFF555555))
+                        }
+                        inner()
+                    }
+                },
+            )
+            if (uiState.isSearching) {
+                CircularProgressIndicator(color = GreenAccent, modifier = Modifier.size(16.dp), strokeWidth = 2.dp)
             }
         }
-    }
-}
 
-@Preview(showBackground = true)
-@OptIn(ExperimentalMaterial3Api::class)
-@Composable
-private fun AddFriendScreenPreview() {
-    MaterialTheme {
-        Scaffold(
-            topBar = {
-                TopAppBar(
-                    title = { Text("Add Friend") },
-                    navigationIcon = {
-                        IconButton(onClick = {}) {
-                            Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back")
+        Spacer(modifier = Modifier.height(16.dp))
+
+        // ── Content ──────────────────────────────────────────────────────
+        if (uiState.query.length >= 2) {
+            // Search results
+            when {
+                uiState.isSearching -> {
+                    Box(modifier = Modifier.fillMaxWidth().padding(40.dp), contentAlignment = Alignment.Center) {
+                        CircularProgressIndicator(color = GreenAccent)
+                    }
+                }
+                uiState.searchResults.isEmpty() -> {
+                    Box(modifier = Modifier.fillMaxWidth().padding(40.dp), contentAlignment = Alignment.Center) {
+                        Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                            Text("🔍", fontSize = 40.sp)
+                            Spacer(modifier = Modifier.height(12.dp))
+                            Text("No players found", fontSize = 16.sp, fontWeight = FontWeight.SemiBold, color = DarkTextPrimary)
+                            Text("Try a different name", fontSize = 13.sp, color = DarkTextSecondary)
                         }
                     }
-                )
-            }
-        ) { padding ->
-            Column(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .padding(padding)
-                    .padding(horizontal = 16.dp)
-            ) {
-                Spacer(modifier = Modifier.height(8.dp))
-                OutlinedTextField(
-                    value = "",
-                    onValueChange = {},
-                    modifier = Modifier.fillMaxWidth(),
-                    placeholder = { Text("Search by name...") },
-                    leadingIcon = {
-                        Icon(Icons.Default.Search, contentDescription = "Search")
-                    },
-                    singleLine = true
-                )
-                Spacer(modifier = Modifier.height(16.dp))
-                Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                    Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                        Icon(
-                            imageVector = Icons.Default.PersonSearch,
-                            contentDescription = null,
-                            modifier = Modifier.size(64.dp),
-                            tint = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.5f)
-                        )
-                        Spacer(modifier = Modifier.height(16.dp))
-                        Text(
-                            text = "Search for players to add",
-                            style = MaterialTheme.typography.bodyLarge,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant
-                        )
+                }
+                else -> {
+                    LazyColumn(modifier = Modifier.fillMaxSize()) {
+                        items(uiState.searchResults, key = { it.friendId }) { result ->
+                            SearchResultRow(
+                                result = result,
+                                alreadySent = result.friendId in uiState.sentRequests,
+                                onSendRequest = { viewModel.sendRequest(result.friendId) },
+                            )
+                            Spacer(modifier = Modifier.height(8.dp))
+                        }
+                        item { Spacer(modifier = Modifier.height(24.dp)) }
                     }
                 }
+            }
+        } else {
+            // Default state — invite card + pending + suggested
+            LazyColumn(modifier = Modifier.fillMaxSize()) {
+                // Invite card
+                item {
+                    Column(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(horizontal = 16.dp)
+                            .clip(RoundedCornerShape(16.dp))
+                            .background(
+                                Brush.linearGradient(listOf(GreenDark, GreenAccent))
+                            )
+                            .padding(20.dp),
+                        horizontalAlignment = Alignment.CenterHorizontally,
+                    ) {
+                        Text("📲", fontSize = 32.sp)
+                        Text("Invite friends to SportsBooks", fontSize = 15.sp, fontWeight = FontWeight.Bold, color = Color.White, modifier = Modifier.padding(top = 8.dp))
+                        Text("Share a link and earn 50 XP per friend!", fontSize = 12.sp, color = Color.White.copy(alpha = 0.8f), textAlign = TextAlign.Center, modifier = Modifier.padding(top = 4.dp))
+                        Spacer(modifier = Modifier.height(14.dp))
+                        Box(
+                            modifier = Modifier
+                                .clip(RoundedCornerShape(10.dp))
+                                .background(Color.White.copy(alpha = 0.2f))
+                                .border(1.dp, Color.White.copy(alpha = 0.4f), RoundedCornerShape(10.dp))
+                                .clickable { }
+                                .padding(horizontal = 24.dp, vertical = 10.dp),
+                        ) {
+                            Text("Share Invite Link", fontSize = 14.sp, fontWeight = FontWeight.SemiBold, color = Color.White)
+                        }
+                    }
+                    Spacer(modifier = Modifier.height(20.dp))
+                }
+
+                // Pending requests section
+                if (samplePending.isNotEmpty()) {
+                    item {
+                        SectionTitle("Pending Requests (${samplePending.size})")
+                    }
+                    items(samplePending) { pending ->
+                        PendingRequestRow(pending)
+                    }
+                    item { Spacer(modifier = Modifier.height(20.dp)) }
+                }
+
+                // Suggested section
+                item {
+                    SectionTitle("Suggested For You")
+                }
+                items(sampleSuggested) { suggested ->
+                    SuggestedPlayerRow(suggested)
+                }
+
+                item { Spacer(modifier = Modifier.height(32.dp)) }
             }
         }
     }
 }
 
-@Preview(showBackground = true)
+// ── Sub-composables ──────────────────────────────────────────────────────────
+
 @Composable
-private fun UserSearchResultCardPreview() {
-    MaterialTheme {
-        UserSearchResultCard(
-            result = Friendship(
-                id = 0,
-                friendId = 77,
-                friendName = "Sam Rivera",
-                friendPhotoUrl = null,
-                status = "none"
-            ),
-            alreadySent = false,
-            onSendRequest = {}
-        )
+private fun SectionTitle(text: String) {
+    Text(
+        text = text,
+        fontSize = 14.sp,
+        fontWeight = FontWeight.Bold,
+        color = DarkTextPrimary,
+        modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp),
+    )
+}
+
+@Composable
+private fun SearchResultRow(
+    result: Friendship,
+    alreadySent: Boolean,
+    onSendRequest: () -> Unit,
+) {
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(horizontal = 16.dp)
+            .clip(RoundedCornerShape(14.dp))
+            .background(DarkSurface)
+            .padding(12.dp),
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.spacedBy(12.dp),
+    ) {
+        // Avatar
+        Box(
+            modifier = Modifier
+                .size(44.dp)
+                .clip(CircleShape)
+                .background(GreenDark),
+            contentAlignment = Alignment.Center,
+        ) {
+            Text(
+                text = result.friendName?.firstOrNull()?.uppercase() ?: "?",
+                fontSize = 18.sp,
+                fontWeight = FontWeight.Bold,
+                color = Color.White,
+            )
+        }
+
+        Column(modifier = Modifier.weight(1f)) {
+            Text(result.friendName ?: "Unknown Player", fontSize = 14.sp, fontWeight = FontWeight.SemiBold, color = DarkTextPrimary)
+            Text("🏅 Player", fontSize = 12.sp, color = DarkTextSecondary)
+        }
+
+        if (alreadySent) {
+            Box(
+                modifier = Modifier
+                    .clip(RoundedCornerShape(8.dp))
+                    .background(DarkBorder)
+                    .padding(horizontal = 14.dp, vertical = 8.dp),
+            ) {
+                Text("Sent", fontSize = 13.sp, color = DarkTextSecondary, fontWeight = FontWeight.SemiBold)
+            }
+        } else {
+            Box(
+                modifier = Modifier
+                    .clip(RoundedCornerShape(8.dp))
+                    .background(GreenAccent)
+                    .clickable(onClick = onSendRequest)
+                    .padding(horizontal = 14.dp, vertical = 8.dp),
+            ) {
+                Text("+ Add", fontSize = 13.sp, color = Color.White, fontWeight = FontWeight.SemiBold)
+            }
+        }
     }
+}
+
+@Composable
+private fun PendingRequestRow(pending: PendingRequest) {
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(horizontal = 16.dp, vertical = 4.dp)
+            .clip(RoundedCornerShape(14.dp))
+            .background(DarkSurface)
+            .padding(12.dp),
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        Box(
+            modifier = Modifier
+                .size(44.dp)
+                .clip(CircleShape)
+                .background(pending.color.copy(alpha = 0.2f))
+                .border(2.dp, pending.color.copy(alpha = 0.5f), CircleShape),
+            contentAlignment = Alignment.Center,
+        ) {
+            Text(pending.initial, fontSize = 18.sp, fontWeight = FontWeight.Bold, color = pending.color)
+        }
+        Spacer(modifier = Modifier.width(12.dp))
+        Column(modifier = Modifier.weight(1f)) {
+            Text(pending.name, fontSize = 14.sp, fontWeight = FontWeight.SemiBold, color = DarkTextPrimary)
+            Text("${pending.sport} Basketball • ${pending.level}", fontSize = 12.sp, color = DarkTextSecondary)
+        }
+        Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+            Box(
+                modifier = Modifier
+                    .clip(RoundedCornerShape(8.dp))
+                    .background(GreenAccent)
+                    .clickable { }
+                    .padding(horizontal = 12.dp, vertical = 7.dp),
+            ) {
+                Text("Accept", fontSize = 12.sp, fontWeight = FontWeight.SemiBold, color = Color.White)
+            }
+            Box(
+                modifier = Modifier
+                    .size(30.dp)
+                    .clip(CircleShape)
+                    .background(DarkBorder)
+                    .clickable { },
+                contentAlignment = Alignment.Center,
+            ) {
+                Text("✕", fontSize = 12.sp, color = DarkTextSecondary)
+            }
+        }
+    }
+}
+
+@Composable
+private fun SuggestedPlayerRow(player: SuggestedPlayer) {
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(horizontal = 16.dp, vertical = 4.dp)
+            .clip(RoundedCornerShape(14.dp))
+            .background(DarkSurface)
+            .padding(12.dp),
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        Box(
+            modifier = Modifier
+                .size(44.dp)
+                .clip(CircleShape)
+                .background(player.color.copy(alpha = 0.2f))
+                .border(2.dp, player.color.copy(alpha = 0.5f), CircleShape),
+            contentAlignment = Alignment.Center,
+        ) {
+            Text(player.initial, fontSize = 18.sp, fontWeight = FontWeight.Bold, color = player.color)
+        }
+        Spacer(modifier = Modifier.width(12.dp))
+        Column(modifier = Modifier.weight(1f)) {
+            Text(player.name, fontSize = 14.sp, fontWeight = FontWeight.SemiBold, color = DarkTextPrimary)
+            Text("${player.sport} ${player.level}", fontSize = 12.sp, color = DarkTextSecondary)
+            Text(player.mutual, fontSize = 11.sp, color = GreenAccent, modifier = Modifier.padding(top = 2.dp))
+        }
+        Box(
+            modifier = Modifier
+                .clip(RoundedCornerShape(8.dp))
+                .background(GreenAccent)
+                .clickable { }
+                .padding(horizontal = 14.dp, vertical = 8.dp),
+        ) {
+            Text("+ Add", fontSize = 13.sp, fontWeight = FontWeight.SemiBold, color = Color.White)
+        }
+    }
+}
+
+// ── Preview ───────────────────────────────────────────────────────────────────
+
+@Preview(showBackground = true, backgroundColor = 0xFF121212)
+@Composable
+private fun AddFriendScreenPreview() {
+    Column(modifier = Modifier.fillMaxSize().background(DarkBg)) {
+            Row(
+                modifier = Modifier.fillMaxWidth().padding(start = 16.dp, end = 16.dp, top = 56.dp, bottom = 16.dp),
+                verticalAlignment = Alignment.CenterVertically,
+            ) {
+                Box(modifier = Modifier.size(40.dp).clip(CircleShape).background(DarkSurface), contentAlignment = Alignment.Center) {
+                    Icon(Icons.AutoMirrored.Filled.ArrowBack, "Back", tint = DarkTextPrimary, modifier = Modifier.size(20.dp))
+                }
+                Spacer(modifier = Modifier.width(16.dp))
+                Text("Add Friends", fontSize = 18.sp, fontWeight = FontWeight.Bold, color = DarkTextPrimary)
+            }
+            SuggestedPlayerRow(sampleSuggested[0])
+            Spacer(modifier = Modifier.height(8.dp))
+            PendingRequestRow(samplePending[0])
+        }
 }

@@ -3,7 +3,6 @@ package com.example.sportsbook.ui.screens.player.match
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.expandVertically
 import androidx.compose.animation.shrinkVertically
-import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -33,30 +32,15 @@ import androidx.compose.material.icons.filled.PersonAdd
 import androidx.compose.material.icons.filled.Star
 import androidx.compose.material.icons.filled.StarBorder
 import androidx.compose.material.icons.filled.Tune
-import androidx.compose.material3.Button
-import androidx.compose.material3.ButtonDefaults
-import androidx.compose.material3.Card
-import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
-import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.FilterChip
-import androidx.compose.material3.FilterChipDefaults
-import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.OutlinedTextFieldDefaults
-import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Switch
 import androidx.compose.material3.SwitchDefaults
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
-import androidx.compose.material3.TopAppBar
-import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
@@ -67,24 +51,27 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import coil.compose.AsyncImage
 import com.example.sportsbook.domain.enums.SportType
 import com.example.sportsbook.domain.model.AvailablePlayer
-import com.example.sportsbook.ui.theme.BorderGray
-import com.example.sportsbook.ui.theme.LightBg
-import com.example.sportsbook.ui.theme.NavBarBg
+import com.example.sportsbook.ui.theme.DarkBg
+import com.example.sportsbook.ui.theme.DarkBorder
+import com.example.sportsbook.ui.theme.DarkSurface
+import com.example.sportsbook.ui.theme.DarkTextPrimary
+import com.example.sportsbook.ui.theme.GreenAccent
 import com.example.sportsbook.ui.theme.SportGreen
-import com.example.sportsbook.ui.theme.GoldAccent
-import com.example.sportsbook.ui.theme.TextPrimary
 
-@OptIn(ExperimentalMaterial3Api::class)
+// ── Screen ───────────────────────────────────────────────────────────────────
+
 @Composable
 fun AvailablePlayersScreen(
     matchId: Long? = null,
@@ -92,7 +79,7 @@ fun AvailablePlayersScreen(
     matchMinSkill: Int? = null,
     matchMaxSkill: Int? = null,
     onBack: () -> Unit,
-    viewModel: AvailablePlayersViewModel = hiltViewModel()
+    viewModel: AvailablePlayersViewModel = hiltViewModel(),
 ) {
     val uiState by viewModel.uiState.collectAsState()
     val snackbarHostState = remember { SnackbarHostState() }
@@ -111,189 +98,194 @@ fun AvailablePlayersScreen(
         }
     }
 
-    Scaffold(
-        containerColor = NavBarBg,
-        snackbarHost = { SnackbarHost(snackbarHostState) },
-        topBar = {
-            TopAppBar(
-                title = {
-                    Text(
-                        text = "Available Players",
-                        color = TextPrimary,
-                        fontWeight = FontWeight.Bold
-                    )
-                },
-                navigationIcon = {
-                    IconButton(onClick = onBack) {
-                        Icon(
-                            imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                            contentDescription = "Back",
-                            tint = TextPrimary
-                        )
-                    }
-                },
-                colors = TopAppBarDefaults.topAppBarColors(containerColor = LightBg)
-            )
-        }
-    ) { padding ->
-        LazyColumn(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(padding),
-            contentPadding = PaddingValues(16.dp),
-            verticalArrangement = Arrangement.spacedBy(16.dp)
-        ) {
-            // My Availability toggle section
-            item {
-                AvailabilityToggleCard(
-                    uiState = uiState,
-                    onRegister = { viewModel.register() },
-                    onUnregister = { sportType -> viewModel.unregister(sportType) },
-                    onSkillLevelChange = { viewModel.updateSkillLevel(it) },
-                    onNoteChange = { viewModel.updateNote(it) }
-                )
+    Box(modifier = Modifier.fillMaxSize().background(DarkBg)) {
+        Column(modifier = Modifier.fillMaxSize()) {
+            // ── Header ───────────────────────────────────────────────────────
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(start = 16.dp, end = 16.dp, top = 56.dp, bottom = 16.dp),
+                verticalAlignment = Alignment.CenterVertically,
+            ) {
+                Box(
+                    modifier = Modifier
+                        .size(40.dp)
+                        .clip(CircleShape)
+                        .background(DarkSurface)
+                        .clickable(onClick = onBack),
+                    contentAlignment = Alignment.Center,
+                ) {
+                    Icon(Icons.AutoMirrored.Filled.ArrowBack, "Back", tint = DarkTextPrimary, modifier = Modifier.size(20.dp))
+                }
+                Spacer(modifier = Modifier.width(16.dp))
+                Text("Available Players", fontSize = 18.sp, fontWeight = FontWeight.Bold, color = DarkTextPrimary)
             }
 
-            // Sport filter chips
-            item {
-                LazyRow(
-                    horizontalArrangement = Arrangement.spacedBy(8.dp),
-                    contentPadding = PaddingValues(vertical = 4.dp)
-                ) {
-                    items(SportType.entries.toList()) { sport ->
-                        FilterChip(
-                            selected = uiState.selectedSport == sport,
-                            onClick = { viewModel.selectSport(sport) },
-                            label = {
+            LazyColumn(
+                modifier = Modifier.fillMaxSize(),
+                contentPadding = PaddingValues(16.dp),
+                verticalArrangement = Arrangement.spacedBy(16.dp),
+            ) {
+                // My Availability toggle section
+                item {
+                    AvailabilityToggleCard(
+                        uiState = uiState,
+                        onRegister = { viewModel.register() },
+                        onUnregister = { sportType -> viewModel.unregister(sportType) },
+                        onSkillLevelChange = { viewModel.updateSkillLevel(it) },
+                        onNoteChange = { viewModel.updateNote(it) },
+                    )
+                }
+
+                // Sport filter chips
+                item {
+                    LazyRow(
+                        horizontalArrangement = Arrangement.spacedBy(8.dp),
+                        contentPadding = PaddingValues(vertical = 4.dp),
+                    ) {
+                        items(SportType.entries.toList()) { sport ->
+                            val isSelected = uiState.selectedSport == sport
+                            Box(
+                                modifier = Modifier
+                                    .clip(RoundedCornerShape(50.dp))
+                                    .background(if (isSelected) GreenAccent else DarkSurface)
+                                    .clickable { viewModel.selectSport(sport) }
+                                    .padding(horizontal = 14.dp, vertical = 8.dp),
+                            ) {
                                 Text(
                                     text = sport.displayName,
-                                    color = if (uiState.selectedSport == sport) NavBarBg else TextPrimary
+                                    fontSize = 13.sp,
+                                    fontWeight = FontWeight.SemiBold,
+                                    color = if (isSelected) DarkBg else DarkTextPrimary,
                                 )
-                            },
-                            colors = FilterChipDefaults.filterChipColors(
-                                selectedContainerColor = GoldAccent,
-                                containerColor = BorderGray
-                            )
+                            }
+                        }
+                    }
+                }
+
+                // Match requirements banner (when navigating from a match)
+                if (uiState.hasMatchRequirements) {
+                    item {
+                        MatchRequirementsBanner(
+                            minSkill = uiState.matchMinSkill,
+                            maxSkill = uiState.matchMaxSkill,
+                            isApplied = uiState.skillFilterEnabled &&
+                                    uiState.filterMinSkill == (uiState.matchMinSkill ?: 1) &&
+                                    uiState.filterMaxSkill == (uiState.matchMaxSkill ?: 5),
+                            onApply = { viewModel.applyMatchRequirements() },
+                            onClear = { viewModel.clearSkillFilter() },
                         )
                     }
                 }
-            }
 
-            // Match requirements banner (when navigating from a match)
-            if (uiState.hasMatchRequirements) {
+                // Skill filter controls
                 item {
-                    MatchRequirementsBanner(
-                        minSkill = uiState.matchMinSkill,
-                        maxSkill = uiState.matchMaxSkill,
-                        isApplied = uiState.skillFilterEnabled &&
-                                uiState.filterMinSkill == (uiState.matchMinSkill ?: 1) &&
-                                uiState.filterMaxSkill == (uiState.matchMaxSkill ?: 5),
-                        onApply = { viewModel.applyMatchRequirements() },
-                        onClear = { viewModel.clearSkillFilter() }
+                    SkillFilterCard(
+                        isEnabled = uiState.skillFilterEnabled,
+                        minSkill = uiState.filterMinSkill,
+                        maxSkill = uiState.filterMaxSkill,
+                        onToggle = { viewModel.toggleSkillFilter(it) },
+                        onMinChange = { viewModel.updateFilterMinSkill(it) },
+                        onMaxChange = { viewModel.updateFilterMaxSkill(it) },
                     )
                 }
-            }
 
-            // Skill filter controls
-            item {
-                SkillFilterCard(
-                    isEnabled = uiState.skillFilterEnabled,
-                    minSkill = uiState.filterMinSkill,
-                    maxSkill = uiState.filterMaxSkill,
-                    onToggle = { viewModel.toggleSkillFilter(it) },
-                    onMinChange = { viewModel.updateFilterMinSkill(it) },
-                    onMaxChange = { viewModel.updateFilterMaxSkill(it) }
-                )
-            }
-
-            // Results count
-            if (!uiState.isLoading && uiState.availablePlayers.isNotEmpty()) {
-                item {
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.SpaceBetween,
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        Text(
-                            text = "${uiState.availablePlayers.size} player${if (uiState.availablePlayers.size != 1) "s" else ""} found",
-                            style = MaterialTheme.typography.labelLarge,
-                            color = TextPrimary.copy(alpha = 0.7f)
-                        )
-                        if (uiState.skillFilterEnabled) {
+                // Results count
+                if (!uiState.isLoading && uiState.availablePlayers.isNotEmpty()) {
+                    item {
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.SpaceBetween,
+                            verticalAlignment = Alignment.CenterVertically,
+                        ) {
                             Text(
-                                text = "Skill ${uiState.filterMinSkill}–${uiState.filterMaxSkill}",
-                                style = MaterialTheme.typography.labelMedium,
-                                color = GoldAccent
+                                text = "${uiState.availablePlayers.size} player${if (uiState.availablePlayers.size != 1) "s" else ""} found",
+                                fontSize = 13.sp,
+                                color = DarkTextPrimary.copy(alpha = 0.7f),
                             )
-                        }
-                    }
-                }
-            }
-
-            // Players list
-            when {
-                uiState.isLoading -> {
-                    item {
-                        Box(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .height(200.dp),
-                            contentAlignment = Alignment.Center
-                        ) {
-                            CircularProgressIndicator(color = GoldAccent)
-                        }
-                    }
-                }
-                uiState.availablePlayers.isEmpty() -> {
-                    item {
-                        Box(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .height(200.dp),
-                            contentAlignment = Alignment.Center
-                        ) {
-                            Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                                Icon(
-                                    imageVector = Icons.Default.Person,
-                                    contentDescription = null,
-                                    tint = TextPrimary.copy(alpha = 0.4f),
-                                    modifier = Modifier.size(48.dp)
-                                )
-                                Spacer(modifier = Modifier.height(12.dp))
+                            if (uiState.skillFilterEnabled) {
                                 Text(
-                                    text = if (uiState.skillFilterEnabled)
-                                        "No players match skill level ${uiState.filterMinSkill}–${uiState.filterMaxSkill}"
-                                    else
-                                        "No players available for this sport yet",
-                                    style = MaterialTheme.typography.bodyMedium,
-                                    color = TextPrimary.copy(alpha = 0.6f),
-                                    textAlign = TextAlign.Center
+                                    text = "Skill ${uiState.filterMinSkill}–${uiState.filterMaxSkill}",
+                                    fontSize = 12.sp,
+                                    color = GreenAccent,
                                 )
-                                if (uiState.skillFilterEnabled) {
-                                    Spacer(modifier = Modifier.height(8.dp))
-                                    TextButton(onClick = { viewModel.clearSkillFilter() }) {
-                                        Text("Clear Skill Filter", color = GoldAccent)
+                            }
+                        }
+                    }
+                }
+
+                // Players list
+                when {
+                    uiState.isLoading -> {
+                        item {
+                            Box(
+                                modifier = Modifier.fillMaxWidth().height(200.dp),
+                                contentAlignment = Alignment.Center,
+                            ) {
+                                CircularProgressIndicator(color = GreenAccent)
+                            }
+                        }
+                    }
+                    uiState.availablePlayers.isEmpty() -> {
+                        item {
+                            Box(
+                                modifier = Modifier.fillMaxWidth().height(200.dp),
+                                contentAlignment = Alignment.Center,
+                            ) {
+                                Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                                    Icon(
+                                        imageVector = Icons.Default.Person,
+                                        contentDescription = null,
+                                        tint = DarkTextPrimary.copy(alpha = 0.4f),
+                                        modifier = Modifier.size(48.dp),
+                                    )
+                                    Spacer(modifier = Modifier.height(12.dp))
+                                    Text(
+                                        text = if (uiState.skillFilterEnabled)
+                                            "No players match skill level ${uiState.filterMinSkill}–${uiState.filterMaxSkill}"
+                                        else
+                                            "No players available for this sport yet",
+                                        fontSize = 14.sp,
+                                        color = DarkTextPrimary.copy(alpha = 0.6f),
+                                        textAlign = TextAlign.Center,
+                                    )
+                                    if (uiState.skillFilterEnabled) {
+                                        Spacer(modifier = Modifier.height(8.dp))
+                                        Box(
+                                            modifier = Modifier
+                                                .clickable { viewModel.clearSkillFilter() }
+                                                .padding(horizontal = 12.dp, vertical = 6.dp),
+                                        ) {
+                                            Text("Clear Skill Filter", fontSize = 13.sp, color = GreenAccent)
+                                        }
                                     }
                                 }
                             }
                         }
                     }
-                }
-                else -> {
-                    items(uiState.availablePlayers, key = { it.id }) { player ->
-                        AvailablePlayerCard(
-                            player = player,
-                            showInviteButton = matchId != null,
-                            matchMinSkill = if (uiState.hasMatchRequirements) uiState.matchMinSkill else null,
-                            matchMaxSkill = if (uiState.hasMatchRequirements) uiState.matchMaxSkill else null,
-                            onInvite = { viewModel.inviteToMatch(player.userId, player.displayName) }
-                        )
+                    else -> {
+                        items(uiState.availablePlayers, key = { it.id }) { player ->
+                            AvailablePlayerCard(
+                                player = player,
+                                showInviteButton = matchId != null,
+                                matchMinSkill = if (uiState.hasMatchRequirements) uiState.matchMinSkill else null,
+                                matchMaxSkill = if (uiState.hasMatchRequirements) uiState.matchMaxSkill else null,
+                                onInvite = { viewModel.inviteToMatch(player.userId, player.displayName) },
+                            )
+                        }
                     }
                 }
             }
         }
+
+        SnackbarHost(
+            hostState = snackbarHostState,
+            modifier = Modifier.align(Alignment.BottomCenter),
+        )
     }
 }
+
+// ── Sub-composables ──────────────────────────────────────────────────────────
 
 @Composable
 private fun MatchRequirementsBanner(
@@ -301,76 +293,76 @@ private fun MatchRequirementsBanner(
     maxSkill: Int?,
     isApplied: Boolean,
     onApply: () -> Unit,
-    onClear: () -> Unit
+    onClear: () -> Unit,
 ) {
-    Card(
-        modifier = Modifier.fillMaxWidth(),
-        colors = CardDefaults.cardColors(
-            containerColor = if (isApplied) SportGreen.copy(alpha = 0.15f) else GoldAccent.copy(alpha = 0.1f)
-        ),
-        shape = RoundedCornerShape(12.dp),
-        border = BorderStroke(1.dp, if (isApplied) SportGreen.copy(alpha = 0.4f) else GoldAccent.copy(alpha = 0.3f))
-    ) {
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(12.dp),
-            horizontalArrangement = Arrangement.spacedBy(12.dp),
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            Icon(
-                imageVector = Icons.Default.Info,
-                contentDescription = null,
-                tint = if (isApplied) SportGreen else GoldAccent,
-                modifier = Modifier.size(20.dp)
-            )
+    val bgColor = if (isApplied) SportGreen.copy(alpha = 0.15f) else GreenAccent.copy(alpha = 0.1f)
+    val borderColor = if (isApplied) SportGreen.copy(alpha = 0.4f) else GreenAccent.copy(alpha = 0.3f)
 
-            Column(modifier = Modifier.weight(1f)) {
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .clip(RoundedCornerShape(12.dp))
+            .background(bgColor)
+            .border(1.dp, borderColor, RoundedCornerShape(12.dp))
+            .padding(12.dp),
+        horizontalArrangement = Arrangement.spacedBy(12.dp),
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        Icon(
+            imageVector = Icons.Default.Info,
+            contentDescription = null,
+            tint = if (isApplied) SportGreen else GreenAccent,
+            modifier = Modifier.size(20.dp),
+        )
+
+        Column(modifier = Modifier.weight(1f)) {
+            Text(
+                text = "Match Requirements",
+                fontSize = 13.sp,
+                color = DarkTextPrimary,
+                fontWeight = FontWeight.SemiBold,
+            )
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(4.dp),
+            ) {
                 Text(
-                    text = "Match Requirements",
-                    style = MaterialTheme.typography.labelLarge,
-                    color = TextPrimary,
-                    fontWeight = FontWeight.SemiBold
+                    text = "Skill level ${minSkill ?: 1} – ${maxSkill ?: 5}",
+                    fontSize = 12.sp,
+                    color = DarkTextPrimary.copy(alpha = 0.7f),
                 )
-                Row(
-                    verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.spacedBy(4.dp)
-                ) {
-                    Text(
-                        text = "Skill level ${minSkill ?: 1} – ${maxSkill ?: 5}",
-                        style = MaterialTheme.typography.bodySmall,
-                        color = TextPrimary.copy(alpha = 0.7f)
-                    )
-                    Row(horizontalArrangement = Arrangement.spacedBy(1.dp)) {
-                        repeat(5) { i ->
-                            val starIndex = i + 1
-                            val inRange = starIndex >= (minSkill ?: 1) && starIndex <= (maxSkill ?: 5)
-                            Icon(
-                                imageVector = if (inRange) Icons.Default.Star else Icons.Default.StarBorder,
-                                contentDescription = null,
-                                tint = if (inRange) GoldAccent else TextPrimary.copy(alpha = 0.3f),
-                                modifier = Modifier.size(12.dp)
-                            )
-                        }
+                Row(horizontalArrangement = Arrangement.spacedBy(1.dp)) {
+                    repeat(5) { i ->
+                        val starIndex = i + 1
+                        val inRange = starIndex >= (minSkill ?: 1) && starIndex <= (maxSkill ?: 5)
+                        Icon(
+                            imageVector = if (inRange) Icons.Default.Star else Icons.Default.StarBorder,
+                            contentDescription = null,
+                            tint = if (inRange) GreenAccent else DarkTextPrimary.copy(alpha = 0.3f),
+                            modifier = Modifier.size(12.dp),
+                        )
                     }
                 }
             }
+        }
 
-            if (isApplied) {
-                TextButton(onClick = onClear) {
-                    Text("Clear", color = TextPrimary.copy(alpha = 0.7f), style = MaterialTheme.typography.labelMedium)
-                }
-            } else {
-                Button(
-                    onClick = onApply,
-                    colors = ButtonDefaults.buttonColors(
-                        containerColor = GoldAccent,
-                        contentColor = NavBarBg
-                    ),
-                    contentPadding = PaddingValues(horizontal = 12.dp, vertical = 4.dp)
-                ) {
-                    Text("Apply", style = MaterialTheme.typography.labelMedium, fontWeight = FontWeight.Bold)
-                }
+        if (isApplied) {
+            Box(
+                modifier = Modifier
+                    .clickable(onClick = onClear)
+                    .padding(horizontal = 8.dp, vertical = 4.dp),
+            ) {
+                Text("Clear", fontSize = 12.sp, color = DarkTextPrimary.copy(alpha = 0.7f))
+            }
+        } else {
+            Box(
+                modifier = Modifier
+                    .clip(RoundedCornerShape(8.dp))
+                    .background(GreenAccent)
+                    .clickable(onClick = onApply)
+                    .padding(horizontal = 12.dp, vertical = 6.dp),
+            ) {
+                Text("Apply", fontSize = 12.sp, fontWeight = FontWeight.Bold, color = DarkBg)
             }
         }
     }
@@ -383,166 +375,129 @@ private fun SkillFilterCard(
     maxSkill: Int,
     onToggle: (Boolean) -> Unit,
     onMinChange: (Int) -> Unit,
-    onMaxChange: (Int) -> Unit
+    onMaxChange: (Int) -> Unit,
 ) {
-    Card(
-        modifier = Modifier.fillMaxWidth(),
-        colors = CardDefaults.cardColors(containerColor = LightBg),
-        shape = RoundedCornerShape(12.dp)
+    Column(
+        modifier = Modifier
+            .fillMaxWidth()
+            .clip(RoundedCornerShape(12.dp))
+            .background(DarkSurface)
+            .border(1.dp, DarkBorder, RoundedCornerShape(12.dp))
+            .padding(12.dp),
     ) {
-        Column(modifier = Modifier.padding(12.dp)) {
-            // Toggle row
+        // Toggle row
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
             Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.CenterVertically
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(8.dp),
             ) {
-                Row(
-                    verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.spacedBy(8.dp)
-                ) {
-                    Icon(
-                        imageVector = Icons.Default.Tune,
-                        contentDescription = null,
-                        tint = GoldAccent,
-                        modifier = Modifier.size(18.dp)
-                    )
-                    Text(
-                        text = "Skill Filter",
-                        style = MaterialTheme.typography.titleSmall,
-                        color = TextPrimary,
-                        fontWeight = FontWeight.SemiBold
-                    )
-                }
-                Switch(
-                    checked = isEnabled,
-                    onCheckedChange = onToggle,
-                    colors = SwitchDefaults.colors(
-                        checkedThumbColor = NavBarBg,
-                        checkedTrackColor = GoldAccent,
-                        uncheckedThumbColor = TextPrimary.copy(alpha = 0.6f),
-                        uncheckedTrackColor = BorderGray
-                    )
+                Icon(
+                    imageVector = Icons.Default.Tune,
+                    contentDescription = null,
+                    tint = GreenAccent,
+                    modifier = Modifier.size(18.dp),
+                )
+                Text(
+                    text = "Skill Filter",
+                    fontSize = 14.sp,
+                    color = DarkTextPrimary,
+                    fontWeight = FontWeight.SemiBold,
                 )
             }
+            Switch(
+                checked = isEnabled,
+                onCheckedChange = onToggle,
+                colors = SwitchDefaults.colors(
+                    checkedThumbColor = DarkBg,
+                    checkedTrackColor = GreenAccent,
+                    uncheckedThumbColor = DarkTextPrimary.copy(alpha = 0.6f),
+                    uncheckedTrackColor = DarkBorder,
+                ),
+            )
+        }
 
-            // Skill range selector (visible when enabled)
-            AnimatedVisibility(
-                visible = isEnabled,
-                enter = expandVertically(),
-                exit = shrinkVertically()
+        // Skill range selector (visible when enabled)
+        AnimatedVisibility(
+            visible = isEnabled,
+            enter = expandVertically(),
+            exit = shrinkVertically(),
+        ) {
+            Column(
+                modifier = Modifier.padding(top = 12.dp),
+                verticalArrangement = Arrangement.spacedBy(12.dp),
             ) {
-                Column(
-                    modifier = Modifier.padding(top = 12.dp),
-                    verticalArrangement = Arrangement.spacedBy(12.dp)
+                Box(modifier = Modifier.fillMaxWidth().height(1.dp).background(DarkTextPrimary.copy(alpha = 0.1f)))
+
+                // Min skill
+                Text(text = "Minimum Skill", fontSize = 12.sp, color = DarkTextPrimary.copy(alpha = 0.7f))
+                Row(
+                    horizontalArrangement = Arrangement.spacedBy(4.dp),
+                    verticalAlignment = Alignment.CenterVertically,
                 ) {
-                    HorizontalDivider(color = TextPrimary.copy(alpha = 0.1f))
-
-                    // Min skill
-                    Text(
-                        text = "Minimum Skill",
-                        style = MaterialTheme.typography.labelMedium,
-                        color = TextPrimary.copy(alpha = 0.7f)
-                    )
-                    Row(
-                        horizontalArrangement = Arrangement.spacedBy(4.dp),
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        repeat(5) { index ->
-                            val starIndex = index + 1
-                            val isSelected = starIndex <= minSkill
-                            Box(
-                                modifier = Modifier
-                                    .size(40.dp)
-                                    .clip(RoundedCornerShape(8.dp))
-                                    .background(
-                                        if (isSelected) GoldAccent.copy(alpha = 0.2f)
-                                        else BorderGray
-                                    )
-                                    .then(
-                                        if (isSelected) Modifier.border(
-                                            1.dp,
-                                            GoldAccent.copy(alpha = 0.5f),
-                                            RoundedCornerShape(8.dp)
-                                        )
-                                        else Modifier
-                                    )
-                                    .clickable { onMinChange(starIndex) },
-                                contentAlignment = Alignment.Center
-                            ) {
-                                Icon(
-                                    imageVector = if (isSelected) Icons.Default.Star else Icons.Default.StarBorder,
-                                    contentDescription = "Skill $starIndex",
-                                    tint = if (isSelected) GoldAccent else TextPrimary.copy(alpha = 0.4f),
-                                    modifier = Modifier.size(22.dp)
-                                )
-                            }
+                    repeat(5) { index ->
+                        val starIndex = index + 1
+                        val isSelected = starIndex <= minSkill
+                        Box(
+                            modifier = Modifier
+                                .size(40.dp)
+                                .clip(RoundedCornerShape(8.dp))
+                                .background(if (isSelected) GreenAccent.copy(alpha = 0.2f) else DarkBorder)
+                                .then(if (isSelected) Modifier.border(1.dp, GreenAccent.copy(alpha = 0.5f), RoundedCornerShape(8.dp)) else Modifier)
+                                .clickable { onMinChange(starIndex) },
+                            contentAlignment = Alignment.Center,
+                        ) {
+                            Icon(
+                                imageVector = if (isSelected) Icons.Default.Star else Icons.Default.StarBorder,
+                                contentDescription = "Skill $starIndex",
+                                tint = if (isSelected) GreenAccent else DarkTextPrimary.copy(alpha = 0.4f),
+                                modifier = Modifier.size(22.dp),
+                            )
                         }
-                        Spacer(modifier = Modifier.width(8.dp))
-                        Text(
-                            text = "$minSkill",
-                            style = MaterialTheme.typography.titleMedium,
-                            color = GoldAccent,
-                            fontWeight = FontWeight.Bold
-                        )
                     }
-
-                    // Max skill
-                    Text(
-                        text = "Maximum Skill",
-                        style = MaterialTheme.typography.labelMedium,
-                        color = TextPrimary.copy(alpha = 0.7f)
-                    )
-                    Row(
-                        horizontalArrangement = Arrangement.spacedBy(4.dp),
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        repeat(5) { index ->
-                            val starIndex = index + 1
-                            val isSelected = starIndex <= maxSkill
-                            Box(
-                                modifier = Modifier
-                                    .size(40.dp)
-                                    .clip(RoundedCornerShape(8.dp))
-                                    .background(
-                                        if (isSelected) GoldAccent.copy(alpha = 0.2f)
-                                        else BorderGray
-                                    )
-                                    .then(
-                                        if (isSelected) Modifier.border(
-                                            1.dp,
-                                            GoldAccent.copy(alpha = 0.5f),
-                                            RoundedCornerShape(8.dp)
-                                        )
-                                        else Modifier
-                                    )
-                                    .clickable { onMaxChange(starIndex) },
-                                contentAlignment = Alignment.Center
-                            ) {
-                                Icon(
-                                    imageVector = if (isSelected) Icons.Default.Star else Icons.Default.StarBorder,
-                                    contentDescription = "Skill $starIndex",
-                                    tint = if (isSelected) GoldAccent else TextPrimary.copy(alpha = 0.4f),
-                                    modifier = Modifier.size(22.dp)
-                                )
-                            }
-                        }
-                        Spacer(modifier = Modifier.width(8.dp))
-                        Text(
-                            text = "$maxSkill",
-                            style = MaterialTheme.typography.titleMedium,
-                            color = GoldAccent,
-                            fontWeight = FontWeight.Bold
-                        )
-                    }
-
-                    // Visual range display
-                    Text(
-                        text = "Showing players with skill level $minSkill – $maxSkill",
-                        style = MaterialTheme.typography.bodySmall,
-                        color = TextPrimary.copy(alpha = 0.5f)
-                    )
+                    Spacer(modifier = Modifier.width(8.dp))
+                    Text(text = "$minSkill", fontSize = 16.sp, color = GreenAccent, fontWeight = FontWeight.Bold)
                 }
+
+                // Max skill
+                Text(text = "Maximum Skill", fontSize = 12.sp, color = DarkTextPrimary.copy(alpha = 0.7f))
+                Row(
+                    horizontalArrangement = Arrangement.spacedBy(4.dp),
+                    verticalAlignment = Alignment.CenterVertically,
+                ) {
+                    repeat(5) { index ->
+                        val starIndex = index + 1
+                        val isSelected = starIndex <= maxSkill
+                        Box(
+                            modifier = Modifier
+                                .size(40.dp)
+                                .clip(RoundedCornerShape(8.dp))
+                                .background(if (isSelected) GreenAccent.copy(alpha = 0.2f) else DarkBorder)
+                                .then(if (isSelected) Modifier.border(1.dp, GreenAccent.copy(alpha = 0.5f), RoundedCornerShape(8.dp)) else Modifier)
+                                .clickable { onMaxChange(starIndex) },
+                            contentAlignment = Alignment.Center,
+                        ) {
+                            Icon(
+                                imageVector = if (isSelected) Icons.Default.Star else Icons.Default.StarBorder,
+                                contentDescription = "Skill $starIndex",
+                                tint = if (isSelected) GreenAccent else DarkTextPrimary.copy(alpha = 0.4f),
+                                modifier = Modifier.size(22.dp),
+                            )
+                        }
+                    }
+                    Spacer(modifier = Modifier.width(8.dp))
+                    Text(text = "$maxSkill", fontSize = 16.sp, color = GreenAccent, fontWeight = FontWeight.Bold)
+                }
+
+                // Visual range display
+                Text(
+                    text = "Showing players with skill level $minSkill – $maxSkill",
+                    fontSize = 12.sp,
+                    color = DarkTextPrimary.copy(alpha = 0.5f),
+                )
             }
         }
     }
@@ -554,168 +509,170 @@ private fun AvailabilityToggleCard(
     onRegister: () -> Unit,
     onUnregister: (String) -> Unit,
     onSkillLevelChange: (Int) -> Unit,
-    onNoteChange: (String) -> Unit
+    onNoteChange: (String) -> Unit,
 ) {
     var showRegisterForm by remember { mutableStateOf(false) }
 
-    val currentSportAvailability = uiState.myAvailability.find {
-        it.sportType == uiState.selectedSport
-    }
+    val currentSportAvailability = uiState.myAvailability.find { it.sportType == uiState.selectedSport }
     val isRegisteredForCurrentSport = currentSportAvailability != null
 
-    Card(
-        modifier = Modifier.fillMaxWidth(),
-        colors = CardDefaults.cardColors(containerColor = LightBg),
-        shape = RoundedCornerShape(12.dp)
+    Column(
+        modifier = Modifier
+            .fillMaxWidth()
+            .clip(RoundedCornerShape(12.dp))
+            .background(DarkSurface)
+            .border(1.dp, DarkBorder, RoundedCornerShape(12.dp))
+            .padding(16.dp),
+        verticalArrangement = Arrangement.spacedBy(12.dp),
     ) {
-        Column(
-            modifier = Modifier.padding(16.dp),
-            verticalArrangement = Arrangement.spacedBy(12.dp)
-        ) {
-            Text(
-                text = "Your Availability",
-                style = MaterialTheme.typography.titleMedium,
-                color = GoldAccent,
-                fontWeight = FontWeight.Bold
-            )
+        Text(
+            text = "Your Availability",
+            fontSize = 15.sp,
+            color = GreenAccent,
+            fontWeight = FontWeight.Bold,
+        )
 
-            if (isRegisteredForCurrentSport) {
+        if (isRegisteredForCurrentSport) {
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically,
+            ) {
                 Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.SpaceBetween,
-                    verticalAlignment = Alignment.CenterVertically
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(8.dp),
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.CheckCircle,
+                        contentDescription = null,
+                        tint = SportGreen,
+                        modifier = Modifier.size(20.dp),
+                    )
+                    Text(
+                        text = "Listed for ${uiState.selectedSport.displayName}",
+                        fontSize = 14.sp,
+                        color = SportGreen,
+                        fontWeight = FontWeight.Medium,
+                    )
+                }
+                Box(
+                    modifier = Modifier
+                        .clip(RoundedCornerShape(8.dp))
+                        .background(DarkBg)
+                        .border(1.dp, DarkTextPrimary.copy(alpha = 0.4f), RoundedCornerShape(8.dp))
+                        .clickable { onUnregister(uiState.selectedSport.name.lowercase()) }
+                        .padding(horizontal = 14.dp, vertical = 8.dp),
+                ) {
+                    Text("Remove", fontSize = 13.sp, color = DarkTextPrimary)
+                }
+            }
+        } else {
+            if (!showRegisterForm) {
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(48.dp)
+                        .clip(RoundedCornerShape(10.dp))
+                        .background(GreenAccent)
+                        .clickable { showRegisterForm = true },
+                    contentAlignment = Alignment.Center,
                 ) {
                     Row(
                         verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.spacedBy(8.dp)
+                        horizontalArrangement = Arrangement.spacedBy(8.dp),
                     ) {
-                        Icon(
-                            imageVector = Icons.Default.CheckCircle,
-                            contentDescription = null,
-                            tint = SportGreen,
-                            modifier = Modifier.size(20.dp)
-                        )
-                        Text(
-                            text = "Listed for ${uiState.selectedSport.displayName}",
-                            style = MaterialTheme.typography.bodyMedium,
-                            color = SportGreen,
-                            fontWeight = FontWeight.Medium
-                        )
-                    }
-                    OutlinedButton(
-                        onClick = { onUnregister(uiState.selectedSport.name.lowercase()) },
-                        colors = ButtonDefaults.outlinedButtonColors(contentColor = TextPrimary),
-                        border = BorderStroke(1.dp, TextPrimary.copy(alpha = 0.4f))
-                    ) {
-                        Text("Remove")
+                        Icon(Icons.Default.PersonAdd, contentDescription = null, tint = DarkBg, modifier = Modifier.size(18.dp))
+                        Text("I'm Available!", fontSize = 14.sp, fontWeight = FontWeight.Bold, color = DarkBg)
                     }
                 }
             } else {
-                if (!showRegisterForm) {
-                    Button(
-                        onClick = { showRegisterForm = true },
-                        modifier = Modifier.fillMaxWidth(),
-                        colors = ButtonDefaults.buttonColors(
-                            containerColor = GoldAccent,
-                            contentColor = NavBarBg
-                        )
-                    ) {
-                        Icon(Icons.Default.PersonAdd, contentDescription = null)
-                        Spacer(modifier = Modifier.width(8.dp))
-                        Text("I'm Available!", fontWeight = FontWeight.Bold)
+                // Skill level selector
+                Text(
+                    text = "Skill Level",
+                    fontSize = 12.sp,
+                    color = DarkTextPrimary.copy(alpha = 0.7f),
+                )
+                Row(
+                    horizontalArrangement = Arrangement.spacedBy(4.dp),
+                    verticalAlignment = Alignment.CenterVertically,
+                ) {
+                    repeat(5) { index ->
+                        val starIndex = index + 1
+                        Box(
+                            modifier = Modifier
+                                .size(36.dp)
+                                .clickable { onSkillLevelChange(starIndex) },
+                            contentAlignment = Alignment.Center,
+                        ) {
+                            Icon(
+                                imageVector = if (starIndex <= uiState.registerSkillLevel) Icons.Default.Star else Icons.Default.StarBorder,
+                                contentDescription = "Skill level $starIndex",
+                                tint = GreenAccent,
+                                modifier = Modifier.size(28.dp),
+                            )
+                        }
                     }
-                } else {
-                    // Skill level selector
+                    Spacer(modifier = Modifier.width(8.dp))
                     Text(
-                        text = "Skill Level",
-                        style = MaterialTheme.typography.labelMedium,
-                        color = TextPrimary.copy(alpha = 0.7f)
+                        text = "${uiState.registerSkillLevel}/5",
+                        fontSize = 12.sp,
+                        color = DarkTextPrimary.copy(alpha = 0.7f),
                     )
-                    Row(
-                        horizontalArrangement = Arrangement.spacedBy(4.dp),
-                        verticalAlignment = Alignment.CenterVertically
+                }
+
+                // Note field
+                OutlinedTextField(
+                    value = uiState.registerNote,
+                    onValueChange = onNoteChange,
+                    label = { Text("Note (optional)", color = DarkTextPrimary.copy(alpha = 0.6f)) },
+                    placeholder = { Text("e.g. Available for 2 hours, intermediate level", color = DarkTextPrimary.copy(alpha = 0.4f)) },
+                    modifier = Modifier.fillMaxWidth(),
+                    colors = OutlinedTextFieldDefaults.colors(
+                        focusedTextColor = DarkTextPrimary,
+                        unfocusedTextColor = DarkTextPrimary,
+                        focusedBorderColor = GreenAccent,
+                        unfocusedBorderColor = DarkTextPrimary.copy(alpha = 0.3f),
+                        cursorColor = GreenAccent,
+                    ),
+                    maxLines = 3,
+                )
+
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(8.dp),
+                ) {
+                    Box(
+                        modifier = Modifier
+                            .weight(1f)
+                            .height(44.dp)
+                            .clip(RoundedCornerShape(10.dp))
+                            .background(DarkBg)
+                            .border(1.dp, DarkTextPrimary.copy(alpha = 0.4f), RoundedCornerShape(10.dp))
+                            .clickable { showRegisterForm = false },
+                        contentAlignment = Alignment.Center,
                     ) {
-                        repeat(5) { index ->
-                            val starIndex = index + 1
-                            IconButton(
-                                onClick = { onSkillLevelChange(starIndex) },
-                                modifier = Modifier.size(36.dp)
-                            ) {
-                                Icon(
-                                    imageVector = if (starIndex <= uiState.registerSkillLevel)
-                                        Icons.Default.Star
-                                    else
-                                        Icons.Default.StarBorder,
-                                    contentDescription = "Skill level $starIndex",
-                                    tint = GoldAccent,
-                                    modifier = Modifier.size(28.dp)
-                                )
-                            }
-                        }
-                        Spacer(modifier = Modifier.width(8.dp))
-                        Text(
-                            text = "${uiState.registerSkillLevel}/5",
-                            style = MaterialTheme.typography.bodySmall,
-                            color = TextPrimary.copy(alpha = 0.7f)
-                        )
+                        Text("Cancel", fontSize = 14.sp, color = DarkTextPrimary)
                     }
-
-                    // Note field
-                    OutlinedTextField(
-                        value = uiState.registerNote,
-                        onValueChange = onNoteChange,
-                        label = {
-                            Text(
-                                "Note (optional)",
-                                color = TextPrimary.copy(alpha = 0.6f)
-                            )
-                        },
-                        placeholder = {
-                            Text(
-                                "e.g. Available for 2 hours, intermediate level",
-                                color = TextPrimary.copy(alpha = 0.4f)
-                            )
-                        },
-                        modifier = Modifier.fillMaxWidth(),
-                        colors = OutlinedTextFieldDefaults.colors(
-                            focusedTextColor = TextPrimary,
-                            unfocusedTextColor = TextPrimary,
-                            focusedBorderColor = GoldAccent,
-                            unfocusedBorderColor = TextPrimary.copy(alpha = 0.3f),
-                            cursorColor = GoldAccent
-                        ),
-                        maxLines = 3
-                    )
-
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.spacedBy(8.dp)
+                    Box(
+                        modifier = Modifier
+                            .weight(1f)
+                            .height(44.dp)
+                            .clip(RoundedCornerShape(10.dp))
+                            .background(if (!uiState.isRegistering) GreenAccent else GreenAccent.copy(alpha = 0.4f))
+                            .then(
+                                if (!uiState.isRegistering) Modifier.clickable {
+                                    onRegister()
+                                    showRegisterForm = false
+                                } else Modifier,
+                            ),
+                        contentAlignment = Alignment.Center,
                     ) {
-                        OutlinedButton(
-                            onClick = { showRegisterForm = false },
-                            modifier = Modifier.weight(1f),
-                            colors = ButtonDefaults.outlinedButtonColors(contentColor = TextPrimary),
-                            border = BorderStroke(1.dp, TextPrimary.copy(alpha = 0.4f))
-                        ) {
-                            Text("Cancel")
-                        }
-                        Button(
-                            onClick = {
-                                onRegister()
-                                showRegisterForm = false
-                            },
-                            modifier = Modifier.weight(1f),
-                            enabled = !uiState.isRegistering,
-                            colors = ButtonDefaults.buttonColors(
-                                containerColor = GoldAccent,
-                                contentColor = NavBarBg
-                            )
-                        ) {
-                            Text(
-                                text = if (uiState.isRegistering) "Registering..." else "Register",
-                                fontWeight = FontWeight.Bold
-                            )
-                        }
+                        Text(
+                            text = if (uiState.isRegistering) "Registering..." else "Register",
+                            fontSize = 14.sp,
+                            fontWeight = FontWeight.Bold,
+                            color = DarkBg,
+                        )
                     }
                 }
             }
@@ -730,163 +687,149 @@ private fun AvailablePlayerCard(
     matchMinSkill: Int? = null,
     matchMaxSkill: Int? = null,
     onInvite: () -> Unit,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
 ) {
-    // Determine if player meets match requirements
     val meetsRequirements = if (matchMinSkill != null || matchMaxSkill != null) {
         val skill = player.skillLevel ?: 0
         val minOk = matchMinSkill == null || skill >= matchMinSkill
         val maxOk = matchMaxSkill == null || skill <= matchMaxSkill
         minOk && maxOk
     } else {
-        null // No requirements set
+        null
     }
 
     val borderColor = when (meetsRequirements) {
         true -> SportGreen.copy(alpha = 0.6f)
-        false -> MaterialTheme.colorScheme.error.copy(alpha = 0.4f)
-        null -> BorderGray
+        false -> Color(0xFFEF5350).copy(alpha = 0.4f)
+        null -> DarkBorder
     }
 
-    Card(
-        modifier = modifier.fillMaxWidth(),
-        colors = CardDefaults.cardColors(containerColor = BorderGray),
-        shape = RoundedCornerShape(12.dp),
-        border = if (meetsRequirements != null) BorderStroke(1.dp, borderColor) else null
+    Row(
+        modifier = modifier
+            .fillMaxWidth()
+            .clip(RoundedCornerShape(12.dp))
+            .background(DarkSurface)
+            .border(1.dp, borderColor, RoundedCornerShape(12.dp))
+            .padding(12.dp),
+        horizontalArrangement = Arrangement.spacedBy(12.dp),
+        verticalAlignment = Alignment.CenterVertically,
     ) {
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(12.dp),
-            horizontalArrangement = Arrangement.spacedBy(12.dp),
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            // Avatar
-            if (player.photoUrl != null) {
-                AsyncImage(
-                    model = player.photoUrl,
-                    contentDescription = player.displayName,
-                    contentScale = ContentScale.Crop,
-                    modifier = Modifier
-                        .size(48.dp)
-                        .clip(CircleShape)
+        // Avatar
+        if (player.photoUrl != null) {
+            AsyncImage(
+                model = player.photoUrl,
+                contentDescription = player.displayName,
+                contentScale = ContentScale.Crop,
+                modifier = Modifier.size(48.dp).clip(CircleShape),
+            )
+        } else {
+            Box(
+                modifier = Modifier
+                    .size(48.dp)
+                    .clip(CircleShape)
+                    .background(DarkBg),
+                contentAlignment = Alignment.Center,
+            ) {
+                val initial = player.displayName?.firstOrNull()?.uppercaseChar()?.toString() ?: "?"
+                Text(text = initial, fontSize = 16.sp, color = GreenAccent, fontWeight = FontWeight.Bold)
+            }
+        }
+
+        // Info
+        Column(modifier = Modifier.weight(1f)) {
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(6.dp),
+            ) {
+                Text(
+                    text = player.displayName ?: "Anonymous",
+                    fontSize = 15.sp,
+                    color = DarkTextPrimary,
+                    fontWeight = FontWeight.SemiBold,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis,
+                    modifier = Modifier.weight(1f, fill = false),
                 )
-            } else {
-                Box(
-                    modifier = Modifier
-                        .size(48.dp)
-                        .clip(CircleShape)
-                        .background(LightBg),
-                    contentAlignment = Alignment.Center
-                ) {
-                    val initial = player.displayName?.firstOrNull()?.uppercaseChar()?.toString() ?: "?"
-                    Text(
-                        text = initial,
-                        style = MaterialTheme.typography.titleMedium,
-                        color = GoldAccent,
-                        fontWeight = FontWeight.Bold
-                    )
-                }
-            }
-
-            // Info
-            Column(modifier = Modifier.weight(1f)) {
-                Row(
-                    verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.spacedBy(6.dp)
-                ) {
-                    Text(
-                        text = player.displayName ?: "Anonymous",
-                        style = MaterialTheme.typography.bodyLarge,
-                        color = TextPrimary,
-                        fontWeight = FontWeight.SemiBold,
-                        maxLines = 1,
-                        overflow = TextOverflow.Ellipsis,
-                        modifier = Modifier.weight(1f, fill = false)
-                    )
-                    // Match compatibility badge
-                    if (meetsRequirements == true) {
-                        Icon(
-                            imageVector = Icons.Default.CheckCircle,
-                            contentDescription = "Meets requirements",
-                            tint = SportGreen,
-                            modifier = Modifier.size(16.dp)
-                        )
-                    }
-                }
-
-                // Skill level stars
-                if (player.skillLevel != null) {
-                    Row(
-                        horizontalArrangement = Arrangement.spacedBy(2.dp),
-                        verticalAlignment = Alignment.CenterVertically,
-                        modifier = Modifier.padding(top = 2.dp)
-                    ) {
-                        repeat(5) { index ->
-                            val inMatchRange = if (matchMinSkill != null || matchMaxSkill != null) {
-                                (index + 1) >= (matchMinSkill ?: 1) && (index + 1) <= (matchMaxSkill ?: 5)
-                            } else true
-
-                            Icon(
-                                imageVector = if (index < player.skillLevel)
-                                    Icons.Default.Star
-                                else
-                                    Icons.Default.StarBorder,
-                                contentDescription = null,
-                                tint = if (index < player.skillLevel) {
-                                    if (inMatchRange || matchMinSkill == null) GoldAccent
-                                    else MaterialTheme.colorScheme.error.copy(alpha = 0.7f)
-                                } else {
-                                    TextPrimary.copy(alpha = 0.2f)
-                                },
-                                modifier = Modifier.size(14.dp)
-                            )
-                        }
-                        Spacer(modifier = Modifier.width(4.dp))
-                        Text(
-                            text = "${player.skillLevel}/5",
-                            style = MaterialTheme.typography.labelSmall,
-                            color = TextPrimary.copy(alpha = 0.5f)
-                        )
-                    }
-                }
-
-                // Note
-                if (!player.note.isNullOrBlank()) {
-                    Text(
-                        text = player.note,
-                        style = MaterialTheme.typography.bodySmall,
-                        color = TextPrimary.copy(alpha = 0.6f),
-                        maxLines = 2,
-                        overflow = TextOverflow.Ellipsis,
-                        modifier = Modifier.padding(top = 4.dp)
-                    )
-                }
-            }
-
-            // Invite button (only shown when navigating from a match)
-            if (showInviteButton) {
-                IconButton(
-                    onClick = onInvite,
-                    modifier = Modifier
-                        .size(40.dp)
-                        .clip(CircleShape)
-                        .background(GoldAccent)
-                ) {
+                if (meetsRequirements == true) {
                     Icon(
-                        imageVector = Icons.Default.PersonAdd,
-                        contentDescription = "Invite to match",
-                        tint = NavBarBg,
-                        modifier = Modifier.size(20.dp)
+                        imageVector = Icons.Default.CheckCircle,
+                        contentDescription = "Meets requirements",
+                        tint = SportGreen,
+                        modifier = Modifier.size(16.dp),
                     )
                 }
+            }
+
+            // Skill level stars
+            if (player.skillLevel != null) {
+                Row(
+                    horizontalArrangement = Arrangement.spacedBy(2.dp),
+                    verticalAlignment = Alignment.CenterVertically,
+                    modifier = Modifier.padding(top = 2.dp),
+                ) {
+                    repeat(5) { index ->
+                        val inMatchRange = if (matchMinSkill != null || matchMaxSkill != null) {
+                            (index + 1) >= (matchMinSkill ?: 1) && (index + 1) <= (matchMaxSkill ?: 5)
+                        } else true
+
+                        Icon(
+                            imageVector = if (index < player.skillLevel) Icons.Default.Star else Icons.Default.StarBorder,
+                            contentDescription = null,
+                            tint = if (index < player.skillLevel) {
+                                if (inMatchRange || matchMinSkill == null) GreenAccent
+                                else Color(0xFFEF5350).copy(alpha = 0.7f)
+                            } else {
+                                DarkTextPrimary.copy(alpha = 0.2f)
+                            },
+                            modifier = Modifier.size(14.dp),
+                        )
+                    }
+                    Spacer(modifier = Modifier.width(4.dp))
+                    Text(
+                        text = "${player.skillLevel}/5",
+                        fontSize = 11.sp,
+                        color = DarkTextPrimary.copy(alpha = 0.5f),
+                    )
+                }
+            }
+
+            // Note
+            if (!player.note.isNullOrBlank()) {
+                Text(
+                    text = player.note,
+                    fontSize = 12.sp,
+                    color = DarkTextPrimary.copy(alpha = 0.6f),
+                    maxLines = 2,
+                    overflow = TextOverflow.Ellipsis,
+                    modifier = Modifier.padding(top = 4.dp),
+                )
+            }
+        }
+
+        // Invite button (only shown when navigating from a match)
+        if (showInviteButton) {
+            Box(
+                modifier = Modifier
+                    .size(40.dp)
+                    .clip(CircleShape)
+                    .background(GreenAccent)
+                    .clickable(onClick = onInvite),
+                contentAlignment = Alignment.Center,
+            ) {
+                Icon(
+                    imageVector = Icons.Default.PersonAdd,
+                    contentDescription = "Invite to match",
+                    tint = DarkBg,
+                    modifier = Modifier.size(20.dp),
+                )
             }
         }
     }
 }
 
-@OptIn(ExperimentalMaterial3Api::class)
-@Preview(showBackground = true, backgroundColor = 0xFF0A1628)
+// ── Previews ─────────────────────────────────────────────────────────────────
+
+@Preview(showBackground = true, backgroundColor = 0xFF121212)
 @Composable
 private fun AvailablePlayersScreenPreview() {
     val previewState = AvailablePlayersUiState(
@@ -894,63 +837,39 @@ private fun AvailablePlayersScreenPreview() {
         selectedSport = SportType.BASKETBALL,
         availablePlayers = listOf(
             AvailablePlayer(
-                id = 1L,
-                userId = 10L,
-                sportType = SportType.BASKETBALL,
-                skillLevel = 3,
-                note = "Looking for a pickup game",
-                latitude = null,
-                longitude = null,
-                availableUntil = null,
-                createdAt = "2026-03-20T10:00:00Z",
-                displayName = "Alex Rivera",
-                photoUrl = null
+                id = 1L, userId = 10L, sportType = SportType.BASKETBALL,
+                skillLevel = 3, note = "Looking for a pickup game",
+                latitude = null, longitude = null, availableUntil = null,
+                createdAt = "2026-03-20T10:00:00Z", displayName = "Alex Rivera", photoUrl = null,
             ),
             AvailablePlayer(
-                id = 2L,
-                userId = 11L,
-                sportType = SportType.BASKETBALL,
-                skillLevel = 4,
-                note = null,
-                latitude = null,
-                longitude = null,
-                availableUntil = null,
-                createdAt = "2026-03-20T11:00:00Z",
-                displayName = "Sam Torres",
-                photoUrl = null
-            )
-        )
+                id = 2L, userId = 11L, sportType = SportType.BASKETBALL,
+                skillLevel = 4, note = null,
+                latitude = null, longitude = null, availableUntil = null,
+                createdAt = "2026-03-20T11:00:00Z", displayName = "Sam Torres", photoUrl = null,
+            ),
+        ),
     )
-    Scaffold(
-        containerColor = NavBarBg,
-        topBar = {
-            TopAppBar(
-                title = {
-                    Text(
-                        text = "Available Players",
-                        color = TextPrimary,
-                        fontWeight = FontWeight.Bold
-                    )
-                },
-                navigationIcon = {
-                    IconButton(onClick = {}) {
-                        Icon(
-                            imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                            contentDescription = "Back",
-                            tint = TextPrimary
-                        )
-                    }
-                },
-                colors = TopAppBarDefaults.topAppBarColors(containerColor = LightBg)
-            )
-        }
-    ) { padding ->
-        LazyColumn(
+    Column(modifier = Modifier.fillMaxSize().background(DarkBg)) {
+        Row(
             modifier = Modifier
-                .fillMaxSize()
-                .padding(padding),
+                .fillMaxWidth()
+                .padding(start = 16.dp, end = 16.dp, top = 56.dp, bottom = 16.dp),
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            Box(
+                modifier = Modifier.size(40.dp).clip(CircleShape).background(DarkSurface),
+                contentAlignment = Alignment.Center,
+            ) {
+                Icon(Icons.AutoMirrored.Filled.ArrowBack, "Back", tint = DarkTextPrimary, modifier = Modifier.size(20.dp))
+            }
+            Spacer(modifier = Modifier.width(16.dp))
+            Text("Available Players", fontSize = 18.sp, fontWeight = FontWeight.Bold, color = DarkTextPrimary)
+        }
+        LazyColumn(
+            modifier = Modifier.fillMaxSize(),
             contentPadding = PaddingValues(16.dp),
-            verticalArrangement = Arrangement.spacedBy(16.dp)
+            verticalArrangement = Arrangement.spacedBy(16.dp),
         ) {
             item {
                 AvailabilityToggleCard(
@@ -958,45 +877,34 @@ private fun AvailablePlayersScreenPreview() {
                     onRegister = {},
                     onUnregister = {},
                     onSkillLevelChange = {},
-                    onNoteChange = {}
+                    onNoteChange = {},
                 )
             }
             items(previewState.availablePlayers, key = { it.id }) { player ->
-                AvailablePlayerCard(
-                    player = player,
-                    showInviteButton = false,
-                    onInvite = {}
-                )
+                AvailablePlayerCard(player = player, showInviteButton = false, onInvite = {})
             }
         }
     }
 }
 
-@Preview(showBackground = true, backgroundColor = 0xFF132A44)
+@Preview(showBackground = true, backgroundColor = 0xFF121212)
 @Composable
 private fun AvailablePlayerCardPreview() {
     AvailablePlayerCard(
         player = AvailablePlayer(
-            id = 1L,
-            userId = 42L,
-            sportType = SportType.BASKETBALL,
-            skillLevel = 3,
-            note = "Looking for a pickup game this afternoon",
-            latitude = null,
-            longitude = null,
-            availableUntil = null,
-            createdAt = "2026-03-18T10:00:00Z",
-            displayName = "Alex Rivera",
-            photoUrl = null
+            id = 1L, userId = 42L, sportType = SportType.BASKETBALL,
+            skillLevel = 3, note = "Looking for a pickup game this afternoon",
+            latitude = null, longitude = null, availableUntil = null,
+            createdAt = "2026-03-18T10:00:00Z", displayName = "Alex Rivera", photoUrl = null,
         ),
         showInviteButton = true,
         matchMinSkill = 2,
         matchMaxSkill = 4,
-        onInvite = {}
+        onInvite = {},
     )
 }
 
-@Preview(showBackground = true, backgroundColor = 0xFF132A44)
+@Preview(showBackground = true, backgroundColor = 0xFF121212)
 @Composable
 private fun SkillFilterCardPreview() {
     SkillFilterCard(
@@ -1005,11 +913,11 @@ private fun SkillFilterCardPreview() {
         maxSkill = 4,
         onToggle = {},
         onMinChange = {},
-        onMaxChange = {}
+        onMaxChange = {},
     )
 }
 
-@Preview(showBackground = true, backgroundColor = 0xFF0A1628)
+@Preview(showBackground = true, backgroundColor = 0xFF121212)
 @Composable
 private fun MatchRequirementsBannerPreview() {
     MatchRequirementsBanner(
@@ -1017,6 +925,6 @@ private fun MatchRequirementsBannerPreview() {
         maxSkill = 5,
         isApplied = true,
         onApply = {},
-        onClear = {}
+        onClear = {},
     )
 }

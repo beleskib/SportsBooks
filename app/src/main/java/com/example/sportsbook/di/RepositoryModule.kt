@@ -16,11 +16,12 @@ import com.example.sportsbook.data.repository.VenueRepositoryImpl
 import com.example.sportsbook.data.repository.MatchRepositoryImpl
 import com.example.sportsbook.data.repository.NotificationRepositoryImpl
 import com.example.sportsbook.data.repository.AvailablePlayerRepositoryImpl
-import com.example.sportsbook.data.repository.StripeConnectRepositoryImpl
 import com.example.sportsbook.data.repository.GamificationRepositoryImpl
+import com.example.sportsbook.data.repository.CardRepositoryImpl
 import com.example.sportsbook.data.repository.CommunityRepositoryImpl
 import com.example.sportsbook.data.repository.DashboardRepositoryImpl
 import com.example.sportsbook.domain.repository.AuthRepository
+import com.example.sportsbook.domain.repository.CardRepository
 import com.example.sportsbook.domain.repository.CommunityRepository
 import com.example.sportsbook.domain.repository.DashboardRepository
 import com.example.sportsbook.domain.repository.FavoriteRepository
@@ -38,7 +39,6 @@ import com.example.sportsbook.domain.repository.VenueRepository
 import com.example.sportsbook.domain.repository.MatchRepository
 import com.example.sportsbook.domain.repository.NotificationRepository
 import com.example.sportsbook.domain.repository.AvailablePlayerRepository
-import com.example.sportsbook.domain.repository.StripeConnectRepository
 import com.example.sportsbook.domain.repository.GamificationRepository
 import dagger.Binds
 import dagger.Module
@@ -112,10 +112,6 @@ abstract class RepositoryModule {
 
     @Binds
     @Singleton
-    abstract fun bindStripeConnectRepository(impl: StripeConnectRepositoryImpl): StripeConnectRepository
-
-    @Binds
-    @Singleton
     abstract fun bindAvailablePlayerRepository(impl: AvailablePlayerRepositoryImpl): AvailablePlayerRepository
 
     @Binds
@@ -129,4 +125,8 @@ abstract class RepositoryModule {
     @Binds
     @Singleton
     abstract fun bindCommunityRepository(impl: CommunityRepositoryImpl): CommunityRepository
+
+    @Binds
+    @Singleton
+    abstract fun bindCardRepository(impl: CardRepositoryImpl): CardRepository
 }

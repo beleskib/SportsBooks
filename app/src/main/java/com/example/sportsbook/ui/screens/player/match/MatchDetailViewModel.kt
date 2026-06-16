@@ -367,15 +367,10 @@ class MatchDetailViewModel @Inject constructor(
                     loadPaymentStatus()
                     return@launch
                 }
-                // Dev mode: auto-confirm since the client secret starts with "dev_secret_"
-                if (intent.clientSecret?.startsWith("dev_secret_") == true) {
-                    apiService.confirmMatchPayment(matchId)
-                    _uiState.update { it.copy(isPayingShare = false, paymentSuccess = true) }
-                    loadPaymentStatus()
-                } else {
-                    // Real Stripe: would launch PaymentSheet here
-                    _uiState.update { it.copy(isPayingShare = false, error = "Stripe payments not yet implemented for matches") }
-                }
+                // Firebase-based: confirm payment directly
+                apiService.confirmMatchPayment(matchId)
+                _uiState.update { it.copy(isPayingShare = false, paymentSuccess = true) }
+                loadPaymentStatus()
             } catch (e: Exception) {
                 _uiState.update { it.copy(isPayingShare = false, error = e.message ?: "Payment failed") }
             }

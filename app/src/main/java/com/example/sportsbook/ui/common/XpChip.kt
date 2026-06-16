@@ -28,8 +28,8 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewModelScope
 import com.example.sportsbook.domain.model.PlayerLevel
 import com.example.sportsbook.domain.repository.GamificationRepository
-import com.example.sportsbook.ui.theme.GoldAccent
-import com.example.sportsbook.ui.theme.NavBarBg
+import com.example.sportsbook.ui.theme.GreenAccent
+import com.example.sportsbook.ui.theme.DarkBg
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -43,7 +43,7 @@ import javax.inject.Inject
  * fetches its own state via a dedicated ViewModel so hosting screens don't
  * need to inject GamificationRepository.
  *
- * Design: small gold capsule with a bolt icon + `Lv N · XP` label on NavBarBg,
+ * Design: small gold capsule with a bolt icon + `Lv N · XP` label on DarkBg,
  * matching the existing gamification screens' palette.
  */
 @Composable
@@ -59,7 +59,7 @@ fun XpChip(
         modifier = modifier
             .padding(end = 8.dp)
             .clip(RoundedCornerShape(50))
-            .background(NavBarBg)
+            .background(DarkBg)
             .clickable(onClick = onClick)
             .padding(horizontal = 10.dp, vertical = 6.dp),
         verticalAlignment = Alignment.CenterVertically,
@@ -68,26 +68,26 @@ fun XpChip(
         Icon(
             imageVector = Icons.Default.Bolt,
             contentDescription = null,
-            tint = GoldAccent,
+            tint = GreenAccent,
             modifier = Modifier.size(16.dp)
         )
         Spacer(modifier = Modifier.width(4.dp))
         Text(
             text = "Lv ${level.currentLevel}",
-            color = GoldAccent,
+            color = GreenAccent,
             style = MaterialTheme.typography.labelMedium,
             fontWeight = FontWeight.SemiBold
         )
         Spacer(modifier = Modifier.width(6.dp))
         Text(
             text = "·",
-            color = GoldAccent.copy(alpha = 0.6f),
+            color = GreenAccent.copy(alpha = 0.6f),
             style = MaterialTheme.typography.labelMedium
         )
         Spacer(modifier = Modifier.width(6.dp))
         Text(
             text = "${level.totalXp} XP",
-            color = GoldAccent,
+            color = GreenAccent,
             style = MaterialTheme.typography.labelMedium,
             fontWeight = FontWeight.Medium
         )
@@ -135,29 +135,29 @@ private fun XpChipPreview() {
             modifier = Modifier
                 .padding(end = 8.dp)
                 .clip(RoundedCornerShape(50))
-                .background(NavBarBg)
+                .background(DarkBg)
                 .padding(horizontal = 10.dp, vertical = 6.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
             Icon(
                 imageVector = Icons.Default.Bolt,
                 contentDescription = null,
-                tint = GoldAccent,
+                tint = GreenAccent,
                 modifier = Modifier.size(16.dp)
             )
             Spacer(modifier = Modifier.width(4.dp))
             Text(
                 text = "Lv 4",
-                color = GoldAccent,
+                color = GreenAccent,
                 style = MaterialTheme.typography.labelMedium,
                 fontWeight = FontWeight.SemiBold
             )
             Spacer(modifier = Modifier.width(6.dp))
-            Text(text = "·", color = GoldAccent.copy(alpha = 0.6f))
+            Text(text = "·", color = GreenAccent.copy(alpha = 0.6f))
             Spacer(modifier = Modifier.width(6.dp))
             Text(
                 text = "1,720 XP",
-                color = GoldAccent,
+                color = GreenAccent,
                 style = MaterialTheme.typography.labelMedium,
                 fontWeight = FontWeight.Medium
             )

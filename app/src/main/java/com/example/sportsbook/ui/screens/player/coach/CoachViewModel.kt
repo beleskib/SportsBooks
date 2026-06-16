@@ -39,18 +39,25 @@ class CoachViewModel @Inject constructor(
     fun loadCoachesBySport(sportType: String) {
         viewModelScope.launch {
             _uiState.update { it.copy(isLoading = true, error = null) }
-            val parsedSportType = runCatching {
-                SportType.valueOf(sportType.uppercase())
-            }.getOrElse {
-                _uiState.update {
-                    it.copy(
-                        isLoading = false,
-                        error = "Unknown sport type: $sportType"
-                    )
+
+            val result = if (sportType.equals("all", ignoreCase = true)) {
+                coachRepository.getAllCoaches()
+            } else {
+                val parsedSportType = runCatching {
+                    SportType.valueOf(sportType.uppercase())
+                }.getOrElse {
+                    _uiState.update {
+                        it.copy(
+                            isLoading = false,
+                            error = "Unknown sport type: $sportType"
+                        )
+                    }
+                    return@launch
                 }
-                return@launch
+                coachRepository.getCoachesBySport(parsedSportType)
             }
-            coachRepository.getCoachesBySport(parsedSportType)
+
+            result
                 .onSuccess { coaches ->
                     _uiState.update {
                         it.copy(coaches = coaches, isLoading = false, error = null)

@@ -1,38 +1,51 @@
 package com.example.sportsbook.ui.screens.partner.edit
 
+import androidx.compose.foundation.background
+import androidx.compose.foundation.border
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.ArrowDropDown
-import androidx.compose.material3.Button
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ExposedDropdownMenuBox
 import androidx.compose.material3.MenuAnchorType
 import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedTextField
-import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
-import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.SolidColor
+import androidx.compose.ui.text.TextStyle
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
@@ -41,6 +54,12 @@ import androidx.lifecycle.viewModelScope
 import com.example.sportsbook.domain.enums.SportType
 import com.example.sportsbook.domain.model.Coach
 import com.example.sportsbook.domain.repository.CoachRepository
+import com.example.sportsbook.ui.theme.DarkBg
+import com.example.sportsbook.ui.theme.DarkBorder
+import com.example.sportsbook.ui.theme.DarkSurface
+import com.example.sportsbook.ui.theme.DarkTextPrimary
+import com.example.sportsbook.ui.theme.DarkTextSecondary
+import com.example.sportsbook.ui.theme.GreenAccent
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -162,105 +181,78 @@ class EditCoachViewModel @Inject constructor(
 fun EditCoachScreen(
     onBack: () -> Unit,
     onSaved: () -> Unit,
-    viewModel: EditCoachViewModel = hiltViewModel()
+    viewModel: EditCoachViewModel = hiltViewModel(),
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
     var sportTypeDropdownExpanded by remember { mutableStateOf(false) }
 
     LaunchedEffect(uiState.saveSuccess) {
-        if (uiState.saveSuccess) {
-            onSaved()
-        }
+        if (uiState.saveSuccess) onSaved()
     }
 
-    Scaffold(
-        topBar = {
-            TopAppBar(
-                title = { Text("Edit Coach Profile") },
-                navigationIcon = {
-                    IconButton(onClick = onBack) {
-                        Icon(
-                            imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                            contentDescription = "Back"
-                        )
-                    }
-                }
-            )
-        }
-    ) { paddingValues ->
-        if (uiState.isLoading) {
-            androidx.compose.foundation.layout.Box(
+    Column(
+        modifier = Modifier
+            .fillMaxSize()
+            .background(DarkBg),
+    ) {
+        // ── Header ────────────────────────────────────────────────────────
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(start = 16.dp, end = 16.dp, top = 56.dp, bottom = 16.dp),
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            Box(
                 modifier = Modifier
-                    .fillMaxSize()
-                    .padding(paddingValues),
-                contentAlignment = androidx.compose.ui.Alignment.Center
+                    .size(40.dp)
+                    .clip(CircleShape)
+                    .background(DarkSurface)
+                    .clickable(onClick = onBack),
+                contentAlignment = Alignment.Center,
             ) {
-                CircularProgressIndicator()
+                Icon(Icons.AutoMirrored.Filled.ArrowBack, "Back", tint = DarkTextPrimary, modifier = Modifier.size(20.dp))
+            }
+            Spacer(modifier = Modifier.width(16.dp))
+            Text("Edit Coach Profile", fontSize = 18.sp, fontWeight = FontWeight.Bold, color = DarkTextPrimary)
+        }
+
+        if (uiState.isLoading) {
+            Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                CircularProgressIndicator(color = GreenAccent)
             }
         } else {
             LazyColumn(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .padding(paddingValues)
-                    .padding(horizontal = 16.dp)
+                modifier = Modifier.fillMaxSize().padding(horizontal = 16.dp),
+                verticalArrangement = Arrangement.spacedBy(12.dp),
             ) {
+                item { Spacer(modifier = Modifier.height(4.dp)) }
+                item { CoachInputField("Full Name", uiState.name, viewModel::onNameChange, singleLine = true) }
+                item { CoachInputField("Bio", uiState.bio, viewModel::onBioChange, singleLine = false, minLines = 3) }
+                item { CoachInputField("Price per Hour (MKD)", uiState.pricePerHour, viewModel::onPriceChange, singleLine = true, keyboardType = KeyboardType.Number) }
+
                 item {
-                    Spacer(modifier = Modifier.height(16.dp))
-
-                    OutlinedTextField(
-                        value = uiState.name,
-                        onValueChange = { viewModel.onNameChange(it) },
-                        label = { Text("Full Name") },
-                        modifier = Modifier.fillMaxWidth(),
-                        singleLine = true
-                    )
-
-                    Spacer(modifier = Modifier.height(12.dp))
-
-                    OutlinedTextField(
-                        value = uiState.bio,
-                        onValueChange = { viewModel.onBioChange(it) },
-                        label = { Text("Bio") },
-                        modifier = Modifier.fillMaxWidth(),
-                        minLines = 3
-                    )
-
-                    Spacer(modifier = Modifier.height(12.dp))
-
-                    OutlinedTextField(
-                        value = uiState.pricePerHour,
-                        onValueChange = { viewModel.onPriceChange(it) },
-                        label = { Text("Price per Hour") },
-                        modifier = Modifier.fillMaxWidth(),
-                        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
-                        singleLine = true
-                    )
-
-                    Spacer(modifier = Modifier.height(12.dp))
-
                     ExposedDropdownMenuBox(
                         expanded = sportTypeDropdownExpanded,
-                        onExpandedChange = { sportTypeDropdownExpanded = it }
+                        onExpandedChange = { sportTypeDropdownExpanded = it },
                     ) {
-                        OutlinedTextField(
-                            value = uiState.sportType.displayName,
-                            onValueChange = {},
-                            readOnly = true,
-                            label = { Text("Sport Type") },
-                            trailingIcon = {
-                                Icon(
-                                    imageVector = Icons.Filled.ArrowDropDown,
-                                    contentDescription = "Expand sport type menu"
-                                )
-                            },
+                        Column(
                             modifier = Modifier
                                 .fillMaxWidth()
+                                .clip(RoundedCornerShape(12.dp))
+                                .background(DarkSurface)
+                                .border(1.dp, DarkBorder, RoundedCornerShape(12.dp))
                                 .menuAnchor(MenuAnchorType.PrimaryNotEditable)
-                        )
-
+                                .padding(horizontal = 14.dp, vertical = 12.dp),
+                        ) {
+                            Text("Sport Type", fontSize = 12.sp, color = DarkTextSecondary)
+                            Row(modifier = Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
+                                Text(uiState.sportType.displayName, fontSize = 15.sp, color = DarkTextPrimary, modifier = Modifier.weight(1f))
+                                Icon(Icons.Filled.ArrowDropDown, null, tint = DarkTextSecondary, modifier = Modifier.size(20.dp))
+                            }
+                        }
                         ExposedDropdownMenu(
                             expanded = sportTypeDropdownExpanded,
-                            onDismissRequest = { sportTypeDropdownExpanded = false }
+                            onDismissRequest = { sportTypeDropdownExpanded = false },
                         ) {
                             SportType.entries.forEach { sportType ->
                                 DropdownMenuItem(
@@ -268,150 +260,129 @@ fun EditCoachScreen(
                                     onClick = {
                                         viewModel.onSportTypeChange(sportType)
                                         sportTypeDropdownExpanded = false
-                                    }
+                                    },
                                 )
                             }
                         }
                     }
+                }
 
-                    Spacer(modifier = Modifier.height(12.dp))
+                item { CoachInputField("Specialization", uiState.specialization, viewModel::onSpecializationChange, singleLine = true) }
+                item { CoachInputField("Years of Experience", uiState.experienceYears, viewModel::onExperienceYearsChange, singleLine = true, keyboardType = KeyboardType.Number) }
+                item { CoachInputField("Address", uiState.address, viewModel::onAddressChange, singleLine = true) }
+                item { CoachInputField("City", uiState.city, viewModel::onCityChange, singleLine = true) }
+                item { CoachInputField("Phone Number", uiState.phoneNumber, viewModel::onPhoneChange, singleLine = true, keyboardType = KeyboardType.Phone) }
+                item { CoachInputField("Email", uiState.email, viewModel::onEmailChange, singleLine = true, keyboardType = KeyboardType.Email) }
 
-                    OutlinedTextField(
-                        value = uiState.specialization,
-                        onValueChange = { viewModel.onSpecializationChange(it) },
-                        label = { Text("Specialization") },
-                        modifier = Modifier.fillMaxWidth(),
-                        singleLine = true
-                    )
-
-                    Spacer(modifier = Modifier.height(12.dp))
-
-                    OutlinedTextField(
-                        value = uiState.experienceYears,
-                        onValueChange = { viewModel.onExperienceYearsChange(it) },
-                        label = { Text("Years of Experience") },
-                        modifier = Modifier.fillMaxWidth(),
-                        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
-                        singleLine = true
-                    )
-
-                    Spacer(modifier = Modifier.height(12.dp))
-
-                    OutlinedTextField(
-                        value = uiState.address,
-                        onValueChange = { viewModel.onAddressChange(it) },
-                        label = { Text("Address") },
-                        modifier = Modifier.fillMaxWidth(),
-                        singleLine = true
-                    )
-
-                    Spacer(modifier = Modifier.height(12.dp))
-
-                    OutlinedTextField(
-                        value = uiState.city,
-                        onValueChange = { viewModel.onCityChange(it) },
-                        label = { Text("City") },
-                        modifier = Modifier.fillMaxWidth(),
-                        singleLine = true
-                    )
-
-                    Spacer(modifier = Modifier.height(12.dp))
-
-                    OutlinedTextField(
-                        value = uiState.phoneNumber,
-                        onValueChange = { viewModel.onPhoneChange(it) },
-                        label = { Text("Phone Number") },
-                        modifier = Modifier.fillMaxWidth(),
-                        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Phone),
-                        singleLine = true
-                    )
-
-                    Spacer(modifier = Modifier.height(12.dp))
-
-                    OutlinedTextField(
-                        value = uiState.email,
-                        onValueChange = { viewModel.onEmailChange(it) },
-                        label = { Text("Email") },
-                        modifier = Modifier.fillMaxWidth(),
-                        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Email),
-                        singleLine = true
-                    )
-
-                    uiState.error?.let { errorMessage ->
-                        Spacer(modifier = Modifier.height(8.dp))
-                        Text(
-                            text = errorMessage,
-                            style = MaterialTheme.typography.bodySmall,
-                            color = MaterialTheme.colorScheme.error
-                        )
+                uiState.error?.let { errorMessage ->
+                    item {
+                        Row(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .clip(RoundedCornerShape(10.dp))
+                                .background(Color(0xFFB71C1C).copy(alpha = 0.2f))
+                                .border(1.dp, Color(0xFFEF5350).copy(alpha = 0.3f), RoundedCornerShape(10.dp))
+                                .padding(12.dp),
+                            verticalAlignment = Alignment.CenterVertically,
+                        ) {
+                            Text("⚠️", fontSize = 14.sp)
+                            Spacer(modifier = Modifier.width(8.dp))
+                            Text(errorMessage, fontSize = 13.sp, color = Color(0xFFEF9A9A))
+                        }
                     }
+                }
 
-                    Spacer(modifier = Modifier.height(24.dp))
-
-                    Button(
-                        onClick = { viewModel.saveChanges() },
-                        modifier = Modifier.fillMaxWidth(),
-                        enabled = !uiState.isSaving
+                item {
+                    Box(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .clip(RoundedCornerShape(14.dp))
+                            .background(if (uiState.isSaving) DarkBorder else GreenAccent)
+                            .clickable(enabled = !uiState.isSaving) { viewModel.saveChanges() }
+                            .padding(vertical = 16.dp),
+                        contentAlignment = Alignment.Center,
                     ) {
                         if (uiState.isSaving) {
-                            CircularProgressIndicator(
-                                modifier = Modifier
-                                    .height(20.dp)
-                                    .padding(end = 8.dp),
-                                strokeWidth = 2.dp
-                            )
+                            CircularProgressIndicator(modifier = Modifier.size(20.dp), strokeWidth = 2.dp, color = Color.White)
+                        } else {
+                            Text("Save Changes", fontSize = 15.sp, fontWeight = FontWeight.Bold, color = Color.White)
                         }
-                        Text("Save Changes")
                     }
-
-                    Spacer(modifier = Modifier.height(16.dp))
                 }
+
+                item { Spacer(modifier = Modifier.height(32.dp)) }
             }
         }
     }
 }
 
-@Preview(showBackground = true)
+@Composable
+private fun CoachInputField(
+    label: String,
+    value: String,
+    onValueChange: (String) -> Unit,
+    singleLine: Boolean,
+    minLines: Int = 1,
+    keyboardType: KeyboardType = KeyboardType.Text,
+) {
+    Column(
+        modifier = Modifier
+            .fillMaxWidth()
+            .clip(RoundedCornerShape(12.dp))
+            .background(DarkSurface)
+            .border(1.dp, DarkBorder, RoundedCornerShape(12.dp))
+            .padding(horizontal = 14.dp, vertical = 12.dp),
+    ) {
+        Text(label, fontSize = 12.sp, color = DarkTextSecondary)
+        Spacer(modifier = Modifier.height(4.dp))
+        BasicTextField(
+            value = value,
+            onValueChange = onValueChange,
+            singleLine = singleLine,
+            minLines = if (singleLine) 1 else minLines,
+            textStyle = TextStyle(color = DarkTextPrimary, fontSize = 15.sp),
+            cursorBrush = SolidColor(GreenAccent),
+            keyboardOptions = KeyboardOptions(keyboardType = keyboardType),
+            modifier = Modifier.fillMaxWidth(),
+            decorationBox = { inner ->
+                Box {
+                    if (value.isEmpty()) {
+                        Text(label, fontSize = 15.sp, color = Color(0xFF555555))
+                    }
+                    inner()
+                }
+            },
+        )
+    }
+}
+
+@Preview(showBackground = true, backgroundColor = 0xFF121212)
 @Composable
 private fun EditCoachScreenPreview() {
-    MaterialTheme {
-        Scaffold(
-            topBar = {
-                @OptIn(ExperimentalMaterial3Api::class)
-                TopAppBar(
-                    title = { Text("Edit Coach Profile") },
-                    navigationIcon = {
-                        IconButton(onClick = {}) {
-                            Icon(
-                                imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                                contentDescription = "Back"
-                            )
-                        }
-                    }
-                )
-            }
-        ) { paddingValues ->
-            LazyColumn(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .padding(paddingValues)
-                    .padding(horizontal = 16.dp)
+    Column(modifier = Modifier.fillMaxSize().background(DarkBg)) {
+            Row(
+                modifier = Modifier.fillMaxWidth().padding(start = 16.dp, end = 16.dp, top = 56.dp, bottom = 16.dp),
+                verticalAlignment = Alignment.CenterVertically,
             ) {
+                Box(modifier = Modifier.size(40.dp).clip(CircleShape).background(DarkSurface), contentAlignment = Alignment.Center) {
+                    Icon(Icons.AutoMirrored.Filled.ArrowBack, "Back", tint = DarkTextPrimary, modifier = Modifier.size(20.dp))
+                }
+                Spacer(modifier = Modifier.width(16.dp))
+                Text("Edit Coach Profile", fontSize = 18.sp, fontWeight = FontWeight.Bold, color = DarkTextPrimary)
+            }
+            LazyColumn(
+                modifier = Modifier.fillMaxSize().padding(horizontal = 16.dp),
+                verticalArrangement = Arrangement.spacedBy(12.dp),
+            ) {
+                item { CoachInputField("Full Name", "Jane Doe", {}, singleLine = true) }
+                item { CoachInputField("Bio", "Certified tennis coach with 10 years of experience", {}, singleLine = false, minLines = 3) }
+                item { CoachInputField("Price per Hour (MKD)", "2500", {}, singleLine = true, keyboardType = KeyboardType.Number) }
                 item {
-                    Spacer(modifier = Modifier.height(16.dp))
-                    OutlinedTextField(
-                        value = "Jane Doe",
-                        onValueChange = {},
-                        label = { Text("Full Name") },
-                        modifier = Modifier.fillMaxWidth(),
-                        singleLine = true
-                    )
-                    Spacer(modifier = Modifier.height(24.dp))
-                    Button(onClick = {}, modifier = Modifier.fillMaxWidth()) {
-                        Text("Save Changes")
+                    Box(modifier = Modifier.fillMaxWidth().clip(RoundedCornerShape(14.dp)).background(GreenAccent).padding(vertical = 16.dp), contentAlignment = Alignment.Center) {
+                        Text("Save Changes", fontSize = 15.sp, fontWeight = FontWeight.Bold, color = Color.White)
                     }
                 }
+                item { Spacer(modifier = Modifier.height(32.dp)) }
             }
         }
-    }
 }

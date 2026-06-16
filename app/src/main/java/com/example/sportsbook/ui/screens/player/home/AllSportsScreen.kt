@@ -1,6 +1,7 @@
 package com.example.sportsbook.ui.screens.player.home
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -14,23 +15,17 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
-import androidx.compose.material3.Card
-import androidx.compose.material3.CardDefaults
-import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
-import androidx.compose.material3.TopAppBar
-import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
@@ -42,12 +37,9 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.example.sportsbook.domain.enums.SportType
 import com.example.sportsbook.domain.model.Sport
-import com.example.sportsbook.ui.theme.BorderGray
-import com.example.sportsbook.ui.theme.LightBg
-import com.example.sportsbook.ui.theme.NavBarBg
-import com.example.sportsbook.ui.theme.SportsBookTheme
-import com.example.sportsbook.ui.theme.GoldAccent
-import com.example.sportsbook.ui.theme.TextPrimary
+import com.example.sportsbook.ui.theme.DarkBg
+import com.example.sportsbook.ui.theme.DarkSurface
+import com.example.sportsbook.ui.theme.DarkTextPrimary
 import com.example.sportsbook.ui.theme.SportBasketball
 import com.example.sportsbook.ui.theme.SportFootball
 import com.example.sportsbook.ui.theme.SportTennis
@@ -92,7 +84,6 @@ private val sportVisualsMap = mapOf(
     SportType.CRICKET to SportVisualData("\uD83C\uDFCF", SportCricket, "Pitches & nets"),
 )
 
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun AllSportsScreen(
     onBack: () -> Unit,
@@ -101,28 +92,35 @@ fun AllSportsScreen(
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
 
-    Scaffold(
-        containerColor = NavBarBg,
-        topBar = {
-            TopAppBar(
-                title = { Text("All Sports", color = TextPrimary) },
-                navigationIcon = {
-                    IconButton(onClick = onBack) {
-                        Icon(
-                            Icons.AutoMirrored.Filled.ArrowBack,
-                            contentDescription = "Back",
-                            tint = TextPrimary
-                        )
-                    }
-                },
-                colors = TopAppBarDefaults.topAppBarColors(containerColor = NavBarBg)
-            )
+    Column(
+        modifier = Modifier
+            .fillMaxSize()
+            .background(DarkBg),
+    ) {
+        // ── Header ────────────────────────────────────────────────────────
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(start = 16.dp, end = 16.dp, top = 56.dp, bottom = 16.dp),
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            Box(
+                modifier = Modifier
+                    .size(40.dp)
+                    .clip(CircleShape)
+                    .background(DarkSurface)
+                    .clickable(onClick = onBack),
+                contentAlignment = Alignment.Center,
+            ) {
+                Icon(Icons.AutoMirrored.Filled.ArrowBack, "Back", tint = DarkTextPrimary, modifier = Modifier.size(20.dp))
+            }
+            Spacer(modifier = Modifier.width(16.dp))
+            Text("All Sports", fontSize = 18.sp, fontWeight = FontWeight.Bold, color = DarkTextPrimary)
         }
-    ) { paddingValues ->
+
         AllSportsContent(
             allSports = uiState.sports,
             onSportClick = onSportClick,
-            modifier = Modifier.padding(paddingValues)
         )
     }
 }
@@ -131,28 +129,28 @@ fun AllSportsScreen(
 private fun AllSportsContent(
     allSports: List<Sport>,
     onSportClick: (String) -> Unit,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
 ) {
     val rows = allSports.chunked(2)
 
     LazyColumn(
         modifier = modifier
             .fillMaxSize()
-            .background(NavBarBg),
+            .background(DarkBg),
         contentPadding = PaddingValues(horizontal = 16.dp, vertical = 8.dp),
-        verticalArrangement = Arrangement.spacedBy(10.dp)
+        verticalArrangement = Arrangement.spacedBy(10.dp),
     ) {
         items(rows.size) { index ->
             val pair = rows[index]
             Row(
                 modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.spacedBy(10.dp)
+                horizontalArrangement = Arrangement.spacedBy(10.dp),
             ) {
                 pair.forEach { sport ->
                     AllSportsCategoryCard(
                         sport = sport,
                         onClick = { onSportClick(sport.sportType.name.lowercase()) },
-                        modifier = Modifier.weight(1f)
+                        modifier = Modifier.weight(1f),
                     )
                 }
                 if (pair.size == 1) {
@@ -172,65 +170,41 @@ private fun AllSportsCategoryCard(
     val visual = sportVisualsMap[sport.sportType]
         ?: SportVisualData("\uD83C\uDFC0", SportBasketball, "Book now")
 
-    Card(
-        onClick = onClick,
-        modifier = modifier.height(96.dp),
-        shape = RoundedCornerShape(14.dp),
-        colors = CardDefaults.cardColors(containerColor = Color.Transparent),
-        elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)
+    Box(
+        modifier = modifier
+            .height(96.dp)
+            .clip(RoundedCornerShape(14.dp))
+            .background(Brush.linearGradient(colors = listOf(visual.color.copy(alpha = 0.35f), DarkSurface)))
+            .clickable(onClick = onClick),
     ) {
-        Box(
-            modifier = Modifier
-                .fillMaxSize()
-                .background(
-                    Brush.linearGradient(
-                        colors = listOf(
-                            visual.color.copy(alpha = 0.35f),
-                            LightBg
-                        )
-                    )
-                )
+        Text(
+            text = visual.emoji,
+            fontSize = 52.sp,
+            modifier = Modifier.align(Alignment.TopEnd).padding(end = 8.dp, top = 2.dp),
+            color = Color.White.copy(alpha = 0.12f),
+        )
+        Column(
+            modifier = Modifier.fillMaxSize().padding(14.dp),
+            verticalArrangement = Arrangement.SpaceBetween,
         ) {
-            Text(
-                text = visual.emoji,
-                fontSize = 52.sp,
-                modifier = Modifier
-                    .align(Alignment.TopEnd)
-                    .padding(end = 8.dp, top = 2.dp),
-                color = Color.White.copy(alpha = 0.12f)
-            )
-
-            Column(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .padding(14.dp),
-                verticalArrangement = Arrangement.SpaceBetween
-            ) {
-                Row(verticalAlignment = Alignment.CenterVertically) {
-                    Text(text = visual.emoji, fontSize = 24.sp)
-                    Spacer(modifier = Modifier.width(8.dp))
-                    Text(
-                        text = sport.sportType.displayName,
-                        style = MaterialTheme.typography.titleSmall.copy(
-                            fontWeight = FontWeight.Bold
-                        ),
-                        color = TextPrimary,
-                        maxLines = 1,
-                        overflow = TextOverflow.Ellipsis
-                    )
-                }
-
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Text(text = visual.emoji, fontSize = 24.sp)
+                Spacer(modifier = Modifier.width(8.dp))
                 Text(
-                    text = visual.tagline,
-                    style = MaterialTheme.typography.bodySmall,
-                    color = visual.color.copy(alpha = 0.8f)
+                    text = sport.sportType.displayName,
+                    fontSize = 13.sp,
+                    fontWeight = FontWeight.Bold,
+                    color = DarkTextPrimary,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis,
                 )
             }
+            Text(text = visual.tagline, fontSize = 11.sp, color = visual.color.copy(alpha = 0.8f))
         }
     }
 }
 
-@Preview(showBackground = true, backgroundColor = 0xFF0A1628)
+@Preview(showBackground = true, backgroundColor = 0xFF121212)
 @Composable
 private fun AllSportsScreenPreview() {
     val sampleSports = listOf(
@@ -243,10 +217,17 @@ private fun AllSportsScreenPreview() {
         Sport(id = 7, sportType = SportType.BOXING, name = "Boxing"),
         Sport(id = 8, sportType = SportType.SWIMMING, name = "Swimming"),
     )
-    SportsBookTheme {
-        AllSportsContent(
-            allSports = sampleSports,
-            onSportClick = {}
-        )
+    Column(modifier = Modifier.fillMaxSize().background(DarkBg)) {
+        Row(
+            modifier = Modifier.fillMaxWidth().padding(start = 16.dp, end = 16.dp, top = 56.dp, bottom = 16.dp),
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            Box(modifier = Modifier.size(40.dp).clip(CircleShape).background(DarkSurface), contentAlignment = Alignment.Center) {
+                Icon(Icons.AutoMirrored.Filled.ArrowBack, "Back", tint = DarkTextPrimary, modifier = Modifier.size(20.dp))
+            }
+            Spacer(modifier = Modifier.width(16.dp))
+            Text("All Sports", fontSize = 18.sp, fontWeight = FontWeight.Bold, color = DarkTextPrimary)
+        }
+        AllSportsContent(allSports = sampleSports, onSportClick = {})
     }
 }

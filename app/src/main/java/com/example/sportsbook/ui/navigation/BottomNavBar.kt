@@ -4,12 +4,14 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.TrendingUp
 import androidx.compose.material.icons.filled.CalendarMonth
-import androidx.compose.material.icons.filled.CalendarViewWeek
 import androidx.compose.material.icons.filled.Dashboard
-import androidx.compose.material.icons.filled.DynamicFeed
+import androidx.compose.material.icons.filled.Explore
 import androidx.compose.material.icons.filled.Home
-import androidx.compose.material.icons.filled.Inbox
-import androidx.compose.material.icons.filled.Person
+import androidx.compose.material.icons.filled.MoreHoriz
+import androidx.compose.material.icons.filled.People
+import androidx.compose.material.icons.filled.Payments
+import androidx.compose.material.icons.filled.Schedule
+import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material.icons.filled.SportsSoccer
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
@@ -24,13 +26,12 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import com.example.sportsbook.ui.theme.CardWhite
-import com.example.sportsbook.ui.theme.GoldAccent
-import com.example.sportsbook.ui.theme.NavBarBg
+import com.example.sportsbook.ui.theme.DarkBorder
+import com.example.sportsbook.ui.theme.DarkNavBar
+import com.example.sportsbook.ui.theme.DarkTextSecondary
+import com.example.sportsbook.ui.theme.DarkTextTertiary
+import com.example.sportsbook.ui.theme.GreenAccent
 import com.example.sportsbook.ui.theme.SportsBookTheme
-import com.example.sportsbook.ui.theme.TextPrimary
-import com.example.sportsbook.ui.theme.TextSecondary
-import com.example.sportsbook.ui.theme.TextTertiary
 
 data class BottomNavItem(
     val label: String,
@@ -38,23 +39,26 @@ data class BottomNavItem(
     val route: Route
 )
 
-// Profile pinned LAST per UX convention — users expect account/profile
-// to live at the far right of the tab bar (matches Instagram, X, Strava, etc.).
+// ══════════════════════════════════════════════════════════════
+// v3 Player Bottom Nav: Home | Explore | Play | Social | More
+// ══════════════════════════════════════════════════════════════
 val playerNavItems = listOf(
-    BottomNavItem("Discover", Icons.Default.Home, Route.PlayerHome),
-    BottomNavItem("Feed", Icons.Default.DynamicFeed, Route.NewsFeed),
-    BottomNavItem("Bookings", Icons.Default.CalendarMonth, Route.MyBookings),
-    // v2-practical-ux
-    BottomNavItem("Play", Icons.Default.SportsSoccer, Route.V2PlayHome),
-    BottomNavItem("Profile", Icons.Default.Person, Route.PlayerProfile)
+    BottomNavItem("Home", Icons.Default.Home, Route.PlayerHome),
+    BottomNavItem("Explore", Icons.Default.Explore, Route.Explore),
+    BottomNavItem("Play", Icons.Default.SportsSoccer, Route.MatchList),
+    BottomNavItem("Social", Icons.Default.People, Route.SocialHub),
+    BottomNavItem("More", Icons.Default.MoreHoriz, Route.MoreMenu),
 )
 
+// ══════════════════════════════════════════════════════════════
+// v3 Partner Bottom Nav: Dashboard | Bookings | Slots | Revenue | Settings
+// ══════════════════════════════════════════════════════════════
 val partnerNavItems = listOf(
     BottomNavItem("Dashboard", Icons.Default.Dashboard, Route.PartnerDashboard),
-    BottomNavItem("Reservations", Icons.Default.Inbox, Route.PendingReservations),
-    BottomNavItem("Analytics", Icons.AutoMirrored.Filled.TrendingUp, Route.PartnerAnalytics),
-    // v2-practical-ux
-    BottomNavItem("Calendar", Icons.Default.CalendarViewWeek, Route.V2WeeklyCalendar)
+    BottomNavItem("Bookings", Icons.Default.CalendarMonth, Route.PendingReservations),
+    BottomNavItem("Slots", Icons.Default.Schedule, Route.TimeSlotManagement),
+    BottomNavItem("Revenue", Icons.Default.Payments, Route.PartnerAnalytics),
+    BottomNavItem("Settings", Icons.Default.Settings, Route.Settings),
 )
 
 // Keep backward compatibility
@@ -66,11 +70,11 @@ fun BottomNavBar(
     onNavigate: (Route) -> Unit
 ) {
     NavigationBar(
-        containerColor = CardWhite,
-        contentColor = TextPrimary,
+        containerColor = DarkNavBar,
+        contentColor = DarkTextSecondary,
         tonalElevation = 0.dp
     ) {
-        bottomNavItems.forEach { item ->
+        playerNavItems.forEach { item ->
             val isSelected = currentRoute == item.route::class.qualifiedName
             NavigationBarItem(
                 selected = isSelected,
@@ -79,20 +83,20 @@ fun BottomNavBar(
                     Icon(
                         item.icon,
                         contentDescription = item.label,
-                        tint = if (isSelected) TextPrimary else TextTertiary,
+                        tint = if (isSelected) GreenAccent else DarkTextTertiary,
                         modifier = Modifier.size(24.dp)
                     )
                 },
                 label = {
                     Text(
                         item.label,
-                        color = if (isSelected) TextPrimary else TextTertiary,
+                        color = if (isSelected) GreenAccent else DarkTextTertiary,
                         style = MaterialTheme.typography.labelSmall,
                         fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Normal
                     )
                 },
                 colors = NavigationBarItemDefaults.colors(
-                    indicatorColor = GoldAccent.copy(alpha = 0.15f)
+                    indicatorColor = GreenAccent.copy(alpha = 0.12f)
                 )
             )
         }
@@ -105,8 +109,8 @@ fun PartnerBottomNavBar(
     onNavigate: (Route) -> Unit
 ) {
     NavigationBar(
-        containerColor = CardWhite,
-        contentColor = TextPrimary,
+        containerColor = DarkNavBar,
+        contentColor = DarkTextSecondary,
         tonalElevation = 0.dp
     ) {
         partnerNavItems.forEach { item ->
@@ -118,20 +122,20 @@ fun PartnerBottomNavBar(
                     Icon(
                         item.icon,
                         contentDescription = item.label,
-                        tint = if (isSelected) TextPrimary else TextTertiary,
+                        tint = if (isSelected) GreenAccent else DarkTextTertiary,
                         modifier = Modifier.size(24.dp)
                     )
                 },
                 label = {
                     Text(
                         item.label,
-                        color = if (isSelected) TextPrimary else TextTertiary,
+                        color = if (isSelected) GreenAccent else DarkTextTertiary,
                         style = MaterialTheme.typography.labelSmall,
                         fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Normal
                     )
                 },
                 colors = NavigationBarItemDefaults.colors(
-                    indicatorColor = GoldAccent.copy(alpha = 0.15f)
+                    indicatorColor = GreenAccent.copy(alpha = 0.12f)
                 )
             )
         }

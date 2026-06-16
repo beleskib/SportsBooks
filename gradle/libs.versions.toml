@@ -27,7 +27,6 @@ mockk = "1.13.12"
 hilt = "2.51.1"
 hiltNavigationCompose = "1.2.0"
 ksp = "2.0.21-1.0.27"
-stripe = "21.5.1"
 firebaseMessaging = "24.1.0"
 mapsCompose = "6.2.1"
 playServicesLocation = "21.3.0"
@@ -70,7 +69,6 @@ hilt-android = { group = "com.google.dagger", name = "hilt-android", version.ref
 hilt-android-compiler = { group = "com.google.dagger", name = "hilt-android-compiler", version.ref = "hilt" }
 hilt-navigation-compose = { group = "androidx.hilt", name = "hilt-navigation-compose", version.ref = "hiltNavigationCompose" }
 hilt-android-testing = { group = "com.google.dagger", name = "hilt-android-testing", version.ref = "hilt" }
-stripe-android = { group = "com.stripe", name = "stripe-android", version.ref = "stripe" }
 firebase-messaging = { group = "com.google.firebase", name = "firebase-messaging", version.ref = "firebaseMessaging" }
 maps-compose = { group = "com.google.maps.android", name = "maps-compose", version.ref = "mapsCompose" }
 play-services-location = { group = "com.google.android.gms", name = "play-services-location", version.ref = "playServicesLocation" }

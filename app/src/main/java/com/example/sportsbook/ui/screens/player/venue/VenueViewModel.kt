@@ -40,15 +40,22 @@ class VenueViewModel @Inject constructor(
 
     fun loadVenuesBySport(sportType: String) {
         currentSportType = sportType
-        val parsedType = runCatching { SportType.valueOf(sportType.uppercase()) }.getOrNull()
-            ?: run {
-                _uiState.update { it.copy(error = "Unknown sport type: $sportType", isLoading = false) }
-                return
-            }
 
         viewModelScope.launch {
             _uiState.update { it.copy(isLoading = true, error = null) }
-            venueRepository.getVenuesBySport(parsedType)
+
+            val result = if (sportType.equals("all", ignoreCase = true)) {
+                venueRepository.getAllVenues()
+            } else {
+                val parsedType = runCatching { SportType.valueOf(sportType.uppercase()) }.getOrNull()
+                    ?: run {
+                        _uiState.update { it.copy(error = "Unknown sport type: $sportType", isLoading = false) }
+                        return@launch
+                    }
+                venueRepository.getVenuesBySport(parsedType)
+            }
+
+            result
                 .onSuccess { venues ->
                     _uiState.update { it.copy(venues = venues, isLoading = false, error = null) }
                 }

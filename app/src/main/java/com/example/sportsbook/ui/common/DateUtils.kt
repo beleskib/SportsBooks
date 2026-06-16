@@ -6,32 +6,54 @@ import java.util.Locale
 import java.util.TimeZone
 
 /**
- * Formats an ISO date string (yyyy-MM-dd) to display format (dd-MM-yyyy).
- * Returns the original string if parsing fails.
+ * Parses a date string that may be in various formats:
+ *   yyyy-MM-dd
+ *   yyyy-MM-dd HH:mm:ss
+ *   yyyy-MM-dd'T'HH:mm:ss
+ * Returns the parsed Date or null.
  */
-fun String.toDisplayDate(): String {
-    return try {
-        val input = SimpleDateFormat("yyyy-MM-dd", Locale.US)
-        val output = SimpleDateFormat("dd-MM-yyyy", Locale.US)
-        val date = input.parse(this) ?: return this
-        output.format(date)
-    } catch (_: Exception) {
-        this
+private fun parseFlexibleDate(value: String): Date? {
+    val formats = listOf(
+        "yyyy-MM-dd'T'HH:mm:ss.SSS'Z'",
+        "yyyy-MM-dd'T'HH:mm:ss",
+        "yyyy-MM-dd HH:mm:ss",
+        "yyyy-MM-dd",
+    )
+    for (fmt in formats) {
+        try {
+            val sdf = SimpleDateFormat(fmt, Locale.US)
+            sdf.isLenient = false
+            val d = sdf.parse(value)
+            if (d != null) return d
+        } catch (_: Exception) { /* try next */ }
     }
+    return null
 }
 
 /**
- * Formats an ISO date string (yyyy-MM-dd) to a friendly format (e.g. "Mon, 18 Mar 2026").
+ * Formats an ISO date string to display format (dd-MM-yyyy).
+ * Handles yyyy-MM-dd, yyyy-MM-dd HH:mm:ss, and ISO-T variants.
+ */
+fun String.toDisplayDate(): String {
+    val date = parseFlexibleDate(this) ?: return this
+    return SimpleDateFormat("dd-MM-yyyy", Locale.US).format(date)
+}
+
+/**
+ * Formats a date string to a friendly format (e.g. "Mon, 18 Mar 2026").
+ * Handles all common date/datetime formats from the backend.
  */
 fun String.toFriendlyDate(): String {
-    return try {
-        val input = SimpleDateFormat("yyyy-MM-dd", Locale.US)
-        val output = SimpleDateFormat("EEE, dd MMM yyyy", Locale.US)
-        val date = input.parse(this) ?: return this
-        output.format(date)
-    } catch (_: Exception) {
-        this
-    }
+    val date = parseFlexibleDate(this) ?: return this
+    return SimpleDateFormat("EEE, dd MMM yyyy", Locale.US).format(date)
+}
+
+/**
+ * Formats a date string to a pretty short format (e.g. "Sat, Jun 14").
+ */
+fun String.toPrettyDate(): String {
+    val date = parseFlexibleDate(this) ?: return this
+    return SimpleDateFormat("EEE, MMM dd", Locale.US).format(date)
 }
 
 /**

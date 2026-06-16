@@ -1,48 +1,29 @@
 package com.example.sportsbook.ui.screens.player.profile
 
-import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.automirrored.filled.Logout
-import androidx.compose.material.icons.automirrored.filled.Chat
-import androidx.compose.material.icons.filled.ChevronRight
-import androidx.compose.material.icons.filled.Dashboard
-import androidx.compose.material.icons.filled.History
-import androidx.compose.material.icons.filled.People
-import androidx.compose.material.icons.filled.Person
-import androidx.compose.material.icons.filled.PersonAdd
-import androidx.compose.material.icons.filled.Save
-import androidx.compose.material.icons.filled.Schedule
-import androidx.compose.material.icons.filled.Settings
-import androidx.compose.material.icons.filled.Star
-import androidx.compose.material3.Button
-import androidx.compose.material3.ButtonDefaults
-import androidx.compose.material3.Card
-import androidx.compose.material3.CardDefaults
-import androidx.compose.material3.HorizontalDivider
+import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedButton
-import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
@@ -55,41 +36,33 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.RectangleShape
-import androidx.compose.ui.graphics.vector.ImageVector
-import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import coil.compose.AsyncImage
-import com.example.sportsbook.domain.enums.BookingStatus
-import com.example.sportsbook.domain.enums.PartnerType
-import com.example.sportsbook.domain.enums.UserRole
+import com.example.sportsbook.domain.enums.ExperienceDuration
+import com.example.sportsbook.domain.enums.SkillLevel
+import com.example.sportsbook.domain.enums.SportType
 import com.example.sportsbook.domain.model.Booking
-import com.example.sportsbook.ui.common.ErrorView
+import com.example.sportsbook.domain.model.User
+import com.example.sportsbook.domain.model.UserSportExpertise
 import com.example.sportsbook.ui.common.LoadingIndicator
-import com.example.sportsbook.ui.common.toDisplayDate
-import com.example.sportsbook.ui.screens.player.settings.PlusBadge
-import com.example.sportsbook.ui.theme.SportsBookTheme
+import com.example.sportsbook.ui.theme.DarkBg
+import com.example.sportsbook.ui.theme.DarkBorder
+import com.example.sportsbook.ui.theme.DarkSurface
+import com.example.sportsbook.ui.theme.DarkTextPrimary
+import com.example.sportsbook.ui.theme.DarkTextSecondary
+import com.example.sportsbook.ui.theme.GreenAccent
+import com.example.sportsbook.ui.theme.GreenDark
+import com.example.sportsbook.ui.theme.OrangeAccent
 
-// ── Light-theme design tokens ──
-private val LightBg = Color(0xFFF9FAFB)
-private val CardBg = Color.White
-private val TextPrimary = Color(0xFF111827)
-private val TextSecondary = Color(0xFF6B7280)
-private val TextTertiary = Color(0xFF9CA3AF)
-private val GoldAccent = Color(0xFFFDE047)
-private val BannerDark = Color(0xFF111827)
-private val BannerMid = Color(0xFF1F2937)
-private val BannerLight = Color(0xFF374151)
-private val EmeraldBar = Color(0xFF34D399)
-private val BlueBar = Color(0xFF60A5FA)
-private val YellowBar = Color(0xFFFDE047)
+// ── Screen ───────────────────────────────────────────────────────────────────
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun PlayerProfileScreen(
     onSignOut: () -> Unit,
@@ -111,1068 +84,743 @@ fun PlayerProfileScreen(
 
     LaunchedEffect(uiState.saveSuccess) {
         if (uiState.saveSuccess) {
-            snackbarHostState.showSnackbar("Profile updated successfully")
+            snackbarHostState.showSnackbar("Profile saved!")
             viewModel.clearSaveSuccess()
         }
     }
 
-    Box(modifier = Modifier.fillMaxSize().background(LightBg)) {
-        when {
-            uiState.isLoading -> LoadingIndicator()
-            uiState.error != null && uiState.user == null -> ErrorView(
-                message = uiState.error!!,
-                onRetry = viewModel::loadProfile
-            )
-            else -> {
-                val user = uiState.user ?: return@Box
-                val isPartner = user.role == UserRole.PARTNER
-
-                // Real data from the database (via UserDto → User)
-                val matchCount = user.totalMatchesPlayed
-                val streak = uiState.followers // reuse follow count as proxy until streak API exists
-                val skillRating = user.avgPlayerSkillRating.toFloat()
-                val sportsmanshipRating = user.avgPlayerSportsmanshipRating.toFloat()
-                val punctualityRating = user.avgPlayerPunctualityRating.toFloat()
-                val avgRating = if (user.totalPlayerRatings > 0) {
-                    ((skillRating + sportsmanshipRating + punctualityRating) / 3f)
-                } else {
-                    0f
-                }
-                val reviewCount = user.totalPlayerRatings
-
-                LazyColumn(
-                    modifier = Modifier.fillMaxSize()
-                ) {
-                    // ── 1. Dark gradient banner with settings gear ──
-                    item {
-                        Box(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .height(96.dp)
-                                .background(
-                                    Brush.horizontalGradient(
-                                        colors = listOf(BannerDark, BannerMid, BannerLight)
-                                    )
-                                )
-                        ) {
-                            IconButton(
-                                onClick = onNavigateToSettings,
-                                modifier = Modifier
-                                    .align(Alignment.TopEnd)
-                                    .padding(top = 8.dp, end = 8.dp)
-                            ) {
-                                Icon(
-                                    imageVector = Icons.Default.Settings,
-                                    contentDescription = "Settings",
-                                    tint = GoldAccent,
-                                    modifier = Modifier.size(22.dp)
-                                )
-                            }
-                        }
-                    }
-
-                    // ── 2. Avatar section (overlapping banner by -40dp) ──
-                    item {
-                        Box(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .offset(y = (-40).dp)
-                                .padding(horizontal = 16.dp)
-                        ) {
-                            Row(
-                                modifier = Modifier.fillMaxWidth(),
-                                verticalAlignment = Alignment.CenterVertically
-                            ) {
-                                // Circular avatar with white ring
-                                Box(
-                                    modifier = Modifier
-                                        .size(80.dp)
-                                        .border(4.dp, CardBg, CircleShape)
-                                        .clip(CircleShape)
-                                ) {
-                                    if (user.photoUrl != null) {
-                                        AsyncImage(
-                                            model = user.photoUrl,
-                                            contentDescription = "Profile photo",
-                                            modifier = Modifier.fillMaxSize(),
-                                            contentScale = ContentScale.Crop
-                                        )
-                                    } else {
-                                        Box(
-                                            modifier = Modifier
-                                                .fillMaxSize()
-                                                .background(BannerMid),
-                                            contentAlignment = Alignment.Center
-                                        ) {
-                                            Icon(
-                                                imageVector = Icons.Default.Person,
-                                                contentDescription = "Profile",
-                                                modifier = Modifier.size(40.dp),
-                                                tint = GoldAccent
-                                            )
-                                        }
-                                    }
-                                }
-
-                                Spacer(modifier = Modifier.width(12.dp))
-
-                                // Name + subtitle
-                                Column(modifier = Modifier.weight(1f)) {
-                                    Row(verticalAlignment = Alignment.CenterVertically) {
-                                        Text(
-                                            text = user.displayName ?: "No name set",
-                                            style = MaterialTheme.typography.titleMedium.copy(
-                                                fontWeight = FontWeight.Bold
-                                            ),
-                                            color = TextPrimary
-                                        )
-                                        if (user.isPlus) {
-                                            Spacer(modifier = Modifier.width(6.dp))
-                                            PlusBadge()
-                                        }
-                                    }
-                                    Text(
-                                        text = "@${user.email.substringBefore("@")}",
-                                        style = MaterialTheme.typography.bodySmall,
-                                        color = TextSecondary
-                                    )
-                                    if (isPartner) {
-                                        Spacer(modifier = Modifier.height(4.dp))
-                                        Box(
-                                            modifier = Modifier
-                                                .clip(RoundedCornerShape(4.dp))
-                                                .background(GoldAccent.copy(alpha = 0.15f))
-                                                .padding(horizontal = 8.dp, vertical = 2.dp)
-                                        ) {
-                                            Text(
-                                                text = when (user.partnerType) {
-                                                    PartnerType.VENUE_OWNER -> "Venue Owner"
-                                                    PartnerType.COACH -> "Coach"
-                                                    else -> "Partner"
-                                                },
-                                                style = MaterialTheme.typography.labelSmall,
-                                                color = Color(0xFF92400E),
-                                                fontWeight = FontWeight.Bold
-                                            )
-                                        }
-                                    }
-                                }
-
-                                // Edit button
-                                if (!uiState.isEditing) {
-                                    OutlinedButton(
-                                        onClick = viewModel::startEditing,
-                                        shape = RoundedCornerShape(6.dp),
-                                        colors = ButtonDefaults.outlinedButtonColors(
-                                            containerColor = CardBg,
-                                            contentColor = TextPrimary
-                                        ),
-                                        border = BorderStroke(1.dp, Color(0xFFD1D5DB)),
-                                        modifier = Modifier.height(32.dp),
-                                        contentPadding = PaddingValues(horizontal = 12.dp, vertical = 0.dp)
-                                    ) {
-                                        Text(
-                                            text = "Edit",
-                                            style = MaterialTheme.typography.labelMedium,
-                                            color = TextPrimary
-                                        )
-                                    }
-                                }
-                            }
-                        }
-                        // Compensate for the negative offset so subsequent items don't overlap
-                        Spacer(modifier = Modifier.height(0.dp))
-                    }
-
-                    // ── 3. Bio text ──
-                    item {
-                        if (!user.bio.isNullOrBlank()) {
-                            Text(
-                                text = user.bio,
-                                style = MaterialTheme.typography.bodySmall.copy(fontSize = 12.sp),
-                                color = Color(0xFF374151),
-                                modifier = Modifier
-                                    .fillMaxWidth()
-                                    .padding(horizontal = 16.dp)
-                                    .padding(top = 4.dp, bottom = 12.dp)
-                            )
-                        } else {
-                            Spacer(modifier = Modifier.height(12.dp))
-                        }
-                    }
-
-                    // ── 4. Edit form (when editing) ──
-                    if (uiState.isEditing) {
-                        item {
-                            Column(
-                                modifier = Modifier
-                                    .fillMaxWidth()
-                                    .padding(horizontal = 16.dp)
-                            ) {
-                                OutlinedTextField(
-                                    value = uiState.editDisplayName,
-                                    onValueChange = viewModel::onDisplayNameChange,
-                                    label = { Text("Display Name") },
-                                    modifier = Modifier.fillMaxWidth(),
-                                    singleLine = true
-                                )
-                                Spacer(modifier = Modifier.height(12.dp))
-                                OutlinedTextField(
-                                    value = uiState.editPhoneNumber,
-                                    onValueChange = viewModel::onPhoneNumberChange,
-                                    label = { Text("Phone Number") },
-                                    modifier = Modifier.fillMaxWidth(),
-                                    singleLine = true
-                                )
-                                Spacer(modifier = Modifier.height(12.dp))
-                                OutlinedTextField(
-                                    value = uiState.editBio,
-                                    onValueChange = viewModel::onBioChange,
-                                    label = { Text("Bio") },
-                                    modifier = Modifier.fillMaxWidth(),
-                                    minLines = 3,
-                                    maxLines = 5
-                                )
-                                Spacer(modifier = Modifier.height(12.dp))
-
-                                Row(
-                                    modifier = Modifier.fillMaxWidth(),
-                                    horizontalArrangement = Arrangement.spacedBy(8.dp)
-                                ) {
-                                    Button(
-                                        onClick = viewModel::saveProfile,
-                                        modifier = Modifier.weight(1f),
-                                        enabled = !uiState.isSaving,
-                                        colors = ButtonDefaults.buttonColors(
-                                            containerColor = TextPrimary,
-                                            contentColor = Color.White
-                                        )
-                                    ) {
-                                        Icon(
-                                            Icons.Default.Save,
-                                            contentDescription = null,
-                                            modifier = Modifier.size(18.dp)
-                                        )
-                                        Spacer(modifier = Modifier.width(6.dp))
-                                        Text(if (uiState.isSaving) "Saving..." else "Save")
-                                    }
-                                    OutlinedButton(
-                                        onClick = viewModel::cancelEditing,
-                                        modifier = Modifier.weight(1f),
-                                        shape = RectangleShape
-                                    ) {
-                                        Text("Cancel", color = TextPrimary)
-                                    }
-                                }
-                                Spacer(modifier = Modifier.height(16.dp))
-                            }
-                        }
-                    }
-
-                    // ── 5. Stats row — 3 cards ──
-                    item {
-                        Row(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .padding(horizontal = 16.dp),
-                            horizontalArrangement = Arrangement.spacedBy(8.dp)
-                        ) {
-                            StatCard(
-                                label = "MATCHES",
-                                value = "$matchCount",
-                                modifier = Modifier.weight(1f)
-                            )
-                            StatCard(
-                                label = "AVG RATING",
-                                value = "%.1f ⭐".format(avgRating),
-                                modifier = Modifier.weight(1f)
-                            )
-                            StatCard(
-                                label = "STREAK",
-                                value = "$streak 🔥",
-                                modifier = Modifier.weight(1f)
-                            )
-                        }
-                        Spacer(modifier = Modifier.height(12.dp))
-                    }
-
-                    // ── 6. Player ratings card ──
-                    item {
-                        PlayerRatingsCard(
-                            skillRating = skillRating.toDouble(),
-                            sportsmanshipRating = sportsmanshipRating.toDouble(),
-                            punctualityRating = punctualityRating.toDouble(),
-                            totalRatings = reviewCount
-                        )
-                        Spacer(modifier = Modifier.height(12.dp))
-                    }
-
-                    // ── 7. Friends card ──
-                    item {
-                        Card(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .padding(horizontal = 16.dp)
-                                .clickable { onNavigateToFriends() },
-                            colors = CardDefaults.cardColors(containerColor = CardBg),
-                            elevation = CardDefaults.cardElevation(defaultElevation = 1.dp),
-                            shape = RoundedCornerShape(16.dp)
-                        ) {
-                            Column(modifier = Modifier.padding(16.dp)) {
-                                Row(
-                                    modifier = Modifier.fillMaxWidth(),
-                                    horizontalArrangement = Arrangement.SpaceBetween,
-                                    verticalAlignment = Alignment.CenterVertically
-                                ) {
-                                    Text(
-                                        text = "FRIENDS",
-                                        style = MaterialTheme.typography.labelSmall.copy(
-                                            fontSize = 10.sp,
-                                            letterSpacing = 0.8.sp
-                                        ),
-                                        color = TextSecondary,
-                                        fontWeight = FontWeight.SemiBold
-                                    )
-                                }
-                                Spacer(modifier = Modifier.height(12.dp))
-                                Row(
-                                    modifier = Modifier.fillMaxWidth(),
-                                    verticalAlignment = Alignment.CenterVertically
-                                ) {
-                                    // Friends icon in a tinted circle
-                                    Box(
-                                        modifier = Modifier
-                                            .size(40.dp)
-                                            .clip(RoundedCornerShape(10.dp))
-                                            .background(Color(0xFFFEF9C3)), // yellow-100
-                                        contentAlignment = Alignment.Center
-                                    ) {
-                                        Icon(
-                                            imageVector = Icons.Default.People,
-                                            contentDescription = "Friends",
-                                            tint = Color(0xFFCA8A04), // yellow-600
-                                            modifier = Modifier.size(22.dp)
-                                        )
-                                    }
-                                    Spacer(modifier = Modifier.width(12.dp))
-                                    Column(modifier = Modifier.weight(1f)) {
-                                        Text(
-                                            text = "My Friends",
-                                            style = MaterialTheme.typography.bodyMedium.copy(
-                                                fontWeight = FontWeight.SemiBold
-                                            ),
-                                            color = TextPrimary
-                                        )
-                                        Spacer(modifier = Modifier.height(2.dp))
-                                        Text(
-                                            text = "${uiState.followers} followers · ${uiState.following} following",
-                                            style = MaterialTheme.typography.bodySmall,
-                                            color = TextSecondary
-                                        )
-                                    }
-                                    Icon(
-                                        imageVector = Icons.Default.ChevronRight,
-                                        contentDescription = "View friends",
-                                        tint = TextTertiary,
-                                        modifier = Modifier.size(20.dp)
-                                    )
-                                }
-                            }
-                        }
-                        Spacer(modifier = Modifier.height(12.dp))
-                    }
-
-                    // ── 8. Chats card ──
-                    item {
-                        Card(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .padding(horizontal = 16.dp)
-                                .clickable { onNavigateToChats() },
-                            colors = CardDefaults.cardColors(containerColor = CardBg),
-                            elevation = CardDefaults.cardElevation(defaultElevation = 1.dp),
-                            shape = RoundedCornerShape(16.dp)
-                        ) {
-                            Column(modifier = Modifier.padding(16.dp)) {
-                                Row(
-                                    modifier = Modifier.fillMaxWidth(),
-                                    horizontalArrangement = Arrangement.SpaceBetween,
-                                    verticalAlignment = Alignment.CenterVertically
-                                ) {
-                                    Text(
-                                        text = "CHATS",
-                                        style = MaterialTheme.typography.labelSmall.copy(
-                                            fontSize = 10.sp,
-                                            letterSpacing = 0.8.sp
-                                        ),
-                                        color = TextSecondary,
-                                        fontWeight = FontWeight.SemiBold
-                                    )
-                                }
-                                Spacer(modifier = Modifier.height(12.dp))
-                                Row(
-                                    modifier = Modifier.fillMaxWidth(),
-                                    verticalAlignment = Alignment.CenterVertically
-                                ) {
-                                    Box(
-                                        modifier = Modifier
-                                            .size(40.dp)
-                                            .clip(RoundedCornerShape(10.dp))
-                                            .background(Color(0xFFDBEAFE)), // blue-100
-                                        contentAlignment = Alignment.Center
-                                    ) {
-                                        Icon(
-                                            imageVector = Icons.AutoMirrored.Filled.Chat,
-                                            contentDescription = "Chats",
-                                            tint = Color(0xFF1D4ED8), // blue-700
-                                            modifier = Modifier.size(22.dp)
-                                        )
-                                    }
-                                    Spacer(modifier = Modifier.width(12.dp))
-                                    Column(modifier = Modifier.weight(1f)) {
-                                        Text(
-                                            text = "My Chats",
-                                            style = MaterialTheme.typography.bodyMedium.copy(
-                                                fontWeight = FontWeight.SemiBold
-                                            ),
-                                            color = TextPrimary
-                                        )
-                                        Spacer(modifier = Modifier.height(2.dp))
-                                        Text(
-                                            text = "Booking chats & match chats",
-                                            style = MaterialTheme.typography.bodySmall,
-                                            color = TextSecondary
-                                        )
-                                    }
-                                    Icon(
-                                        imageVector = Icons.Default.ChevronRight,
-                                        contentDescription = "View chats",
-                                        tint = TextTertiary,
-                                        modifier = Modifier.size(20.dp)
-                                    )
-                                }
-                            }
-                        }
-                        Spacer(modifier = Modifier.height(12.dp))
-                    }
-
-                    // ── 9. Past Bookings card ──
-                    if (uiState.pastBookings.isNotEmpty()) {
-                        item {
-                            Card(
-                                modifier = Modifier
-                                    .fillMaxWidth()
-                                    .padding(horizontal = 16.dp),
-                                colors = CardDefaults.cardColors(containerColor = CardBg),
-                                elevation = CardDefaults.cardElevation(defaultElevation = 1.dp),
-                                shape = RoundedCornerShape(16.dp)
-                            ) {
-                                Column(modifier = Modifier.padding(16.dp)) {
-                                    Row(
-                                        modifier = Modifier.fillMaxWidth(),
-                                        horizontalArrangement = Arrangement.SpaceBetween,
-                                        verticalAlignment = Alignment.CenterVertically
-                                    ) {
-                                        Row(verticalAlignment = Alignment.CenterVertically) {
-                                            Icon(
-                                                imageVector = Icons.Default.History,
-                                                contentDescription = "Past Bookings",
-                                                tint = TextSecondary,
-                                                modifier = Modifier.size(16.dp)
-                                            )
-                                            Spacer(modifier = Modifier.width(6.dp))
-                                            Text(
-                                                text = "PAST BOOKINGS",
-                                                style = MaterialTheme.typography.labelSmall.copy(
-                                                    fontSize = 10.sp,
-                                                    letterSpacing = 0.8.sp
-                                                ),
-                                                color = TextSecondary,
-                                                fontWeight = FontWeight.SemiBold
-                                            )
-                                        }
-                                    }
-                                    Spacer(modifier = Modifier.height(12.dp))
-                                    uiState.pastBookings.forEachIndexed { index, booking ->
-                                        PastBookingRow(
-                                            booking = booking,
-                                            onClick = { onNavigateToBookingDetail(booking.id) }
-                                        )
-                                        if (index < uiState.pastBookings.lastIndex) {
-                                            HorizontalDivider(
-                                                color = Color(0xFFF3F4F6),
-                                                modifier = Modifier.padding(vertical = 8.dp)
-                                            )
-                                        }
-                                    }
-                                    Spacer(modifier = Modifier.height(12.dp))
-                                    HorizontalDivider(color = Color(0xFFF3F4F6))
-                                    Spacer(modifier = Modifier.height(8.dp))
-                                    Row(
-                                        modifier = Modifier
-                                            .fillMaxWidth()
-                                            .clickable { onNavigateToMyBookings() },
-                                        horizontalArrangement = Arrangement.Center,
-                                        verticalAlignment = Alignment.CenterVertically
-                                    ) {
-                                        Text(
-                                            text = "View All",
-                                            style = MaterialTheme.typography.labelMedium,
-                                            color = Color(0xFF1D4ED8)
-                                        )
-                                        Icon(
-                                            imageVector = Icons.Default.ChevronRight,
-                                            contentDescription = null,
-                                            tint = Color(0xFF1D4ED8),
-                                            modifier = Modifier.size(16.dp)
-                                        )
-                                    }
-                                }
-                            }
-                            Spacer(modifier = Modifier.height(12.dp))
-                        }
-                    }
-
-                    // ── Partner tools ──
-                    if (isPartner) {
-                        item {
-                            Card(
-                                modifier = Modifier
-                                    .fillMaxWidth()
-                                    .padding(horizontal = 16.dp),
-                                colors = CardDefaults.cardColors(containerColor = CardBg),
-                                elevation = CardDefaults.cardElevation(defaultElevation = 1.dp),
-                                shape = RoundedCornerShape(16.dp)
-                            ) {
-                                Column {
-                                    Text(
-                                        text = "PARTNER TOOLS",
-                                        style = MaterialTheme.typography.labelSmall.copy(
-                                            fontSize = 10.sp,
-                                            letterSpacing = 0.8.sp
-                                        ),
-                                        color = TextSecondary,
-                                        fontWeight = FontWeight.SemiBold,
-                                        modifier = Modifier.padding(
-                                            start = 16.dp,
-                                            end = 16.dp,
-                                            top = 16.dp,
-                                            bottom = 4.dp
-                                        )
-                                    )
-                                    LightMenuRow(
-                                        icon = Icons.Default.Dashboard,
-                                        label = "Partner Dashboard",
-                                        onClick = onNavigateToDashboard,
-                                        iconTint = GoldAccent
-                                    )
-                                    HorizontalDivider(
-                                        color = Color(0xFFF3F4F6),
-                                        modifier = Modifier.padding(horizontal = 16.dp)
-                                    )
-                                    LightMenuRow(
-                                        icon = Icons.Default.Schedule,
-                                        label = "Manage Time Slots",
-                                        onClick = onManageTimeSlots
-                                    )
-                                }
-                            }
-                            Spacer(modifier = Modifier.height(12.dp))
-                        }
-                    }
-
-                    // ── Sign out ──
-                    item {
-                        Spacer(modifier = Modifier.height(8.dp))
-                        Box(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .padding(horizontal = 16.dp),
-                            contentAlignment = Alignment.Center
-                        ) {
-                            OutlinedButton(
-                                onClick = {
-                                    viewModel.signOut()
-                                    onSignOut()
-                                },
-                                shape = RoundedCornerShape(8.dp),
-                                border = BorderStroke(1.dp, MaterialTheme.colorScheme.error.copy(alpha = 0.4f))
-                            ) {
-                                Icon(
-                                    Icons.AutoMirrored.Filled.Logout,
-                                    contentDescription = null,
-                                    tint = MaterialTheme.colorScheme.error,
-                                    modifier = Modifier.size(18.dp)
-                                )
-                                Spacer(modifier = Modifier.width(8.dp))
-                                Text("Sign Out", color = MaterialTheme.colorScheme.error)
-                            }
-                        }
-                        Spacer(modifier = Modifier.height(32.dp))
-                    }
-                }
-            }
-        }
-
-        SnackbarHost(
-            hostState = snackbarHostState,
-            modifier = Modifier.align(Alignment.BottomCenter)
-        )
-    }
-}
-
-private val StarGold = Color(0xFFFBBF24)
-
-// ── Player Ratings card ──
-@Composable
-private fun PlayerRatingsCard(
-    skillRating: Double,
-    sportsmanshipRating: Double,
-    punctualityRating: Double,
-    totalRatings: Int
-) {
-    Card(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(horizontal = 16.dp),
-        colors = CardDefaults.cardColors(containerColor = CardBg),
-        elevation = CardDefaults.cardElevation(defaultElevation = 1.dp),
-        shape = RoundedCornerShape(16.dp)
-    ) {
-        Column(modifier = Modifier.padding(16.dp)) {
-            // Header row: star icon + title
-            Row(
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                Icon(
-                    imageVector = Icons.Default.Star,
-                    contentDescription = null,
-                    tint = StarGold,
-                    modifier = Modifier.size(16.dp)
-                )
-                Spacer(modifier = Modifier.width(6.dp))
-                Text(
-                    text = "Player Ratings",
-                    style = MaterialTheme.typography.titleSmall.copy(
-                        fontWeight = FontWeight.Bold
-                    ),
-                    color = TextPrimary
-                )
-            }
-
-            Spacer(modifier = Modifier.height(16.dp))
-
-            if (totalRatings == 0) {
-                Text(
-                    text = "No ratings yet",
-                    style = MaterialTheme.typography.bodyMedium,
-                    color = TextSecondary
-                )
-            } else {
-                PlayerRatingRow(label = "Skill", rating = skillRating)
-                Spacer(modifier = Modifier.height(12.dp))
-                PlayerRatingRow(label = "Sportsmanship", rating = sportsmanshipRating)
-                Spacer(modifier = Modifier.height(12.dp))
-                PlayerRatingRow(label = "Punctuality", rating = punctualityRating)
-
-                Spacer(modifier = Modifier.height(14.dp))
-                Text(
-                    text = "Based on $totalRatings ${if (totalRatings == 1) "rating" else "ratings"}",
-                    style = MaterialTheme.typography.bodySmall,
-                    color = TextSecondary
-                )
-            }
-        }
-    }
-}
-
-// ── Single row: label — ⭐ X.X ──
-@Composable
-private fun PlayerRatingRow(
-    label: String,
-    rating: Double
-) {
-    Row(
-        modifier = Modifier.fillMaxWidth(),
-        verticalAlignment = Alignment.CenterVertically
-    ) {
-        Text(
-            text = label,
-            style = MaterialTheme.typography.bodyMedium,
-            color = TextPrimary,
-            modifier = Modifier.weight(1f)
-        )
-        Icon(
-            imageVector = Icons.Default.Star,
-            contentDescription = null,
-            tint = StarGold,
-            modifier = Modifier.size(16.dp)
-        )
-        Spacer(modifier = Modifier.width(4.dp))
-        Text(
-            text = String.format("%.1f", rating),
-            style = MaterialTheme.typography.bodyMedium.copy(fontWeight = FontWeight.SemiBold),
-            color = TextPrimary
-        )
-    }
-}
-
-@Preview(showBackground = true, backgroundColor = 0xFFF9FAFB)
-@Composable
-private fun PlayerRatingsCardPreview() {
-    SportsBookTheme {
-        Column(
-            modifier = Modifier
-                .fillMaxSize()
-                .background(LightBg)
-                .padding(vertical = 16.dp)
-        ) {
-            PlayerRatingsCard(
-                skillRating = 4.2,
-                sportsmanshipRating = 4.8,
-                punctualityRating = 4.5,
-                totalRatings = 12
-            )
-            Spacer(modifier = Modifier.height(16.dp))
-            PlayerRatingsCard(
-                skillRating = 0.0,
-                sportsmanshipRating = 0.0,
-                punctualityRating = 0.0,
-                totalRatings = 0
-            )
-        }
-    }
-}
-
-// ── Past booking row (inside the Past Bookings card) ──
-@Composable
-private fun PastBookingRow(
-    booking: Booking,
-    onClick: () -> Unit
-) {
-    val displayName = booking.venue?.name ?: booking.coach?.name ?: "Booking #${booking.id}"
-    val dateText = booking.timeSlot?.slotDate?.toDisplayDate() ?: ""
-    val isCompleted = booking.status == BookingStatus.COMPLETED
-    val statusColor = if (isCompleted) Color(0xFF16A34A) else Color(0xFF1D4ED8)
-    val statusBg = if (isCompleted) Color(0xFFDCFCE7) else Color(0xFFDBEAFE)
-
-    Row(
-        modifier = Modifier
-            .fillMaxWidth()
-            .clickable(onClick = onClick),
-        verticalAlignment = Alignment.CenterVertically
-    ) {
-        Column(modifier = Modifier.weight(1f)) {
-            Text(
-                text = displayName,
-                style = MaterialTheme.typography.bodyMedium.copy(fontWeight = FontWeight.SemiBold),
-                color = TextPrimary
-            )
-            if (dateText.isNotBlank()) {
-                Spacer(modifier = Modifier.height(2.dp))
-                Text(
-                    text = dateText,
-                    style = MaterialTheme.typography.bodySmall,
-                    color = TextSecondary
-                )
-            }
-        }
-        Spacer(modifier = Modifier.width(8.dp))
-        Column(horizontalAlignment = Alignment.End) {
-            Text(
-                text = "${"%.0f".format(booking.totalPrice)} ден",
-                style = MaterialTheme.typography.bodySmall.copy(fontWeight = FontWeight.SemiBold),
-                color = TextPrimary
-            )
-            Spacer(modifier = Modifier.height(4.dp))
-            Text(
-                text = booking.status.name,
-                style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.SemiBold),
-                color = statusColor,
-                modifier = androidx.compose.ui.Modifier
-                    .background(color = statusBg, shape = RoundedCornerShape(4.dp))
-                    .padding(horizontal = 6.dp, vertical = 2.dp)
-            )
-        }
-        Spacer(modifier = Modifier.width(4.dp))
-        Icon(
-            imageVector = Icons.Default.ChevronRight,
-            contentDescription = null,
-            tint = TextTertiary,
-            modifier = Modifier.size(16.dp)
-        )
-    }
-}
-
-// ── Stat card (one of three in the row) ──
-@Composable
-private fun StatCard(
-    label: String,
-    value: String,
-    modifier: Modifier = Modifier
-) {
-    Card(
-        modifier = modifier,
-        colors = CardDefaults.cardColors(containerColor = CardBg),
-        elevation = CardDefaults.cardElevation(defaultElevation = 1.dp),
-        shape = RoundedCornerShape(16.dp)
-    ) {
-        Column(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(vertical = 12.dp, horizontal = 8.dp),
-            horizontalAlignment = Alignment.CenterHorizontally
-        ) {
-            Text(
-                text = label,
-                style = MaterialTheme.typography.labelSmall.copy(
-                    fontSize = 10.sp,
-                    letterSpacing = 0.8.sp
-                ),
-                color = TextSecondary,
-                fontWeight = FontWeight.SemiBold,
-                textAlign = TextAlign.Center
-            )
-            Spacer(modifier = Modifier.height(4.dp))
-            Text(
-                text = value,
-                style = MaterialTheme.typography.titleMedium.copy(
-                    fontWeight = FontWeight.Bold,
-                    fontSize = 18.sp
-                ),
-                color = TextPrimary,
-                textAlign = TextAlign.Center
-            )
-        }
-    }
-}
-
-// ── Single rating bar row ──
-@Composable
-private fun RatingBar(
-    label: String,
-    score: Float,
-    barColor: Color
-) {
-    Row(
-        modifier = Modifier.fillMaxWidth(),
-        verticalAlignment = Alignment.CenterVertically
-    ) {
-        Text(
-            text = label,
-            style = MaterialTheme.typography.bodySmall,
-            color = TextSecondary,
-            modifier = Modifier.width(96.dp)
-        )
-        Box(
-            modifier = Modifier
-                .weight(1f)
-                .height(6.dp)
-                .clip(RoundedCornerShape(50))
-                .background(Color(0xFFE5E7EB))
-        ) {
-            Box(
-                modifier = Modifier
-                    .fillMaxWidth((score / 5f).coerceIn(0f, 1f))
-                    .height(6.dp)
-                    .clip(RoundedCornerShape(50))
-                    .background(barColor)
-            )
-        }
-        Spacer(modifier = Modifier.width(8.dp))
-        Text(
-            text = "%.1f".format(score),
-            style = MaterialTheme.typography.bodySmall.copy(fontWeight = FontWeight.SemiBold),
-            color = TextPrimary,
-            modifier = Modifier.width(28.dp),
-            textAlign = TextAlign.End
-        )
-    }
-}
-
-// ── Light-theme menu row (used inside partner tools card) ──
-@Composable
-private fun LightMenuRow(
-    icon: ImageVector,
-    label: String,
-    onClick: () -> Unit,
-    iconTint: Color = TextSecondary
-) {
-    Row(
-        modifier = Modifier
-            .fillMaxWidth()
-            .clickable(onClick = onClick)
-            .padding(horizontal = 16.dp, vertical = 14.dp),
-        verticalAlignment = Alignment.CenterVertically
-    ) {
-        Icon(
-            imageVector = icon,
-            contentDescription = null,
-            modifier = Modifier.size(20.dp),
-            tint = iconTint
-        )
-        Spacer(modifier = Modifier.width(12.dp))
-        Text(
-            text = label,
-            style = MaterialTheme.typography.bodyMedium,
-            color = TextPrimary,
-            modifier = Modifier.weight(1f)
-        )
-        Text(
-            text = "›",
-            style = MaterialTheme.typography.bodyLarge,
-            color = TextTertiary,
-            fontSize = 20.sp
-        )
-    }
-}
-
-@Preview(showBackground = true, backgroundColor = 0xFFF9FAFB)
-@Composable
-private fun PlayerProfileScreenPreview() {
-    SportsBookTheme {
-        Column(
-            modifier = Modifier
-                .fillMaxSize()
-                .background(LightBg)
-        ) {
-            // Banner
-            Box(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(96.dp)
-                    .background(
-                        Brush.horizontalGradient(
-                            colors = listOf(BannerDark, BannerMid, BannerLight)
-                        )
-                    )
-            ) {
-                IconButton(
-                    onClick = {},
-                    modifier = Modifier
-                        .align(Alignment.TopEnd)
-                        .padding(top = 8.dp, end = 8.dp)
-                ) {
-                    Icon(
-                        imageVector = Icons.Default.Settings,
-                        contentDescription = "Settings",
-                        tint = GoldAccent,
-                        modifier = Modifier.size(22.dp)
-                    )
-                }
-            }
-
-            // Avatar row (offset simulated with negative padding in preview)
-            Box(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .offset(y = (-40).dp)
-                    .padding(horizontal = 16.dp)
-            ) {
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    Box(
-                        modifier = Modifier
-                            .size(80.dp)
-                            .border(4.dp, CardBg, CircleShape)
-                            .clip(CircleShape)
-                            .background(BannerMid),
-                        contentAlignment = Alignment.Center
-                    ) {
-                        Icon(
-                            Icons.Default.Person,
-                            contentDescription = null,
-                            modifier = Modifier.size(40.dp),
-                            tint = GoldAccent
-                        )
-                    }
-                    Spacer(modifier = Modifier.width(12.dp))
-                    Column(modifier = Modifier.weight(1f)) {
-                        Text(
-                            "Alex Johnson",
-                            style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold),
-                            color = TextPrimary
-                        )
-                        Text(
-                            "@alexj",
-                            style = MaterialTheme.typography.bodySmall,
-                            color = TextSecondary
-                        )
-                    }
-                    OutlinedButton(
-                        onClick = {},
-                        shape = RoundedCornerShape(6.dp),
-                        border = BorderStroke(1.dp, Color(0xFFD1D5DB)),
-                        modifier = Modifier.height(32.dp),
-                        contentPadding = PaddingValues(horizontal = 12.dp, vertical = 0.dp)
-                    ) {
-                        Text("Edit", style = MaterialTheme.typography.labelMedium, color = TextPrimary)
-                    }
-                }
-            }
-
-            Box(modifier = Modifier.offset(y = (-28).dp)) {
-                Column {
-                    Text(
-                        text = "Basketball & tennis enthusiast.",
-                        style = MaterialTheme.typography.bodySmall.copy(fontSize = 12.sp),
-                        color = Color(0xFF374151),
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(horizontal = 16.dp)
-                            .padding(bottom = 12.dp)
-                    )
-
+    Box(modifier = Modifier.fillMaxSize().background(DarkBg)) {
+        if (uiState.isLoading && uiState.user == null) {
+            LoadingIndicator(modifier = Modifier.fillMaxSize())
+        } else {
+            LazyColumn(modifier = Modifier.fillMaxSize()) {
+                // ── Header ───────────────────────────────────────────────
+                item {
                     Row(
                         modifier = Modifier
                             .fillMaxWidth()
-                            .padding(horizontal = 16.dp),
-                        horizontalArrangement = Arrangement.spacedBy(8.dp)
+                            .padding(start = 16.dp, end = 16.dp, top = 12.dp, bottom = 4.dp),
+                        verticalAlignment = Alignment.CenterVertically,
                     ) {
-                        StatCard(label = "MATCHES", value = "42", modifier = Modifier.weight(1f))
-                        StatCard(label = "AVG RATING", value = "4.8 ⭐", modifier = Modifier.weight(1f))
-                        StatCard(label = "STREAK", value = "12 🔥", modifier = Modifier.weight(1f))
+                        Spacer(modifier = Modifier.size(36.dp)) // no back on own profile
+                        Spacer(modifier = Modifier.width(12.dp))
+                        Text(
+                            text = "Profile",
+                            fontSize = 18.sp,
+                            fontWeight = FontWeight.Bold,
+                            color = DarkTextPrimary,
+                            modifier = Modifier.weight(1f),
+                        )
+                        // Edit button
+                        Box(
+                            modifier = Modifier
+                                .clip(RoundedCornerShape(10.dp))
+                                .background(DarkSurface)
+                                .clickable { viewModel.startEditing() }
+                                .padding(horizontal = 16.dp, vertical = 8.dp),
+                        ) {
+                            Text("✏ Edit", fontSize = 13.sp, fontWeight = FontWeight.SemiBold, color = DarkTextPrimary)
+                        }
                     }
+                }
 
-                    Spacer(modifier = Modifier.height(12.dp))
-
-                    Card(
+                // ── Avatar + Name + XP ───────────────────────────────────
+                item {
+                    Column(
                         modifier = Modifier
                             .fillMaxWidth()
-                            .padding(horizontal = 16.dp),
-                        colors = CardDefaults.cardColors(containerColor = CardBg),
-                        elevation = CardDefaults.cardElevation(defaultElevation = 1.dp),
-                        shape = RoundedCornerShape(16.dp)
+                            .padding(horizontal = 16.dp, vertical = 8.dp),
+                        horizontalAlignment = Alignment.CenterHorizontally,
                     ) {
-                        Column(modifier = Modifier.padding(16.dp)) {
+                        // Avatar
+                        Box(
+                            modifier = Modifier.size(90.dp),
+                            contentAlignment = Alignment.BottomEnd,
+                        ) {
+                            Box(
+                                modifier = Modifier
+                                    .size(90.dp)
+                                    .clip(CircleShape)
+                                    .background(Brush.linearGradient(listOf(GreenDark, GreenAccent))),
+                                contentAlignment = Alignment.Center,
+                            ) {
+                                val initial = uiState.user?.displayName?.firstOrNull()?.uppercaseChar()?.toString() ?: "?"
+                                Text(initial, fontSize = 36.sp, fontWeight = FontWeight.Bold, color = Color.White)
+                            }
+                            // Level badge
+                            Box(
+                                modifier = Modifier
+                                    .clip(RoundedCornerShape(10.dp))
+                                    .background(Color(0xFFFFC107))
+                                    .border(2.dp, DarkBg, RoundedCornerShape(10.dp))
+                                    .padding(horizontal = 6.dp, vertical = 2.dp),
+                            ) {
+                                Text("Lv.7", fontSize = 10.sp, fontWeight = FontWeight.ExtraBold, color = Color.Black)
+                            }
+                        }
+
+                        Spacer(modifier = Modifier.height(12.dp))
+                        Text(
+                            text = uiState.user?.displayName ?: "Player",
+                            fontSize = 22.sp,
+                            fontWeight = FontWeight.ExtraBold,
+                            color = DarkTextPrimary,
+                        )
+                        Text(
+                            text = "@${uiState.user?.email?.substringBefore("@") ?: "player"} • Skopje, MK",
+                            fontSize = 13.sp,
+                            color = DarkTextSecondary,
+                            modifier = Modifier.padding(top = 2.dp),
+                        )
+
+                        Spacer(modifier = Modifier.height(12.dp))
+
+                        // XP bar
+                        Column(
+                            modifier = Modifier
+                                .fillMaxWidth(0.72f)
+                                .clickable(onClick = onNavigateToXpLevel),
+                        ) {
                             Row(
                                 modifier = Modifier.fillMaxWidth(),
-                                horizontalArrangement = Arrangement.SpaceBetween
+                                horizontalArrangement = Arrangement.SpaceBetween,
                             ) {
-                                Text(
-                                    "PLAYER RATINGS",
-                                    style = MaterialTheme.typography.labelSmall.copy(fontSize = 10.sp, letterSpacing = 0.8.sp),
-                                    color = TextSecondary,
-                                    fontWeight = FontWeight.SemiBold
-                                )
-                                Text(
-                                    "from 38 reviews",
-                                    style = MaterialTheme.typography.labelSmall.copy(fontSize = 10.sp),
-                                    color = TextTertiary
+                                Text("Level 7 • 1,830 XP", fontSize = 11.sp, color = DarkTextSecondary)
+                                Text("2,500 XP", fontSize = 11.sp, color = DarkTextSecondary)
+                            }
+                            Spacer(modifier = Modifier.height(4.dp))
+                            Box(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .height(6.dp)
+                                    .clip(RoundedCornerShape(3.dp))
+                                    .background(DarkBorder),
+                            ) {
+                                Box(
+                                    modifier = Modifier
+                                        .fillMaxWidth(0.72f)
+                                        .height(6.dp)
+                                        .clip(RoundedCornerShape(3.dp))
+                                        .background(Brush.horizontalGradient(listOf(GreenAccent, Color(0xFF81C784)))),
                                 )
                             }
-                            Spacer(modifier = Modifier.height(14.dp))
-                            RatingBar(label = "Skill", score = 4.7f, barColor = YellowBar)
-                            Spacer(modifier = Modifier.height(10.dp))
-                            RatingBar(label = "Sportsmanship", score = 4.9f, barColor = EmeraldBar)
-                            Spacer(modifier = Modifier.height(10.dp))
-                            RatingBar(label = "Punctuality", score = 5.0f, barColor = BlueBar)
                         }
+                    }
+                }
+
+                // ── Stats grid ───────────────────────────────────────────
+                item {
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(horizontal = 16.dp)
+                            .padding(bottom = 16.dp),
+                        horizontalArrangement = Arrangement.spacedBy(8.dp),
+                    ) {
+                        val stats: List<Pair<String, String>> = listOf(
+                            (uiState.user?.totalMatchesPlayed?.toString() ?: "0") to "Matches",
+                            uiState.pastBookings.size.toString() to "Bookings",
+                            "12" to "Awards",
+                            uiState.followers.toString() to "Friends",
+                        )
+                        stats.forEach { (value, label) ->
+                            Column(
+                                modifier = Modifier
+                                    .weight(1f)
+                                    .clip(RoundedCornerShape(12.dp))
+                                    .background(DarkSurface)
+                                    .padding(vertical = 12.dp, horizontal = 8.dp),
+                                horizontalAlignment = Alignment.CenterHorizontally,
+                            ) {
+                                Text(value, fontSize = 18.sp, fontWeight = FontWeight.ExtraBold, color = DarkTextPrimary)
+                                Text(label, fontSize = 10.sp, color = DarkTextSecondary, modifier = Modifier.padding(top = 2.dp))
+                            }
+                        }
+                    }
+                }
+
+                // ── Action buttons ───────────────────────────────────────
+                item {
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(horizontal = 16.dp)
+                            .padding(bottom = 20.dp),
+                        horizontalArrangement = Arrangement.spacedBy(8.dp),
+                    ) {
+                        listOf(
+                            Triple("👥 Add Friend", GreenAccent, {}),
+                            Triple("💬 Message", DarkSurface, onNavigateToChats),
+                            Triple("⚔ Challenge", DarkSurface, {}),
+                        ).forEach { (label, bg, action) ->
+                            Box(
+                                modifier = Modifier
+                                    .weight(1f)
+                                    .clip(RoundedCornerShape(12.dp))
+                                    .background(bg)
+                                    .clickable { action() }
+                                    .padding(vertical = 12.dp),
+                                contentAlignment = Alignment.Center,
+                            ) {
+                                Text(label, fontSize = 12.sp, fontWeight = FontWeight.SemiBold, color = DarkTextPrimary, textAlign = TextAlign.Center)
+                            }
+                        }
+                    }
+                }
+
+                // ── Sport Expertise ──────────────────────────────────────
+                item {
+                    SportExpertiseSection(
+                        expertise = uiState.sportExpertise,
+                        isEditing = uiState.isEditingExpertise,
+                        editExpertise = uiState.editExpertise,
+                        isSaving = uiState.isSavingExpertise,
+                        interestedSports = uiState.user?.interestedSports ?: emptyList(),
+                        onStartEditing = viewModel::startEditingExpertise,
+                        onCancelEditing = viewModel::cancelEditingExpertise,
+                        onSave = viewModel::saveExpertise,
+                        onAddSport = viewModel::addExpertiseSport,
+                        onRemoveSport = viewModel::removeExpertiseSport,
+                        onSkillLevelChange = viewModel::updateExpertiseSkillLevel,
+                        onExperienceChange = viewModel::updateExpertiseExperience,
+                    )
+                }
+
+                // ── Achievements ─────────────────────────────────────────
+                item {
+                    ProfileSection(
+                        title = "Achievements",
+                        actionLabel = null,
+                        onAction = onNavigateToAchievements,
+                    ) {
+                        Box(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .clip(RoundedCornerShape(10.dp))
+                                .background(DarkSurface)
+                                .padding(20.dp),
+                            contentAlignment = Alignment.Center,
+                        ) {
+                            Text("No achievements yet", fontSize = 13.sp, color = DarkTextSecondary)
+                        }
+                    }
+                }
+
+                // ── Recent Matches ───────────────────────────────────────
+                item {
+                    ProfileSection(
+                        title = "Recent Matches",
+                        actionLabel = "See All",
+                        onAction = onNavigateToStats,
+                    ) {
+                        Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                            if (uiState.pastBookings.isNotEmpty()) {
+                                uiState.pastBookings.take(3).forEach { booking ->
+                                    RecentMatchRow(booking = booking, onClick = { onNavigateToBookingDetail(booking.id) })
+                                }
+                            } else {
+                                Box(
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .clip(RoundedCornerShape(10.dp))
+                                        .background(DarkSurface)
+                                        .padding(20.dp),
+                                    contentAlignment = Alignment.Center,
+                                ) {
+                                    Text("No recent matches", fontSize = 13.sp, color = DarkTextSecondary)
+                                }
+                            }
+                        }
+                    }
+                }
+
+                // ── Quick nav ────────────────────────────────────────────
+                item {
+                    Column(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(horizontal = 16.dp, vertical = 4.dp),
+                        verticalArrangement = Arrangement.spacedBy(1.dp),
+                    ) {
+                        ProfileNavRow("📅", "My Bookings", onClick = onNavigateToMyBookings)
+                        ProfileNavRow("💰", "Payments", onClick = onNavigateToPayments)
+                        ProfileNavRow("👥", "Friends", onClick = onNavigateToFriends)
+                        ProfileNavRow("📊", "My Stats", onClick = onNavigateToStats)
+                        ProfileNavRow("⚙", "Settings", onClick = onNavigateToSettings)
+                    }
+                }
+
+                // ── Sign out ─────────────────────────────────────────────
+                item {
+                    Box(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(horizontal = 16.dp, vertical = 12.dp)
+                            .clip(RoundedCornerShape(12.dp))
+                            .background(Color(0xFF2A1B1B))
+                            .clickable {
+                                viewModel.signOut()
+                                onSignOut()
+                            }
+                            .padding(vertical = 14.dp),
+                        contentAlignment = Alignment.Center,
+                    ) {
+                        Row(
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.spacedBy(8.dp),
+                        ) {
+                            Icon(Icons.AutoMirrored.Filled.Logout, null, tint = Color(0xFFF44336), modifier = Modifier.size(18.dp))
+                            Text("Sign Out", fontSize = 14.sp, fontWeight = FontWeight.SemiBold, color = Color(0xFFF44336))
+                        }
+                    }
+                    Spacer(modifier = Modifier.height(24.dp))
+                }
+            }
+        }
+
+        SnackbarHost(hostState = snackbarHostState, modifier = Modifier.align(Alignment.BottomCenter))
+    }
+}
+
+// ── Sub-composables ───────────────────────────────────────────────────────────
+
+@Composable
+private fun ProfileSection(
+    title: String,
+    actionLabel: String?,
+    onAction: () -> Unit,
+    content: @Composable () -> Unit,
+) {
+    Column(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(horizontal = 16.dp)
+            .padding(bottom = 20.dp),
+    ) {
+        Row(
+            modifier = Modifier.fillMaxWidth().padding(bottom = 10.dp),
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            Text(title, fontSize = 16.sp, fontWeight = FontWeight.Bold, color = DarkTextPrimary)
+            if (actionLabel != null) {
+                Text(actionLabel, fontSize = 13.sp, color = GreenAccent, modifier = Modifier.clickable(onClick = onAction))
+            }
+        }
+        content()
+    }
+}
+
+@Composable
+private fun SportExpertiseSection(
+    expertise: List<UserSportExpertise>,
+    isEditing: Boolean,
+    editExpertise: List<EditableSportExpertise>,
+    isSaving: Boolean,
+    interestedSports: List<SportType>,
+    onStartEditing: () -> Unit,
+    onCancelEditing: () -> Unit,
+    onSave: () -> Unit,
+    onAddSport: (SportType) -> Unit,
+    onRemoveSport: (SportType) -> Unit,
+    onSkillLevelChange: (SportType, SkillLevel) -> Unit,
+    onExperienceChange: (SportType, ExperienceDuration) -> Unit,
+) {
+    ProfileSection(
+        title = "Sport Expertise",
+        actionLabel = if (!isEditing) "Edit" else null,
+        onAction = onStartEditing,
+    ) {
+        if (!isEditing) {
+            // ── View mode ────────────────────────────────────────────
+            if (expertise.isEmpty()) {
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .clip(RoundedCornerShape(10.dp))
+                        .background(DarkSurface)
+                        .padding(20.dp),
+                    contentAlignment = Alignment.Center,
+                ) {
+                    Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                        Text("🏅", fontSize = 32.sp)
+                        Spacer(modifier = Modifier.height(8.dp))
+                        Text("No expertise set yet", fontSize = 14.sp, color = DarkTextSecondary)
+                        Spacer(modifier = Modifier.height(6.dp))
+                        Box(
+                            modifier = Modifier
+                                .clip(RoundedCornerShape(10.dp))
+                                .background(GreenAccent)
+                                .clickable(onClick = onStartEditing)
+                                .padding(horizontal = 16.dp, vertical = 8.dp),
+                        ) {
+                            Text("Add Your Skills", fontSize = 13.sp, fontWeight = FontWeight.SemiBold, color = Color.White)
+                        }
+                    }
+                }
+            } else {
+                Row(
+                    modifier = Modifier.horizontalScroll(rememberScrollState()),
+                    horizontalArrangement = Arrangement.spacedBy(8.dp),
+                ) {
+                    expertise.forEach { entry ->
+                        ExpertiseCard(entry)
+                    }
+                }
+            }
+        } else {
+            // ── Edit mode ────────────────────────────────────────────
+            Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
+                editExpertise.forEach { entry ->
+                    EditableExpertiseCard(
+                        entry = entry,
+                        onRemove = { onRemoveSport(entry.sportType) },
+                        onSkillLevelChange = { onSkillLevelChange(entry.sportType, it) },
+                        onExperienceChange = { onExperienceChange(entry.sportType, it) },
+                    )
+                }
+
+                // Add sport buttons — show sports not yet added
+                val availableSports = interestedSports.filter { sport ->
+                    editExpertise.none { it.sportType == sport }
+                }
+                if (availableSports.isNotEmpty()) {
+                    Text("Add a sport:", fontSize = 12.sp, color = DarkTextSecondary, modifier = Modifier.padding(top = 4.dp))
+                    Row(
+                        modifier = Modifier.horizontalScroll(rememberScrollState()),
+                        horizontalArrangement = Arrangement.spacedBy(6.dp),
+                    ) {
+                        availableSports.forEach { sport ->
+                            Box(
+                                modifier = Modifier
+                                    .clip(RoundedCornerShape(8.dp))
+                                    .background(DarkSurface)
+                                    .border(1.dp, DarkBorder, RoundedCornerShape(8.dp))
+                                    .clickable { onAddSport(sport) }
+                                    .padding(horizontal = 12.dp, vertical = 6.dp),
+                            ) {
+                                Text(
+                                    "+ ${sportEmoji(sport)} ${sport.displayName}",
+                                    fontSize = 12.sp,
+                                    color = GreenAccent,
+                                )
+                            }
+                        }
+                    }
+                }
+
+                // Save / Cancel buttons
+                Row(
+                    modifier = Modifier.fillMaxWidth().padding(top = 8.dp),
+                    horizontalArrangement = Arrangement.spacedBy(8.dp),
+                ) {
+                    Box(
+                        modifier = Modifier
+                            .weight(1f)
+                            .clip(RoundedCornerShape(10.dp))
+                            .background(DarkSurface)
+                            .border(1.dp, DarkBorder, RoundedCornerShape(10.dp))
+                            .clickable(enabled = !isSaving, onClick = onCancelEditing)
+                            .padding(vertical = 10.dp),
+                        contentAlignment = Alignment.Center,
+                    ) {
+                        Text("Cancel", fontSize = 13.sp, fontWeight = FontWeight.SemiBold, color = DarkTextPrimary)
+                    }
+                    Box(
+                        modifier = Modifier
+                            .weight(1f)
+                            .clip(RoundedCornerShape(10.dp))
+                            .background(if (isSaving) Color(0xFF2A3D2B) else GreenAccent)
+                            .clickable(enabled = !isSaving, onClick = onSave)
+                            .padding(vertical = 10.dp),
+                        contentAlignment = Alignment.Center,
+                    ) {
+                        Text(
+                            if (isSaving) "Saving..." else "Save",
+                            fontSize = 13.sp,
+                            fontWeight = FontWeight.SemiBold,
+                            color = Color.White,
+                        )
                     }
                 }
             }
         }
     }
+}
+
+@Composable
+private fun ExpertiseCard(entry: UserSportExpertise) {
+    val skillPct = skillLevelToProgress(entry.skillLevel)
+    val barColor = skillLevelToColor(entry.skillLevel)
+    Column(
+        modifier = Modifier
+            .width(130.dp)
+            .clip(RoundedCornerShape(10.dp))
+            .background(DarkSurface)
+            .padding(horizontal = 14.dp, vertical = 10.dp),
+    ) {
+        Text(
+            "${sportEmoji(entry.sportType)} ${entry.sportType.displayName}",
+            fontSize = 13.sp,
+            color = DarkTextPrimary,
+            maxLines = 1,
+            overflow = TextOverflow.Ellipsis,
+        )
+        Spacer(modifier = Modifier.height(6.dp))
+        Box(
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(4.dp)
+                .clip(RoundedCornerShape(2.dp))
+                .background(DarkBorder),
+        ) {
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth(skillPct)
+                    .height(4.dp)
+                    .clip(RoundedCornerShape(2.dp))
+                    .background(barColor),
+            )
+        }
+        Spacer(modifier = Modifier.height(4.dp))
+        Text(entry.skillLevel.displayName, fontSize = 11.sp, fontWeight = FontWeight.SemiBold, color = barColor)
+        Text(entry.experienceDuration.displayName, fontSize = 10.sp, color = DarkTextSecondary)
+    }
+}
+
+@Composable
+private fun EditableExpertiseCard(
+    entry: EditableSportExpertise,
+    onRemove: () -> Unit,
+    onSkillLevelChange: (SkillLevel) -> Unit,
+    onExperienceChange: (ExperienceDuration) -> Unit,
+) {
+    Column(
+        modifier = Modifier
+            .fillMaxWidth()
+            .clip(RoundedCornerShape(12.dp))
+            .background(DarkSurface)
+            .border(1.dp, DarkBorder, RoundedCornerShape(12.dp))
+            .padding(14.dp),
+    ) {
+        // Header
+        Row(verticalAlignment = Alignment.CenterVertically) {
+            Text(
+                "${sportEmoji(entry.sportType)} ${entry.sportType.displayName}",
+                fontSize = 15.sp,
+                fontWeight = FontWeight.SemiBold,
+                color = DarkTextPrimary,
+                modifier = Modifier.weight(1f),
+            )
+            Box(
+                modifier = Modifier
+                    .size(28.dp)
+                    .clip(CircleShape)
+                    .background(Color(0xFFEF5350).copy(alpha = 0.15f))
+                    .clickable(onClick = onRemove),
+                contentAlignment = Alignment.Center,
+            ) {
+                Text("✕", fontSize = 12.sp, color = Color(0xFFEF5350))
+            }
+        }
+
+        Spacer(modifier = Modifier.height(10.dp))
+
+        // Skill Level
+        Text("Skill Level", fontSize = 11.sp, color = DarkTextSecondary)
+        Spacer(modifier = Modifier.height(4.dp))
+        Row(
+            modifier = Modifier.horizontalScroll(rememberScrollState()),
+            horizontalArrangement = Arrangement.spacedBy(4.dp),
+        ) {
+            SkillLevel.entries.forEach { level ->
+                val selected = entry.skillLevel == level
+                Box(
+                    modifier = Modifier
+                        .clip(RoundedCornerShape(8.dp))
+                        .background(if (selected) GreenAccent else Color.Transparent)
+                        .border(
+                            1.dp,
+                            if (selected) GreenAccent else DarkBorder,
+                            RoundedCornerShape(8.dp),
+                        )
+                        .clickable { onSkillLevelChange(level) }
+                        .padding(horizontal = 10.dp, vertical = 6.dp),
+                ) {
+                    Text(
+                        level.displayName,
+                        fontSize = 11.sp,
+                        fontWeight = if (selected) FontWeight.Bold else FontWeight.Normal,
+                        color = if (selected) Color.White else DarkTextSecondary,
+                    )
+                }
+            }
+        }
+
+        Spacer(modifier = Modifier.height(10.dp))
+
+        // Experience
+        Text("Experience", fontSize = 11.sp, color = DarkTextSecondary)
+        Spacer(modifier = Modifier.height(4.dp))
+        Row(
+            modifier = Modifier.horizontalScroll(rememberScrollState()),
+            horizontalArrangement = Arrangement.spacedBy(4.dp),
+        ) {
+            ExperienceDuration.entries.forEach { exp ->
+                val selected = entry.experienceDuration == exp
+                Box(
+                    modifier = Modifier
+                        .clip(RoundedCornerShape(8.dp))
+                        .background(if (selected) GreenAccent else Color.Transparent)
+                        .border(
+                            1.dp,
+                            if (selected) GreenAccent else DarkBorder,
+                            RoundedCornerShape(8.dp),
+                        )
+                        .clickable { onExperienceChange(exp) }
+                        .padding(horizontal = 10.dp, vertical = 6.dp),
+                ) {
+                    Text(
+                        exp.displayName,
+                        fontSize = 11.sp,
+                        fontWeight = if (selected) FontWeight.Bold else FontWeight.Normal,
+                        color = if (selected) Color.White else DarkTextSecondary,
+                    )
+                }
+            }
+        }
+    }
+}
+
+@Composable
+private fun AchievementBadge(emoji: String, name: String, bg: Color) {
+    Column(
+        horizontalAlignment = Alignment.CenterHorizontally,
+        modifier = Modifier.width(72.dp),
+    ) {
+        Box(
+            modifier = Modifier
+                .size(56.dp)
+                .clip(RoundedCornerShape(12.dp))
+                .background(bg),
+            contentAlignment = Alignment.Center,
+        ) {
+            Text(emoji, fontSize = 24.sp)
+        }
+        Spacer(modifier = Modifier.height(6.dp))
+        Text(name, fontSize = 10.sp, color = DarkTextSecondary, textAlign = TextAlign.Center, maxLines = 2)
+    }
+}
+
+@Composable
+private fun RecentMatchRow(booking: Booking, onClick: () -> Unit) {
+    val sportEmoji = when (booking.venue?.sportType) {
+        SportType.BASKETBALL -> "🏀"
+        SportType.FOOTBALL -> "⚽"
+        SportType.TENNIS -> "🎾"
+        SportType.PADDLE -> "🏓"
+        SportType.VOLLEYBALL -> "🏐"
+        else -> "🏟"
+    }
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .clip(RoundedCornerShape(10.dp))
+            .background(DarkSurface)
+            .clickable(onClick = onClick)
+            .padding(horizontal = 12.dp, vertical = 10.dp),
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        Box(
+            modifier = Modifier
+                .size(36.dp)
+                .clip(RoundedCornerShape(8.dp))
+                .background(Color(0xFF1B3A1E)),
+            contentAlignment = Alignment.Center,
+        ) {
+            Text(sportEmoji, fontSize = 16.sp)
+        }
+        Spacer(modifier = Modifier.width(10.dp))
+        Column(modifier = Modifier.weight(1f)) {
+            Text(booking.matchTitle ?: booking.venue?.name ?: "Match", fontSize = 13.sp, fontWeight = FontWeight.SemiBold, color = DarkTextPrimary, maxLines = 1, overflow = TextOverflow.Ellipsis)
+            Text(booking.createdAt?.take(10) ?: "", fontSize = 11.sp, color = DarkTextSecondary, modifier = Modifier.padding(top = 1.dp))
+        }
+        Box(
+            modifier = Modifier
+                .clip(RoundedCornerShape(6.dp))
+                .background(Color(0xFF1B3A1E))
+                .padding(horizontal = 10.dp, vertical = 4.dp),
+        ) {
+            Text("W", fontSize = 11.sp, fontWeight = FontWeight.Bold, color = GreenAccent)
+        }
+    }
+}
+
+
+@Composable
+private fun ProfileNavRow(icon: String, label: String, onClick: () -> Unit) {
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .clip(RoundedCornerShape(12.dp))
+            .background(DarkSurface)
+            .clickable(onClick = onClick)
+            .padding(horizontal = 16.dp, vertical = 14.dp),
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        Text(icon, fontSize = 18.sp)
+        Spacer(modifier = Modifier.width(12.dp))
+        Text(label, fontSize = 14.sp, fontWeight = FontWeight.SemiBold, color = DarkTextPrimary, modifier = Modifier.weight(1f))
+        Text("›", fontSize = 20.sp, color = DarkTextSecondary)
+    }
+    Spacer(modifier = Modifier.height(2.dp))
+}
+
+// ── Helpers ───────────────────────────────────────────────────────────────────
+
+private fun sportEmoji(sportType: SportType): String = when (sportType) {
+    SportType.BASKETBALL -> "🏀"
+    SportType.FOOTBALL -> "⚽"
+    SportType.TENNIS -> "🎾"
+    SportType.PADDLE -> "🏓"
+    SportType.VOLLEYBALL -> "🏐"
+    SportType.BADMINTON -> "🏸"
+    SportType.TABLE_TENNIS -> "🏓"
+    SportType.SWIMMING -> "🏊"
+    SportType.BOXING -> "🥊"
+    SportType.GOLF -> "⛳"
+    SportType.RUNNING -> "🏃"
+    SportType.CYCLING -> "🚴"
+    SportType.MMA -> "🥋"
+    SportType.YOGA -> "🧘"
+    SportType.PILATES -> "🤸"
+    SportType.CROSSFIT -> "🏋️"
+    SportType.HANDBALL -> "🤾"
+    SportType.BASEBALL -> "⚾"
+    SportType.CRICKET -> "🏏"
+}
+
+private fun skillLevelToProgress(level: SkillLevel): Float = when (level) {
+    SkillLevel.NEWBIE -> 0.15f
+    SkillLevel.BEGINNER -> 0.35f
+    SkillLevel.INTERMEDIATE -> 0.55f
+    SkillLevel.SEMI_PRO -> 0.75f
+    SkillLevel.PRO -> 0.95f
+}
+
+private fun skillLevelToColor(level: SkillLevel): Color = when (level) {
+    SkillLevel.NEWBIE -> Color(0xFF9E9E9E)
+    SkillLevel.BEGINNER -> Color(0xFFFF9800)
+    SkillLevel.INTERMEDIATE -> Color(0xFF4CAF50)
+    SkillLevel.SEMI_PRO -> Color(0xFF2196F3)
+    SkillLevel.PRO -> Color(0xFFE040FB)
+}
+
+
+// ── Preview ───────────────────────────────────────────────────────────────────
+
+@Preview(showBackground = true, backgroundColor = 0xFF121212)
+@Composable
+private fun PlayerProfileScreenPreview() {
+    PlayerProfileScreen(onSignOut = {})
 }

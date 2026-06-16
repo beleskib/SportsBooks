@@ -1,11 +1,11 @@
 package com.example.sportsbook.ui.screens.player.community
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
@@ -20,25 +20,11 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
-import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Groups
 import androidx.compose.material.icons.filled.Public
-import androidx.compose.material3.Card
-import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
-import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Scaffold
-import androidx.compose.material3.Tab
-import androidx.compose.material3.TabRow
-import androidx.compose.material3.TabRowDefaults
-import androidx.compose.material3.TabRowDefaults.tabIndicatorOffset
 import androidx.compose.material3.Text
-import androidx.compose.material3.TopAppBar
-import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
@@ -51,20 +37,19 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import coil.compose.AsyncImage
 import com.example.sportsbook.domain.model.Community
-import com.example.sportsbook.ui.theme.BorderGray
-import com.example.sportsbook.ui.theme.CardWhite
-import com.example.sportsbook.ui.theme.GoldAccent
-import com.example.sportsbook.ui.theme.LightBg
-import com.example.sportsbook.ui.theme.NavBarBg
-import com.example.sportsbook.ui.theme.TextPrimary
-import com.example.sportsbook.ui.theme.TextSecondary
-import com.example.sportsbook.ui.theme.TextTertiary
+import com.example.sportsbook.ui.theme.DarkBg
+import com.example.sportsbook.ui.theme.DarkBorder
+import com.example.sportsbook.ui.theme.DarkSurface
+import com.example.sportsbook.ui.theme.DarkTextPrimary
+import com.example.sportsbook.ui.theme.DarkTextSecondary
+import com.example.sportsbook.ui.theme.DarkTextTertiary
+import com.example.sportsbook.ui.theme.GreenAccent
 
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun CommunityListScreen(
     onCommunityClick: (Long) -> Unit,
@@ -74,127 +59,134 @@ fun CommunityListScreen(
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
 
-    Scaffold(
-        containerColor = LightBg,
-        topBar = {
-            TopAppBar(
-                title = { Text("Communities", color = GoldAccent) },
-                navigationIcon = {
-                    IconButton(onClick = onBack) {
-                        Icon(
-                            Icons.AutoMirrored.Filled.ArrowBack,
-                            contentDescription = "Back",
-                            tint = GoldAccent
-                        )
-                    }
-                },
-                colors = TopAppBarDefaults.topAppBarColors(containerColor = NavBarBg)
-            )
-        },
-        floatingActionButton = {
-            FloatingActionButton(
-                onClick = onCreateCommunity,
-                containerColor = GoldAccent
+    Column(
+        modifier = Modifier
+            .fillMaxSize()
+            .background(DarkBg),
+    ) {
+        // ── Header ────────────────────────────────────────────────────────
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(start = 16.dp, end = 16.dp, top = 56.dp, bottom = 16.dp),
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            Box(
+                modifier = Modifier
+                    .size(40.dp)
+                    .clip(CircleShape)
+                    .background(DarkSurface)
+                    .clickable(onClick = onBack),
+                contentAlignment = Alignment.Center,
             ) {
-                Icon(Icons.Default.Add, contentDescription = "Create Community", tint = NavBarBg)
+                Icon(Icons.AutoMirrored.Filled.ArrowBack, "Back", tint = DarkTextPrimary, modifier = Modifier.size(20.dp))
+            }
+            Spacer(modifier = Modifier.width(16.dp))
+            Text("Communities", fontSize = 18.sp, fontWeight = FontWeight.Bold, color = DarkTextPrimary, modifier = Modifier.weight(1f))
+            Box(
+                modifier = Modifier
+                    .size(40.dp)
+                    .clip(CircleShape)
+                    .background(GreenAccent)
+                    .clickable(onClick = onCreateCommunity),
+                contentAlignment = Alignment.Center,
+            ) {
+                Text("+", fontSize = 22.sp, color = Color.White, fontWeight = FontWeight.Bold)
             }
         }
-    ) { padding ->
-        Column(
+
+        // ── Tabs ──────────────────────────────────────────────────────────
+        val tabs = listOf("My Communities", "Discover")
+        Row(
             modifier = Modifier
-                .fillMaxSize()
-                .padding(padding)
+                .fillMaxWidth()
+                .padding(horizontal = 16.dp, vertical = 4.dp),
+            horizontalArrangement = Arrangement.spacedBy(10.dp),
         ) {
-            val tabs = listOf("My Communities", "Discover")
-            TabRow(
-                selectedTabIndex = uiState.selectedTab.ordinal,
-                containerColor = CardWhite,
-                contentColor = GoldAccent,
-                indicator = { tabPositions ->
-                    TabRowDefaults.SecondaryIndicator(
-                        modifier = Modifier.tabIndicatorOffset(tabPositions[uiState.selectedTab.ordinal]),
-                        color = GoldAccent
+            tabs.forEachIndexed { index, title ->
+                val isSelected = uiState.selectedTab.ordinal == index
+                Box(
+                    modifier = Modifier
+                        .weight(1f)
+                        .clip(RoundedCornerShape(50))
+                        .background(if (isSelected) GreenAccent else DarkSurface)
+                        .border(1.dp, if (isSelected) GreenAccent else DarkBorder, RoundedCornerShape(50))
+                        .clickable { viewModel.selectTab(CommunityTab.entries[index]) }
+                        .padding(vertical = 10.dp),
+                    contentAlignment = Alignment.Center,
+                ) {
+                    Text(
+                        title,
+                        fontSize = 14.sp,
+                        fontWeight = FontWeight.SemiBold,
+                        color = if (isSelected) Color.White else DarkTextSecondary,
                     )
                 }
-            ) {
-                tabs.forEachIndexed { index, title ->
-                    Tab(
-                        selected = uiState.selectedTab.ordinal == index,
-                        onClick = { viewModel.selectTab(CommunityTab.entries[index]) },
-                        text = {
-                            Text(
-                                text = title,
-                                color = if (uiState.selectedTab.ordinal == index) GoldAccent else TextSecondary
-                            )
-                        }
+            }
+        }
+
+        Spacer(modifier = Modifier.height(8.dp))
+
+        when {
+            uiState.isLoading -> {
+                Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                    CircularProgressIndicator(color = GreenAccent)
+                }
+            }
+
+            uiState.error != null -> {
+                Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                    Text(
+                        text = uiState.error!!,
+                        color = Color(0xFFEF5350),
+                        fontSize = 14.sp,
+                        textAlign = TextAlign.Center,
+                        modifier = Modifier.padding(16.dp),
                     )
                 }
             }
 
-            when {
-                uiState.isLoading -> {
-                    Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                        CircularProgressIndicator(color = GoldAccent)
-                    }
-                }
-
-                uiState.error != null -> {
-                    Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                        Text(
-                            text = uiState.error!!,
-                            color = MaterialTheme.colorScheme.error,
-                            textAlign = TextAlign.Center,
-                            modifier = Modifier.padding(16.dp)
-                        )
-                    }
-                }
-
-                uiState.displayedCommunities.isEmpty() -> {
-                    Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                        Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                            Icon(
-                                Icons.Default.Groups,
-                                contentDescription = null,
-                                tint = TextTertiary,
-                                modifier = Modifier.size(64.dp)
-                            )
-                            Spacer(modifier = Modifier.height(16.dp))
-                            Text(
-                                text = if (uiState.selectedTab == CommunityTab.MY)
-                                    "You haven't joined any communities yet"
-                                else
-                                    "No public communities found",
-                                style = MaterialTheme.typography.titleMedium,
-                                color = TextSecondary,
-                                textAlign = TextAlign.Center,
-                                modifier = Modifier.padding(horizontal = 32.dp)
-                            )
-                            if (uiState.selectedTab == CommunityTab.MY) {
-                                Spacer(modifier = Modifier.height(8.dp))
-                                Text(
-                                    text = "Create one or discover public communities",
-                                    style = MaterialTheme.typography.bodyMedium,
-                                    color = TextTertiary,
-                                    textAlign = TextAlign.Center,
-                                    modifier = Modifier.padding(horizontal = 32.dp)
-                                )
-                            }
-                        }
-                    }
-                }
-
-                else -> {
-                    LazyColumn(
-                        contentPadding = PaddingValues(horizontal = 16.dp, vertical = 12.dp),
-                        verticalArrangement = Arrangement.spacedBy(12.dp)
+            uiState.displayedCommunities.isEmpty() -> {
+                Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                    Column(
+                        horizontalAlignment = Alignment.CenterHorizontally,
+                        modifier = Modifier.padding(40.dp),
                     ) {
-                        items(uiState.displayedCommunities, key = { it.id }) { community ->
-                            CommunityCard(
-                                community = community,
-                                onClick = { onCommunityClick(community.id) }
+                        Text("👥", fontSize = 48.sp)
+                        Spacer(modifier = Modifier.height(16.dp))
+                        Text(
+                            text = if (uiState.selectedTab == CommunityTab.MY)
+                                "You haven't joined any communities yet"
+                            else
+                                "No public communities found",
+                            fontSize = 18.sp,
+                            fontWeight = FontWeight.Bold,
+                            color = DarkTextPrimary,
+                            textAlign = TextAlign.Center,
+                        )
+                        if (uiState.selectedTab == CommunityTab.MY) {
+                            Text(
+                                text = "Create one or discover public communities",
+                                fontSize = 14.sp,
+                                color = DarkTextSecondary,
+                                textAlign = TextAlign.Center,
+                                modifier = Modifier.padding(top = 6.dp),
                             )
                         }
                     }
+                }
+            }
+
+            else -> {
+                LazyColumn(
+                    modifier = Modifier.fillMaxSize().padding(horizontal = 16.dp),
+                    verticalArrangement = Arrangement.spacedBy(12.dp),
+                ) {
+                    item { Spacer(modifier = Modifier.height(4.dp)) }
+                    items(uiState.displayedCommunities, key = { it.id }) { community ->
+                        CommunityCard(community = community, onClick = { onCommunityClick(community.id) })
+                    }
+                    item { Spacer(modifier = Modifier.height(32.dp)) }
                 }
             }
         }
@@ -205,85 +197,61 @@ fun CommunityListScreen(
 private fun CommunityCard(
     community: Community,
     onClick: () -> Unit,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
 ) {
-    Card(
+    Row(
         modifier = modifier
             .fillMaxWidth()
-            .clickable(onClick = onClick),
-        shape = RoundedCornerShape(12.dp),
-        colors = CardDefaults.cardColors(containerColor = CardWhite),
-        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
+            .clip(RoundedCornerShape(14.dp))
+            .background(DarkSurface)
+            .clickable(onClick = onClick)
+            .padding(12.dp),
+        verticalAlignment = Alignment.CenterVertically,
     ) {
-        Row(
+        // Community image / placeholder
+        Box(
             modifier = Modifier
-                .fillMaxWidth()
-                .padding(12.dp),
-            verticalAlignment = Alignment.CenterVertically
+                .size(56.dp)
+                .clip(RoundedCornerShape(10.dp))
+                .background(DarkBg),
+            contentAlignment = Alignment.Center,
         ) {
-            // Community image / placeholder
-            Box(
-                modifier = Modifier
-                    .size(56.dp)
-                    .clip(RoundedCornerShape(8.dp))
-                    .background(LightBg),
-                contentAlignment = Alignment.Center
-            ) {
-                if (!community.imageUrl.isNullOrBlank()) {
-                    AsyncImage(
-                        model = community.imageUrl,
-                        contentDescription = community.name,
-                        contentScale = ContentScale.Crop,
-                        modifier = Modifier.fillMaxSize()
-                    )
-                } else {
-                    Icon(
-                        Icons.Default.Groups,
-                        contentDescription = null,
-                        tint = GoldAccent,
-                        modifier = Modifier.size(28.dp)
-                    )
-                }
-            }
-
-            Spacer(modifier = Modifier.width(12.dp))
-
-            Column(modifier = Modifier.weight(1f)) {
-                Text(
-                    text = community.name,
-                    style = MaterialTheme.typography.titleSmall,
-                    fontWeight = FontWeight.SemiBold,
-                    color = TextPrimary,
-                    maxLines = 1,
-                    overflow = TextOverflow.Ellipsis
+            if (!community.imageUrl.isNullOrBlank()) {
+                AsyncImage(
+                    model = community.imageUrl,
+                    contentDescription = community.name,
+                    contentScale = ContentScale.Crop,
+                    modifier = Modifier.fillMaxSize(),
                 )
-                if (!community.sportType.isNullOrBlank()) {
-                    Spacer(modifier = Modifier.height(2.dp))
-                    SportBadge(sportType = community.sportType)
-                }
+            } else {
+                Icon(Icons.Default.Groups, contentDescription = null, tint = GreenAccent, modifier = Modifier.size(28.dp))
+            }
+        }
+
+        Spacer(modifier = Modifier.width(12.dp))
+
+        Column(modifier = Modifier.weight(1f)) {
+            Text(
+                text = community.name,
+                fontSize = 14.sp,
+                fontWeight = FontWeight.SemiBold,
+                color = DarkTextPrimary,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis,
+            )
+            if (!community.sportType.isNullOrBlank()) {
                 Spacer(modifier = Modifier.height(4.dp))
-                Row(
-                    verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.spacedBy(8.dp)
-                ) {
-                    Text(
-                        text = "${community.memberCount} members",
-                        style = MaterialTheme.typography.bodySmall,
-                        color = TextSecondary
-                    )
-                    if (community.isPublic) {
-                        Icon(
-                            Icons.Default.Public,
-                            contentDescription = "Public",
-                            tint = GoldAccent,
-                            modifier = Modifier.size(12.dp)
-                        )
-                        Text(
-                            text = "Public",
-                            style = MaterialTheme.typography.labelSmall,
-                            color = GoldAccent
-                        )
-                    }
+                SportBadge(sportType = community.sportType)
+            }
+            Spacer(modifier = Modifier.height(4.dp))
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(6.dp),
+            ) {
+                Text("${community.memberCount} members", fontSize = 12.sp, color = DarkTextSecondary)
+                if (community.isPublic) {
+                    Icon(Icons.Default.Public, contentDescription = "Public", tint = GreenAccent, modifier = Modifier.size(12.dp))
+                    Text("Public", fontSize = 11.sp, color = GreenAccent)
                 }
             }
         }
@@ -295,56 +263,55 @@ internal fun SportBadge(sportType: String, modifier: Modifier = Modifier) {
     Box(
         modifier = modifier
             .clip(RoundedCornerShape(4.dp))
-            .background(GoldAccent.copy(alpha = 0.15f))
-            .padding(horizontal = 6.dp, vertical = 2.dp)
+            .background(GreenAccent.copy(alpha = 0.15f))
+            .padding(horizontal = 6.dp, vertical = 2.dp),
     ) {
         Text(
-            text = sportType.replace("_", " ")
-                .lowercase()
-                .replaceFirstChar { it.uppercase() },
-            style = MaterialTheme.typography.labelSmall,
-            color = GoldAccent
+            text = sportType.replace("_", " ").lowercase().replaceFirstChar { it.uppercase() },
+            fontSize = 11.sp,
+            color = GreenAccent,
         )
     }
 }
 
-@OptIn(ExperimentalMaterial3Api::class)
-@Preview(showBackground = true)
+@Preview(showBackground = true, backgroundColor = 0xFF121212)
 @Composable
 private fun CommunityListScreenPreview() {
-    Scaffold(
-        containerColor = LightBg,
-        topBar = {
-            TopAppBar(
-                title = { Text("Communities", color = GoldAccent) },
-                colors = TopAppBarDefaults.topAppBarColors(containerColor = NavBarBg)
-            )
-        }
-    ) { padding ->
-        Column(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(padding)
+    val sampleCommunities = listOf(
+        Community(id = 1, name = "Basketball Crew", sportType = "basketball", memberCount = 12, isPublic = true),
+        Community(id = 2, name = "Tennis Club", sportType = "tennis", memberCount = 8),
+    )
+    Column(modifier = Modifier.fillMaxSize().background(DarkBg)) {
+        Row(
+            modifier = Modifier.fillMaxWidth().padding(start = 16.dp, end = 16.dp, top = 56.dp, bottom = 16.dp),
+            verticalAlignment = Alignment.CenterVertically,
         ) {
-            TabRow(
-                selectedTabIndex = 0,
-                containerColor = CardWhite
-            ) {
-                Tab(selected = true, onClick = {}, text = { Text("My Communities") })
-                Tab(selected = false, onClick = {}, text = { Text("Discover") })
+            Box(modifier = Modifier.size(40.dp).clip(CircleShape).background(DarkSurface), contentAlignment = Alignment.Center) {
+                Icon(Icons.AutoMirrored.Filled.ArrowBack, "Back", tint = DarkTextPrimary, modifier = Modifier.size(20.dp))
             }
-            LazyColumn(
-                contentPadding = PaddingValues(16.dp),
-                verticalArrangement = Arrangement.spacedBy(12.dp)
-            ) {
-                items(
-                    listOf(
-                        Community(id = 1, name = "Basketball Crew", sportType = "basketball", memberCount = 12, isPublic = true),
-                        Community(id = 2, name = "Tennis Club", sportType = "tennis", memberCount = 8)
-                    )
-                ) { community ->
-                    CommunityCard(community = community, onClick = {})
+            Spacer(modifier = Modifier.width(16.dp))
+            Text("Communities", fontSize = 18.sp, fontWeight = FontWeight.Bold, color = DarkTextPrimary, modifier = Modifier.weight(1f))
+            Box(modifier = Modifier.size(40.dp).clip(CircleShape).background(GreenAccent), contentAlignment = Alignment.Center) {
+                Text("+", fontSize = 22.sp, color = Color.White, fontWeight = FontWeight.Bold)
+            }
+        }
+        Row(modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 4.dp), horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+            listOf("My Communities" to true, "Discover" to false).forEach { (title, isSelected) ->
+                Box(
+                    modifier = Modifier.weight(1f).clip(RoundedCornerShape(50))
+                        .background(if (isSelected) GreenAccent else DarkSurface)
+                        .border(1.dp, if (isSelected) GreenAccent else DarkBorder, RoundedCornerShape(50))
+                        .padding(vertical = 10.dp),
+                    contentAlignment = Alignment.Center,
+                ) {
+                    Text(title, fontSize = 14.sp, fontWeight = FontWeight.SemiBold, color = if (isSelected) Color.White else DarkTextSecondary)
                 }
+            }
+        }
+        Spacer(modifier = Modifier.height(8.dp))
+        LazyColumn(modifier = Modifier.fillMaxSize().padding(horizontal = 16.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
+            items(sampleCommunities) { community ->
+                CommunityCard(community = community, onClick = {})
             }
         }
     }

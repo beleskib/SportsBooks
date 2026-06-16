@@ -10,14 +10,15 @@ import androidx.compose.material3.TextField
 import androidx.compose.material3.TextFieldDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import com.example.sportsbook.ui.theme.BorderGray
-import com.example.sportsbook.ui.theme.CardWhite
-import com.example.sportsbook.ui.theme.GoldAccent
+import com.example.sportsbook.ui.theme.DarkBorder
+import com.example.sportsbook.ui.theme.DarkSurface
+import com.example.sportsbook.ui.theme.DarkTextPrimary
+import com.example.sportsbook.ui.theme.DarkTextSecondary
+import com.example.sportsbook.ui.theme.GreenAccent
 import com.example.sportsbook.ui.theme.SportsBookTheme
-import com.example.sportsbook.ui.theme.TextPrimary
-import com.example.sportsbook.ui.theme.TextSecondary
 
 @Composable
 fun SearchBar(
@@ -31,21 +32,21 @@ fun SearchBar(
         onValueChange = onQueryChange,
         modifier = modifier.fillMaxWidth(),
         placeholder = {
-            Text(placeholder, color = TextSecondary)
+            Text(placeholder, color = DarkTextSecondary)
         },
         leadingIcon = {
-            Icon(Icons.Default.Search, contentDescription = "Search", tint = TextSecondary)
+            Icon(Icons.Default.Search, contentDescription = "Search", tint = DarkTextSecondary)
         },
         singleLine = true,
         shape = RoundedCornerShape(12.dp),
         colors = TextFieldDefaults.colors(
-            focusedContainerColor = CardWhite,
-            unfocusedContainerColor = CardWhite,
-            focusedTextColor = TextPrimary,
-            unfocusedTextColor = TextPrimary,
-            cursorColor = GoldAccent,
-            focusedIndicatorColor = BorderGray,
-            unfocusedIndicatorColor = BorderGray
+            focusedContainerColor = DarkSurface,
+            unfocusedContainerColor = DarkSurface,
+            focusedTextColor = DarkTextPrimary,
+            unfocusedTextColor = DarkTextPrimary,
+            cursorColor = GreenAccent,
+            focusedIndicatorColor = Color.Transparent,
+            unfocusedIndicatorColor = Color.Transparent
         )
     )
 }

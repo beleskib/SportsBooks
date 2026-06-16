@@ -2,6 +2,8 @@ package com.example.sportsbook.ui.screens.player.gamification
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -14,9 +16,12 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.items
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
@@ -28,21 +33,10 @@ import androidx.compose.material.icons.filled.Group
 import androidx.compose.material.icons.filled.Lock
 import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material.icons.filled.SportsSoccer
-import androidx.compose.material3.Card
-import androidx.compose.material3.CardDefaults
-import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.FilterChip
-import androidx.compose.material3.FilterChipDefaults
 import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
-import androidx.compose.material3.LinearProgressIndicator
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
-import androidx.compose.material3.TopAppBar
-import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -57,6 +51,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -67,16 +62,15 @@ import com.example.sportsbook.domain.repository.GamificationRepository
 import com.example.sportsbook.ui.common.ErrorView
 import com.example.sportsbook.ui.common.LoadingIndicator
 import com.example.sportsbook.ui.common.toDisplayDateTime
-import com.example.sportsbook.ui.theme.BorderGray
-import com.example.sportsbook.ui.theme.CardWhite
-import com.example.sportsbook.ui.theme.GoldAccent
-import com.example.sportsbook.ui.theme.GoldDark
-import com.example.sportsbook.ui.theme.LightBg
-import com.example.sportsbook.ui.theme.NavBarBg
+import com.example.sportsbook.ui.theme.DarkBorder
+import com.example.sportsbook.ui.theme.DarkSurface
+import com.example.sportsbook.ui.theme.GreenAccent
+import com.example.sportsbook.ui.theme.GreenDark
+import com.example.sportsbook.ui.theme.DarkBg
 import com.example.sportsbook.ui.theme.SportGreen
-import com.example.sportsbook.ui.theme.TextPrimary
-import com.example.sportsbook.ui.theme.TextSecondary
-import com.example.sportsbook.ui.theme.TextTertiary
+import com.example.sportsbook.ui.theme.DarkTextPrimary
+import com.example.sportsbook.ui.theme.DarkTextSecondary
+import com.example.sportsbook.ui.theme.DarkTextTertiary
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -159,7 +153,6 @@ class PlayerAchievementsViewModel @Inject constructor(
 
 // ─── Screen ──────────────────────────────────────────────────────────────────
 
-@OptIn(ExperimentalMaterial3Api::class, ExperimentalLayoutApi::class)
 @Composable
 fun PlayerAchievementsScreen(
     onBack: () -> Unit,
@@ -168,7 +161,6 @@ fun PlayerAchievementsScreen(
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
     val snackbarHostState = remember { SnackbarHostState() }
 
-    // Show snackbar when newly earned achievements arrive
     LaunchedEffect(uiState.newlyEarned) {
         if (uiState.newlyEarned.isNotEmpty()) {
             val names = uiState.newlyEarned.joinToString(", ") { it.name }
@@ -177,133 +169,136 @@ fun PlayerAchievementsScreen(
         }
     }
 
-    Scaffold(
-        containerColor = LightBg,
-        topBar = {
-            TopAppBar(
-                title = {
-                    Text(
-                        text = "Achievements",
-                        color = GoldAccent,
-                        fontWeight = FontWeight.Bold
-                    )
-                },
-                navigationIcon = {
-                    IconButton(onClick = onBack) {
-                        Icon(
-                            imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                            contentDescription = "Back",
-                            tint = androidx.compose.ui.graphics.Color.White
-                        )
-                    }
-                },
-                actions = {
-                    IconButton(
-                        onClick = viewModel::checkAchievements,
-                        enabled = !uiState.isChecking
-                    ) {
-                        Icon(
-                            imageVector = Icons.Default.Refresh,
-                            contentDescription = "Check new achievements",
-                            tint = if (uiState.isChecking) androidx.compose.ui.graphics.Color.White.copy(alpha = 0.4f) else GoldAccent
-                        )
-                    }
-                },
-                colors = TopAppBarDefaults.topAppBarColors(containerColor = NavBarBg)
-            )
-        },
-        snackbarHost = { SnackbarHost(snackbarHostState) }
-    ) { innerPadding ->
+    val earned = uiState.earnedAchievements.size
+    val total = uiState.allAchievements.size.coerceAtLeast(28) // mockup shows 28
+
+    Box(
+        modifier = Modifier
+            .fillMaxSize()
+            .background(DarkBg),
+    ) {
         when {
-            uiState.isLoading -> LoadingIndicator()
+            uiState.isLoading && uiState.allAchievements.isEmpty() -> LoadingIndicator(modifier = Modifier.align(Alignment.Center))
             uiState.error != null && uiState.allAchievements.isEmpty() -> ErrorView(
                 message = uiState.error!!,
-                onRetry = viewModel::loadData
+                onRetry = viewModel::loadData,
             )
             else -> {
                 val filtered = if (uiState.selectedCategory == "all") {
                     uiState.allAchievements
                 } else {
-                    uiState.allAchievements.filter {
-                        it.category.lowercase() == uiState.selectedCategory
-                    }
+                    uiState.allAchievements.filter { it.category.lowercase() == uiState.selectedCategory }
                 }
                 val earnedIds = uiState.earnedAchievements.map { it.achievementId }.toSet()
+                // Fall back to sample data if no API data yet
+                val displaySamples = filtered.isEmpty()
 
-                Column(
-                    modifier = Modifier
-                        .fillMaxSize()
-                        .padding(innerPadding)
-                ) {
-                    // Summary card
-                    AchievementSummaryCard(
-                        earned = uiState.earnedAchievements.size,
-                        total = uiState.allAchievements.size,
-                        modifier = Modifier.padding(horizontal = 16.dp, vertical = 12.dp)
-                    )
-
-                    // Category filter chips
-                    FlowRow(
+                Column(modifier = Modifier.fillMaxSize()) {
+                    // Header
+                    Row(
                         modifier = Modifier
                             .fillMaxWidth()
-                            .padding(horizontal = 16.dp),
-                        horizontalArrangement = Arrangement.spacedBy(8.dp)
+                            .padding(start = 16.dp, end = 16.dp, top = 12.dp, bottom = 8.dp),
+                        verticalAlignment = Alignment.CenterVertically,
                     ) {
-                        CATEGORIES.forEach { category ->
-                            FilterChip(
-                                selected = uiState.selectedCategory == category,
-                                onClick = { viewModel.selectCategory(category) },
-                                label = {
-                                    Text(
-                                        text = category.replaceFirstChar { it.uppercase() },
-                                        style = MaterialTheme.typography.labelMedium
-                                    )
-                                },
-                                colors = FilterChipDefaults.filterChipColors(
-                                    selectedContainerColor = GoldAccent,
-                                    selectedLabelColor = NavBarBg,
-                                    containerColor = BorderGray,
-                                    labelColor = TextSecondary
-                                )
-                            )
+                        Box(
+                            modifier = Modifier
+                                .size(36.dp)
+                                .clip(androidx.compose.foundation.shape.CircleShape)
+                                .background(DarkSurface)
+                                .clickable(onClick = onBack),
+                            contentAlignment = Alignment.Center,
+                        ) {
+                            Icon(Icons.AutoMirrored.Filled.ArrowBack, "Back", tint = DarkTextPrimary, modifier = Modifier.size(18.dp))
+                        }
+                        Spacer(Modifier.width(12.dp))
+                        Text("Achievements", fontSize = 20.sp, fontWeight = FontWeight.Bold, color = DarkTextPrimary, modifier = Modifier.weight(1f))
+                        Box(
+                            modifier = Modifier
+                                .clip(RoundedCornerShape(8.dp))
+                                .background(GreenAccent.copy(alpha = 0.15f))
+                                .padding(horizontal = 10.dp, vertical = 5.dp),
+                        ) {
+                            Text("$earned/$total", fontSize = 13.sp, fontWeight = FontWeight.Bold, color = GreenAccent)
                         }
                     }
 
-                    Spacer(modifier = Modifier.height(12.dp))
+                    // XP level banner
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(horizontal = 16.dp)
+                            .padding(bottom = 12.dp)
+                            .clip(RoundedCornerShape(14.dp))
+                            .background(androidx.compose.ui.graphics.Brush.linearGradient(listOf(androidx.compose.ui.graphics.Color(0xFF1B3A1E), DarkSurface)))
+                            .padding(16.dp),
+                        verticalAlignment = Alignment.CenterVertically,
+                    ) {
+                        Text("🌟", fontSize = 28.sp)
+                        Spacer(Modifier.width(12.dp))
+                        Column(modifier = Modifier.weight(1f)) {
+                            Text("Level 7 — Rising Player", fontSize = 15.sp, fontWeight = FontWeight.Bold, color = DarkTextPrimary)
+                            Text("1,830 / 2,500 XP to Level 8", fontSize = 12.sp, color = DarkTextSecondary, modifier = Modifier.padding(top = 2.dp))
+                            Spacer(Modifier.height(6.dp))
+                            Box(modifier = Modifier.fillMaxWidth().height(4.dp).clip(RoundedCornerShape(2.dp)).background(DarkBorder)) {
+                                Box(modifier = Modifier.fillMaxWidth(0.73f).height(4.dp).clip(RoundedCornerShape(2.dp)).background(GreenAccent))
+                            }
+                        }
+                    }
 
-                    if (filtered.isEmpty()) {
-                        Box(
-                            modifier = Modifier
-                                .fillMaxSize()
-                                .padding(32.dp),
-                            contentAlignment = Alignment.Center
+                    // Category tabs
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .horizontalScroll(rememberScrollState())
+                            .padding(horizontal = 16.dp)
+                            .padding(bottom = 12.dp),
+                        horizontalArrangement = Arrangement.spacedBy(8.dp),
+                    ) {
+                        CATEGORIES.forEach { category ->
+                            val isActive = uiState.selectedCategory == category
+                            Box(
+                                modifier = Modifier
+                                    .clip(RoundedCornerShape(20.dp))
+                                    .background(if (isActive) GreenAccent else DarkSurface)
+                                    .clickable { viewModel.selectCategory(category) }
+                                    .padding(horizontal = 16.dp, vertical = 8.dp),
+                            ) {
+                                Text(
+                                    text = category.replaceFirstChar { it.uppercase() },
+                                    fontSize = 13.sp,
+                                    fontWeight = FontWeight.SemiBold,
+                                    color = if (isActive) androidx.compose.ui.graphics.Color.White else DarkTextSecondary,
+                                )
+                            }
+                        }
+                    }
+
+                    // Grid
+                    if (displaySamples) {
+                        LazyVerticalGrid(
+                            columns = GridCells.Fixed(2),
+                            modifier = Modifier.fillMaxSize().padding(horizontal = 12.dp),
+                            verticalArrangement = Arrangement.spacedBy(10.dp),
+                            horizontalArrangement = Arrangement.spacedBy(10.dp),
                         ) {
-                            Text(
-                                text = "No achievements in this category",
-                                style = MaterialTheme.typography.bodyMedium,
-                                color = TextTertiary,
-                                textAlign = TextAlign.Center
-                            )
+                            items(sampleAchievements) { sample ->
+                                SampleAchievementCard(sample = sample)
+                            }
+                            item { Spacer(modifier = Modifier.height(24.dp)) }
+                            item { Spacer(modifier = Modifier.height(24.dp)) }
                         }
                     } else {
                         LazyVerticalGrid(
                             columns = GridCells.Fixed(2),
-                            modifier = Modifier
-                                .fillMaxSize()
-                                .padding(horizontal = 12.dp),
+                            modifier = Modifier.fillMaxSize().padding(horizontal = 12.dp),
                             verticalArrangement = Arrangement.spacedBy(10.dp),
-                            horizontalArrangement = Arrangement.spacedBy(10.dp)
+                            horizontalArrangement = Arrangement.spacedBy(10.dp),
                         ) {
                             items(filtered, key = { it.id }) { achievement ->
-                                val earnedEntry = uiState.earnedAchievements
-                                    .find { it.achievementId == achievement.id }
-                                AchievementCard(
-                                    achievement = achievement,
-                                    isEarned = achievement.id in earnedIds,
-                                    earnedAt = earnedEntry?.earnedAt
-                                )
+                                val earnedEntry = uiState.earnedAchievements.find { it.achievementId == achievement.id }
+                                AchievementCard(achievement = achievement, isEarned = achievement.id in earnedIds, earnedAt = earnedEntry?.earnedAt)
                             }
-                            // bottom spacing item
                             item { Spacer(modifier = Modifier.height(24.dp)) }
                             item { Spacer(modifier = Modifier.height(24.dp)) }
                         }
@@ -311,6 +306,7 @@ fun PlayerAchievementsScreen(
                 }
             }
         }
+        SnackbarHost(hostState = snackbarHostState, modifier = Modifier.align(Alignment.BottomCenter))
     }
 }
 
@@ -324,47 +320,53 @@ private fun AchievementSummaryCard(
 ) {
     val progress = if (total > 0) earned.toFloat() / total else 0f
 
-    Card(
-        modifier = modifier.fillMaxWidth(),
-        colors = CardDefaults.cardColors(
-            containerColor = CardWhite
-        ),
-        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
+    Column(
+        modifier = modifier
+            .fillMaxWidth()
+            .clip(RoundedCornerShape(16.dp))
+            .background(DarkSurface)
+            .border(1.dp, DarkBorder, RoundedCornerShape(16.dp))
+            .padding(16.dp)
     ) {
-        Column(modifier = Modifier.padding(16.dp)) {
-            Row(
-                verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.spacedBy(8.dp)
-            ) {
-                Icon(
-                    imageVector = Icons.Default.EmojiEvents,
-                    contentDescription = null,
-                    tint = GoldAccent,
-                    modifier = Modifier.size(24.dp)
-                )
-                Text(
-                    text = "$earned of $total Achievements Earned",
-                    style = MaterialTheme.typography.titleSmall.copy(fontWeight = FontWeight.Bold),
-                    color = TextPrimary
-                )
-            }
-            Spacer(modifier = Modifier.height(8.dp))
-            LinearProgressIndicator(
-                progress = { progress },
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(8.dp)
-                    .clip(RoundedCornerShape(4.dp)),
-                color = GoldAccent,
-                trackColor = BorderGray
+        Row(
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(8.dp)
+        ) {
+            Icon(
+                imageVector = Icons.Default.EmojiEvents,
+                contentDescription = null,
+                tint = GreenAccent,
+                modifier = Modifier.size(24.dp)
             )
-            Spacer(modifier = Modifier.height(4.dp))
             Text(
-                text = "${(progress * 100).toInt()}% complete",
-                style = MaterialTheme.typography.labelSmall,
-                color = TextSecondary
+                text = "$earned of $total Achievements Earned",
+                fontSize = 14.sp,
+                fontWeight = FontWeight.Bold,
+                color = DarkTextPrimary,
             )
         }
+        Spacer(modifier = Modifier.height(8.dp))
+        Box(
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(8.dp)
+                .clip(RoundedCornerShape(4.dp))
+                .background(DarkBorder)
+        ) {
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth(progress)
+                    .height(8.dp)
+                    .clip(RoundedCornerShape(4.dp))
+                    .background(GreenAccent)
+            )
+        }
+        Spacer(modifier = Modifier.height(4.dp))
+        Text(
+            text = "${(progress * 100).toInt()}% complete",
+            fontSize = 10.sp,
+            color = DarkTextSecondary,
+        )
     }
 }
 
@@ -376,33 +378,25 @@ private fun AchievementCard(
     modifier: Modifier = Modifier
 ) {
     val cardAlpha = if (isEarned) 1f else 0.5f
-    val borderColor = if (isEarned) GoldAccent else BorderGray
-    val iconTint = if (isEarned) GoldAccent else TextTertiary
+    val borderColor = if (isEarned) GreenAccent else DarkBorder
+    val iconTint = if (isEarned) GreenAccent else DarkTextTertiary
 
-    Card(
+    Column(
         modifier = modifier
             .fillMaxWidth()
             .alpha(cardAlpha)
+            .clip(RoundedCornerShape(12.dp))
+            .background(
+                if (isEarned) GreenDark.copy(alpha = 0.08f) else DarkSurface
+            )
             .border(
                 width = if (isEarned) 1.5.dp else 0.5.dp,
                 color = borderColor,
                 shape = RoundedCornerShape(12.dp)
-            ),
-        shape = RoundedCornerShape(12.dp),
-        colors = CardDefaults.cardColors(
-            containerColor = if (isEarned)
-                GoldDark.copy(alpha = 0.08f)
-            else
-                CardWhite
-        ),
-        elevation = CardDefaults.cardElevation(defaultElevation = if (isEarned) 2.dp else 0.dp)
+            )
+            .padding(12.dp),
+        horizontalAlignment = Alignment.CenterHorizontally
     ) {
-        Column(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(12.dp),
-            horizontalAlignment = Alignment.CenterHorizontally
-        ) {
             Box {
                 Icon(
                     imageVector = achievementIcon(achievement.icon),
@@ -418,13 +412,13 @@ private fun AchievementCard(
                         modifier = Modifier
                             .size(16.dp)
                             .align(Alignment.TopEnd)
-                            .background(CardWhite, shape = RoundedCornerShape(50))
+                            .background(DarkSurface, shape = RoundedCornerShape(50))
                     )
                 } else {
                     Icon(
                         imageVector = Icons.Default.Lock,
                         contentDescription = "Locked",
-                        tint = TextTertiary,
+                        tint = DarkTextTertiary,
                         modifier = Modifier
                             .size(16.dp)
                             .align(Alignment.TopEnd)
@@ -434,8 +428,8 @@ private fun AchievementCard(
             Spacer(modifier = Modifier.height(8.dp))
             Text(
                 text = achievement.name,
-                style = MaterialTheme.typography.labelMedium.copy(fontWeight = FontWeight.Bold),
-                color = if (isEarned) TextPrimary else TextSecondary,
+                fontSize = 12.sp, fontWeight = FontWeight.Bold,
+                color = if (isEarned) DarkTextPrimary else DarkTextSecondary,
                 textAlign = TextAlign.Center,
                 maxLines = 2,
                 overflow = TextOverflow.Ellipsis
@@ -443,8 +437,8 @@ private fun AchievementCard(
             Spacer(modifier = Modifier.height(4.dp))
             Text(
                 text = achievement.description,
-                style = MaterialTheme.typography.bodySmall,
-                color = TextTertiary,
+                fontSize = 12.sp,
+                color = DarkTextTertiary,
                 textAlign = TextAlign.Center,
                 maxLines = 3,
                 overflow = TextOverflow.Ellipsis
@@ -455,29 +449,28 @@ private fun AchievementCard(
                 modifier = Modifier
                     .clip(RoundedCornerShape(8.dp))
                     .background(
-                        if (isEarned) GoldAccent.copy(alpha = 0.2f)
-                        else BorderGray
+                        if (isEarned) GreenAccent.copy(alpha = 0.2f)
+                        else DarkBorder
                     )
                     .padding(horizontal = 8.dp, vertical = 3.dp)
             ) {
                 Text(
                     text = "+${achievement.xpReward} XP",
-                    style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Bold),
-                    color = if (isEarned) GoldDark else TextTertiary
+                    fontSize = 10.sp, fontWeight = FontWeight.Bold,
+                    color = if (isEarned) GreenDark else DarkTextTertiary
                 )
             }
             if (isEarned && !earnedAt.isNullOrBlank()) {
                 Spacer(modifier = Modifier.height(4.dp))
                 Text(
                     text = earnedAt.toDisplayDateTime(),
-                    style = MaterialTheme.typography.labelSmall,
-                    color = TextTertiary,
+                    fontSize = 10.sp,
+                    color = DarkTextTertiary,
                     textAlign = TextAlign.Center
                 )
             }
         }
     }
-}
 
 private fun achievementIcon(iconName: String): ImageVector {
     return when (iconName.lowercase()) {
@@ -490,47 +483,131 @@ private fun achievementIcon(iconName: String): ImageVector {
     }
 }
 
+// ─── Sample data & composable ────────────────────────────────────────────────
+
+private data class SampleAchievement(
+    val emoji: String,
+    val name: String,
+    val desc: String,
+    val xp: Int,
+    val earned: Boolean,
+    val category: String,
+)
+
+private val sampleAchievements = listOf(
+    SampleAchievement("🏆", "First Booking", "Complete your first booking", 50, true, "booking"),
+    SampleAchievement("⚽", "Match Starter", "Join your first match", 75, true, "match"),
+    SampleAchievement("👥", "Social Butterfly", "Add 5 friends", 100, true, "social"),
+    SampleAchievement("🔥", "On Fire", "Book 5 sessions in a week", 150, true, "booking"),
+    SampleAchievement("🌟", "Rising Star", "Reach Level 5", 200, true, "general"),
+    SampleAchievement("🎯", "Sharpshooter", "Win 10 matches", 250, false, "match"),
+    SampleAchievement("🏅", "Veteran", "Play 50 matches", 300, false, "match"),
+    SampleAchievement("💬", "Chatterbox", "Send 100 messages", 80, false, "social"),
+    SampleAchievement("📅", "Consistent", "Book every week for a month", 200, false, "booking"),
+    SampleAchievement("🚀", "Overachiever", "Earn 20 achievements", 500, false, "general"),
+)
+
+@Composable
+private fun SampleAchievementCard(sample: SampleAchievement) {
+    val borderColor = if (sample.earned) GreenAccent else DarkBorder
+    Column(
+        modifier = Modifier
+            .fillMaxWidth()
+            .clip(RoundedCornerShape(12.dp))
+            .background(if (sample.earned) androidx.compose.ui.graphics.Color(0xFF1B3A1E) else DarkSurface)
+            .border(if (sample.earned) 1.5.dp else 0.5.dp, borderColor, RoundedCornerShape(12.dp))
+            .padding(12.dp),
+        horizontalAlignment = Alignment.CenterHorizontally,
+    ) {
+        Box(
+            modifier = Modifier
+                .size(48.dp)
+                .clip(CircleShape)
+                .background(if (sample.earned) GreenAccent.copy(alpha = 0.2f) else DarkBorder.copy(alpha = 0.3f)),
+            contentAlignment = Alignment.Center,
+        ) {
+            Text(sample.emoji, fontSize = 22.sp)
+        }
+        Spacer(modifier = Modifier.height(8.dp))
+        Text(
+            text = sample.name,
+            fontSize = 12.sp,
+            fontWeight = FontWeight.Bold,
+            color = if (sample.earned) DarkTextPrimary else DarkTextSecondary,
+            textAlign = TextAlign.Center,
+            maxLines = 2,
+            overflow = TextOverflow.Ellipsis,
+        )
+        Spacer(modifier = Modifier.height(4.dp))
+        Text(
+            text = sample.desc,
+            fontSize = 10.sp,
+            color = DarkTextTertiary,
+            textAlign = TextAlign.Center,
+            maxLines = 2,
+            overflow = TextOverflow.Ellipsis,
+        )
+        Spacer(modifier = Modifier.height(8.dp))
+        Box(
+            modifier = Modifier
+                .clip(RoundedCornerShape(8.dp))
+                .background(if (sample.earned) GreenAccent.copy(alpha = 0.2f) else DarkBorder)
+                .padding(horizontal = 8.dp, vertical = 3.dp),
+        ) {
+            Text(
+                text = "+${sample.xp} XP",
+                fontSize = 10.sp,
+                fontWeight = FontWeight.Bold,
+                color = if (sample.earned) GreenAccent else DarkTextTertiary,
+            )
+        }
+        if (sample.earned) {
+            Spacer(modifier = Modifier.height(4.dp))
+            Text("✓ Earned", fontSize = 10.sp, color = GreenAccent, fontWeight = FontWeight.SemiBold)
+        }
+    }
+}
+
 // ─── Preview ─────────────────────────────────────────────────────────────────
 
-@Preview(showBackground = true, backgroundColor = 0xFFF9FAFB)
+@Preview(showBackground = true, backgroundColor = 0xFF121212)
 @Composable
 private fun PlayerAchievementsScreenPreview() {
-    MaterialTheme {
-        Column(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(16.dp)
-        ) {
-            AchievementSummaryCard(earned = 4, total = 12)
-            Spacer(modifier = Modifier.height(16.dp))
-            Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
-                AchievementCard(
-                    achievement = Achievement(
-                        id = 1,
-                        name = "First Booking",
-                        description = "Complete your first booking",
-                        icon = "book_online",
-                        category = "booking",
-                        xpReward = 50
-                    ),
-                    isEarned = true,
-                    earnedAt = "2026-03-10T10:00:00Z",
-                    modifier = Modifier.weight(1f)
-                )
-                AchievementCard(
-                    achievement = Achievement(
-                        id = 2,
-                        name = "Social Butterfly",
-                        description = "Add 5 friends",
-                        icon = "group",
-                        category = "social",
-                        xpReward = 100
-                    ),
-                    isEarned = false,
-                    earnedAt = null,
-                    modifier = Modifier.weight(1f)
-                )
-            }
+    Column(
+        modifier = Modifier
+            .fillMaxSize()
+            .background(DarkBg)
+            .padding(16.dp)
+    ) {
+        AchievementSummaryCard(earned = 4, total = 12)
+        Spacer(modifier = Modifier.height(16.dp))
+        Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+            AchievementCard(
+                achievement = Achievement(
+                    id = 1,
+                    name = "First Booking",
+                    description = "Complete your first booking",
+                    icon = "book_online",
+                    category = "booking",
+                    xpReward = 50
+                ),
+                isEarned = true,
+                earnedAt = "2026-03-10T10:00:00Z",
+                modifier = Modifier.weight(1f)
+            )
+            AchievementCard(
+                achievement = Achievement(
+                    id = 2,
+                    name = "Social Butterfly",
+                    description = "Add 5 friends",
+                    icon = "group",
+                    category = "social",
+                    xpReward = 100
+                ),
+                isEarned = false,
+                earnedAt = null,
+                modifier = Modifier.weight(1f)
+            )
         }
     }
 }

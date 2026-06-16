@@ -61,5 +61,5 @@ data class PaymentIntentResponseDto(
 
 @Serializable
 data class ConfirmPaymentRequestDto(
-    val stripePaymentIntentId: String? = null,
+    val paymentIntentId: String? = null,
 )

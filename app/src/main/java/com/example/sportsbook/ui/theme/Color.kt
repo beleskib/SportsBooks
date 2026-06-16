@@ -3,10 +3,33 @@ package com.example.sportsbook.ui.theme
 import androidx.compose.ui.graphics.Color
 
 // ══════════════════════════════════════════════════════════════
-// SportsBooks Light Theme Palette
-// Matches the mockup design language: gray-50 bg, white cards,
-// dark nav bar with gold accents.
+// SportsBooks v3 Dark Theme Palette
+// Design: #121212 background, #1E1E1E surfaces, #4CAF50 green
+// accent, #2196F3 blue secondary. Matches mockup spec.
 // ══════════════════════════════════════════════════════════════
+
+// ── v3 Dark backgrounds & surfaces ──
+val DarkBg = Color(0xFF121212)           // main background
+val DarkSurface = Color(0xFF1E1E1E)      // cards, sheets, nav bar
+val DarkSurfaceLight = Color(0xFF252525) // elevated cards, inputs
+val DarkBorder = Color(0xFF2A2A2A)       // borders, dividers
+val DarkNavBar = Color(0xFF1A1A1A)       // bottom nav bar
+
+// ── v3 Text on dark ──
+val DarkTextPrimary = Color(0xFFFFFFFF)   // primary text
+val DarkTextSecondary = Color(0xFF888888) // secondary / muted text
+val DarkTextTertiary = Color(0xFF555555)  // disabled / hint text
+val DarkTextLink = Color(0xFF2196F3)      // links on dark bg
+
+// ── v3 Accent colors ──
+val GreenAccent = Color(0xFF4CAF50)       // primary accent — active tabs, CTAs
+val GreenDark = Color(0xFF2E7D32)         // darker green for gradients
+val BlueAccent = Color(0xFF2196F3)        // secondary accent
+val BlueDarkAccent = Color(0xFF1565C0)    // darker blue for gradients
+val OrangeAccent = Color(0xFFFF9800)      // warning, pending states
+val PurpleAccentV3 = Color(0xFFAB47BC)    // gamification, special
+
+// ── Legacy Light Theme Palette (kept for backward compat) ──
 
 // ── Primary grays (backgrounds & text) ──
 val LightBg = Color(0xFFF9FAFB)          // gray-50 — page background

@@ -3,6 +3,8 @@ package com.example.sportsbook.ui.screens.player.booking
 import android.content.Intent
 import android.net.Uri
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -20,33 +22,27 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.automirrored.filled.Send
-import androidx.compose.material.icons.filled.Email
-import androidx.compose.material.icons.filled.Person
-import androidx.compose.material.icons.filled.Phone
-import androidx.compose.material3.Card
-import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
-import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedTextField
-import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
-import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
@@ -56,6 +52,13 @@ import com.example.sportsbook.data.remote.api.ApiService
 import com.example.sportsbook.data.remote.dto.BookingContactDto
 import com.example.sportsbook.data.remote.dto.BookingMessageDto
 import com.example.sportsbook.data.remote.dto.SendMessageRequestDto
+import com.example.sportsbook.ui.theme.DarkBg
+import com.example.sportsbook.ui.theme.DarkBorder
+import com.example.sportsbook.ui.theme.DarkSurface
+import com.example.sportsbook.ui.theme.DarkTextPrimary
+import com.example.sportsbook.ui.theme.DarkTextSecondary
+import com.example.sportsbook.ui.theme.GreenAccent
+import com.example.sportsbook.ui.theme.GreenDark
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -204,7 +207,6 @@ class BookingChatViewModel @Inject constructor(
 
 // ── Screen ────────────────────────────────────────────────────────────────────
 
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun BookingChatScreen(
     onBack: () -> Unit,
@@ -221,105 +223,137 @@ fun BookingChatScreen(
         }
     }
 
-    Scaffold(
-        topBar = {
-            TopAppBar(
-                title = {
-                    Text(uiState.contactInfo?.name ?: "Booking Chat")
-                },
-                navigationIcon = {
-                    IconButton(onClick = onBack) {
-                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back")
-                    }
-                }
-            )
-        }
-    ) { padding ->
-        Column(
+    Column(
+        modifier = Modifier
+            .fillMaxSize()
+            .background(DarkBg),
+    ) {
+        // ── Header ────────────────────────────────────────────────────────
+        Row(
             modifier = Modifier
-                .fillMaxSize()
-                .padding(padding)
+                .fillMaxWidth()
+                .padding(start = 16.dp, end = 16.dp, top = 56.dp, bottom = 12.dp),
+            verticalAlignment = Alignment.CenterVertically,
         ) {
-            // Contact Info Card
-            uiState.contactInfo?.let { contact ->
-                ContactInfoCard(
-                    contact = contact,
-                    onCallClick = { phoneNumber ->
-                        val intent = Intent(Intent.ACTION_DIAL, Uri.parse("tel:$phoneNumber"))
-                        context.startActivity(intent)
-                    },
-                    onEmailClick = { email ->
-                        val intent = Intent(Intent.ACTION_SENDTO, Uri.parse("mailto:$email"))
-                        context.startActivity(intent)
-                    },
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(horizontal = 16.dp, vertical = 8.dp)
+            Box(
+                modifier = Modifier
+                    .size(40.dp)
+                    .clip(CircleShape)
+                    .background(DarkSurface)
+                    .clickable(onClick = onBack),
+                contentAlignment = Alignment.Center,
+            ) {
+                Icon(Icons.AutoMirrored.Filled.ArrowBack, "Back", tint = DarkTextPrimary, modifier = Modifier.size(20.dp))
+            }
+            Spacer(modifier = Modifier.width(16.dp))
+            Column(modifier = Modifier.weight(1f)) {
+                Text(
+                    uiState.contactInfo?.name ?: "Booking Chat",
+                    fontSize = 18.sp,
+                    fontWeight = FontWeight.Bold,
+                    color = DarkTextPrimary,
                 )
-            }
-
-            // Loading state
-            if (uiState.isLoading) {
-                Box(
-                    modifier = Modifier
-                        .weight(1f)
-                        .fillMaxWidth(),
-                    contentAlignment = Alignment.Center
-                ) {
-                    CircularProgressIndicator()
-                }
-            } else {
-                // Messages list
-                LazyColumn(
-                    modifier = Modifier
-                        .weight(1f)
-                        .fillMaxWidth()
-                        .padding(horizontal = 16.dp),
-                    state = listState,
-                    verticalArrangement = Arrangement.spacedBy(8.dp)
-                ) {
-                    item { Spacer(modifier = Modifier.height(4.dp)) }
-                    items(uiState.messages, key = { it.id }) { message ->
-                        val isMe = message.senderId == uiState.currentUserId
-                        BookingChatBubble(message = message, isMe = isMe)
-                    }
-                    item { Spacer(modifier = Modifier.height(4.dp)) }
+                if (uiState.contactInfo?.name != null) {
+                    Text("Booking Chat", fontSize = 13.sp, color = DarkTextSecondary)
                 }
             }
+        }
 
-            // Message input bar
-            Row(
+        // ── Contact info card ─────────────────────────────────────────────
+        uiState.contactInfo?.let { contact ->
+            ContactInfoCard(
+                contact = contact,
+                onCallClick = { phoneNumber ->
+                    val intent = Intent(Intent.ACTION_DIAL, Uri.parse("tel:$phoneNumber"))
+                    context.startActivity(intent)
+                },
+                onEmailClick = { email ->
+                    val intent = Intent(Intent.ACTION_SENDTO, Uri.parse("mailto:$email"))
+                    context.startActivity(intent)
+                },
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(8.dp),
-                verticalAlignment = Alignment.CenterVertically
+                    .padding(horizontal = 16.dp, vertical = 4.dp),
+            )
+        }
+
+        // ── Loading or messages ───────────────────────────────────────────
+        if (uiState.isLoading) {
+            Box(
+                modifier = Modifier.weight(1f).fillMaxWidth(),
+                contentAlignment = Alignment.Center,
             ) {
-                OutlinedTextField(
+                CircularProgressIndicator(color = GreenAccent)
+            }
+        } else {
+            LazyColumn(
+                modifier = Modifier.weight(1f).fillMaxWidth().padding(horizontal = 16.dp),
+                state = listState,
+                verticalArrangement = Arrangement.spacedBy(8.dp),
+            ) {
+                item { Spacer(modifier = Modifier.height(4.dp)) }
+                items(uiState.messages, key = { it.id }) { message ->
+                    BookingChatBubble(message = message, isMe = message.senderId == uiState.currentUserId)
+                }
+                item { Spacer(modifier = Modifier.height(4.dp)) }
+            }
+        }
+
+        // ── Input bar ─────────────────────────────────────────────────────
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .background(DarkSurface)
+                .border(1.dp, DarkBorder, RoundedCornerShape(topStart = 0.dp, topEnd = 0.dp))
+                .padding(horizontal = 12.dp, vertical = 10.dp),
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            Box(
+                modifier = Modifier
+                    .weight(1f)
+                    .clip(RoundedCornerShape(22.dp))
+                    .background(DarkBg)
+                    .border(1.dp, DarkBorder, RoundedCornerShape(22.dp))
+                    .padding(horizontal = 16.dp, vertical = 10.dp),
+            ) {
+                BasicTextField(
                     value = uiState.newMessage,
                     onValueChange = viewModel::onMessageTextChange,
-                    modifier = Modifier.weight(1f),
-                    placeholder = { Text("Type a message...") },
-                    maxLines = 3,
-                    shape = RoundedCornerShape(24.dp),
                     enabled = !uiState.isSending,
+                    maxLines = 3,
+                    textStyle = TextStyle(color = DarkTextPrimary, fontSize = 15.sp),
+                    cursorBrush = SolidColor(GreenAccent),
+                    modifier = Modifier.fillMaxWidth(),
+                    decorationBox = { inner ->
+                        Box {
+                            if (uiState.newMessage.isEmpty()) {
+                                Text("Type a message...", fontSize = 15.sp, color = Color(0xFF555555))
+                            }
+                            inner()
+                        }
+                    },
                 )
-                Spacer(modifier = Modifier.width(8.dp))
-                IconButton(
-                    onClick = viewModel::sendMessage,
-                    enabled = uiState.newMessage.isNotBlank() && !uiState.isSending
-                ) {
-                    if (uiState.isSending) {
-                        CircularProgressIndicator(
-                            modifier = Modifier.size(20.dp),
-                            strokeWidth = 2.dp
-                        )
-                    } else {
-                        Icon(
-                            Icons.AutoMirrored.Filled.Send,
-                            contentDescription = "Send",
-                            tint = MaterialTheme.colorScheme.primary
-                        )
-                    }
+            }
+            Spacer(modifier = Modifier.width(10.dp))
+            val canSend = uiState.newMessage.isNotBlank() && !uiState.isSending
+            Box(
+                modifier = Modifier
+                    .size(42.dp)
+                    .clip(CircleShape)
+                    .background(if (canSend) GreenAccent else DarkSurface)
+                    .border(1.dp, if (canSend) GreenAccent else DarkBorder, CircleShape)
+                    .then(if (canSend) Modifier.clickable { viewModel.sendMessage() } else Modifier),
+                contentAlignment = Alignment.Center,
+            ) {
+                if (uiState.isSending) {
+                    CircularProgressIndicator(modifier = Modifier.size(20.dp), strokeWidth = 2.dp, color = GreenAccent)
+                } else {
+                    Icon(
+                        Icons.AutoMirrored.Filled.Send,
+                        contentDescription = "Send",
+                        tint = if (canSend) Color.White else DarkTextSecondary,
+                        modifier = Modifier.size(18.dp),
+                    )
                 }
             }
         }
@@ -335,80 +369,51 @@ private fun ContactInfoCard(
     onEmailClick: (String) -> Unit,
     modifier: Modifier = Modifier,
 ) {
-    Card(
-        modifier = modifier,
-        colors = CardDefaults.cardColors(
-            containerColor = MaterialTheme.colorScheme.surfaceVariant
-        )
+    Column(
+        modifier = modifier
+            .clip(RoundedCornerShape(14.dp))
+            .background(DarkSurface)
+            .border(1.dp, DarkBorder, RoundedCornerShape(14.dp))
+            .padding(12.dp),
     ) {
-        Column(modifier = Modifier.padding(12.dp)) {
-            Text(
-                text = contact.name,
-                style = MaterialTheme.typography.titleSmall,
-                fontWeight = FontWeight.Bold
-            )
+        Text(contact.name, fontSize = 14.sp, fontWeight = FontWeight.Bold, color = DarkTextPrimary)
 
-            contact.email?.let { email ->
-                Spacer(modifier = Modifier.height(4.dp))
-                Row(
-                    verticalAlignment = Alignment.CenterVertically,
-                    modifier = Modifier.fillMaxWidth()
+        contact.email?.let { email ->
+            Spacer(modifier = Modifier.height(6.dp))
+            Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.fillMaxWidth()) {
+                Text("✉️", fontSize = 14.sp)
+                Spacer(modifier = Modifier.width(6.dp))
+                Text(email, fontSize = 13.sp, color = DarkTextSecondary, modifier = Modifier.weight(1f))
+                Box(
+                    modifier = Modifier
+                        .size(32.dp)
+                        .clip(CircleShape)
+                        .background(GreenAccent.copy(alpha = 0.12f))
+                        .border(1.dp, GreenAccent.copy(alpha = 0.4f), CircleShape)
+                        .clickable { onEmailClick(email) },
+                    contentAlignment = Alignment.Center,
                 ) {
-                    Icon(
-                        imageVector = Icons.Default.Email,
-                        contentDescription = null,
-                        modifier = Modifier.size(16.dp),
-                        tint = MaterialTheme.colorScheme.primary
-                    )
-                    Spacer(modifier = Modifier.width(6.dp))
-                    Text(
-                        text = email,
-                        style = MaterialTheme.typography.bodySmall,
-                        modifier = Modifier.weight(1f)
-                    )
-                    IconButton(
-                        onClick = { onEmailClick(email) },
-                        modifier = Modifier.size(32.dp)
-                    ) {
-                        Icon(
-                            imageVector = Icons.Default.Email,
-                            contentDescription = "Send email",
-                            modifier = Modifier.size(18.dp),
-                            tint = MaterialTheme.colorScheme.primary
-                        )
-                    }
+                    Text("✉️", fontSize = 13.sp)
                 }
             }
+        }
 
-            contact.phoneNumber?.let { phone ->
-                Spacer(modifier = Modifier.height(4.dp))
-                Row(
-                    verticalAlignment = Alignment.CenterVertically,
-                    modifier = Modifier.fillMaxWidth()
+        contact.phoneNumber?.let { phone ->
+            Spacer(modifier = Modifier.height(6.dp))
+            Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.fillMaxWidth()) {
+                Text("📞", fontSize = 14.sp)
+                Spacer(modifier = Modifier.width(6.dp))
+                Text(phone, fontSize = 13.sp, color = DarkTextSecondary, modifier = Modifier.weight(1f))
+                Box(
+                    modifier = Modifier
+                        .size(32.dp)
+                        .clip(CircleShape)
+                        .background(GreenAccent.copy(alpha = 0.12f))
+                        .border(1.dp, GreenAccent.copy(alpha = 0.4f), CircleShape)
+                        .clickable { onCallClick(phone) },
+                    contentAlignment = Alignment.Center,
                 ) {
-                    Icon(
-                        imageVector = Icons.Default.Phone,
-                        contentDescription = null,
-                        modifier = Modifier.size(16.dp),
-                        tint = MaterialTheme.colorScheme.primary
-                    )
-                    Spacer(modifier = Modifier.width(6.dp))
-                    Text(
-                        text = phone,
-                        style = MaterialTheme.typography.bodySmall,
-                        modifier = Modifier.weight(1f)
-                    )
-                    IconButton(
-                        onClick = { onCallClick(phone) },
-                        modifier = Modifier.size(32.dp)
-                    ) {
-                        Icon(
-                            imageVector = Icons.Default.Phone,
-                            contentDescription = "Call",
-                            modifier = Modifier.size(18.dp),
-                            tint = MaterialTheme.colorScheme.primary
-                        )
-                    }
+                    Text("📞", fontSize = 13.sp)
                 }
             }
         }
@@ -421,7 +426,7 @@ private fun ContactInfoCard(
 private fun BookingChatBubble(message: BookingMessage, isMe: Boolean) {
     Column(
         modifier = Modifier.fillMaxWidth(),
-        horizontalAlignment = if (isMe) Alignment.End else Alignment.Start
+        horizontalAlignment = if (isMe) Alignment.End else Alignment.Start,
     ) {
         if (!isMe) {
             Row(verticalAlignment = Alignment.CenterVertically) {
@@ -429,22 +434,18 @@ private fun BookingChatBubble(message: BookingMessage, isMe: Boolean) {
                     modifier = Modifier
                         .size(24.dp)
                         .clip(CircleShape)
-                        .background(MaterialTheme.colorScheme.primaryContainer),
-                    contentAlignment = Alignment.Center
+                        .background(GreenDark),
+                    contentAlignment = Alignment.Center,
                 ) {
-                    Icon(
-                        Icons.Default.Person,
-                        contentDescription = null,
-                        modifier = Modifier.size(16.dp),
-                        tint = MaterialTheme.colorScheme.onPrimaryContainer
+                    Text(
+                        message.senderName.firstOrNull()?.uppercase() ?: "?",
+                        fontSize = 10.sp,
+                        fontWeight = FontWeight.Bold,
+                        color = Color.White,
                     )
                 }
-                Spacer(modifier = Modifier.width(4.dp))
-                Text(
-                    text = message.senderName,
-                    style = MaterialTheme.typography.labelSmall,
-                    fontWeight = FontWeight.Bold
-                )
+                Spacer(modifier = Modifier.width(6.dp))
+                Text(message.senderName, fontSize = 12.sp, fontWeight = FontWeight.Bold, color = DarkTextSecondary)
             }
             Spacer(modifier = Modifier.height(2.dp))
         }
@@ -460,131 +461,86 @@ private fun BookingChatBubble(message: BookingMessage, isMe: Boolean) {
                         bottomEnd = if (isMe) 4.dp else 16.dp,
                     )
                 )
-                .background(
-                    if (isMe) MaterialTheme.colorScheme.primary
-                    else MaterialTheme.colorScheme.surfaceVariant
-                )
-                .padding(12.dp)
+                .background(if (isMe) GreenAccent else DarkSurface)
+                .padding(12.dp),
         ) {
             Text(
                 text = message.message,
-                color = if (isMe) MaterialTheme.colorScheme.onPrimary
-                else MaterialTheme.colorScheme.onSurfaceVariant,
-                style = MaterialTheme.typography.bodyMedium
+                color = if (isMe) Color.White else DarkTextPrimary,
+                fontSize = 14.sp,
             )
         }
 
         Text(
             text = message.createdAt.takeLast(8).take(5),
-            style = MaterialTheme.typography.labelSmall,
-            color = MaterialTheme.colorScheme.onSurfaceVariant
+            fontSize = 11.sp,
+            color = DarkTextSecondary,
+            modifier = Modifier.padding(top = 2.dp),
         )
     }
 }
 
 // ── Preview ───────────────────────────────────────────────────────────────────
 
-@OptIn(ExperimentalMaterial3Api::class)
-@Preview(showBackground = true)
+@Preview(showBackground = true, backgroundColor = 0xFF121212)
 @Composable
 private fun BookingChatScreenPreview() {
     val sampleMessages = listOf(
-        BookingMessage(
-            id = 1L,
-            bookingId = 10L,
-            senderId = 5L,
-            senderName = "City Tennis Center",
-            message = "Hello! Your booking is confirmed for March 25 at 10:00.",
-            createdAt = "2026-03-20T09:00:00Z"
-        ),
-        BookingMessage(
-            id = 2L,
-            bookingId = 10L,
-            senderId = 99L,
-            senderName = "Me",
-            message = "Great, thank you! Do I need to bring my own racket?",
-            createdAt = "2026-03-20T09:02:00Z"
-        ),
-        BookingMessage(
-            id = 3L,
-            bookingId = 10L,
-            senderId = 5L,
-            senderName = "City Tennis Center",
-            message = "We have rackets available for rental at the venue.",
-            createdAt = "2026-03-20T09:04:00Z"
-        ),
+        BookingMessage(id = 1L, bookingId = 10L, senderId = 5L, senderName = "City Tennis Center",
+            message = "Hello! Your booking is confirmed for March 25 at 10:00.", createdAt = "2026-03-20T09:00:00Z"),
+        BookingMessage(id = 2L, bookingId = 10L, senderId = 99L, senderName = "Me",
+            message = "Great, thank you! Do I need to bring my own racket?", createdAt = "2026-03-20T09:02:00Z"),
+        BookingMessage(id = 3L, bookingId = 10L, senderId = 5L, senderName = "City Tennis Center",
+            message = "We have rackets available for rental at the venue.", createdAt = "2026-03-20T09:04:00Z"),
     )
-    val sampleContact = BookingContact(
-        name = "City Tennis Center",
-        email = "info@citytenniscenter.com",
-        phoneNumber = "+1 555-123-4567"
-    )
+    val sampleContact = BookingContact(name = "City Tennis Center", email = "info@citytenniscenter.com", phoneNumber = "+1 555-123-4567")
     val currentUserId = 99L
 
-    MaterialTheme {
-        Scaffold(
-            topBar = {
-                TopAppBar(
-                    title = { Text(sampleContact.name) },
-                    navigationIcon = {
-                        IconButton(onClick = {}) {
-                            Icon(Icons.AutoMirrored.Filled.ArrowBack, "Back")
-                        }
-                    }
-                )
-            }
-        ) { padding ->
-            Column(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .padding(padding)
+    Column(modifier = Modifier.fillMaxSize().background(DarkBg)) {
+        Row(
+            modifier = Modifier.fillMaxWidth().padding(start = 16.dp, end = 16.dp, top = 56.dp, bottom = 12.dp),
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            Box(
+                modifier = Modifier.size(40.dp).clip(CircleShape).background(DarkSurface),
+                contentAlignment = Alignment.Center,
             ) {
-                ContactInfoCard(
-                    contact = sampleContact,
-                    onCallClick = {},
-                    onEmailClick = {},
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(horizontal = 16.dp, vertical = 8.dp)
-                )
-                LazyColumn(
-                    modifier = Modifier
-                        .weight(1f)
-                        .fillMaxWidth()
-                        .padding(horizontal = 16.dp),
-                    verticalArrangement = Arrangement.spacedBy(8.dp)
-                ) {
-                    item { Spacer(modifier = Modifier.height(4.dp)) }
-                    items(sampleMessages, key = { it.id }) { message ->
-                        BookingChatBubble(
-                            message = message,
-                            isMe = message.senderId == currentUserId
-                        )
-                    }
-                }
-                Row(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(8.dp),
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    OutlinedTextField(
-                        value = "",
-                        onValueChange = {},
-                        modifier = Modifier.weight(1f),
-                        placeholder = { Text("Type a message...") },
-                        maxLines = 3,
-                        shape = RoundedCornerShape(24.dp)
-                    )
-                    Spacer(modifier = Modifier.width(8.dp))
-                    IconButton(onClick = {}, enabled = false) {
-                        Icon(
-                            Icons.AutoMirrored.Filled.Send,
-                            contentDescription = "Send",
-                            tint = MaterialTheme.colorScheme.primary
-                        )
-                    }
-                }
+                Icon(Icons.AutoMirrored.Filled.ArrowBack, "Back", tint = DarkTextPrimary, modifier = Modifier.size(20.dp))
+            }
+            Spacer(modifier = Modifier.width(16.dp))
+            Column(modifier = Modifier.weight(1f)) {
+                Text(sampleContact.name, fontSize = 18.sp, fontWeight = FontWeight.Bold, color = DarkTextPrimary)
+                Text("Booking Chat", fontSize = 13.sp, color = DarkTextSecondary)
+            }
+        }
+        ContactInfoCard(contact = sampleContact, onCallClick = {}, onEmailClick = {},
+            modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 4.dp))
+        LazyColumn(
+            modifier = Modifier.weight(1f).fillMaxWidth().padding(horizontal = 16.dp),
+            verticalArrangement = Arrangement.spacedBy(8.dp),
+        ) {
+            item { Spacer(modifier = Modifier.height(4.dp)) }
+            items(sampleMessages, key = { it.id }) { message ->
+                BookingChatBubble(message = message, isMe = message.senderId == currentUserId)
+            }
+        }
+        Row(
+            modifier = Modifier.fillMaxWidth().background(DarkSurface)
+                .border(1.dp, DarkBorder, RoundedCornerShape(0.dp)).padding(horizontal = 12.dp, vertical = 10.dp),
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            Box(
+                modifier = Modifier.weight(1f).clip(RoundedCornerShape(22.dp)).background(DarkBg)
+                    .border(1.dp, DarkBorder, RoundedCornerShape(22.dp)).padding(horizontal = 16.dp, vertical = 10.dp),
+            ) {
+                Text("Type a message...", fontSize = 15.sp, color = Color(0xFF555555))
+            }
+            Spacer(modifier = Modifier.width(10.dp))
+            Box(
+                modifier = Modifier.size(42.dp).clip(CircleShape).background(DarkSurface).border(1.dp, DarkBorder, CircleShape),
+                contentAlignment = Alignment.Center,
+            ) {
+                Icon(Icons.AutoMirrored.Filled.Send, contentDescription = "Send", tint = DarkTextSecondary, modifier = Modifier.size(18.dp))
             }
         }
     }

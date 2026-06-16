@@ -1,5 +1,8 @@
 package com.example.sportsbook.ui.screens.onboarding
 
+import androidx.compose.foundation.background
+import androidx.compose.foundation.border
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -9,26 +12,34 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Business
 import androidx.compose.material.icons.filled.SportsBasketball
-import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
-import androidx.compose.material3.ElevatedCard
 import androidx.compose.material3.Icon
-import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.example.sportsbook.domain.enums.UserRole
+import com.example.sportsbook.ui.theme.DarkBg
+import com.example.sportsbook.ui.theme.DarkBorder
+import com.example.sportsbook.ui.theme.DarkSurface
+import com.example.sportsbook.ui.theme.DarkTextPrimary
+import com.example.sportsbook.ui.theme.DarkTextSecondary
+import com.example.sportsbook.ui.theme.GreenAccent
 
 @Composable
 fun RoleSelectionScreen(
@@ -49,23 +60,26 @@ fun RoleSelectionScreen(
     Column(
         modifier = Modifier
             .fillMaxSize()
+            .background(DarkBg)
             .padding(horizontal = 24.dp, vertical = 48.dp),
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.Center
     ) {
         Text(
             text = "Choose Your Role",
-            style = MaterialTheme.typography.headlineMedium,
-            textAlign = TextAlign.Center
+            fontSize = 24.sp,
+            fontWeight = FontWeight.Bold,
+            color = DarkTextPrimary,
+            textAlign = TextAlign.Center,
         )
 
         Spacer(modifier = Modifier.height(8.dp))
 
         Text(
             text = "How will you use SportsBook?",
-            style = MaterialTheme.typography.bodyMedium,
-            color = MaterialTheme.colorScheme.onSurfaceVariant,
-            textAlign = TextAlign.Center
+            fontSize = 14.sp,
+            color = DarkTextSecondary,
+            textAlign = TextAlign.Center,
         )
 
         Spacer(modifier = Modifier.height(32.dp))
@@ -81,7 +95,7 @@ fun RoleSelectionScreen(
                         imageVector = Icons.Default.SportsBasketball,
                         contentDescription = null,
                         modifier = Modifier.size(48.dp),
-                        tint = MaterialTheme.colorScheme.primary
+                        tint = GreenAccent
                     )
                 },
                 title = "I'm a Player",
@@ -97,7 +111,7 @@ fun RoleSelectionScreen(
                         imageVector = Icons.Default.Business,
                         contentDescription = null,
                         modifier = Modifier.size(48.dp),
-                        tint = MaterialTheme.colorScheme.primary
+                        tint = GreenAccent
                     )
                 },
                 title = "I'm a Partner",
@@ -109,16 +123,16 @@ fun RoleSelectionScreen(
 
         if (uiState.isLoading) {
             Spacer(modifier = Modifier.height(24.dp))
-            CircularProgressIndicator()
+            CircularProgressIndicator(color = GreenAccent)
         }
 
         if (uiState.error != null) {
             Spacer(modifier = Modifier.height(16.dp))
             Text(
                 text = uiState.error!!,
-                style = MaterialTheme.typography.bodySmall,
-                color = MaterialTheme.colorScheme.error,
-                textAlign = TextAlign.Center
+                fontSize = 12.sp,
+                color = Color(0xFFEF5350),
+                textAlign = TextAlign.Center,
             )
         }
     }
@@ -133,101 +147,100 @@ private fun RoleCard(
     enabled: Boolean,
     modifier: Modifier = Modifier
 ) {
-    ElevatedCard(
-        onClick = onClick,
-        modifier = modifier,
-        enabled = enabled,
-        elevation = CardDefaults.elevatedCardElevation(defaultElevation = 4.dp)
+    Column(
+        modifier = modifier
+            .clip(RoundedCornerShape(16.dp))
+            .background(DarkSurface)
+            .border(1.dp, DarkBorder, RoundedCornerShape(16.dp))
+            .clickable(enabled = enabled, onClick = onClick)
+            .padding(16.dp),
+        horizontalAlignment = Alignment.CenterHorizontally,
+        verticalArrangement = Arrangement.spacedBy(8.dp)
     ) {
-        Column(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(16.dp),
-            horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.spacedBy(8.dp)
-        ) {
-            icon()
+        icon()
 
-            Text(
-                text = title,
-                style = MaterialTheme.typography.titleMedium,
-                textAlign = TextAlign.Center
-            )
+        Text(
+            text = title,
+            fontSize = 16.sp,
+            fontWeight = FontWeight.SemiBold,
+            color = DarkTextPrimary,
+            textAlign = TextAlign.Center,
+        )
 
-            Text(
-                text = description,
-                style = MaterialTheme.typography.bodySmall,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
-                textAlign = TextAlign.Center
-            )
-        }
+        Text(
+            text = description,
+            fontSize = 12.sp,
+            color = DarkTextSecondary,
+            textAlign = TextAlign.Center,
+        )
     }
 }
 
-@Preview(showBackground = true)
+@Preview(showBackground = true, backgroundColor = 0xFF121212)
 @Composable
 private fun RoleSelectionScreenPreview() {
-    MaterialTheme {
-        Column(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(horizontal = 24.dp, vertical = 48.dp),
-            horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.Center
+    Column(
+        modifier = Modifier
+            .fillMaxSize()
+            .background(DarkBg)
+            .padding(horizontal = 24.dp, vertical = 48.dp),
+        horizontalAlignment = Alignment.CenterHorizontally,
+        verticalArrangement = Arrangement.Center
+    ) {
+        Text(
+            text = "Choose Your Role",
+            fontSize = 24.sp,
+            fontWeight = FontWeight.Bold,
+            color = DarkTextPrimary,
+            textAlign = TextAlign.Center,
+        )
+
+        Spacer(modifier = Modifier.height(8.dp))
+
+        Text(
+            text = "How will you use SportsBook?",
+            fontSize = 14.sp,
+            color = DarkTextSecondary,
+            textAlign = TextAlign.Center,
+        )
+
+        Spacer(modifier = Modifier.height(32.dp))
+
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.spacedBy(16.dp)
         ) {
-            Text(
-                text = "Choose Your Role",
-                style = MaterialTheme.typography.headlineMedium,
-                textAlign = TextAlign.Center
+            RoleCard(
+                modifier = Modifier.weight(1f),
+                icon = {
+                    Icon(
+                        imageVector = Icons.Default.SportsBasketball,
+                        contentDescription = null,
+                        modifier = Modifier.size(48.dp),
+                        tint = GreenAccent
+                    )
+                },
+                title = "I'm a Player",
+                description = "Browse and book sports venues and coaches",
+                onClick = {},
+                enabled = true
             )
 
-            Spacer(modifier = Modifier.height(8.dp))
-
-            Text(
-                text = "How will you use SportsBook?",
-                style = MaterialTheme.typography.bodyMedium,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
-                textAlign = TextAlign.Center
+            RoleCard(
+                modifier = Modifier.weight(1f),
+                icon = {
+                    Icon(
+                        imageVector = Icons.Default.Business,
+                        contentDescription = null,
+                        modifier = Modifier.size(48.dp),
+                        tint = GreenAccent
+                    )
+                },
+                title = "I'm a Partner",
+                description = "List your venue or coaching services",
+                onClick = {},
+                enabled = true
             )
-
-            Spacer(modifier = Modifier.height(32.dp))
-
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.spacedBy(16.dp)
-            ) {
-                RoleCard(
-                    modifier = Modifier.weight(1f),
-                    icon = {
-                        Icon(
-                            imageVector = Icons.Default.SportsBasketball,
-                            contentDescription = null,
-                            modifier = Modifier.size(48.dp),
-                            tint = MaterialTheme.colorScheme.primary
-                        )
-                    },
-                    title = "I'm a Player",
-                    description = "Browse and book sports venues and coaches",
-                    onClick = {},
-                    enabled = true
-                )
-
-                RoleCard(
-                    modifier = Modifier.weight(1f),
-                    icon = {
-                        Icon(
-                            imageVector = Icons.Default.Business,
-                            contentDescription = null,
-                            modifier = Modifier.size(48.dp),
-                            tint = MaterialTheme.colorScheme.primary
-                        )
-                    },
-                    title = "I'm a Partner",
-                    description = "List your venue or coaching services",
-                    onClick = {},
-                    enabled = true
-                )
-            }
         }
     }
 }

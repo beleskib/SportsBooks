@@ -1,5 +1,14 @@
 package com.example.sportsbook.ui.screens.player.match
 
+import androidx.compose.animation.core.LinearEasing
+import androidx.compose.animation.core.RepeatMode
+import androidx.compose.animation.core.animateFloat
+import androidx.compose.animation.core.infiniteRepeatable
+import androidx.compose.animation.core.rememberInfiniteTransition
+import androidx.compose.animation.core.tween
+import androidx.compose.foundation.background
+import androidx.compose.foundation.border
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -11,75 +20,64 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.lazy.LazyRow
-import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.automirrored.filled.Chat
 import androidx.compose.material.icons.filled.CalendarToday
-import androidx.compose.material.icons.filled.CheckCircle
+import androidx.compose.material.icons.filled.Call
+import androidx.compose.material.icons.automirrored.filled.DirectionsWalk
 import androidx.compose.material.icons.filled.Groups
-import androidx.compose.material.icons.filled.HourglassEmpty
-import androidx.compose.material.icons.filled.LocationOn
-import androidx.compose.material.icons.filled.Payment
+import androidx.compose.material.icons.filled.MoreVert
+import androidx.compose.material.icons.filled.Notifications
+import androidx.compose.material.icons.filled.PersonAdd
 import androidx.compose.material.icons.filled.Schedule
-import androidx.compose.material.icons.filled.Share
-import androidx.compose.material.icons.filled.PersonSearch
 import androidx.compose.material.icons.filled.Star
-import androidx.compose.material3.AlertDialog
-import androidx.compose.material3.Button
-import androidx.compose.material3.ButtonDefaults
-import androidx.compose.material3.Card
 import androidx.compose.material3.CircularProgressIndicator
-import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.FilledTonalButton
-import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
-import androidx.compose.material3.LinearProgressIndicator
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedButton
-import androidx.compose.material3.OutlinedTextField
-import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
-import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
-import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
-import com.example.sportsbook.data.remote.dto.MatchPaymentStatusDto
-import com.example.sportsbook.data.remote.dto.v2.SplitPaymentShareDto
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.example.sportsbook.domain.enums.MatchStatus
 import com.example.sportsbook.domain.enums.MatchType
-import java.time.Duration
-import java.time.Instant
 import com.example.sportsbook.domain.enums.MatchVisibility
 import com.example.sportsbook.domain.enums.ParticipantRole
 import com.example.sportsbook.domain.enums.ParticipantStatus
 import com.example.sportsbook.domain.enums.SportType
 import com.example.sportsbook.domain.model.Match
 import com.example.sportsbook.domain.model.MatchParticipant
-import com.example.sportsbook.ui.common.toDisplayDate
-import com.example.sportsbook.ui.screens.player.match.components.MatchStatusBadge
-import com.example.sportsbook.ui.screens.player.match.components.ParticipantAvatar
-import com.example.sportsbook.ui.screens.player.match.components.SkillRangeBadge
+import com.example.sportsbook.ui.common.toFriendlyDate
+import com.example.sportsbook.ui.theme.DarkBg
+import com.example.sportsbook.ui.theme.DarkBorder
+import com.example.sportsbook.ui.theme.DarkSurface
+import com.example.sportsbook.ui.theme.DarkSurfaceLight
+import com.example.sportsbook.ui.theme.DarkTextPrimary
+import com.example.sportsbook.ui.theme.DarkTextSecondary
+import com.example.sportsbook.ui.theme.GreenAccent
+import com.example.sportsbook.ui.theme.OrangeAccent
+import java.time.Duration
+import java.time.Instant
 
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun MatchDetailScreen(
     onBack: () -> Unit,
@@ -91,10 +89,8 @@ fun MatchDetailScreen(
     viewModel: MatchDetailViewModel = hiltViewModel()
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
-    var showShareDialog by remember { mutableStateOf(false) }
-    var shareCaption by remember { mutableStateOf("") }
-    var showRatingReminder by remember { mutableStateOf(false) }
     val snackbarHostState = remember { SnackbarHostState() }
+    var showRatingReminder by remember { mutableStateOf(false) }
 
     LaunchedEffect(uiState.shareSuccess) {
         if (uiState.shareSuccess) {
@@ -127,562 +123,254 @@ fun MatchDetailScreen(
         }
     }
 
-    // Rating reminder dialog
-    if (showRatingReminder && match != null) {
-        AlertDialog(
-            onDismissRequest = { showRatingReminder = false },
-            icon = {
-                Icon(
-                    imageVector = Icons.Default.Star,
-                    contentDescription = null,
-                    tint = Color(0xFFFFD700)
-                )
-            },
-            title = { Text("Match Completed!") },
-            text = {
-                Text("Don't forget to rate the players! You have 24 hours to submit your ratings.")
-            },
-            confirmButton = {
-                Button(
-                    onClick = {
-                        showRatingReminder = false
-                        onRatePlayers(match.id)
-                    }
-                ) {
-                    Text("Rate Now")
-                }
-            },
-            dismissButton = {
-                TextButton(onClick = { showRatingReminder = false }) {
-                    Text("Maybe Later")
-                }
-            }
-        )
-    }
-
-    // Share dialog
-    if (showShareDialog) {
-        AlertDialog(
-            onDismissRequest = { showShareDialog = false; shareCaption = "" },
-            title = { Text("Share to Feed") },
-            text = {
-                Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                    Text(
-                        text = "Share this match with your followers",
-                        style = MaterialTheme.typography.bodyMedium
-                    )
-                    OutlinedTextField(
-                        value = shareCaption,
-                        onValueChange = { shareCaption = it },
-                        label = { Text("Add a caption (optional)") },
-                        modifier = Modifier.fillMaxWidth(),
-                        maxLines = 3
-                    )
-                }
-            },
-            confirmButton = {
-                Button(
-                    onClick = {
-                        viewModel.shareMatchToFeed(shareCaption.takeIf { it.isNotBlank() })
-                        showShareDialog = false
-                        shareCaption = ""
-                    },
-                    enabled = !uiState.isSharing
-                ) {
-                    Text(if (uiState.isSharing) "Sharing..." else "Share")
-                }
-            },
-            dismissButton = {
-                TextButton(onClick = { showShareDialog = false; shareCaption = "" }) {
-                    Text("Cancel")
-                }
-            }
-        )
-    }
-
-    Scaffold(
-        topBar = {
-            TopAppBar(
-                title = { Text("Match Details") },
-                navigationIcon = {
-                    IconButton(onClick = onBack) {
-                        Icon(Icons.AutoMirrored.Filled.ArrowBack, "Back")
-                    }
-                },
-                actions = {
-                    if (uiState.isParticipant || uiState.isHost) {
-                        IconButton(onClick = { showShareDialog = true }) {
-                            Icon(Icons.Default.Share, contentDescription = "Share to Feed")
-                        }
-                    }
-                }
-            )
-        },
-        snackbarHost = { SnackbarHost(snackbarHostState) }
-    ) { padding ->
+    Box(modifier = Modifier.fillMaxSize().background(DarkBg)) {
         when {
             uiState.isLoading -> {
-                Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                    CircularProgressIndicator()
+                Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                    CircularProgressIndicator(color = GreenAccent)
                 }
             }
-            uiState.error != null -> {
-                Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                    Text("Error: ${uiState.error}", color = MaterialTheme.colorScheme.error)
+
+            uiState.error != null && uiState.match == null -> {
+                Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                    Text(
+                        text = "Error: ${uiState.error}",
+                        color = Color(0xFFEF4444),
+                        modifier = Modifier.padding(16.dp),
+                    )
                 }
             }
+
             uiState.match != null -> {
-                val match = uiState.match!!
+                val currentMatch = uiState.match!!
                 Column(
                     modifier = Modifier
                         .fillMaxSize()
-                        .padding(padding)
-                        .verticalScroll(rememberScrollState())
-                        .padding(16.dp),
-                    verticalArrangement = Arrangement.spacedBy(16.dp)
+                        .padding(bottom = if (uiState.match != null) 80.dp else 0.dp)
+                        .verticalScroll(rememberScrollState()),
                 ) {
-                    // Title + Status
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.SpaceBetween,
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        Text(
-                            text = match.title,
-                            style = MaterialTheme.typography.headlineSmall,
-                            fontWeight = FontWeight.Bold,
-                            modifier = Modifier.weight(1f)
-                        )
-                        MatchStatusBadge(status = match.status)
-                    }
-
-                    // Sport + Skill range
-                    Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                        Text(
-                            text = match.sportType.displayName,
-                            style = MaterialTheme.typography.titleMedium,
-                            color = MaterialTheme.colorScheme.primary
-                        )
-                        if (match.minSkillLevel != null && match.maxSkillLevel != null) {
-                            SkillRangeBadge(match.minSkillLevel, match.maxSkillLevel)
-                        }
-                    }
-
-                    // Description
-                    if (!match.description.isNullOrBlank()) {
-                        Text(
-                            text = match.description,
-                            style = MaterialTheme.typography.bodyMedium
-                        )
-                    }
-
-                    // Details card
-                    Card(modifier = Modifier.fillMaxWidth()) {
-                        Column(modifier = Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                            DetailRow(Icons.Default.CalendarToday, "Date", match.matchDate.toDisplayDate())
-                            DetailRow(Icons.Default.Schedule, "Time", match.displayTime)
-                            DetailRow(Icons.Default.LocationOn, "Location", match.displayLocation)
-                            DetailRow(Icons.Default.Groups, "Players", "${match.currentPlayers}/${match.maxPlayers}")
-                            if (!match.isFree) {
-                                Text(
-                                    text = "Cost: ${String.format("%.0f", match.costPerPlayer)} ден/player",
-                                    style = MaterialTheme.typography.bodyMedium,
-                                    fontWeight = FontWeight.Medium
-                                )
-                            } else {
-                                Text("Free to join!", color = MaterialTheme.colorScheme.tertiary, fontWeight = FontWeight.Medium)
-                            }
-                            if (match.paymentType != null && match.paymentType != "host_pays") {
-                                Text(
-                                    text = "Payment: ${match.paymentType.replace("_", " ").replaceFirstChar { it.uppercase() }}",
-                                    style = MaterialTheme.typography.bodyMedium,
-                                    color = MaterialTheme.colorScheme.secondary,
-                                    fontWeight = FontWeight.Medium
-                                )
-                            }
-                        }
-                    }
-
-                    // Host info
-                    Text("Hosted by ${match.hostName ?: "Unknown"}", style = MaterialTheme.typography.bodyMedium)
-
-                    // Participants
-                    val approvedParticipants = match.participants.filter { it.status == ParticipantStatus.APPROVED }
-                    if (approvedParticipants.isNotEmpty()) {
-                        Text("Players", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
-                        LazyRow(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
-                            items(approvedParticipants) { p ->
-                                ParticipantAvatar(
-                                    name = p.userName,
-                                    photoUrl = p.userPhotoUrl,
-                                    role = p.role,
-                                    onClick = { onPlayerClick(p.userId) }
-                                )
-                            }
-                        }
-                    }
-
-                    // Browse available players (host only)
-                    if (uiState.isHost) {
-                        FilledTonalButton(
-                            onClick = {
-                                onBrowseAvailablePlayers(
-                                    match.id,
-                                    match.sportType.name.lowercase(),
-                                    match.minSkillLevel,
-                                    match.maxSkillLevel
-                                )
-                            },
-                            modifier = Modifier.fillMaxWidth()
-                        ) {
-                            Icon(Icons.Default.PersonSearch, contentDescription = null)
-                            Spacer(Modifier.width(8.dp))
-                            Text("Browse Available Players")
-                        }
-                    }
-
-                    // Pending join requests (host only)
-                    if (uiState.isHost && uiState.pendingRequests.isNotEmpty()) {
-                        Text("Join Requests", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
-                        uiState.pendingRequests.forEach { p ->
-                            Card(modifier = Modifier.fillMaxWidth()) {
-                                Row(
-                                    modifier = Modifier.padding(12.dp).fillMaxWidth(),
-                                    horizontalArrangement = Arrangement.SpaceBetween,
-                                    verticalAlignment = Alignment.CenterVertically
-                                ) {
-                                    Text(p.userName ?: "Player")
-                                    Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                                        Button(onClick = { viewModel.respondToJoinRequest(p.id, true) }) {
-                                            Text("Accept")
-                                        }
-                                        OutlinedButton(onClick = { viewModel.respondToJoinRequest(p.id, false) }) {
-                                            Text("Decline")
-                                        }
-                                    }
-                                }
-                            }
-                        }
-                    }
-
-                    // Action buttons
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.spacedBy(8.dp)
-                    ) {
-                        if (uiState.canJoin) {
-                            Button(
-                                onClick = { viewModel.joinMatch() },
-                                enabled = !uiState.isJoining,
-                                modifier = Modifier.weight(1f)
-                            ) {
-                                Text(if (uiState.isJoining) "Joining..." else "Join Match")
-                            }
-                        }
-                        if (uiState.canJoinWithParty) {
-                            FilledTonalButton(
-                                onClick = { viewModel.joinWithParty() },
-                                enabled = !uiState.isJoining,
-                                modifier = Modifier.weight(1f)
-                            ) {
-                                Icon(Icons.Default.Groups, null)
-                                Spacer(Modifier.width(4.dp))
-                                Text("Join with Party")
-                            }
-                        }
-                        if (uiState.isParticipant && !uiState.isHost) {
-                            OutlinedButton(
-                                onClick = { viewModel.leaveMatch() },
-                                modifier = Modifier.weight(1f)
-                            ) {
-                                Text("Leave Match")
-                            }
-                        }
-                        if (uiState.isParticipant) {
-                            FilledTonalButton(
-                                onClick = { onOpenChat(match.id) },
-                                modifier = Modifier.weight(1f)
-                            ) {
-                                Icon(Icons.AutoMirrored.Filled.Chat, null)
-                                Spacer(Modifier.width(4.dp))
-                                Text("Chat")
-                            }
-                        }
-                    }
-
-                    // Match Full CTA
-                    if (uiState.matchIsFull && uiState.isParticipant) {
-                        Card(
-                            modifier = Modifier.fillMaxWidth(),
-                            colors = androidx.compose.material3.CardDefaults.cardColors(
-                                containerColor = MaterialTheme.colorScheme.primaryContainer
+                    MatchDetailHeader(onBack = onBack)
+                    Spacer(modifier = Modifier.height(8.dp))
+                    MatchHeroCard(match = currentMatch, isLive = currentMatch.status == MatchStatus.OPEN)
+                    Spacer(modifier = Modifier.height(12.dp))
+                    MatchInfoCardsRow(match = currentMatch)
+                    Spacer(modifier = Modifier.height(16.dp))
+                    val approvedParticipants = currentMatch.participants.filter { it.status == ParticipantStatus.APPROVED }
+                    MatchPlayersSection(
+                        participants = approvedParticipants,
+                        maxPlayers = currentMatch.maxPlayers,
+                        currentUserId = uiState.currentUserId,
+                        onPlayerClick = onPlayerClick,
+                        onInvite = {
+                            onBrowseAvailablePlayers(
+                                currentMatch.id,
+                                currentMatch.sportType.name.lowercase(),
+                                currentMatch.minSkillLevel,
+                                currentMatch.maxSkillLevel,
                             )
-                        ) {
-                            Column(
-                                modifier = Modifier.padding(16.dp),
-                                horizontalAlignment = Alignment.CenterHorizontally,
-                                verticalArrangement = Arrangement.spacedBy(8.dp)
-                            ) {
-                                Icon(
-                                    imageVector = Icons.Default.CheckCircle,
-                                    contentDescription = null,
-                                    tint = MaterialTheme.colorScheme.primary,
-                                    modifier = Modifier.size(32.dp)
-                                )
-                                Text(
-                                    text = "Match is Full!",
-                                    style = MaterialTheme.typography.titleMedium,
-                                    fontWeight = FontWeight.Bold,
-                                    color = MaterialTheme.colorScheme.onPrimaryContainer
-                                )
-                                Text(
-                                    text = if (match.paymentType == "cash_at_venue")
-                                        "Your spot is confirmed. Pay at the venue."
-                                    else if (match.paymentType == "split")
-                                        "Proceed to pay your share to confirm the booking."
-                                    else
-                                        "The booking is being processed.",
-                                    style = MaterialTheme.typography.bodyMedium,
-                                    color = MaterialTheme.colorScheme.onPrimaryContainer
-                                )
-                                if (match.paymentType == "split" && uiState.canPayShare && uiState.myShare != null) {
-                                    Button(
-                                        onClick = { viewModel.payMyShare() },
-                                        enabled = !uiState.isPayingShare,
-                                        modifier = Modifier.fillMaxWidth()
-                                    ) {
-                                        Icon(Icons.Default.Payment, null)
-                                        Spacer(Modifier.width(8.dp))
-                                        Text(
-                                            if (uiState.isPayingShare) "Processing..."
-                                            else "Pay Your Share — ${"%.0f".format(uiState.myShare!!.amount)} ${uiState.myShare!!.currency}"
-                                        )
-                                    }
-                                }
-                            }
-                        }
-                    }
-
-                    // Payment Status Section (for split matches)
-                    if (uiState.showPaymentSection) {
-                        HorizontalDivider()
-                        PaymentStatusSection(
-                            paymentStatus = uiState.paymentStatus!!,
-                            myShare = uiState.myShare,
-                            canPayShare = uiState.canPayShare,
-                            isPaying = uiState.isPayingShare,
-                            onPayShare = { viewModel.payMyShare() }
-                        )
-                    }
-
-                    // Cash at Venue Section
-                    if (uiState.showCashAtVenueSection) {
-                        HorizontalDivider()
-                        CashAtVenueSection(
-                            match = match,
-                            isParticipant = uiState.isParticipant,
-                            onPayOnline = { viewModel.payMyShare() },
-                            isPaying = uiState.isPayingShare,
-                            canPayOnline = uiState.canPayShare,
-                            myShare = uiState.myShare
-                        )
-                    }
-
-                    // Rate players (completed matches, within 24 hours)
-                    val isWithin24Hours = match.updatedAt?.let {
-                        try {
-                            val completedAt = Instant.parse(it)
-                            Duration.between(completedAt, Instant.now()).toHours() < 24
-                        } catch (_: Exception) { true }
-                    } ?: true
-
-                    if (match.status == MatchStatus.COMPLETED && uiState.isParticipant && isWithin24Hours) {
-                        Button(
-                            onClick = { onRatePlayers(match.id) },
-                            modifier = Modifier.fillMaxWidth()
-                        ) {
-                            Icon(Icons.Default.Star, null)
-                            Spacer(Modifier.width(4.dp))
-                            Text("Rate Players")
-                        }
-                    }
-
-                    // Cancel (host only, if match is open/full)
-                    if (uiState.isHost && (match.status.name == "OPEN" || match.status.name == "FULL")) {
-                        TextButton(
-                            onClick = { viewModel.cancelMatch() },
-                            modifier = Modifier.fillMaxWidth()
-                        ) {
-                            Text("Cancel Match", color = MaterialTheme.colorScheme.error)
-                        }
-                    }
+                        },
+                    )
+                    Spacer(modifier = Modifier.height(16.dp))
+                    MatchVenueCard(match = currentMatch)
+                    Spacer(modifier = Modifier.height(16.dp))
+                    MatchChatPreviewSection(matchId = currentMatch.id, onOpenChat = { onOpenChat(currentMatch.id) })
+                    Spacer(modifier = Modifier.height(16.dp))
                 }
             }
         }
-    }
-}
 
-@Composable
-private fun PaymentStatusSection(
-    paymentStatus: MatchPaymentStatusDto,
-    myShare: SplitPaymentShareDto?,
-    canPayShare: Boolean,
-    isPaying: Boolean,
-    onPayShare: () -> Unit
-) {
-    Card(modifier = Modifier.fillMaxWidth()) {
-        Column(modifier = Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
-            Text("Payment Status", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
-
-            // Progress bar
-            val progress = if (paymentStatus.totalAmount > 0) {
-                (paymentStatus.paidAmount / paymentStatus.totalAmount).toFloat().coerceIn(0f, 1f)
-            } else 0f
-
-            Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.SpaceBetween
-                ) {
-                    Text(
-                        "${"%.0f".format(paymentStatus.paidAmount)} / ${"%.0f".format(paymentStatus.totalAmount)} ${paymentStatus.currency}",
-                        style = MaterialTheme.typography.bodySmall
-                    )
-                    Text(
-                        "${(progress * 100).toInt()}% paid",
-                        style = MaterialTheme.typography.bodySmall,
-                        color = MaterialTheme.colorScheme.primary
-                    )
-                }
-                LinearProgressIndicator(
-                    progress = { progress },
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .height(8.dp),
-                    trackColor = MaterialTheme.colorScheme.surfaceVariant
-                )
-            }
-
-            // Individual shares
-            paymentStatus.shares.forEach { share ->
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.SpaceBetween,
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    Row(
-                        horizontalArrangement = Arrangement.spacedBy(8.dp),
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        Icon(
-                            imageVector = if (share.status == "paid") Icons.Default.CheckCircle else Icons.Default.HourglassEmpty,
-                            contentDescription = null,
-                            tint = if (share.status == "paid") Color(0xFF16A34A) else Color(0xFFF59E0B),
-                            modifier = Modifier.size(20.dp)
-                        )
-                        Text(
-                            share.payerName ?: "Player",
-                            style = MaterialTheme.typography.bodyMedium
-                        )
-                    }
-                    Text(
-                        "${"%.0f".format(share.amount)} ${share.currency}",
-                        style = MaterialTheme.typography.bodyMedium,
-                        fontWeight = FontWeight.Medium
-                    )
-                }
-            }
-
-            // Pay button
-            if (canPayShare && myShare != null) {
-                Spacer(modifier = Modifier.height(4.dp))
-                Button(
-                    onClick = onPayShare,
-                    enabled = !isPaying,
-                    modifier = Modifier.fillMaxWidth(),
-                    colors = ButtonDefaults.buttonColors(
-                        containerColor = Color(0xFF2563EB)
-                    )
-                ) {
-                    Icon(Icons.Default.Payment, contentDescription = null)
-                    Spacer(Modifier.width(8.dp))
-                    Text(
-                        if (isPaying) "Processing..."
-                        else "Pay Your Share — ${"%.0f".format(myShare.amount)} ${myShare.currency}"
-                    )
-                }
-            }
+        if (uiState.match != null) {
+            MatchDetailBottomBar(
+                uiState = uiState,
+                onOpenChat = { onOpenChat(uiState.match!!.id) },
+                onJoin = { viewModel.joinMatch() },
+                onLeave = { viewModel.leaveMatch() },
+                modifier = Modifier.align(Alignment.BottomCenter),
+            )
         }
+
+        SnackbarHost(
+            hostState = snackbarHostState,
+            modifier = Modifier.align(Alignment.BottomCenter).padding(bottom = 80.dp),
+        )
     }
 }
 
+// ─────────────────────────────────────────────────────────────────────────────
+// Header row
+// ─────────────────────────────────────────────────────────────────────────────
+
 @Composable
-private fun CashAtVenueSection(
-    match: Match,
-    isParticipant: Boolean,
-    onPayOnline: () -> Unit,
-    isPaying: Boolean,
-    canPayOnline: Boolean,
-    myShare: SplitPaymentShareDto?
-) {
-    Card(modifier = Modifier.fillMaxWidth()) {
-        Column(
-            modifier = Modifier.padding(16.dp),
-            verticalArrangement = Arrangement.spacedBy(12.dp)
+private fun MatchDetailHeader(onBack: () -> Unit) {
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(horizontal = 16.dp, vertical = 12.dp),
+        horizontalArrangement = Arrangement.SpaceBetween,
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        // Back button
+        Box(
+            modifier = Modifier
+                .size(36.dp)
+                .clip(CircleShape)
+                .background(DarkSurface)
+                .clickable { onBack() },
+            contentAlignment = Alignment.Center
         ) {
-            // Main confirmed text with icon
+            Icon(
+                imageVector = Icons.AutoMirrored.Filled.ArrowBack,
+                contentDescription = "Back",
+                tint = DarkTextPrimary,
+                modifier = Modifier.size(20.dp)
+            )
+        }
+
+        Spacer(modifier = Modifier.weight(1f))
+
+        // Notification icon
+        Box(
+            modifier = Modifier
+                .size(36.dp)
+                .clip(CircleShape)
+                .background(DarkSurface),
+            contentAlignment = Alignment.Center
+        ) {
+            Icon(
+                imageVector = Icons.Default.Notifications,
+                contentDescription = "Notifications",
+                tint = DarkTextPrimary,
+                modifier = Modifier.size(20.dp)
+            )
+        }
+
+        Spacer(modifier = Modifier.width(8.dp))
+
+        // 3-dot icon
+        Box(
+            modifier = Modifier
+                .size(36.dp)
+                .clip(CircleShape)
+                .background(DarkSurface),
+            contentAlignment = Alignment.Center
+        ) {
+            Icon(
+                imageVector = Icons.Default.MoreVert,
+                contentDescription = "More options",
+                tint = DarkTextPrimary,
+                modifier = Modifier.size(20.dp)
+            )
+        }
+    }
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Match hero card
+// ─────────────────────────────────────────────────────────────────────────────
+
+@Composable
+private fun MatchHeroCard(match: Match, isLive: Boolean) {
+    val sportEmoji = sportEmoji(match.sportType)
+    val sportGradient = sportGradient(match.sportType)
+
+    Box(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(horizontal = 16.dp)
+            .clip(RoundedCornerShape(16.dp))
+            .background(DarkSurface)
+            .padding(20.dp)
+    ) {
+        Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
+            // Sport emoji circle
             Row(
-                verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.spacedBy(8.dp)
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.Top
             ) {
-                Icon(
-                    imageVector = Icons.Default.CheckCircle,
-                    contentDescription = null,
-                    tint = Color(0xFF16A34A),
-                    modifier = Modifier.size(24.dp)
-                )
-                Text(
-                    text = "Confirmed — Pay at Venue",
-                    style = MaterialTheme.typography.titleMedium,
-                    fontWeight = FontWeight.Bold,
-                    color = Color(0xFF16A34A)
-                )
+                Box(
+                    modifier = Modifier
+                        .size(72.dp)
+                        .clip(CircleShape)
+                        .background(Brush.radialGradient(sportGradient)),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Text(text = sportEmoji, fontSize = 32.sp)
+                }
+
+                // Badges column
+                Column(
+                    horizontalAlignment = Alignment.End,
+                    verticalArrangement = Arrangement.spacedBy(6.dp)
+                ) {
+                    // "Competitive" badge
+                    Box(
+                        modifier = Modifier
+                            .clip(RoundedCornerShape(12.dp))
+                            .background(Color(0xFF1B3A1B))
+                            .padding(horizontal = 10.dp, vertical = 4.dp)
+                    ) {
+                        Text(
+                            text = "Competitive",
+                            color = GreenAccent,
+                            fontSize = 12.sp,
+                            fontWeight = FontWeight.SemiBold
+                        )
+                    }
+
+                    // LIVE badge (animated pulse when OPEN)
+                    if (isLive) {
+                        LiveBadge()
+                    }
+                }
             }
 
+            // Match title
             Text(
-                text = "Payment will be collected at the venue on the day of the match.",
-                style = MaterialTheme.typography.bodyMedium,
-                color = MaterialTheme.colorScheme.onSurfaceVariant
+                text = match.title,
+                color = DarkTextPrimary,
+                fontSize = 20.sp,
+                fontWeight = FontWeight.Bold,
+                lineHeight = 26.sp
             )
 
-            // Show cost per player
-            if (!match.isFree) {
-                Text(
-                    text = "Your share: ${String.format("%.0f", match.costPerPlayer)} ден",
-                    style = MaterialTheme.typography.bodyMedium,
-                    fontWeight = FontWeight.Medium
-                )
-            }
+            // Hosted by
+            Text(
+                text = "Hosted by ${match.hostName ?: "Unknown"}",
+                color = DarkTextSecondary,
+                fontSize = 14.sp
+            )
 
-            // Optional: Pay now online instead
-            if (canPayOnline && myShare != null) {
-                HorizontalDivider()
-                Text(
-                    text = "Or pay now online",
-                    style = MaterialTheme.typography.labelMedium,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
+            Box(modifier = Modifier.fillMaxWidth().height(1.dp).background(DarkBorder))
+
+            // Meta row: date / time / skill range
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(16.dp),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                MetaChip(
+                    icon = Icons.Default.CalendarToday,
+                    text = match.matchDate.toFriendlyDate()
                 )
-                OutlinedButton(
-                    onClick = onPayOnline,
-                    enabled = !isPaying,
-                    modifier = Modifier.fillMaxWidth()
-                ) {
-                    Icon(Icons.Default.Payment, contentDescription = null)
-                    Spacer(Modifier.width(8.dp))
-                    Text(
-                        if (isPaying) "Processing..."
-                        else "Pay Now — ${"%.0f".format(myShare.amount)} ${myShare.currency}"
-                    )
+                MetaChip(
+                    icon = Icons.Default.Schedule,
+                    text = match.displayTime
+                )
+                if (match.minSkillLevel != null && match.maxSkillLevel != null) {
+                    Box(
+                        modifier = Modifier
+                            .clip(RoundedCornerShape(8.dp))
+                            .background(Color(0xFF1A2A3A))
+                            .padding(horizontal = 8.dp, vertical = 4.dp)
+                    ) {
+                        Text(
+                            text = "Skill ${match.minSkillLevel}-${match.maxSkillLevel}",
+                            color = Color(0xFF2196F3),
+                            fontSize = 12.sp,
+                            fontWeight = FontWeight.Medium
+                        )
+                    }
                 }
             }
         }
@@ -690,16 +378,645 @@ private fun CashAtVenueSection(
 }
 
 @Composable
-private fun DetailRow(icon: androidx.compose.ui.graphics.vector.ImageVector, label: String, value: String) {
-    Row(verticalAlignment = Alignment.CenterVertically) {
-        Icon(icon, null, tint = MaterialTheme.colorScheme.primary, modifier = Modifier.padding(end = 8.dp))
-        Text("$label: ", fontWeight = FontWeight.Medium, style = MaterialTheme.typography.bodyMedium)
-        Text(value, style = MaterialTheme.typography.bodyMedium)
+private fun LiveBadge() {
+    val infiniteTransition = rememberInfiniteTransition(label = "live_pulse")
+    val alpha by infiniteTransition.animateFloat(
+        initialValue = 1f,
+        targetValue = 0.3f,
+        animationSpec = infiniteRepeatable(
+            animation = tween(700, easing = LinearEasing),
+            repeatMode = RepeatMode.Reverse
+        ),
+        label = "live_alpha"
+    )
+
+    Box(
+        modifier = Modifier
+            .clip(RoundedCornerShape(12.dp))
+            .background(Color(0x33EF4444))
+            .padding(horizontal = 10.dp, vertical = 4.dp)
+    ) {
+        Row(
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(4.dp)
+        ) {
+            Box(
+                modifier = Modifier
+                    .size(6.dp)
+                    .clip(CircleShape)
+                    .background(Color(0xFFEF4444).copy(alpha = alpha))
+            )
+            Text(
+                text = "LIVE",
+                color = Color(0xFFEF4444),
+                fontSize = 11.sp,
+                fontWeight = FontWeight.Bold
+            )
+        }
     }
 }
 
-@OptIn(ExperimentalMaterial3Api::class)
-@Preview(showBackground = true)
+@Composable
+private fun MetaChip(
+    icon: androidx.compose.ui.graphics.vector.ImageVector,
+    text: String
+) {
+    Row(
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.spacedBy(4.dp)
+    ) {
+        Icon(
+            imageVector = icon,
+            contentDescription = null,
+            tint = DarkTextSecondary,
+            modifier = Modifier.size(14.dp)
+        )
+        Text(text = text, color = DarkTextSecondary, fontSize = 12.sp)
+    }
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Info cards row
+// ─────────────────────────────────────────────────────────────────────────────
+
+@Composable
+private fun MatchInfoCardsRow(match: Match) {
+    val costText = when {
+        match.isFree -> "Free"
+        match.pricePerPlayer > 0 -> "${"%.0f".format(match.pricePerPlayer)} ${match.currency}"
+        match.costPerPlayer > 0 -> "${"%.0f".format(match.costPerPlayer)} ${match.currency}"
+        else -> "Free"
+    }
+
+    // Calculate duration from start/end time
+    val durationText = try {
+        val parts1 = match.startTime.split(":")
+        val parts2 = match.endTime.split(":")
+        val start = parts1[0].toInt() * 60 + parts1[1].toInt()
+        val end = parts2[0].toInt() * 60 + parts2[1].toInt()
+        val diff = end - start
+        if (diff > 0) "${diff / 60}h ${if (diff % 60 != 0) "${diff % 60}m" else ""}".trim() else "—"
+    } catch (_: Exception) {
+        "—"
+    }
+
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(horizontal = 16.dp),
+        horizontalArrangement = Arrangement.spacedBy(8.dp)
+    ) {
+        InfoCard(
+            modifier = Modifier.weight(1f),
+            icon = Icons.Default.Groups,
+            value = "${match.currentPlayers}/${match.maxPlayers}",
+            label = "Players"
+        )
+        InfoCard(
+            modifier = Modifier.weight(1f),
+            icon = Icons.AutoMirrored.Filled.Chat,
+            value = costText,
+            label = "Per player"
+        )
+        InfoCard(
+            modifier = Modifier.weight(1f),
+            icon = Icons.Default.Schedule,
+            value = durationText,
+            label = "Duration"
+        )
+    }
+}
+
+@Composable
+private fun InfoCard(
+    modifier: Modifier = Modifier,
+    icon: androidx.compose.ui.graphics.vector.ImageVector,
+    value: String,
+    label: String
+) {
+    Box(
+        modifier = modifier
+            .clip(RoundedCornerShape(12.dp))
+            .background(DarkSurface)
+            .padding(12.dp)
+    ) {
+        Column(
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.spacedBy(4.dp),
+            modifier = Modifier.fillMaxWidth()
+        ) {
+            Icon(
+                imageVector = icon,
+                contentDescription = null,
+                tint = GreenAccent,
+                modifier = Modifier.size(20.dp)
+            )
+            Text(
+                text = value,
+                color = DarkTextPrimary,
+                fontSize = 14.sp,
+                fontWeight = FontWeight.Bold
+            )
+            Text(
+                text = label,
+                color = DarkTextSecondary,
+                fontSize = 11.sp
+            )
+        }
+    }
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Players section
+// ─────────────────────────────────────────────────────────────────────────────
+
+@Composable
+private fun MatchPlayersSection(
+    participants: List<MatchParticipant>,
+    maxPlayers: Int,
+    currentUserId: Long?,
+    onPlayerClick: (Long) -> Unit,
+    onInvite: () -> Unit
+) {
+    Column(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(horizontal = 16.dp),
+        verticalArrangement = Arrangement.spacedBy(12.dp)
+    ) {
+        // Section header
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Text(
+                text = "Players (${participants.size}/$maxPlayers)",
+                color = DarkTextPrimary,
+                fontSize = 16.sp,
+                fontWeight = FontWeight.Bold
+            )
+            Box(
+                modifier = Modifier
+                    .clip(RoundedCornerShape(8.dp))
+                    .background(Color(0xFF1B3A1B))
+                    .clickable { onInvite() }
+                    .padding(horizontal = 12.dp, vertical = 6.dp)
+            ) {
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(4.dp)
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.PersonAdd,
+                        contentDescription = "Invite",
+                        tint = GreenAccent,
+                        modifier = Modifier.size(14.dp)
+                    )
+                    Text(
+                        text = "Invite +",
+                        color = GreenAccent,
+                        fontSize = 13.sp,
+                        fontWeight = FontWeight.SemiBold
+                    )
+                }
+            }
+        }
+
+        // Participant rows
+        participants.forEach { participant ->
+            ParticipantRow(
+                participant = participant,
+                isCurrentUser = participant.userId == currentUserId,
+                onClick = { onPlayerClick(participant.userId) }
+            )
+        }
+    }
+}
+
+@Composable
+private fun ParticipantRow(
+    participant: MatchParticipant,
+    isCurrentUser: Boolean,
+    onClick: () -> Unit
+) {
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .clip(RoundedCornerShape(12.dp))
+            .background(DarkSurface)
+            .clickable { onClick() }
+            .padding(12.dp),
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.spacedBy(12.dp)
+    ) {
+        // Avatar initial
+        val name = participant.userName ?: "?"
+        val initial = name.firstOrNull()?.uppercaseChar()?.toString() ?: "?"
+        Box(
+            modifier = Modifier
+                .size(44.dp)
+                .clip(CircleShape)
+                .background(Brush.linearGradient(listOf(GreenAccent, Color(0xFF2E7D32)))),
+            contentAlignment = Alignment.Center
+        ) {
+            Text(
+                text = initial,
+                color = DarkTextPrimary,
+                fontSize = 18.sp,
+                fontWeight = FontWeight.Bold
+            )
+        }
+
+        // Name + level info
+        Column(modifier = Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(2.dp)) {
+            Text(
+                text = name,
+                color = DarkTextPrimary,
+                fontSize = 15.sp,
+                fontWeight = FontWeight.SemiBold
+            )
+            Text(
+                text = participant.role.displayName,
+                color = DarkTextSecondary,
+                fontSize = 12.sp
+            )
+        }
+
+        // Tags (HOST / YOU)
+        Column(
+            horizontalAlignment = Alignment.End,
+            verticalArrangement = Arrangement.spacedBy(4.dp)
+        ) {
+            if (participant.role == ParticipantRole.HOST) {
+                Box(
+                    modifier = Modifier
+                        .clip(RoundedCornerShape(6.dp))
+                        .background(Color(0xFF1A2A3A))
+                        .padding(horizontal = 8.dp, vertical = 3.dp)
+                ) {
+                    Text(
+                        text = "HOST",
+                        color = Color(0xFF2196F3),
+                        fontSize = 10.sp,
+                        fontWeight = FontWeight.Bold
+                    )
+                }
+            }
+            if (isCurrentUser) {
+                Box(
+                    modifier = Modifier
+                        .clip(RoundedCornerShape(6.dp))
+                        .background(Color(0xFF1B3A1B))
+                        .padding(horizontal = 8.dp, vertical = 3.dp)
+                ) {
+                    Text(
+                        text = "YOU",
+                        color = GreenAccent,
+                        fontSize = 10.sp,
+                        fontWeight = FontWeight.Bold
+                    )
+                }
+            }
+        }
+    }
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Venue card
+// ─────────────────────────────────────────────────────────────────────────────
+
+@Composable
+private fun MatchVenueCard(match: Match) {
+    Box(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(horizontal = 16.dp)
+            .clip(RoundedCornerShape(16.dp))
+            .background(DarkSurface)
+            .padding(16.dp)
+    ) {
+        Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
+            Text(
+                text = "Venue",
+                color = DarkTextPrimary,
+                fontSize = 16.sp,
+                fontWeight = FontWeight.Bold
+            )
+
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(12.dp)
+            ) {
+                // Venue emoji box
+                Box(
+                    modifier = Modifier
+                        .size(48.dp)
+                        .clip(RoundedCornerShape(10.dp))
+                        .background(Color(0xFF1A2A3A)),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Text(text = "🏟", fontSize = 24.sp)
+                }
+
+                Column(modifier = Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(2.dp)) {
+                    Text(
+                        text = match.venueName ?: match.locationName ?: "Venue TBD",
+                        color = DarkTextPrimary,
+                        fontSize = 15.sp,
+                        fontWeight = FontWeight.SemiBold
+                    )
+                    Text(
+                        text = match.address ?: match.locationName ?: "Address TBD",
+                        color = DarkTextSecondary,
+                        fontSize = 12.sp
+                    )
+                }
+            }
+
+            Box(modifier = Modifier.fillMaxWidth().height(1.dp).background(DarkBorder))
+
+            // Action buttons
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(8.dp)
+            ) {
+                // Directions button
+                Row(
+                    modifier = Modifier
+                        .weight(1f)
+                        .clip(RoundedCornerShape(10.dp))
+                        .background(DarkSurfaceLight)
+                        .padding(vertical = 10.dp),
+                    horizontalArrangement = Arrangement.Center,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Icon(
+                        imageVector = Icons.AutoMirrored.Filled.DirectionsWalk,
+                        contentDescription = "Directions",
+                        tint = GreenAccent,
+                        modifier = Modifier.size(16.dp)
+                    )
+                    Spacer(modifier = Modifier.width(6.dp))
+                    Text(
+                        text = "Directions",
+                        color = GreenAccent,
+                        fontSize = 13.sp,
+                        fontWeight = FontWeight.SemiBold
+                    )
+                }
+
+                // Call button
+                Row(
+                    modifier = Modifier
+                        .weight(1f)
+                        .clip(RoundedCornerShape(10.dp))
+                        .background(DarkSurfaceLight)
+                        .padding(vertical = 10.dp),
+                    horizontalArrangement = Arrangement.Center,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.Call,
+                        contentDescription = "Call",
+                        tint = Color(0xFF2196F3),
+                        modifier = Modifier.size(16.dp)
+                    )
+                    Spacer(modifier = Modifier.width(6.dp))
+                    Text(
+                        text = "Call",
+                        color = Color(0xFF2196F3),
+                        fontSize = 13.sp,
+                        fontWeight = FontWeight.SemiBold
+                    )
+                }
+            }
+        }
+    }
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Match Chat preview section
+// ─────────────────────────────────────────────────────────────────────────────
+
+@Composable
+private fun MatchChatPreviewSection(matchId: Long, onOpenChat: () -> Unit) {
+    // Static preview messages (real messages would come from a chat VM)
+    val previewMessages = listOf(
+        Triple("Jordan L.", "See you all at 6pm! Don't be late 🏀", "2h ago"),
+        Triple("Alex M.", "Bringing extra water, it's gonna be hot", "1h ago")
+    )
+
+    Box(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(horizontal = 16.dp)
+            .clip(RoundedCornerShape(16.dp))
+            .background(DarkSurface)
+            .padding(16.dp)
+    ) {
+        Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
+            Text(
+                text = "Match Chat",
+                color = DarkTextPrimary,
+                fontSize = 16.sp,
+                fontWeight = FontWeight.Bold
+            )
+
+            previewMessages.forEach { (author, body, time) ->
+                Column(verticalArrangement = Arrangement.spacedBy(2.dp)) {
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceBetween
+                    ) {
+                        Text(
+                            text = author,
+                            color = GreenAccent,
+                            fontSize = 13.sp,
+                            fontWeight = FontWeight.SemiBold
+                        )
+                        Text(
+                            text = time,
+                            color = DarkTextSecondary,
+                            fontSize = 11.sp
+                        )
+                    }
+                    Text(
+                        text = body,
+                        color = DarkTextSecondary,
+                        fontSize = 13.sp
+                    )
+                }
+                Box(modifier = Modifier.fillMaxWidth().height(1.dp).background(DarkBorder))
+            }
+
+            // Open Chat row
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .clickable { onOpenChat() },
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+                    Icon(
+                        imageVector = Icons.AutoMirrored.Filled.Chat,
+                        contentDescription = null,
+                        tint = GreenAccent,
+                        modifier = Modifier.size(18.dp)
+                    )
+                    Text(
+                        text = "Open Chat",
+                        color = GreenAccent,
+                        fontSize = 14.sp,
+                        fontWeight = FontWeight.SemiBold
+                    )
+                }
+                Text(
+                    text = "→",
+                    color = GreenAccent,
+                    fontSize = 16.sp,
+                    fontWeight = FontWeight.Bold
+                )
+            }
+        }
+    }
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Sticky bottom bar
+// ─────────────────────────────────────────────────────────────────────────────
+
+@Composable
+private fun MatchDetailBottomBar(
+    uiState: MatchDetailUiState,
+    onOpenChat: () -> Unit,
+    onJoin: () -> Unit,
+    onLeave: () -> Unit,
+    modifier: Modifier = Modifier,
+) {
+    Box(
+        modifier = modifier
+            .fillMaxWidth()
+            .background(DarkBg)
+            .border(width = 1.dp, color = DarkBorder, shape = RoundedCornerShape(topStart = 0.dp, topEnd = 0.dp))
+            .padding(horizontal = 16.dp, vertical = 12.dp),
+    ) {
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.spacedBy(10.dp),
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            val chatWeight = if (uiState.canJoin || (uiState.isParticipant && !uiState.isHost)) 0.45f else 1f
+            // Chat button
+            Box(
+                modifier = Modifier
+                    .weight(chatWeight)
+                    .height(46.dp)
+                    .clip(RoundedCornerShape(12.dp))
+                    .background(DarkSurface)
+                    .clickable(onClick = onOpenChat),
+                contentAlignment = Alignment.Center,
+            ) {
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(6.dp),
+                ) {
+                    Icon(Icons.AutoMirrored.Filled.Chat, contentDescription = null, modifier = Modifier.size(18.dp), tint = DarkTextPrimary)
+                    Text(text = "Chat", fontSize = 14.sp, fontWeight = FontWeight.SemiBold, color = DarkTextPrimary)
+                }
+            }
+
+            // Join Match button
+            if (uiState.canJoin) {
+                val match = uiState.match
+                val priceLabel = when {
+                    match == null -> "Join Match"
+                    match.isFree -> "Join Free"
+                    match.pricePerPlayer > 0 -> "Join · ${"%.0f".format(match.pricePerPlayer)} ${match.currency}"
+                    match.costPerPlayer > 0 -> "Join · ${"%.0f".format(match.costPerPlayer)} ${match.currency}"
+                    else -> "Join Match"
+                }
+                Box(
+                    modifier = Modifier
+                        .weight(1f)
+                        .height(46.dp)
+                        .clip(RoundedCornerShape(12.dp))
+                        .background(if (!uiState.isJoining) GreenAccent else GreenAccent.copy(alpha = 0.5f))
+                        .then(if (!uiState.isJoining) Modifier.clickable(onClick = onJoin) else Modifier),
+                    contentAlignment = Alignment.Center,
+                ) {
+                    Text(
+                        text = if (uiState.isJoining) "Joining..." else priceLabel,
+                        fontSize = 14.sp,
+                        fontWeight = FontWeight.Bold,
+                        color = DarkBg,
+                    )
+                }
+            }
+
+            // Leave Match button
+            if (uiState.isParticipant && !uiState.isHost) {
+                Box(
+                    modifier = Modifier
+                        .weight(1f)
+                        .height(46.dp)
+                        .clip(RoundedCornerShape(12.dp))
+                        .background(Color(0xFFEF4444))
+                        .clickable(onClick = onLeave),
+                    contentAlignment = Alignment.Center,
+                ) {
+                    Text(text = "Leave Match", fontSize = 14.sp, fontWeight = FontWeight.Bold, color = DarkTextPrimary)
+                }
+            }
+        }
+    }
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Helpers
+// ─────────────────────────────────────────────────────────────────────────────
+
+private fun sportEmoji(sportType: SportType): String = when (sportType) {
+    SportType.BASKETBALL -> "🏀"
+    SportType.FOOTBALL -> "⚽"
+    SportType.TENNIS -> "🎾"
+    SportType.PADDLE -> "🏓"
+    SportType.VOLLEYBALL -> "🏐"
+    SportType.SWIMMING -> "🏊"
+    SportType.BOXING -> "🥊"
+    SportType.MMA -> "🥋"
+    SportType.YOGA -> "🧘"
+    SportType.PILATES -> "🤸"
+    SportType.CROSSFIT -> "💪"
+    SportType.RUNNING -> "🏃"
+    SportType.CYCLING -> "🚴"
+    SportType.GOLF -> "⛳"
+    SportType.BADMINTON -> "🏸"
+    SportType.TABLE_TENNIS -> "🏓"
+    SportType.HANDBALL -> "🤾"
+    SportType.BASEBALL -> "⚾"
+    SportType.CRICKET -> "🏏"
+}
+
+private fun sportGradient(sportType: SportType): List<Color> = when (sportType) {
+    SportType.BASKETBALL -> listOf(Color(0xFF7B3A10), Color(0xFF2A1A05))
+    SportType.FOOTBALL -> listOf(Color(0xFF1A3A1A), Color(0xFF0A1A0A))
+    SportType.TENNIS -> listOf(Color(0xFF2A3A10), Color(0xFF0A1A05))
+    SportType.PADDLE -> listOf(Color(0xFF102A3A), Color(0xFF051020))
+    SportType.VOLLEYBALL -> listOf(Color(0xFF103A3A), Color(0xFF051A1A))
+    SportType.SWIMMING -> listOf(Color(0xFF102040), Color(0xFF051020))
+    else -> listOf(Color(0xFF1B3A1B), Color(0xFF0A1A0A))
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Preview
+// ─────────────────────────────────────────────────────────────────────────────
+
+@Preview(showBackground = true, backgroundColor = 0xFF121212)
 @Composable
 private fun MatchDetailScreenPreview() {
     val sampleMatch = Match(
@@ -711,8 +1028,7 @@ private fun MatchDetailScreenPreview() {
         status = MatchStatus.OPEN,
         visibility = MatchVisibility.PUBLIC,
         title = "Sunday Pickup Basketball",
-        description = "Casual game, all levels welcome. Bring water!",
-        matchDate = "2026-03-30",
+        matchDate = "2026-06-08",
         startTime = "18:00",
         endTime = "19:30",
         minPlayers = 6,
@@ -721,74 +1037,68 @@ private fun MatchDetailScreenPreview() {
         minSkillLevel = 2,
         maxSkillLevel = 4,
         locationName = "City Sports Center",
+        venueName = "City Sports Arena",
         address = "123 Main St",
-        isFree = true,
+        isFree = false,
+        costPerPlayer = 200.0,
+        currency = "MKD",
         participants = listOf(
             MatchParticipant(
                 id = 1L, matchId = 1L, userId = 10L,
-                userName = "Jordan Lee", status = ParticipantStatus.APPROVED,
+                userName = "Jordan Lee",
+                status = ParticipantStatus.APPROVED,
                 role = ParticipantRole.HOST
+            ),
+            MatchParticipant(
+                id = 2L, matchId = 1L, userId = 20L,
+                userName = "Alex M.",
+                status = ParticipantStatus.APPROVED,
+                role = ParticipantRole.PLAYER
             )
         )
     )
-    Scaffold(
-        topBar = {
-            TopAppBar(
-                title = { Text("Match Details") },
-                navigationIcon = {
-                    IconButton(onClick = {}) {
-                        Icon(Icons.AutoMirrored.Filled.ArrowBack, "Back")
-                    }
-                }
-            )
-        }
-    ) { padding ->
+
+    val previewUiState = MatchDetailUiState(
+        match = sampleMatch,
+        currentUserId = 20L
+    )
+
+    Box(
+        modifier = Modifier
+            .fillMaxSize()
+            .background(DarkBg)
+    ) {
         Column(
             modifier = Modifier
                 .fillMaxSize()
-                .padding(padding)
                 .verticalScroll(rememberScrollState())
-                .padding(16.dp),
-            verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                Text(
-                    text = sampleMatch.title,
-                    style = MaterialTheme.typography.headlineSmall,
-                    fontWeight = FontWeight.Bold,
-                    modifier = Modifier.weight(1f)
-                )
-                MatchStatusBadge(status = sampleMatch.status)
-            }
-            Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                Text(
-                    text = sampleMatch.sportType.displayName,
-                    style = MaterialTheme.typography.titleMedium,
-                    color = MaterialTheme.colorScheme.primary
-                )
-                SkillRangeBadge(2, 4)
-            }
-            Text(
-                text = sampleMatch.description ?: "",
-                style = MaterialTheme.typography.bodyMedium
+            MatchDetailHeader(onBack = {})
+            Spacer(modifier = Modifier.height(8.dp))
+            MatchHeroCard(match = sampleMatch, isLive = true)
+            Spacer(modifier = Modifier.height(12.dp))
+            MatchInfoCardsRow(match = sampleMatch)
+            Spacer(modifier = Modifier.height(16.dp))
+            MatchPlayersSection(
+                participants = sampleMatch.participants.filter { it.status == ParticipantStatus.APPROVED },
+                maxPlayers = sampleMatch.maxPlayers,
+                currentUserId = 20L,
+                onPlayerClick = {},
+                onInvite = {}
             )
-            Card(modifier = Modifier.fillMaxWidth()) {
-                Column(modifier = Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                    DetailRow(Icons.Default.CalendarToday, "Date", sampleMatch.matchDate.toDisplayDate())
-                    DetailRow(Icons.Default.Schedule, "Time", sampleMatch.displayTime)
-                    DetailRow(Icons.Default.LocationOn, "Location", sampleMatch.displayLocation)
-                    DetailRow(Icons.Default.Groups, "Players", "${sampleMatch.currentPlayers}/${sampleMatch.maxPlayers}")
-                    Text("Free to join!", color = MaterialTheme.colorScheme.tertiary, fontWeight = FontWeight.Medium)
-                }
-            }
-            Text("Hosted by ${sampleMatch.hostName}", style = MaterialTheme.typography.bodyMedium)
-            Button(onClick = {}, modifier = Modifier.fillMaxWidth()) {
-                Text("Join Match")
-            }
+            Spacer(modifier = Modifier.height(16.dp))
+            MatchVenueCard(match = sampleMatch)
+            Spacer(modifier = Modifier.height(16.dp))
+            MatchChatPreviewSection(matchId = 1L, onOpenChat = {})
+            Spacer(modifier = Modifier.height(88.dp))
+        }
+        Box(modifier = Modifier.align(Alignment.BottomCenter)) {
+            MatchDetailBottomBar(
+                uiState = previewUiState,
+                onOpenChat = {},
+                onJoin = {},
+                onLeave = {}
+            )
         }
     }
 }

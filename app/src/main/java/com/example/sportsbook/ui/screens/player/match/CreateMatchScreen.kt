@@ -1,15 +1,11 @@
 package com.example.sportsbook.ui.screens.player.match
 
-import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
-import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.ExperimentalLayoutApi
-import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
@@ -17,62 +13,65 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
-import androidx.compose.material.icons.filled.AccessTime
-import androidx.compose.material.icons.filled.CalendarMonth
-import androidx.compose.material.icons.filled.LocationOn
-import androidx.compose.material3.Button
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.DatePicker
 import androidx.compose.material3.DatePickerDialog
-import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.ExposedDropdownMenuBox
-import androidx.compose.material3.ExposedDropdownMenuDefaults
 import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.MenuAnchorType
-import androidx.compose.material3.OutlinedTextField
-import androidx.compose.material3.Scaffold
-import androidx.compose.material3.Slider
+import androidx.compose.material3.Surface
 import androidx.compose.material3.Switch
-import androidx.compose.material3.Text
+import androidx.compose.material3.SwitchDefaults
 import androidx.compose.material3.TextButton
+import androidx.compose.material3.Text
 import androidx.compose.material3.TimePicker
-import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.rememberDatePickerState
 import androidx.compose.material3.rememberTimePickerState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
+import java.text.SimpleDateFormat
+import java.util.Date
+import java.util.Locale
 import androidx.compose.ui.Alignment
+import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.draw.shadow
-import androidx.compose.ui.text.input.KeyboardType
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.SolidColor
+import androidx.compose.ui.text.TextStyle
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.compose.ui.window.Dialog
 import androidx.hilt.navigation.compose.hiltViewModel
-import androidx.compose.material3.FilterChip
-import androidx.compose.material.icons.filled.Groups
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.example.sportsbook.domain.enums.MatchPaymentType
 import com.example.sportsbook.domain.enums.MatchType
 import com.example.sportsbook.domain.enums.MatchVisibility
 import com.example.sportsbook.domain.enums.SportType
-import com.example.sportsbook.ui.common.toDisplayDate
-import com.example.sportsbook.ui.common.toIsoDate
+
+// ── Color tokens ────────────────────────────────────────────────────────────
+private val DarkBg = Color(0xFF121212)
+private val DarkSurface = Color(0xFF1E1E1E)
+private val DarkBorder = Color(0xFF2A2A2A)
+private val DarkTextPrimary = Color.White
+private val DarkTextSecondary = Color(0xFF888888)
+private val GreenAccent = Color(0xFF4CAF50)
+private val GreenActiveBg = Color(0xFF1B3A1E)
+
+// ── Public screen ────────────────────────────────────────────────────────────
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -81,355 +80,378 @@ fun CreateMatchScreen(
     onBack: () -> Unit,
     viewModel: CreateMatchViewModel = hiltViewModel()
 ) {
-    val uiState by viewModel.uiState.collectAsState()
+    val uiState by viewModel.uiState.collectAsStateWithLifecycle()
 
     LaunchedEffect(uiState.createdMatch) {
         uiState.createdMatch?.let { onMatchCreated(it.id) }
     }
 
-    Scaffold(
-        topBar = {
-            TopAppBar(
-                title = { Text("Create Match") },
-                navigationIcon = {
-                    IconButton(onClick = onBack) {
-                        Icon(Icons.AutoMirrored.Filled.ArrowBack, "Back")
-                    }
-                }
-            )
-        }
-    ) { padding ->
-        Column(
+    var autoApprove by remember { mutableStateOf(false) }
+    var showDatePicker by remember { mutableStateOf(false) }
+    var showStartTimePicker by remember { mutableStateOf(false) }
+    var showEndTimePicker by remember { mutableStateOf(false) }
+
+    Box(
+        modifier = Modifier
+            .fillMaxSize()
+            .background(DarkBg)
+    ) {
+        LazyColumn(
             modifier = Modifier
                 .fillMaxSize()
-                .padding(padding)
-                .verticalScroll(rememberScrollState())
-                .padding(16.dp),
-            verticalArrangement = Arrangement.spacedBy(12.dp)
+                .padding(bottom = 88.dp),
+            contentPadding = androidx.compose.foundation.layout.PaddingValues(bottom = 16.dp)
         ) {
-            OutlinedTextField(
-                value = uiState.title,
-                onValueChange = viewModel::updateTitle,
-                label = { Text("Match Title *") },
-                modifier = Modifier.fillMaxWidth(),
-                singleLine = true
-            )
-
-            OutlinedTextField(
-                value = uiState.description,
-                onValueChange = viewModel::updateDescription,
-                label = { Text("Description") },
-                modifier = Modifier.fillMaxWidth(),
-                maxLines = 3
-            )
-
-            // Sport Type dropdown
-            SportDropdown(
-                selected = uiState.sportType,
-                onSelected = viewModel::updateSportType
-            )
-
-            // Match Type
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.spacedBy(8.dp),
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                Text("Type:", style = MaterialTheme.typography.bodyMedium)
-                MatchType.entries.forEach { type ->
-                    androidx.compose.material3.FilterChip(
-                        selected = uiState.matchType == type,
-                        onClick = { viewModel.updateMatchType(type) },
-                        label = { Text(type.displayName) }
-                    )
-                }
-            }
-
-            // Visibility
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.spacedBy(8.dp),
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                Text("Visibility:", style = MaterialTheme.typography.bodyMedium)
-                MatchVisibility.entries.forEach { vis ->
-                    androidx.compose.material3.FilterChip(
-                        selected = uiState.visibility == vis,
-                        onClick = { viewModel.updateVisibility(vis) },
-                        label = { Text(vis.displayName) }
-                    )
-                }
-            }
-
-            // Party picker — bring your team along
-            if (uiState.activeParties.isNotEmpty()) {
-                Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
-                    Row(
-                        verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.spacedBy(8.dp)
+            // ── Header ──────────────────────────────────────────────────
+            item {
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = 16.dp, vertical = 16.dp),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Box(
+                        modifier = Modifier
+                            .size(36.dp)
+                            .clip(CircleShape)
+                            .background(DarkSurface)
+                            .clickable { onBack() },
+                        contentAlignment = Alignment.Center
                     ) {
                         Icon(
-                            Icons.Default.Groups,
-                            contentDescription = null,
-                            tint = MaterialTheme.colorScheme.primary,
-                            modifier = Modifier.size(20.dp)
+                            imageVector = Icons.AutoMirrored.Filled.ArrowBack,
+                            contentDescription = "Back",
+                            tint = DarkTextPrimary,
+                            modifier = Modifier.size(18.dp)
                         )
-                        Text("Bring your party", style = MaterialTheme.typography.titleSmall)
                     }
+                    Box(
+                        modifier = Modifier.weight(1f),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Text(
+                            text = "Create Match",
+                            color = DarkTextPrimary,
+                            fontSize = 18.sp,
+                            fontWeight = FontWeight.Bold
+                        )
+                    }
+                    // Spacer to balance the back button
+                    Spacer(modifier = Modifier.size(36.dp))
+                }
+            }
+
+            // ── Match Title ──────────────────────────────────────────────
+            item {
+                FormSection(label = "MATCH TITLE") {
+                    DarkTextField(
+                        value = uiState.title,
+                        onValueChange = viewModel::updateTitle,
+                        hint = "e.g. Sunday Basketball Showdown"
+                    )
+                }
+            }
+
+            // ── Sport ────────────────────────────────────────────────────
+            item {
+                FormSection(label = "SPORT") {
+                    SportGrid(
+                        selected = uiState.sportType,
+                        onSelected = viewModel::updateSportType
+                    )
+                }
+            }
+
+            // ── Match Type ───────────────────────────────────────────────
+            item {
+                FormSection(label = "MATCH TYPE") {
+                    MatchTypeRow(
+                        selected = uiState.matchType,
+                        onSelected = viewModel::updateMatchType
+                    )
+                }
+            }
+
+            // ── Date & Time ──────────────────────────────────────────────
+            item {
+                FormSection(label = "DATE & TIME") {
                     Row(
                         modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.spacedBy(8.dp)
+                        horizontalArrangement = Arrangement.spacedBy(10.dp)
                     ) {
-                        FilterChip(
-                            selected = uiState.selectedPartyId == null,
-                            onClick = { viewModel.selectParty(null) },
-                            label = { Text("Solo") }
+                        DateTimeBox(
+                            label = "Date",
+                            value = uiState.matchDate.ifBlank { "Select date" },
+                            modifier = Modifier.weight(1f),
+                            onClick = { showDatePicker = true }
                         )
-                        uiState.activeParties.forEach { party ->
-                            FilterChip(
-                                selected = uiState.selectedPartyId == party.id,
-                                onClick = { viewModel.selectParty(party.id) },
-                                label = {
-                                    Text(
-                                        "${party.name ?: party.sportType ?: "Party"} (${party.members.size})",
-                                        maxLines = 1
+                        DateTimeBox(
+                            label = "Start",
+                            value = uiState.startTime.ifBlank { "Start time" },
+                            modifier = Modifier.weight(1f),
+                            onClick = { showStartTimePicker = true }
+                        )
+                    }
+                    Spacer(modifier = Modifier.height(10.dp))
+                    DateTimeBox(
+                        label = "End",
+                        value = uiState.endTime.ifBlank { "End time" },
+                        modifier = Modifier.fillMaxWidth(),
+                        onClick = { showEndTimePicker = true }
+                    )
+                }
+            }
+
+            // ── Players ──────────────────────────────────────────────────
+            item {
+                FormSection(label = "PLAYERS") {
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.spacedBy(10.dp)
+                    ) {
+                        PlayerStepper(
+                            label = "Min",
+                            value = uiState.minPlayers,
+                            onDecrement = { if (uiState.minPlayers > 1) viewModel.updateMinPlayers(uiState.minPlayers - 1) },
+                            onIncrement = { viewModel.updateMinPlayers(uiState.minPlayers + 1) },
+                            modifier = Modifier.weight(1f)
+                        )
+                        PlayerStepper(
+                            label = "Max",
+                            value = uiState.maxPlayers,
+                            onDecrement = { if (uiState.maxPlayers > uiState.minPlayers) viewModel.updateMaxPlayers(uiState.maxPlayers - 1) },
+                            onIncrement = { viewModel.updateMaxPlayers(uiState.maxPlayers + 1) },
+                            modifier = Modifier.weight(1f)
+                        )
+                    }
+                }
+            }
+
+            // ── Skill Level ──────────────────────────────────────────────
+            item {
+                FormSection(label = "SKILL LEVEL") {
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.spacedBy(10.dp)
+                    ) {
+                        for (i in 1..5) {
+                            val filled = i <= uiState.maxSkillLevel
+                            Box(
+                                modifier = Modifier
+                                    .size(36.dp)
+                                    .clip(CircleShape)
+                                    .background(if (filled) GreenAccent else DarkSurface)
+                                    .border(
+                                        width = 1.dp,
+                                        color = if (filled) GreenAccent else DarkBorder,
+                                        shape = CircleShape
                                     )
-                                }
-                            )
+                                    .clickable { viewModel.updateMaxSkillLevel(i) },
+                                contentAlignment = Alignment.Center
+                            ) {
+                                Text(
+                                    text = "$i",
+                                    color = if (filled) Color.White else DarkTextSecondary,
+                                    fontSize = 13.sp,
+                                    fontWeight = FontWeight.Bold
+                                )
+                            }
                         }
                     }
-                }
-            }
-
-            // Date picker
-            var showDatePicker by remember { mutableStateOf(false) }
-            val datePickerState = rememberDatePickerState()
-
-            OutlinedTextField(
-                value = if (uiState.matchDate.isNotBlank()) uiState.matchDate.toDisplayDate() else "",
-                onValueChange = {},
-                readOnly = true,
-                label = { Text("Date *") },
-                placeholder = { Text("DD-MM-YYYY") },
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .clickable { showDatePicker = true },
-                singleLine = true,
-                trailingIcon = {
-                    IconButton(onClick = { showDatePicker = true }) {
-                        Icon(Icons.Default.CalendarMonth, contentDescription = "Pick date")
-                    }
-                },
-                enabled = false,
-                colors = androidx.compose.material3.OutlinedTextFieldDefaults.colors(
-                    disabledTextColor = MaterialTheme.colorScheme.onSurface,
-                    disabledBorderColor = MaterialTheme.colorScheme.outline,
-                    disabledLabelColor = MaterialTheme.colorScheme.onSurfaceVariant,
-                    disabledTrailingIconColor = MaterialTheme.colorScheme.onSurfaceVariant,
-                    disabledPlaceholderColor = MaterialTheme.colorScheme.onSurfaceVariant
-                )
-            )
-
-            if (showDatePicker) {
-                DatePickerDialog(
-                    onDismissRequest = { showDatePicker = false },
-                    confirmButton = {
-                        TextButton(onClick = {
-                            datePickerState.selectedDateMillis?.let { millis ->
-                                viewModel.updateMatchDate(millis.toIsoDate())
-                            }
-                            showDatePicker = false
-                        }) { Text("OK") }
-                    },
-                    dismissButton = {
-                        TextButton(onClick = { showDatePicker = false }) { Text("Cancel") }
-                    }
-                ) {
-                    DatePicker(state = datePickerState)
-                }
-            }
-
-            // Time pickers — only shown for pickup games (no venue selected)
-            if (uiState.selectedVenueId == null) {
-                var showStartTimePicker by remember { mutableStateOf(false) }
-                var showEndTimePicker by remember { mutableStateOf(false) }
-                val startTimeState = rememberTimePickerState(initialHour = 18, initialMinute = 0)
-                val endTimeState = rememberTimePickerState(initialHour = 19, initialMinute = 0)
-
-                Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                    OutlinedTextField(
-                        value = uiState.startTime,
-                        onValueChange = {},
-                        readOnly = true,
-                        label = { Text("Start *") },
-                        placeholder = { Text("HH:MM") },
-                        modifier = Modifier
-                            .weight(1f)
-                            .clickable { showStartTimePicker = true },
-                        singleLine = true,
-                        trailingIcon = {
-                            IconButton(onClick = { showStartTimePicker = true }) {
-                                Icon(Icons.Default.AccessTime, contentDescription = "Pick start time", modifier = Modifier.size(20.dp))
-                            }
-                        },
-                        enabled = false,
-                        colors = androidx.compose.material3.OutlinedTextFieldDefaults.colors(
-                            disabledTextColor = MaterialTheme.colorScheme.onSurface,
-                            disabledBorderColor = MaterialTheme.colorScheme.outline,
-                            disabledLabelColor = MaterialTheme.colorScheme.onSurfaceVariant,
-                            disabledTrailingIconColor = MaterialTheme.colorScheme.onSurfaceVariant,
-                            disabledPlaceholderColor = MaterialTheme.colorScheme.onSurfaceVariant
-                        )
-                    )
-                    OutlinedTextField(
-                        value = uiState.endTime,
-                        onValueChange = {},
-                        readOnly = true,
-                        label = { Text("End *") },
-                        placeholder = { Text("HH:MM") },
-                        modifier = Modifier
-                            .weight(1f)
-                            .clickable { showEndTimePicker = true },
-                        singleLine = true,
-                        trailingIcon = {
-                            IconButton(onClick = { showEndTimePicker = true }) {
-                                Icon(Icons.Default.AccessTime, contentDescription = "Pick end time", modifier = Modifier.size(20.dp))
-                            }
-                        },
-                        enabled = false,
-                        colors = androidx.compose.material3.OutlinedTextFieldDefaults.colors(
-                            disabledTextColor = MaterialTheme.colorScheme.onSurface,
-                            disabledBorderColor = MaterialTheme.colorScheme.outline,
-                            disabledLabelColor = MaterialTheme.colorScheme.onSurfaceVariant,
-                            disabledTrailingIconColor = MaterialTheme.colorScheme.onSurfaceVariant,
-                            disabledPlaceholderColor = MaterialTheme.colorScheme.onSurfaceVariant
-                        )
-                    )
-                }
-
-                if (showStartTimePicker) {
-                    TimePickerDialog(
-                        onDismiss = { showStartTimePicker = false },
-                        onConfirm = {
-                            val h = startTimeState.hour.toString().padStart(2, '0')
-                            val m = startTimeState.minute.toString().padStart(2, '0')
-                            viewModel.updateStartTime("$h:$m")
-                            showStartTimePicker = false
-                        }
+                    Spacer(modifier = Modifier.height(8.dp))
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceBetween
                     ) {
-                        TimePicker(state = startTimeState)
-                    }
-                }
-
-                if (showEndTimePicker) {
-                    TimePickerDialog(
-                        onDismiss = { showEndTimePicker = false },
-                        onConfirm = {
-                            val h = endTimeState.hour.toString().padStart(2, '0')
-                            val m = endTimeState.minute.toString().padStart(2, '0')
-                            viewModel.updateEndTime("$h:$m")
-                            showEndTimePicker = false
-                        }
-                    ) {
-                        TimePicker(state = endTimeState)
+                        Text("Beginner", color = DarkTextSecondary, fontSize = 11.sp)
+                        Text("Intermediate", color = DarkTextSecondary, fontSize = 11.sp)
+                        Text("Pro", color = DarkTextSecondary, fontSize = 11.sp)
                     }
                 }
             }
 
-            // Player counts
-            Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                OutlinedTextField(
-                    value = uiState.minPlayers.toString(),
-                    onValueChange = { viewModel.updateMinPlayers(it.toIntOrNull() ?: 2) },
-                    label = { Text("Min Players") },
-                    modifier = Modifier.weight(1f),
-                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
-                    singleLine = true
-                )
-                OutlinedTextField(
-                    value = uiState.maxPlayers.toString(),
-                    onValueChange = { viewModel.updateMaxPlayers(it.toIntOrNull() ?: 10) },
-                    label = { Text("Max Players") },
-                    modifier = Modifier.weight(1f),
-                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
-                    singleLine = true
-                )
-            }
-
-            // Skill level range
-            Text("Skill Level: ${skillLabel(uiState.minSkillLevel)} – ${skillLabel(uiState.maxSkillLevel)}")
-            RangeSlider(
-                min = uiState.minSkillLevel,
-                max = uiState.maxSkillLevel,
-                onMinChange = viewModel::updateMinSkillLevel,
-                onMaxChange = viewModel::updateMaxSkillLevel
-            )
-
-            // Location Name with venue search suggestions
-            Box {
-                Column {
-                    OutlinedTextField(
+            // ── Location ─────────────────────────────────────────────────
+            item {
+                FormSection(label = "LOCATION") {
+                    // Location name / venue search
+                    DarkTextField(
                         value = uiState.locationName,
                         onValueChange = viewModel::updateLocationName,
-                        label = { Text("Location Name") },
-                        modifier = Modifier.fillMaxWidth(),
-                        singleLine = true,
-                        trailingIcon = {
-                            if (uiState.isSearchingVenues) {
-                                CircularProgressIndicator(
-                                    modifier = Modifier.size(20.dp),
-                                    strokeWidth = 2.dp
-                                )
-                            } else if (uiState.selectedVenueId != null) {
-                                Icon(
-                                    Icons.Default.LocationOn,
-                                    contentDescription = "Venue selected",
-                                    tint = MaterialTheme.colorScheme.primary
-                                )
-                            }
-                        },
-                        supportingText = if (uiState.selectedVenueId != null) {
-                            { Text("Linked to venue", color = MaterialTheme.colorScheme.primary) }
-                        } else {
-                            { Text("Type to search venues or enter custom location") }
-                        }
+                        hint = "Search venue or enter location"
                     )
 
-                    // Venue suggestion dropdown
+                    // Venue suggestions dropdown
                     if (uiState.showSuggestions && uiState.venueSuggestions.isNotEmpty()) {
+                        Spacer(modifier = Modifier.height(4.dp))
                         Column(
                             modifier = Modifier
                                 .fillMaxWidth()
-                                .shadow(4.dp, RoundedCornerShape(8.dp))
-                                .clip(RoundedCornerShape(8.dp))
-                                .background(MaterialTheme.colorScheme.surface)
+                                .clip(RoundedCornerShape(10.dp))
+                                .background(DarkSurface)
+                                .border(1.dp, DarkBorder, RoundedCornerShape(10.dp))
                         ) {
-                            uiState.venueSuggestions.forEach { venue ->
+                            uiState.venueSuggestions.forEachIndexed { index, venue ->
                                 Row(
                                     modifier = Modifier
                                         .fillMaxWidth()
                                         .clickable { viewModel.selectVenue(venue) }
-                                        .padding(horizontal = 16.dp, vertical = 12.dp),
-                                    verticalAlignment = Alignment.CenterVertically,
-                                    horizontalArrangement = Arrangement.spacedBy(12.dp)
+                                        .padding(horizontal = 14.dp, vertical = 12.dp),
+                                    verticalAlignment = Alignment.CenterVertically
                                 ) {
-                                    Icon(
-                                        Icons.Default.LocationOn,
-                                        contentDescription = null,
-                                        tint = MaterialTheme.colorScheme.primary,
-                                        modifier = Modifier.size(20.dp)
-                                    )
+                                    Text("📍", fontSize = 14.sp)
+                                    Spacer(modifier = Modifier.width(10.dp))
                                     Column {
                                         Text(
                                             text = venue.name,
-                                            style = MaterialTheme.typography.bodyMedium
+                                            color = DarkTextPrimary,
+                                            fontSize = 14.sp,
+                                            fontWeight = FontWeight.Medium
                                         )
                                         if (!venue.address.isNullOrBlank()) {
                                             Text(
                                                 text = venue.address,
-                                                style = MaterialTheme.typography.bodySmall,
-                                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                                                color = DarkTextSecondary,
+                                                fontSize = 12.sp
                                             )
+                                        }
+                                    }
+                                }
+                                if (index < uiState.venueSuggestions.lastIndex) {
+                                    Box(
+                                        modifier = Modifier
+                                            .fillMaxWidth()
+                                            .height(1.dp)
+                                            .background(DarkBorder)
+                                    )
+                                }
+                            }
+                        }
+                    }
+
+                    if (uiState.isSearchingVenues) {
+                        Spacer(modifier = Modifier.height(8.dp))
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            CircularProgressIndicator(
+                                modifier = Modifier.size(14.dp),
+                                color = GreenAccent,
+                                strokeWidth = 2.dp
+                            )
+                            Spacer(modifier = Modifier.width(8.dp))
+                            Text("Searching venues…", color = DarkTextSecondary, fontSize = 12.sp)
+                        }
+                    }
+
+                    // Selected venue indicator
+                    if (uiState.selectedVenueId != null) {
+                        Spacer(modifier = Modifier.height(8.dp))
+                        Row(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .clip(RoundedCornerShape(8.dp))
+                                .background(GreenActiveBg)
+                                .border(1.dp, GreenAccent, RoundedCornerShape(8.dp))
+                                .padding(horizontal = 12.dp, vertical = 8.dp),
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Text("🏟️", fontSize = 14.sp)
+                            Spacer(modifier = Modifier.width(8.dp))
+                            Column(modifier = Modifier.weight(1f)) {
+                                Text(
+                                    text = "Venue: ${uiState.locationName}",
+                                    color = GreenAccent,
+                                    fontSize = 13.sp,
+                                    fontWeight = FontWeight.SemiBold
+                                )
+                                if (uiState.address.isNotBlank()) {
+                                    Text(uiState.address, color = DarkTextSecondary, fontSize = 11.sp)
+                                }
+                            }
+                            Box(
+                                modifier = Modifier
+                                    .size(22.dp)
+                                    .clip(CircleShape)
+                                    .background(DarkBorder)
+                                    .clickable {
+                                        viewModel.updateLocationName("")
+                                    },
+                                contentAlignment = Alignment.Center
+                            ) {
+                                Text("✕", color = DarkTextSecondary, fontSize = 11.sp)
+                            }
+                        }
+                    }
+
+                    // Address (for pickup games / manual entry)
+                    if (uiState.selectedVenueId == null) {
+                        Spacer(modifier = Modifier.height(8.dp))
+                        DarkTextField(
+                            value = uiState.address,
+                            onValueChange = viewModel::updateAddress,
+                            hint = "Address (optional)"
+                        )
+                    }
+
+                    // Available time slots (when venue + date selected)
+                    if (uiState.selectedVenueId != null && uiState.matchDate.isNotBlank()) {
+                        Spacer(modifier = Modifier.height(12.dp))
+                        Text(
+                            text = "AVAILABLE TIME SLOTS",
+                            color = DarkTextSecondary,
+                            fontSize = 11.sp,
+                            fontWeight = FontWeight.SemiBold,
+                            letterSpacing = 1.sp
+                        )
+                        Spacer(modifier = Modifier.height(8.dp))
+
+                        if (uiState.isLoadingTimeSlots) {
+                            Row(verticalAlignment = Alignment.CenterVertically) {
+                                CircularProgressIndicator(
+                                    modifier = Modifier.size(14.dp),
+                                    color = GreenAccent,
+                                    strokeWidth = 2.dp
+                                )
+                                Spacer(modifier = Modifier.width(8.dp))
+                                Text("Loading time slots…", color = DarkTextSecondary, fontSize = 12.sp)
+                            }
+                        } else if (uiState.availableTimeSlots.isEmpty()) {
+                            Text(
+                                text = "No available slots for this date",
+                                color = DarkTextSecondary,
+                                fontSize = 13.sp
+                            )
+                        } else {
+                            Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
+                                uiState.availableTimeSlots.filter { it.isAvailable }.forEach { slot ->
+                                    val isSelected = uiState.selectedTimeSlotId == slot.id
+                                    Row(
+                                        modifier = Modifier
+                                            .fillMaxWidth()
+                                            .clip(RoundedCornerShape(10.dp))
+                                            .background(if (isSelected) GreenActiveBg else DarkSurface)
+                                            .border(
+                                                width = if (isSelected) 1.5.dp else 1.dp,
+                                                color = if (isSelected) GreenAccent else DarkBorder,
+                                                shape = RoundedCornerShape(10.dp)
+                                            )
+                                            .clickable { viewModel.selectTimeSlot(slot) }
+                                            .padding(horizontal = 14.dp, vertical = 12.dp),
+                                        verticalAlignment = Alignment.CenterVertically,
+                                        horizontalArrangement = Arrangement.SpaceBetween
+                                    ) {
+                                        Text(
+                                            text = "${slot.startTime} – ${slot.endTime}",
+                                            color = if (isSelected) GreenAccent else DarkTextPrimary,
+                                            fontSize = 14.sp,
+                                            fontWeight = if (isSelected) FontWeight.SemiBold else FontWeight.Normal
+                                        )
+                                        if (slot.price > 0) {
+                                            Text(
+                                                text = "$${String.format("%.2f", slot.price)}",
+                                                color = if (isSelected) GreenAccent else DarkTextSecondary,
+                                                fontSize = 13.sp
+                                            )
+                                        } else {
+                                            Text("Free", color = GreenAccent, fontSize = 13.sp)
                                         }
                                     }
                                 }
@@ -439,288 +461,220 @@ fun CreateMatchScreen(
                 }
             }
 
-            OutlinedTextField(
-                value = uiState.address,
-                onValueChange = viewModel::updateAddress,
-                label = { Text("Address") },
-                modifier = Modifier.fillMaxWidth(),
-                singleLine = true,
-                readOnly = uiState.selectedVenueId != null
-            )
-
-            // Time slot picker (visible when venue + date are both set)
-            if (uiState.selectedVenueId != null && uiState.matchDate.isNotBlank()) {
-                TimeSlotPicker(
-                    slots = uiState.availableTimeSlots,
-                    selectedSlotId = uiState.selectedTimeSlotId,
-                    isLoading = uiState.isLoadingTimeSlots,
-                    onSlotSelected = viewModel::selectTimeSlot
-                )
-            }
-
-            // Payment Type (only when venue is selected)
-            if (uiState.selectedVenueId != null) {
-                Spacer(modifier = Modifier.height(16.dp))
-                Text(
-                    text = "Payment",
-                    style = MaterialTheme.typography.titleSmall,
-                    fontWeight = FontWeight.SemiBold
-                )
-                Spacer(modifier = Modifier.height(8.dp))
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.spacedBy(8.dp)
-                ) {
-                    MatchPaymentType.entries.forEach { pt ->
-                        FilterChip(
-                            selected = uiState.paymentType == pt,
-                            onClick = { viewModel.updatePaymentType(pt) },
-                            label = { Text(pt.displayName, fontSize = 12.sp) },
-                            modifier = Modifier.weight(1f)
+            // ── Payment ──────────────────────────────────────────────────
+            item {
+                FormSection(label = "PAYMENT") {
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.spacedBy(8.dp)
+                    ) {
+                        val paymentOptions = listOf(
+                            Triple(MatchPaymentType.SPLIT, "💰", "Split Equally"),
+                            Triple(MatchPaymentType.HOST_PAYS, "💳", "Host Pays"),
+                            Triple(MatchPaymentType.CASH_AT_VENUE, "🛒", "Cash at Venue")
                         )
+                        paymentOptions.forEach { (type, emoji, label) ->
+                            val active = uiState.paymentType == type
+                            Column(
+                                modifier = Modifier
+                                    .weight(1f)
+                                    .clip(RoundedCornerShape(10.dp))
+                                    .background(if (active) GreenActiveBg else DarkSurface)
+                                    .border(
+                                        width = if (active) 1.5.dp else 1.dp,
+                                        color = if (active) GreenAccent else DarkBorder,
+                                        shape = RoundedCornerShape(10.dp)
+                                    )
+                                    .clickable { viewModel.updatePaymentType(type) }
+                                    .padding(vertical = 12.dp, horizontal = 6.dp),
+                                horizontalAlignment = Alignment.CenterHorizontally,
+                                verticalArrangement = Arrangement.spacedBy(4.dp)
+                            ) {
+                                Text(emoji, fontSize = 18.sp)
+                                Text(
+                                    text = label,
+                                    color = if (active) GreenAccent else DarkTextSecondary,
+                                    fontSize = 10.sp,
+                                    fontWeight = if (active) FontWeight.SemiBold else FontWeight.Normal,
+                                    maxLines = 1
+                                )
+                            }
+                        }
                     }
                 }
+            }
 
-                // Show price per player when split is selected and time slot is chosen
-                if (uiState.paymentType == MatchPaymentType.SPLIT && uiState.selectedTimeSlotId != null) {
-                    val selectedSlot = uiState.availableTimeSlots.find { it.id == uiState.selectedTimeSlotId }
-                    if (selectedSlot != null && uiState.maxPlayers > 0) {
-                        val perPlayer = selectedSlot.price / uiState.maxPlayers
-                        Spacer(modifier = Modifier.height(8.dp))
+            // ── Visibility ───────────────────────────────────────────────
+            item {
+                FormSection(label = "VISIBILITY") {
+                    ToggleRow(
+                        title = "Public Match",
+                        subtitle = "Anyone can join",
+                        checked = uiState.visibility == MatchVisibility.PUBLIC,
+                        onCheckedChange = { checked ->
+                            viewModel.updateVisibility(
+                                if (checked) MatchVisibility.PUBLIC else MatchVisibility.PRIVATE
+                            )
+                        }
+                    )
+                    Spacer(modifier = Modifier.height(8.dp))
+                    ToggleRow(
+                        title = "Auto-approve",
+                        subtitle = "No approval needed",
+                        checked = autoApprove,
+                        onCheckedChange = { autoApprove = it }
+                    )
+                }
+            }
+
+            // ── Error ────────────────────────────────────────────────────
+            if (uiState.error != null) {
+                item {
+                    Text(
+                        text = uiState.error!!,
+                        color = Color(0xFFCF6679),
+                        fontSize = 13.sp,
+                        modifier = Modifier.padding(horizontal = 16.dp, vertical = 4.dp)
+                    )
+                }
+            }
+        }
+
+        // ── Sticky bottom bar ────────────────────────────────────────────
+        Box(
+            modifier = Modifier
+                .align(Alignment.BottomCenter)
+                .fillMaxWidth()
+                .background(DarkBg)
+                .padding(horizontal = 16.dp, vertical = 16.dp)
+        ) {
+            val canCreate = uiState.isValid && !uiState.isCreating
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(52.dp)
+                    .clip(RoundedCornerShape(14.dp))
+                    .background(if (canCreate) GreenAccent else Color(0xFF2A3D2B))
+                    .then(if (canCreate) Modifier.clickable(onClick = viewModel::createMatch) else Modifier),
+                contentAlignment = Alignment.Center,
+            ) {
+                if (uiState.isCreating) {
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        CircularProgressIndicator(modifier = Modifier.size(20.dp), color = Color.White, strokeWidth = 2.dp)
+                        Spacer(modifier = Modifier.width(10.dp))
+                        Text("Creating...", fontSize = 16.sp, fontWeight = FontWeight.SemiBold, color = Color.White)
+                    }
+                } else {
+                    Text("Create Match", fontSize = 16.sp, fontWeight = FontWeight.SemiBold, color = if (canCreate) Color.White else Color(0xFF5A7A5C))
+                }
+            }
+        }
+
+        // ── Date Picker Dialog ──────────────────────────────────────────
+        if (showDatePicker) {
+            val datePickerState = rememberDatePickerState()
+            DatePickerDialog(
+                onDismissRequest = { showDatePicker = false },
+                confirmButton = {
+                    TextButton(onClick = {
+                        datePickerState.selectedDateMillis?.let { millis ->
+                            val formatted = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault()).format(Date(millis))
+                            viewModel.updateMatchDate(formatted)
+                        }
+                        showDatePicker = false
+                    }) {
+                        Text("OK", color = GreenAccent)
+                    }
+                },
+                dismissButton = {
+                    TextButton(onClick = { showDatePicker = false }) {
+                        Text("Cancel", color = DarkTextSecondary)
+                    }
+                }
+            ) {
+                DatePicker(state = datePickerState)
+            }
+        }
+
+        // ── Start Time Picker Dialog ────────────────────────────────────
+        if (showStartTimePicker) {
+            val timePickerState = rememberTimePickerState()
+            Dialog(onDismissRequest = { showStartTimePicker = false }) {
+                Surface(
+                    shape = RoundedCornerShape(16.dp),
+                    color = DarkSurface,
+                    tonalElevation = 6.dp
+                ) {
+                    Column(
+                        modifier = Modifier.padding(24.dp),
+                        horizontalAlignment = Alignment.CenterHorizontally
+                    ) {
                         Text(
-                            text = "${"%.0f".format(perPlayer)} ден/player (${"%.0f".format(selectedSlot.price)} ÷ ${uiState.maxPlayers})",
-                            style = MaterialTheme.typography.bodySmall,
-                            color = MaterialTheme.colorScheme.primary,
+                            "Select Start Time",
+                            color = DarkTextPrimary,
+                            fontSize = 16.sp,
                             fontWeight = FontWeight.SemiBold
                         )
+                        Spacer(modifier = Modifier.height(16.dp))
+                        TimePicker(state = timePickerState)
+                        Spacer(modifier = Modifier.height(16.dp))
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.End
+                        ) {
+                            TextButton(onClick = { showStartTimePicker = false }) {
+                                Text("Cancel", color = DarkTextSecondary)
+                            }
+                            Spacer(modifier = Modifier.width(8.dp))
+                            TextButton(onClick = {
+                                val formatted = String.format("%02d:%02d", timePickerState.hour, timePickerState.minute)
+                                viewModel.updateStartTime(formatted)
+                                showStartTimePicker = false
+                            }) {
+                                Text("OK", color = GreenAccent)
+                            }
+                        }
                     }
                 }
             }
-
-            // Cost
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.SpaceBetween
-            ) {
-                Text("Free to join")
-                Switch(checked = uiState.isFree, onCheckedChange = viewModel::updateIsFree)
-            }
-            if (!uiState.isFree) {
-                OutlinedTextField(
-                    value = if (uiState.costPerPlayer == 0.0) "" else uiState.costPerPlayer.toString(),
-                    onValueChange = { viewModel.updateCostPerPlayer(it.toDoubleOrNull() ?: 0.0) },
-                    label = { Text("Cost per Player ($)") },
-                    modifier = Modifier.fillMaxWidth(),
-                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
-                    singleLine = true
-                )
-            }
-
-            // Error
-            if (uiState.error != null) {
-                Text(uiState.error!!, color = MaterialTheme.colorScheme.error)
-            }
-
-            Spacer(modifier = Modifier.height(8.dp))
-
-            Button(
-                onClick = viewModel::createMatch,
-                modifier = Modifier.fillMaxWidth(),
-                enabled = uiState.isValid && !uiState.isCreating
-            ) {
-                Text(if (uiState.isCreating) "Creating..." else "Create Match")
-            }
         }
-    }
-}
 
-@OptIn(ExperimentalMaterial3Api::class)
-@Composable
-private fun SportDropdown(selected: SportType, onSelected: (SportType) -> Unit) {
-    var expanded by remember { mutableStateOf(false) }
-    ExposedDropdownMenuBox(expanded = expanded, onExpandedChange = { expanded = it }) {
-        OutlinedTextField(
-            value = selected.displayName,
-            onValueChange = {},
-            readOnly = true,
-            label = { Text("Sport") },
-            trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded) },
-            modifier = Modifier.fillMaxWidth().menuAnchor(MenuAnchorType.PrimaryNotEditable)
-        )
-        ExposedDropdownMenu(expanded = expanded, onDismissRequest = { expanded = false }) {
-            SportType.entries.forEach { sport ->
-                DropdownMenuItem(
-                    text = { Text(sport.displayName) },
-                    onClick = { onSelected(sport); expanded = false }
-                )
-            }
-        }
-    }
-}
-
-@Composable
-private fun RangeSlider(min: Int, max: Int, onMinChange: (Int) -> Unit, onMaxChange: (Int) -> Unit) {
-    Column {
-        Text("Min: ${skillLabel(min)}", style = MaterialTheme.typography.labelSmall)
-        Slider(
-            value = min.toFloat(),
-            onValueChange = { onMinChange(it.toInt()) },
-            valueRange = 1f..5f,
-            steps = 3
-        )
-        Text("Max: ${skillLabel(max)}", style = MaterialTheme.typography.labelSmall)
-        Slider(
-            value = max.toFloat(),
-            onValueChange = { onMaxChange(it.toInt()) },
-            valueRange = 1f..5f,
-            steps = 3
-        )
-    }
-}
-
-private fun skillLabel(level: Int): String = when (level) {
-    1 -> "Newbie"; 2 -> "Beginner"; 3 -> "Intermediate"; 4 -> "Semi Pro"; 5 -> "Pro"; else -> "Lvl $level"
-}
-
-@OptIn(ExperimentalMaterial3Api::class)
-@Composable
-private fun TimePickerDialog(
-    onDismiss: () -> Unit,
-    onConfirm: () -> Unit,
-    content: @Composable () -> Unit
-) {
-    Dialog(onDismissRequest = onDismiss) {
-        androidx.compose.material3.Surface(
-            shape = RoundedCornerShape(28.dp),
-            tonalElevation = 6.dp
-        ) {
-            Column(
-                modifier = Modifier.padding(24.dp),
-                horizontalAlignment = Alignment.CenterHorizontally
-            ) {
-                Text(
-                    text = "Select time",
-                    style = MaterialTheme.typography.labelMedium,
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(bottom = 20.dp)
-                )
-                content()
-                Row(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(top = 20.dp),
-                    horizontalArrangement = Arrangement.End
+        // ── End Time Picker Dialog ──────────────────────────────────────
+        if (showEndTimePicker) {
+            val timePickerState = rememberTimePickerState()
+            Dialog(onDismissRequest = { showEndTimePicker = false }) {
+                Surface(
+                    shape = RoundedCornerShape(16.dp),
+                    color = DarkSurface,
+                    tonalElevation = 6.dp
                 ) {
-                    TextButton(onClick = onDismiss) { Text("Cancel") }
-                    TextButton(onClick = onConfirm) { Text("OK") }
-                }
-            }
-        }
-    }
-}
-
-@OptIn(ExperimentalLayoutApi::class)
-@Composable
-private fun TimeSlotPicker(
-    slots: List<TimeSlotInfo>,
-    selectedSlotId: Long?,
-    isLoading: Boolean,
-    onSlotSelected: (TimeSlotInfo) -> Unit
-) {
-    // Color tokens
-    val availableBg = Color(0xFFF3F4F6)       // gray-100
-    val availableText = Color(0xFF374151)      // gray-700
-    val selectedBg = Color(0xFFDCFCE7)         // green-100
-    val selectedBorder = Color(0xFF16A34A)     // green-600
-    val selectedText = Color(0xFF166534)       // green-800
-    val bookedBg = Color(0xFFFEE2E2)           // red-100
-    val bookedBorder = Color(0xFFDC2626)       // red-600
-    val bookedText = Color(0xFF991B1B)         // red-800
-
-    Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-        Text(
-            text = "Available Time Slots",
-            style = MaterialTheme.typography.titleSmall
-        )
-
-        when {
-            isLoading -> {
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.Center
-                ) {
-                    CircularProgressIndicator(modifier = Modifier.size(24.dp), strokeWidth = 2.dp)
-                    Spacer(modifier = Modifier.padding(start = 8.dp))
-                    Text("Loading time slots...", style = MaterialTheme.typography.bodySmall)
-                }
-            }
-            slots.isEmpty() -> {
-                Text(
-                    text = "No available time slots for this date",
-                    style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
-                )
-            }
-            else -> {
-                FlowRow(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.spacedBy(8.dp),
-                    verticalArrangement = Arrangement.spacedBy(8.dp)
-                ) {
-                    slots.forEach { slot ->
-                        val isSelected = slot.id == selectedSlotId
-                        val isBooked = !slot.isAvailable
-
-                        val bgColor = when {
-                            isSelected -> selectedBg
-                            isBooked -> bookedBg
-                            else -> availableBg
-                        }
-                        val textColor = when {
-                            isSelected -> selectedText
-                            isBooked -> bookedText
-                            else -> availableText
-                        }
-                        val border = when {
-                            isSelected -> BorderStroke(2.dp, selectedBorder)
-                            isBooked -> BorderStroke(1.dp, bookedBorder)
-                            else -> null
-                        }
-
-                        androidx.compose.material3.Surface(
-                            modifier = Modifier.clickable(enabled = !isBooked) {
-                                onSlotSelected(slot)
-                            },
-                            shape = RoundedCornerShape(4.dp),
-                            color = bgColor,
-                            border = border
+                    Column(
+                        modifier = Modifier.padding(24.dp),
+                        horizontalAlignment = Alignment.CenterHorizontally
+                    ) {
+                        Text(
+                            "Select End Time",
+                            color = DarkTextPrimary,
+                            fontSize = 16.sp,
+                            fontWeight = FontWeight.SemiBold
+                        )
+                        Spacer(modifier = Modifier.height(16.dp))
+                        TimePicker(state = timePickerState)
+                        Spacer(modifier = Modifier.height(16.dp))
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.End
                         ) {
-                            Column(
-                                modifier = Modifier.padding(horizontal = 16.dp, vertical = 10.dp),
-                                horizontalAlignment = Alignment.CenterHorizontally
-                            ) {
-                                Text(
-                                    text = "${slot.startTime} - ${slot.endTime}",
-                                    style = MaterialTheme.typography.bodyMedium,
-                                    fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Normal,
-                                    color = textColor
-                                )
-                                if (isBooked) {
-                                    Text(
-                                        text = "Booked",
-                                        style = MaterialTheme.typography.labelSmall,
-                                        fontWeight = FontWeight.SemiBold,
-                                        color = bookedText
-                                    )
-                                } else if (slot.price > 0) {
-                                    Text(
-                                        text = "${String.format("%.0f", slot.price)} MKD",
-                                        style = MaterialTheme.typography.labelSmall,
-                                        color = textColor
-                                    )
-                                }
+                            TextButton(onClick = { showEndTimePicker = false }) {
+                                Text("Cancel", color = DarkTextSecondary)
+                            }
+                            Spacer(modifier = Modifier.width(8.dp))
+                            TextButton(onClick = {
+                                val formatted = String.format("%02d:%02d", timePickerState.hour, timePickerState.minute)
+                                viewModel.updateEndTime(formatted)
+                                showEndTimePicker = false
+                            }) {
+                                Text("OK", color = GreenAccent)
                             }
                         }
                     }
@@ -730,17 +684,289 @@ private fun TimeSlotPicker(
     }
 }
 
-@OptIn(ExperimentalMaterial3Api::class)
-@Preview(showBackground = true)
+// ── Private composables ──────────────────────────────────────────────────────
+
+@Composable
+private fun FormSection(
+    label: String,
+    content: @Composable () -> Unit
+) {
+    Column(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(horizontal = 16.dp)
+            .padding(top = 20.dp)
+    ) {
+        Text(
+            text = label,
+            color = DarkTextSecondary,
+            fontSize = 11.sp,
+            fontWeight = FontWeight.SemiBold,
+            letterSpacing = 1.sp
+        )
+        Spacer(modifier = Modifier.height(10.dp))
+        content()
+    }
+}
+
+@Composable
+private fun DarkTextField(
+    value: String,
+    onValueChange: (String) -> Unit,
+    hint: String,
+    modifier: Modifier = Modifier
+) {
+    Box(
+        modifier = modifier
+            .fillMaxWidth()
+            .clip(RoundedCornerShape(12.dp))
+            .background(DarkSurface)
+            .border(1.dp, DarkBorder, RoundedCornerShape(12.dp))
+            .padding(14.dp)
+    ) {
+        if (value.isEmpty()) {
+            Text(text = hint, color = DarkTextSecondary, fontSize = 14.sp)
+        }
+        BasicTextField(
+            value = value,
+            onValueChange = onValueChange,
+            textStyle = TextStyle(color = DarkTextPrimary, fontSize = 14.sp),
+            cursorBrush = SolidColor(GreenAccent),
+            modifier = Modifier.fillMaxWidth()
+        )
+    }
+}
+
+@Composable
+private fun SportGrid(
+    selected: SportType,
+    onSelected: (SportType) -> Unit
+) {
+    val sports = listOf(
+        SportType.BASKETBALL to "🏀",
+        SportType.FOOTBALL to "⚽",
+        SportType.TENNIS to "🎾",
+        SportType.PADDLE to "🏓",
+        SportType.VOLLEYBALL to "🏐",
+        SportType.BADMINTON to "🏸",
+        SportType.BOXING to "🥊",
+        SportType.RUNNING to "🏃"
+    )
+    val columns = 4
+    val rows = (sports.size + columns - 1) / columns
+    Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+        for (row in 0 until rows) {
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(8.dp)
+            ) {
+                for (col in 0 until columns) {
+                    val idx = row * columns + col
+                    if (idx < sports.size) {
+                        val (sport, emoji) = sports[idx]
+                        val active = selected == sport
+                        Column(
+                            modifier = Modifier
+                                .weight(1f)
+                                .clip(RoundedCornerShape(10.dp))
+                                .background(if (active) GreenActiveBg else DarkSurface)
+                                .border(
+                                    width = if (active) 1.5.dp else 1.dp,
+                                    color = if (active) GreenAccent else DarkBorder,
+                                    shape = RoundedCornerShape(10.dp)
+                                )
+                                .clickable { onSelected(sport) }
+                                .padding(vertical = 10.dp, horizontal = 4.dp),
+                            horizontalAlignment = Alignment.CenterHorizontally,
+                            verticalArrangement = Arrangement.spacedBy(4.dp)
+                        ) {
+                            Text(emoji, fontSize = 24.sp)
+                            Text(
+                                text = sport.displayName,
+                                color = if (active) GreenAccent else DarkTextSecondary,
+                                fontSize = 11.sp,
+                                fontWeight = if (active) FontWeight.SemiBold else FontWeight.Normal,
+                                maxLines = 1
+                            )
+                        }
+                    } else {
+                        Spacer(modifier = Modifier.weight(1f))
+                    }
+                }
+            }
+        }
+    }
+}
+
+@Composable
+private fun MatchTypeRow(
+    selected: MatchType,
+    onSelected: (MatchType) -> Unit
+) {
+    val options = listOf(
+        Triple(MatchType.STANDALONE, "⚔️", "Competitive"),
+        Triple(MatchType.STANDALONE, "🎉", "Casual"),
+        Triple(MatchType.VENUE_LINKED, "🏆", "Tournament")
+    )
+    Row(
+        modifier = Modifier.fillMaxWidth(),
+        horizontalArrangement = Arrangement.spacedBy(8.dp)
+    ) {
+        options.forEach { (type, emoji, label) ->
+            val active = selected == type && label == when (type) {
+                MatchType.STANDALONE -> "Competitive"
+                MatchType.VENUE_LINKED -> "Tournament"
+                else -> ""
+            }
+            Column(
+                modifier = Modifier
+                    .weight(1f)
+                    .clip(RoundedCornerShape(10.dp))
+                    .background(if (active) GreenActiveBg else DarkSurface)
+                    .border(
+                        width = if (active) 1.5.dp else 1.dp,
+                        color = if (active) GreenAccent else DarkBorder,
+                        shape = RoundedCornerShape(10.dp)
+                    )
+                    .clickable { onSelected(type) }
+                    .padding(vertical = 14.dp, horizontal = 4.dp),
+                horizontalAlignment = Alignment.CenterHorizontally,
+                verticalArrangement = Arrangement.spacedBy(6.dp)
+            ) {
+                Text(emoji, fontSize = 20.sp)
+                Text(
+                    text = label,
+                    color = if (active) GreenAccent else DarkTextSecondary,
+                    fontSize = 12.sp,
+                    fontWeight = if (active) FontWeight.SemiBold else FontWeight.Normal
+                )
+            }
+        }
+    }
+}
+
+@Composable
+private fun DateTimeBox(
+    label: String,
+    value: String,
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier
+) {
+    Column(
+        modifier = modifier
+            .clip(RoundedCornerShape(12.dp))
+            .background(DarkSurface)
+            .border(1.dp, DarkBorder, RoundedCornerShape(12.dp))
+            .clickable { onClick() }
+            .padding(14.dp)
+    ) {
+        Text(text = label, color = DarkTextSecondary, fontSize = 11.sp)
+        Spacer(modifier = Modifier.height(4.dp))
+        Text(text = value, color = DarkTextPrimary, fontSize = 14.sp)
+    }
+}
+
+@Composable
+private fun PlayerStepper(
+    label: String,
+    value: Int,
+    onDecrement: () -> Unit,
+    onIncrement: () -> Unit,
+    modifier: Modifier = Modifier
+) {
+    Row(
+        modifier = modifier
+            .clip(RoundedCornerShape(12.dp))
+            .background(DarkSurface)
+            .border(1.dp, DarkBorder, RoundedCornerShape(12.dp))
+            .padding(horizontal = 12.dp, vertical = 12.dp),
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.SpaceBetween
+    ) {
+        Text(
+            text = label,
+            color = DarkTextSecondary,
+            fontSize = 12.sp
+        )
+        Row(
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(12.dp)
+        ) {
+            Box(
+                modifier = Modifier
+                    .size(28.dp)
+                    .clip(CircleShape)
+                    .background(DarkBorder)
+                    .clickable { onDecrement() },
+                contentAlignment = Alignment.Center
+            ) {
+                Text("−", color = DarkTextPrimary, fontSize = 16.sp, fontWeight = FontWeight.Bold)
+            }
+            Text(
+                text = "$value",
+                color = DarkTextPrimary,
+                fontSize = 16.sp,
+                fontWeight = FontWeight.Bold
+            )
+            Box(
+                modifier = Modifier
+                    .size(28.dp)
+                    .clip(CircleShape)
+                    .background(GreenAccent)
+                    .clickable { onIncrement() },
+                contentAlignment = Alignment.Center
+            ) {
+                Text("+", color = Color.White, fontSize = 16.sp, fontWeight = FontWeight.Bold)
+            }
+        }
+    }
+}
+
+@Composable
+private fun ToggleRow(
+    title: String,
+    subtitle: String,
+    checked: Boolean,
+    onCheckedChange: (Boolean) -> Unit
+) {
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .clip(RoundedCornerShape(12.dp))
+            .background(DarkSurface)
+            .border(1.dp, DarkBorder, RoundedCornerShape(12.dp))
+            .padding(horizontal = 16.dp, vertical = 14.dp),
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.SpaceBetween
+    ) {
+        Column {
+            Text(text = title, color = DarkTextPrimary, fontSize = 14.sp, fontWeight = FontWeight.Medium)
+            Text(text = subtitle, color = DarkTextSecondary, fontSize = 12.sp)
+        }
+        Switch(
+            checked = checked,
+            onCheckedChange = onCheckedChange,
+            colors = SwitchDefaults.colors(
+                checkedThumbColor = Color.White,
+                checkedTrackColor = GreenAccent,
+                uncheckedThumbColor = DarkTextSecondary,
+                uncheckedTrackColor = DarkBorder
+            )
+        )
+    }
+}
+
+// ── Preview ──────────────────────────────────────────────────────────────────
+
+@Preview(showBackground = true, backgroundColor = 0xFF121212)
 @Composable
 private fun CreateMatchScreenPreview() {
     val previewState = CreateMatchUiState(
-        title = "Sunday Basketball",
-        description = "Casual pickup game, all skill levels welcome",
+        title = "Sunday Basketball Showdown",
         sportType = SportType.BASKETBALL,
         matchType = MatchType.STANDALONE,
         visibility = MatchVisibility.PUBLIC,
-        matchDate = "2026-03-30",
+        matchDate = "2026-06-08",
         startTime = "18:00",
         endTime = "19:30",
         minPlayers = 6,
@@ -749,72 +975,76 @@ private fun CreateMatchScreenPreview() {
         maxSkillLevel = 4,
         locationName = "City Sports Center",
         address = "123 Main St",
-        isFree = true
+        isFree = true,
+        paymentType = MatchPaymentType.SPLIT
     )
-    Scaffold(
-        topBar = {
-            TopAppBar(
-                title = { Text("Create Match") },
-                navigationIcon = {
-                    IconButton(onClick = {}) {
-                        Icon(Icons.AutoMirrored.Filled.ArrowBack, "Back")
-                    }
-                }
-            )
-        }
-    ) { padding ->
+
+    Box(
+        modifier = Modifier
+            .fillMaxSize()
+            .background(DarkBg)
+    ) {
         Column(
             modifier = Modifier
                 .fillMaxSize()
-                .padding(padding)
-                .verticalScroll(rememberScrollState())
-                .padding(16.dp),
-            verticalArrangement = Arrangement.spacedBy(12.dp)
+                .padding(bottom = 88.dp)
+                .padding(horizontal = 16.dp)
         ) {
-            OutlinedTextField(
-                value = previewState.title,
-                onValueChange = {},
-                label = { Text("Match Title *") },
-                modifier = Modifier.fillMaxWidth(),
-                singleLine = true
-            )
-            OutlinedTextField(
-                value = previewState.description,
-                onValueChange = {},
-                label = { Text("Description") },
-                modifier = Modifier.fillMaxWidth(),
-                maxLines = 3
-            )
-            SportDropdown(selected = previewState.sportType, onSelected = {})
-            Text("Skill Level: ${skillLabel(previewState.minSkillLevel)} – ${skillLabel(previewState.maxSkillLevel)}")
-            RangeSlider(
-                min = previewState.minSkillLevel,
-                max = previewState.maxSkillLevel,
-                onMinChange = {},
-                onMaxChange = {}
-            )
-            OutlinedTextField(
-                value = previewState.locationName,
-                onValueChange = {},
-                label = { Text("Location Name") },
-                modifier = Modifier.fillMaxWidth(),
-                singleLine = true
-            )
+            // Header
             Row(
-                modifier = Modifier.fillMaxWidth(),
-                verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.SpaceBetween
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(vertical = 16.dp),
+                verticalAlignment = Alignment.CenterVertically
             ) {
-                Text("Free to join")
-                Switch(checked = previewState.isFree, onCheckedChange = {})
+                Box(
+                    modifier = Modifier
+                        .size(36.dp)
+                        .clip(CircleShape)
+                        .background(DarkSurface),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Icon(
+                        imageVector = Icons.AutoMirrored.Filled.ArrowBack,
+                        contentDescription = "Back",
+                        tint = DarkTextPrimary,
+                        modifier = Modifier.size(18.dp)
+                    )
+                }
+                Box(modifier = Modifier.weight(1f), contentAlignment = Alignment.Center) {
+                    Text(
+                        "Create Match",
+                        color = DarkTextPrimary,
+                        fontSize = 18.sp,
+                        fontWeight = FontWeight.Bold
+                    )
+                }
+                Spacer(modifier = Modifier.size(36.dp))
             }
-            Spacer(modifier = Modifier.height(8.dp))
-            Button(
-                onClick = {},
-                modifier = Modifier.fillMaxWidth(),
-                enabled = false
+
+            // Sport grid preview
+            FormSection(label = "SPORT") {
+                SportGrid(selected = previewState.sportType, onSelected = {})
+            }
+        }
+
+        // Bottom bar
+        Box(
+            modifier = Modifier
+                .align(Alignment.BottomCenter)
+                .fillMaxWidth()
+                .background(DarkBg)
+                .padding(horizontal = 16.dp, vertical = 16.dp)
+        ) {
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(52.dp)
+                    .clip(RoundedCornerShape(14.dp))
+                    .background(GreenAccent),
+                contentAlignment = Alignment.Center,
             ) {
-                Text("Create Match")
+                Text("Create Match", fontSize = 16.sp, fontWeight = FontWeight.SemiBold, color = Color.White)
             }
         }
     }

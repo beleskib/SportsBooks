@@ -34,6 +34,7 @@ sealed interface Route {
     @Serializable data class PaymentCheckout(val bookingId: Long) : Route
     @Serializable data object PaymentHistory : Route
     @Serializable data class PaymentDetail(val paymentId: Long) : Route
+    @Serializable data object PaymentMethods : Route
     @Serializable data object Notifications : Route
     @Serializable data object Settings : Route
 
@@ -101,6 +102,9 @@ sealed interface Route {
     @Serializable data class InviteFriends(val communityId: Long) : Route
     @Serializable data class CreateLobby(val communityId: Long) : Route
 
+    // Booking Success
+    @Serializable data class BookingSuccess(val bookingId: Long) : Route
+
     // Venue Booking Lobbies
     @Serializable data class BrowseVenueLobbies(val venueId: Long? = null) : Route
     @Serializable data class CreateVenueBookingLobby(val timeSlotId: Long = -1, val venueId: Long = -1) : Route
@@ -113,13 +117,17 @@ sealed interface Route {
     @Serializable data object CoachSetup : Route
     @Serializable data object PartnerDashboard : Route
     @Serializable data class ManageImages(val entityType: String, val entityId: Long) : Route
-    @Serializable data object StripeConnect : Route
     @Serializable data object TimeSlotManagement : Route
     @Serializable data class EditVenue(val venueId: Long) : Route
     @Serializable data class EditCoach(val coachId: Long) : Route
     @Serializable data object PartnerAnalytics : Route
 
-    // v2-practical-ux
+    // v3 bottom nav tabs
+    @Serializable data object Explore : Route        // Browse sports, venues, coaches
+    @Serializable data object SocialHub : Route      // Friends, parties, find players
+    @Serializable data object MoreMenu : Route       // Profile, settings, payments, etc.
+
+    // v2-practical-ux (legacy, kept for compat)
     @Serializable data object V2PlayHome : Route
     @Serializable data object V2WeeklyCalendar : Route
     @Serializable data object SportsIFollow : Route

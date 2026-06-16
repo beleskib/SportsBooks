@@ -1,6 +1,8 @@
 package com.example.sportsbook.ui.screens.player.community
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -24,54 +26,37 @@ import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.Groups
 import androidx.compose.material.icons.filled.PersonAdd
-import androidx.compose.material3.Button
-import androidx.compose.material3.ButtonDefaults
-import androidx.compose.material3.Card
-import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
-import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
-import androidx.compose.material3.LinearProgressIndicator
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedButton
-import androidx.compose.material3.Scaffold
-import androidx.compose.material3.Tab
-import androidx.compose.material3.TabRow
-import androidx.compose.material3.TabRowDefaults
-import androidx.compose.material3.TabRowDefaults.tabIndicatorOffset
 import androidx.compose.material3.Text
-import androidx.compose.material3.TopAppBar
-import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import coil.compose.AsyncImage
 import com.example.sportsbook.domain.model.Community
 import com.example.sportsbook.domain.model.CommunityMember
 import com.example.sportsbook.domain.model.Lobby
-import com.example.sportsbook.ui.theme.BorderGray
-import com.example.sportsbook.ui.theme.CardWhite
-import com.example.sportsbook.ui.theme.GoldAccent
-import com.example.sportsbook.ui.theme.LightBg
-import com.example.sportsbook.ui.theme.NavBarBg
+import com.example.sportsbook.ui.theme.DarkBg
+import com.example.sportsbook.ui.theme.DarkBorder
+import com.example.sportsbook.ui.theme.DarkSurface
+import com.example.sportsbook.ui.theme.DarkTextPrimary
+import com.example.sportsbook.ui.theme.DarkTextSecondary
+import com.example.sportsbook.ui.theme.DarkTextTertiary
+import com.example.sportsbook.ui.theme.GreenAccent
 import com.example.sportsbook.ui.theme.SportGreen
-import com.example.sportsbook.ui.theme.TextPrimary
-import com.example.sportsbook.ui.theme.TextSecondary
-import com.example.sportsbook.ui.theme.TextTertiary
 
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun CommunityDetailScreen(
     onBack: () -> Unit,
@@ -83,133 +68,163 @@ fun CommunityDetailScreen(
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
     val community = uiState.community
 
-    Scaffold(
-        containerColor = LightBg,
-        topBar = {
-            TopAppBar(
-                title = {
-                    Text(
-                        text = community?.name ?: "Community",
-                        color = GoldAccent,
-                        maxLines = 1,
-                        overflow = TextOverflow.Ellipsis
-                    )
-                },
-                navigationIcon = {
-                    IconButton(onClick = onBack) {
-                        Icon(
-                            Icons.AutoMirrored.Filled.ArrowBack,
-                            contentDescription = "Back",
-                            tint = GoldAccent
-                        )
-                    }
-                },
-                actions = {
-                    if (uiState.isUserAdmin) {
-                        IconButton(onClick = { community?.id?.let { onInviteFriends(it) } }) {
-                            Icon(Icons.Default.PersonAdd, contentDescription = "Invite Friends", tint = GoldAccent)
-                        }
-                    }
-                },
-                colors = TopAppBarDefaults.topAppBarColors(containerColor = NavBarBg)
-            )
-        },
-        floatingActionButton = {
-            if (uiState.isUserMember || uiState.isUserAdmin) {
-                FloatingActionButton(
-                    onClick = { community?.id?.let { onCreateLobby(it) } },
-                    containerColor = GoldAccent
-                ) {
-                    Icon(Icons.Default.Add, contentDescription = "Create Lobby", tint = NavBarBg)
-                }
-            }
-        }
-    ) { padding ->
+    Box(modifier = Modifier.fillMaxSize().background(DarkBg)) {
         when {
             uiState.isLoading -> {
                 Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                    CircularProgressIndicator(color = GoldAccent)
+                    CircularProgressIndicator(color = GreenAccent)
                 }
             }
 
             community == null -> {
+                // Header still visible even on error
+                Row(
+                    modifier = Modifier.fillMaxWidth().padding(start = 16.dp, end = 16.dp, top = 56.dp, bottom = 16.dp),
+                    verticalAlignment = Alignment.CenterVertically,
+                ) {
+                    Box(
+                        modifier = Modifier.size(40.dp).clip(CircleShape).background(DarkSurface).clickable(onClick = onBack),
+                        contentAlignment = Alignment.Center,
+                    ) {
+                        Icon(Icons.AutoMirrored.Filled.ArrowBack, "Back", tint = DarkTextPrimary, modifier = Modifier.size(20.dp))
+                    }
+                }
                 Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
                     Text(
                         text = uiState.error ?: "Community not found",
-                        color = MaterialTheme.colorScheme.error,
-                        textAlign = TextAlign.Center
+                        color = Color(0xFFEF5350),
+                        textAlign = TextAlign.Center,
+                        modifier = Modifier.padding(16.dp),
                     )
                 }
             }
 
             else -> {
-                Column(
-                    modifier = Modifier
-                        .fillMaxSize()
-                        .padding(padding)
-                ) {
-                    // Community header
-                    CommunityHeader(community = community)
+                Column(modifier = Modifier.fillMaxSize()) {
+                    // ── Header ────────────────────────────────────────────
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(start = 16.dp, end = 16.dp, top = 56.dp, bottom = 16.dp),
+                        verticalAlignment = Alignment.CenterVertically,
+                    ) {
+                        Box(
+                            modifier = Modifier
+                                .size(40.dp)
+                                .clip(CircleShape)
+                                .background(DarkSurface)
+                                .clickable(onClick = onBack),
+                            contentAlignment = Alignment.Center,
+                        ) {
+                            Icon(Icons.AutoMirrored.Filled.ArrowBack, "Back", tint = DarkTextPrimary, modifier = Modifier.size(20.dp))
+                        }
+                        Spacer(modifier = Modifier.width(12.dp))
+                        Text(
+                            text = community.name,
+                            fontSize = 18.sp,
+                            fontWeight = FontWeight.Bold,
+                            color = GreenAccent,
+                            maxLines = 1,
+                            overflow = TextOverflow.Ellipsis,
+                            modifier = Modifier.weight(1f),
+                        )
+                        if (uiState.isUserAdmin) {
+                            Box(
+                                modifier = Modifier
+                                    .size(40.dp)
+                                    .clip(CircleShape)
+                                    .background(DarkSurface)
+                                    .clickable { community.id.let { onInviteFriends(it) } },
+                                contentAlignment = Alignment.Center,
+                            ) {
+                                Icon(Icons.Default.PersonAdd, contentDescription = "Invite", tint = GreenAccent, modifier = Modifier.size(20.dp))
+                            }
+                        }
+                    }
 
-                    // Join button if not a member
-                    if (!uiState.isUserMember && !uiState.isUserAdmin) {
-                        Button(
-                            onClick = viewModel::joinCommunity,
+                    Column(modifier = Modifier.weight(1f)) {
+                        // Community header block
+                        CommunityHeader(community = community)
+
+                        // Join button
+                        if (!uiState.isUserMember && !uiState.isUserAdmin) {
+                            Box(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .padding(horizontal = 16.dp, vertical = 8.dp)
+                                    .height(48.dp)
+                                    .clip(RoundedCornerShape(12.dp))
+                                    .background(GreenAccent)
+                                    .clickable(onClick = viewModel::joinCommunity),
+                                contentAlignment = Alignment.Center,
+                            ) {
+                                Text("Join Community", color = DarkBg, fontWeight = FontWeight.SemiBold, fontSize = 15.sp)
+                            }
+                        }
+
+                        // Pending approvals
+                        if (uiState.isUserAdmin && uiState.pendingMembers.isNotEmpty()) {
+                            PendingApprovals(
+                                pendingMembers = uiState.pendingMembers,
+                                onApprove = { userId -> viewModel.respondToMember(userId, true) },
+                                onReject = { userId -> viewModel.respondToMember(userId, false) },
+                            )
+                        }
+
+                        // ── Pill tabs ──────────────────────────────────────
+                        val tabTitles = listOf("Lobbies", "Members")
+                        Row(
                             modifier = Modifier
                                 .fillMaxWidth()
                                 .padding(horizontal = 16.dp, vertical = 8.dp),
-                            colors = ButtonDefaults.buttonColors(containerColor = GoldAccent)
+                            horizontalArrangement = Arrangement.spacedBy(10.dp),
                         ) {
-                            Text("Join Community", color = NavBarBg, fontWeight = FontWeight.SemiBold)
-                        }
-                    }
-
-                    // Pending approvals (admin only)
-                    if (uiState.isUserAdmin && uiState.pendingMembers.isNotEmpty()) {
-                        PendingApprovals(
-                            pendingMembers = uiState.pendingMembers,
-                            onApprove = { userId -> viewModel.respondToMember(userId, true) },
-                            onReject = { userId -> viewModel.respondToMember(userId, false) }
-                        )
-                    }
-
-                    // Tabs
-                    val tabTitles = listOf("Lobbies", "Members")
-                    TabRow(
-                        selectedTabIndex = uiState.selectedTab.ordinal,
-                        containerColor = CardWhite,
-                        indicator = { tabPositions ->
-                            TabRowDefaults.SecondaryIndicator(
-                                modifier = Modifier.tabIndicatorOffset(tabPositions[uiState.selectedTab.ordinal]),
-                                color = GoldAccent
-                            )
-                        }
-                    ) {
-                        tabTitles.forEachIndexed { index, title ->
-                            Tab(
-                                selected = uiState.selectedTab.ordinal == index,
-                                onClick = { viewModel.selectTab(CommunityDetailTab.entries[index]) },
-                                text = {
+                            tabTitles.forEachIndexed { index, title ->
+                                val isSelected = uiState.selectedTab.ordinal == index
+                                Box(
+                                    modifier = Modifier
+                                        .weight(1f)
+                                        .clip(RoundedCornerShape(50))
+                                        .background(if (isSelected) GreenAccent else DarkSurface)
+                                        .border(1.dp, if (isSelected) GreenAccent else DarkBorder, RoundedCornerShape(50))
+                                        .clickable { viewModel.selectTab(CommunityDetailTab.entries[index]) }
+                                        .padding(vertical = 10.dp),
+                                    contentAlignment = Alignment.Center,
+                                ) {
                                     Text(
-                                        text = title,
-                                        color = if (uiState.selectedTab.ordinal == index) GoldAccent
-                                        else TextSecondary
+                                        title,
+                                        fontSize = 14.sp,
+                                        fontWeight = FontWeight.SemiBold,
+                                        color = if (isSelected) Color.White else DarkTextSecondary,
                                     )
                                 }
+                            }
+                        }
+
+                        when (uiState.selectedTab) {
+                            CommunityDetailTab.LOBBIES -> LobbiesTab(lobbies = uiState.lobbies, onLobbyClick = onLobbyClick)
+                            CommunityDetailTab.MEMBERS -> MembersTab(
+                                members = uiState.members,
+                                isAdmin = uiState.isUserAdmin,
+                                onRemoveMember = viewModel::removeMember,
                             )
                         }
                     }
+                }
 
-                    when (uiState.selectedTab) {
-                        CommunityDetailTab.LOBBIES -> LobbiesTab(
-                            lobbies = uiState.lobbies,
-                            onLobbyClick = onLobbyClick
-                        )
-                        CommunityDetailTab.MEMBERS -> MembersTab(
-                            members = uiState.members,
-                            isAdmin = uiState.isUserAdmin,
-                            onRemoveMember = viewModel::removeMember
-                        )
+                // ── FAB: create lobby ──────────────────────────────────────
+                if (uiState.isUserMember || uiState.isUserAdmin) {
+                    Box(
+                        modifier = Modifier
+                            .size(56.dp)
+                            .align(Alignment.BottomEnd)
+                            .padding(bottom = 16.dp, end = 16.dp)
+                            .clip(CircleShape)
+                            .background(GreenAccent)
+                            .clickable { community.id.let { onCreateLobby(it) } },
+                        contentAlignment = Alignment.Center,
+                    ) {
+                        Icon(Icons.Default.Add, contentDescription = "Create Lobby", tint = DarkBg)
                     }
                 }
             }
@@ -222,31 +237,26 @@ private fun CommunityHeader(community: Community) {
     Column(
         modifier = Modifier
             .fillMaxWidth()
-            .background(CardWhite)
-            .padding(16.dp)
+            .background(DarkSurface)
+            .padding(16.dp),
     ) {
         Row(verticalAlignment = Alignment.CenterVertically) {
             Box(
                 modifier = Modifier
                     .size(64.dp)
                     .clip(RoundedCornerShape(10.dp))
-                    .background(LightBg),
-                contentAlignment = Alignment.Center
+                    .background(DarkBg),
+                contentAlignment = Alignment.Center,
             ) {
                 if (!community.imageUrl.isNullOrBlank()) {
                     AsyncImage(
                         model = community.imageUrl,
                         contentDescription = community.name,
                         contentScale = ContentScale.Crop,
-                        modifier = Modifier.fillMaxSize()
+                        modifier = Modifier.fillMaxSize(),
                     )
                 } else {
-                    Icon(
-                        Icons.Default.Groups,
-                        contentDescription = null,
-                        tint = GoldAccent,
-                        modifier = Modifier.size(32.dp)
-                    )
+                    Icon(Icons.Default.Groups, contentDescription = null, tint = GreenAccent, modifier = Modifier.size(32.dp))
                 }
             }
             Spacer(modifier = Modifier.width(12.dp))
@@ -257,18 +267,14 @@ private fun CommunityHeader(community: Community) {
                 }
                 Text(
                     text = "${community.memberCount} / ${community.maxMembers} members",
-                    style = MaterialTheme.typography.bodySmall,
-                    color = TextSecondary
+                    fontSize = 12.sp,
+                    color = DarkTextSecondary,
                 )
             }
         }
         if (!community.description.isNullOrBlank()) {
             Spacer(modifier = Modifier.height(8.dp))
-            Text(
-                text = community.description,
-                style = MaterialTheme.typography.bodyMedium,
-                color = TextSecondary
-            )
+            Text(text = community.description, fontSize = 13.sp, color = DarkTextSecondary)
         }
     }
 }
@@ -277,50 +283,41 @@ private fun CommunityHeader(community: Community) {
 private fun PendingApprovals(
     pendingMembers: List<CommunityMember>,
     onApprove: (Long) -> Unit,
-    onReject: (Long) -> Unit
+    onReject: (Long) -> Unit,
 ) {
-    Card(
+    Column(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(horizontal = 16.dp, vertical = 8.dp),
-        colors = CardDefaults.cardColors(containerColor = CardWhite),
-        shape = RoundedCornerShape(10.dp)
+            .padding(horizontal = 16.dp, vertical = 8.dp)
+            .clip(RoundedCornerShape(10.dp))
+            .background(DarkSurface)
+            .border(1.dp, DarkBorder, RoundedCornerShape(10.dp))
+            .padding(12.dp),
     ) {
-        Column(modifier = Modifier.padding(12.dp)) {
-            Text(
-                text = "Pending Requests (${pendingMembers.size})",
-                style = MaterialTheme.typography.titleSmall,
-                color = GoldAccent,
-                fontWeight = FontWeight.SemiBold
-            )
-            Spacer(modifier = Modifier.height(8.dp))
-            pendingMembers.forEach { member ->
-                Row(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(vertical = 4.dp),
-                    verticalAlignment = Alignment.CenterVertically
+        Text("Pending Requests (${pendingMembers.size})", fontSize = 13.sp, color = GreenAccent, fontWeight = FontWeight.SemiBold)
+        Spacer(modifier = Modifier.height(8.dp))
+        pendingMembers.forEach { member ->
+            Row(
+                modifier = Modifier.fillMaxWidth().padding(vertical = 4.dp),
+                verticalAlignment = Alignment.CenterVertically,
+            ) {
+                MemberAvatar(name = member.displayName, photoUrl = member.photoUrl, size = 36)
+                Spacer(modifier = Modifier.width(8.dp))
+                Text(text = member.displayName, fontSize = 14.sp, color = DarkTextPrimary, modifier = Modifier.weight(1f))
+                Box(
+                    modifier = Modifier.size(32.dp).clip(CircleShape).background(SportGreen.copy(alpha = 0.15f))
+                        .clickable { onApprove(member.userId) },
+                    contentAlignment = Alignment.Center,
                 ) {
-                    MemberAvatar(name = member.displayName, photoUrl = member.photoUrl, size = 36)
-                    Spacer(modifier = Modifier.width(8.dp))
-                    Text(
-                        text = member.displayName,
-                        style = MaterialTheme.typography.bodyMedium,
-                        color = TextPrimary,
-                        modifier = Modifier.weight(1f)
-                    )
-                    IconButton(
-                        onClick = { onApprove(member.userId) },
-                        modifier = Modifier.size(32.dp)
-                    ) {
-                        Icon(Icons.Default.Check, contentDescription = "Approve", tint = SportGreen)
-                    }
-                    IconButton(
-                        onClick = { onReject(member.userId) },
-                        modifier = Modifier.size(32.dp)
-                    ) {
-                        Icon(Icons.Default.Close, contentDescription = "Reject", tint = MaterialTheme.colorScheme.error)
-                    }
+                    Icon(Icons.Default.Check, contentDescription = "Approve", tint = SportGreen, modifier = Modifier.size(16.dp))
+                }
+                Spacer(modifier = Modifier.width(8.dp))
+                Box(
+                    modifier = Modifier.size(32.dp).clip(CircleShape).background(Color(0xFFEF5350).copy(alpha = 0.15f))
+                        .clickable { onReject(member.userId) },
+                    contentAlignment = Alignment.Center,
+                ) {
+                    Icon(Icons.Default.Close, contentDescription = "Reject", tint = Color(0xFFEF5350), modifier = Modifier.size(16.dp))
                 }
             }
         }
@@ -330,26 +327,16 @@ private fun PendingApprovals(
 @Composable
 private fun LobbiesTab(
     lobbies: List<Lobby>,
-    onLobbyClick: (Long) -> Unit
+    onLobbyClick: (Long) -> Unit,
 ) {
     if (lobbies.isEmpty()) {
-        Box(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(32.dp),
-            contentAlignment = Alignment.Center
-        ) {
-            Text(
-                text = "No lobbies yet. Create one!",
-                style = MaterialTheme.typography.bodyLarge,
-                color = TextTertiary,
-                textAlign = TextAlign.Center
-            )
+        Box(modifier = Modifier.fillMaxSize().padding(32.dp), contentAlignment = Alignment.Center) {
+            Text(text = "No lobbies yet. Create one!", fontSize = 14.sp, color = DarkTextTertiary, textAlign = TextAlign.Center)
         }
     } else {
         LazyColumn(
             contentPadding = PaddingValues(horizontal = 16.dp, vertical = 12.dp),
-            verticalArrangement = Arrangement.spacedBy(10.dp)
+            verticalArrangement = Arrangement.spacedBy(10.dp),
         ) {
             items(lobbies, key = { it.id }) { lobby ->
                 LobbyCard(lobby = lobby, onClick = { onLobbyClick(lobby.id) })
@@ -362,71 +349,51 @@ private fun LobbiesTab(
 internal fun LobbyCard(
     lobby: Lobby,
     onClick: () -> Unit,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
 ) {
-    Card(
-        modifier = modifier.fillMaxWidth(),
-        shape = RoundedCornerShape(10.dp),
-        colors = CardDefaults.cardColors(containerColor = CardWhite),
-        onClick = onClick
+    Column(
+        modifier = modifier
+            .fillMaxWidth()
+            .clip(RoundedCornerShape(10.dp))
+            .background(DarkSurface)
+            .border(1.dp, DarkBorder, RoundedCornerShape(10.dp))
+            .clickable(onClick = onClick)
+            .padding(14.dp),
     ) {
-        Column(modifier = Modifier.padding(14.dp)) {
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.SpaceBetween
-            ) {
-                Text(
-                    text = lobby.title,
-                    style = MaterialTheme.typography.titleSmall,
-                    fontWeight = FontWeight.SemiBold,
-                    color = TextPrimary,
-                    maxLines = 1,
-                    overflow = TextOverflow.Ellipsis,
-                    modifier = Modifier.weight(1f)
-                )
-                Spacer(modifier = Modifier.width(8.dp))
-                SportBadge(sportType = lobby.sportType)
-            }
-
-            Spacer(modifier = Modifier.height(6.dp))
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.SpaceBetween,
+        ) {
             Text(
-                text = "${lobby.scheduledDate}  ${lobby.scheduledTime}",
-                style = MaterialTheme.typography.bodySmall,
-                color = TextSecondary
+                text = lobby.title,
+                fontSize = 14.sp,
+                fontWeight = FontWeight.SemiBold,
+                color = DarkTextPrimary,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis,
+                modifier = Modifier.weight(1f),
             )
-            if (!lobby.venueName.isNullOrBlank()) {
-                Text(
-                    text = lobby.venueName,
-                    style = MaterialTheme.typography.bodySmall,
-                    color = TextTertiary
-                )
-            }
-
-            Spacer(modifier = Modifier.height(8.dp))
-
-            // Player count progress
-            val progress = if (lobby.maxPlayers > 0) lobby.currentPlayers.toFloat() / lobby.maxPlayers else 0f
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                verticalAlignment = Alignment.CenterVertically
+            Spacer(modifier = Modifier.width(8.dp))
+            SportBadge(sportType = lobby.sportType)
+        }
+        Spacer(modifier = Modifier.height(6.dp))
+        Text(text = "${lobby.scheduledDate}  ${lobby.scheduledTime}", fontSize = 12.sp, color = DarkTextSecondary)
+        if (!lobby.venueName.isNullOrBlank()) {
+            Text(text = lobby.venueName, fontSize = 12.sp, color = DarkTextTertiary)
+        }
+        Spacer(modifier = Modifier.height(8.dp))
+        val progress = if (lobby.maxPlayers > 0) lobby.currentPlayers.toFloat() / lobby.maxPlayers else 0f
+        Row(modifier = Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
+            Box(
+                modifier = Modifier.weight(1f).height(6.dp).clip(RoundedCornerShape(3.dp)).background(DarkBg)
             ) {
-                LinearProgressIndicator(
-                    progress = { progress },
-                    modifier = Modifier
-                        .weight(1f)
-                        .height(6.dp)
-                        .clip(RoundedCornerShape(3.dp)),
-                    color = GoldAccent,
-                    trackColor = LightBg
-                )
-                Spacer(modifier = Modifier.width(8.dp))
-                Text(
-                    text = "${lobby.currentPlayers}/${lobby.maxPlayers} players",
-                    style = MaterialTheme.typography.labelSmall,
-                    color = TextSecondary
+                Box(
+                    modifier = Modifier.fillMaxWidth(progress).height(6.dp).clip(RoundedCornerShape(3.dp)).background(GreenAccent)
                 )
             }
+            Spacer(modifier = Modifier.width(8.dp))
+            Text("${lobby.currentPlayers}/${lobby.maxPlayers} players", fontSize = 11.sp, color = DarkTextSecondary)
         }
     }
 }
@@ -435,31 +402,22 @@ internal fun LobbyCard(
 private fun MembersTab(
     members: List<CommunityMember>,
     isAdmin: Boolean,
-    onRemoveMember: (Long) -> Unit
+    onRemoveMember: (Long) -> Unit,
 ) {
     if (members.isEmpty()) {
-        Box(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(32.dp),
-            contentAlignment = Alignment.Center
-        ) {
-            Text(
-                text = "No members yet",
-                style = MaterialTheme.typography.bodyLarge,
-                color = TextTertiary
-            )
+        Box(modifier = Modifier.fillMaxSize().padding(32.dp), contentAlignment = Alignment.Center) {
+            Text(text = "No members yet", fontSize = 14.sp, color = DarkTextTertiary)
         }
     } else {
         LazyColumn(
             contentPadding = PaddingValues(horizontal = 16.dp, vertical = 12.dp),
-            verticalArrangement = Arrangement.spacedBy(8.dp)
+            verticalArrangement = Arrangement.spacedBy(8.dp),
         ) {
             items(members, key = { it.id }) { member ->
                 MemberRow(
                     member = member,
                     isAdmin = isAdmin,
-                    onRemove = { onRemoveMember(member.userId) }
+                    onRemove = { onRemoveMember(member.userId) },
                 )
             }
         }
@@ -470,32 +428,25 @@ private fun MembersTab(
 private fun MemberRow(
     member: CommunityMember,
     isAdmin: Boolean,
-    onRemove: () -> Unit
+    onRemove: () -> Unit,
 ) {
     Row(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(vertical = 4.dp),
-        verticalAlignment = Alignment.CenterVertically
+        modifier = Modifier.fillMaxWidth().padding(vertical = 4.dp),
+        verticalAlignment = Alignment.CenterVertically,
     ) {
         MemberAvatar(name = member.displayName, photoUrl = member.photoUrl, size = 40)
         Spacer(modifier = Modifier.width(10.dp))
         Column(modifier = Modifier.weight(1f)) {
-            Text(
-                text = member.displayName,
-                style = MaterialTheme.typography.bodyMedium,
-                color = TextPrimary,
-                fontWeight = FontWeight.Medium
-            )
+            Text(text = member.displayName, fontSize = 14.sp, color = DarkTextPrimary, fontWeight = FontWeight.Medium)
             RoleBadge(role = member.role)
         }
         if (isAdmin && !member.isOwner) {
-            IconButton(onClick = onRemove, modifier = Modifier.size(32.dp)) {
-                Icon(
-                    Icons.Default.Close,
-                    contentDescription = "Remove",
-                    tint = MaterialTheme.colorScheme.error.copy(alpha = 0.7f)
-                )
+            Box(
+                modifier = Modifier.size(32.dp).clip(CircleShape).background(Color(0xFFEF5350).copy(alpha = 0.1f))
+                    .clickable(onClick = onRemove),
+                contentAlignment = Alignment.Center,
+            ) {
+                Icon(Icons.Default.Close, contentDescription = "Remove", tint = Color(0xFFEF5350).copy(alpha = 0.7f), modifier = Modifier.size(16.dp))
             }
         }
     }
@@ -506,28 +457,25 @@ internal fun MemberAvatar(
     name: String,
     photoUrl: String?,
     size: Int,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
 ) {
     Box(
-        modifier = modifier
-            .size(size.dp)
-            .clip(CircleShape)
-            .background(LightBg),
-        contentAlignment = Alignment.Center
+        modifier = modifier.size(size.dp).clip(CircleShape).background(DarkBg),
+        contentAlignment = Alignment.Center,
     ) {
         if (!photoUrl.isNullOrBlank()) {
             AsyncImage(
                 model = photoUrl,
                 contentDescription = name,
                 contentScale = ContentScale.Crop,
-                modifier = Modifier.fillMaxSize()
+                modifier = Modifier.fillMaxSize(),
             )
         } else {
             Text(
                 text = name.firstOrNull()?.uppercaseChar()?.toString() ?: "?",
-                style = MaterialTheme.typography.labelMedium,
-                color = GoldAccent,
-                fontWeight = FontWeight.Bold
+                fontSize = 12.sp,
+                color = GreenAccent,
+                fontWeight = FontWeight.Bold,
             )
         }
     }
@@ -536,7 +484,7 @@ internal fun MemberAvatar(
 @Composable
 private fun RoleBadge(role: String) {
     val (label, color) = when (role) {
-        "owner" -> "Owner" to GoldAccent
+        "owner" -> "Owner" to GreenAccent
         "admin" -> "Admin" to SportGreen
         else -> return
     }
@@ -544,56 +492,62 @@ private fun RoleBadge(role: String) {
         modifier = Modifier
             .clip(RoundedCornerShape(4.dp))
             .background(color.copy(alpha = 0.15f))
-            .padding(horizontal = 6.dp, vertical = 1.dp)
+            .padding(horizontal = 6.dp, vertical = 1.dp),
     ) {
-        Text(text = label, style = MaterialTheme.typography.labelSmall, color = color)
+        Text(text = label, fontSize = 11.sp, color = color)
     }
 }
 
-@OptIn(ExperimentalMaterial3Api::class)
-@Preview(showBackground = true)
+@Preview(showBackground = true, backgroundColor = 0xFF121212)
 @Composable
 private fun CommunityDetailScreenPreview() {
-    Scaffold(
-        containerColor = LightBg,
-        topBar = {
-            TopAppBar(
-                title = { Text("Basketball Crew", color = GoldAccent) },
-                colors = TopAppBarDefaults.topAppBarColors(containerColor = NavBarBg)
-            )
-        }
-    ) { padding ->
-        Column(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(padding)
+    val sampleCommunity = Community(
+        id = 1,
+        name = "Basketball Crew",
+        sportType = "basketball",
+        description = "A community for basketball enthusiasts in the city.",
+        memberCount = 12,
+        maxMembers = 30,
+    )
+    Column(modifier = Modifier.fillMaxSize().background(DarkBg)) {
+        Row(
+            modifier = Modifier.fillMaxWidth().padding(start = 16.dp, end = 16.dp, top = 56.dp, bottom = 16.dp),
+            verticalAlignment = Alignment.CenterVertically,
         ) {
-            CommunityHeader(
-                community = Community(
-                    id = 1,
-                    name = "Basketball Crew",
-                    sportType = "basketball",
-                    description = "A community for basketball enthusiasts in the city.",
-                    memberCount = 12,
-                    maxMembers = 30
-                )
-            )
-            TabRow(selectedTabIndex = 0, containerColor = CardWhite) {
-                Tab(selected = true, onClick = {}, text = { Text("Lobbies") })
-                Tab(selected = false, onClick = {}, text = { Text("Members") })
+            Box(modifier = Modifier.size(40.dp).clip(CircleShape).background(DarkSurface), contentAlignment = Alignment.Center) {
+                Icon(Icons.AutoMirrored.Filled.ArrowBack, "Back", tint = DarkTextPrimary, modifier = Modifier.size(20.dp))
             }
-            LazyColumn(
-                contentPadding = PaddingValues(16.dp),
-                verticalArrangement = Arrangement.spacedBy(10.dp)
-            ) {
-                items(
-                    listOf(
-                        Lobby(id = 1, title = "Friday Night Game", sportType = "basketball", scheduledDate = "2026-03-27", scheduledTime = "19:00", currentPlayers = 4, maxPlayers = 10),
-                        Lobby(id = 2, title = "Weekend Practice", sportType = "basketball", scheduledDate = "2026-03-28", scheduledTime = "10:00", currentPlayers = 8, maxPlayers = 10)
-                    )
-                ) { lobby ->
-                    LobbyCard(lobby = lobby, onClick = {})
+            Spacer(modifier = Modifier.width(12.dp))
+            Text("Basketball Crew", fontSize = 18.sp, fontWeight = FontWeight.Bold, color = GreenAccent)
+        }
+        CommunityHeader(community = sampleCommunity)
+        Row(
+            modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 8.dp),
+            horizontalArrangement = Arrangement.spacedBy(10.dp),
+        ) {
+            listOf("Lobbies" to true, "Members" to false).forEach { (title, isSelected) ->
+                Box(
+                    modifier = Modifier.weight(1f).clip(RoundedCornerShape(50))
+                        .background(if (isSelected) GreenAccent else DarkSurface)
+                        .border(1.dp, if (isSelected) GreenAccent else DarkBorder, RoundedCornerShape(50))
+                        .padding(vertical = 10.dp),
+                    contentAlignment = Alignment.Center,
+                ) {
+                    Text(title, fontSize = 14.sp, fontWeight = FontWeight.SemiBold, color = if (isSelected) Color.White else DarkTextSecondary)
                 }
+            }
+        }
+        LazyColumn(
+            contentPadding = PaddingValues(16.dp),
+            verticalArrangement = Arrangement.spacedBy(10.dp),
+        ) {
+            items(
+                listOf(
+                    Lobby(id = 1, title = "Friday Night Game", sportType = "basketball", scheduledDate = "2026-03-27", scheduledTime = "19:00", currentPlayers = 4, maxPlayers = 10),
+                    Lobby(id = 2, title = "Weekend Practice", sportType = "basketball", scheduledDate = "2026-03-28", scheduledTime = "10:00", currentPlayers = 8, maxPlayers = 10),
+                ),
+            ) { lobby ->
+                LobbyCard(lobby = lobby, onClick = {})
             }
         }
     }

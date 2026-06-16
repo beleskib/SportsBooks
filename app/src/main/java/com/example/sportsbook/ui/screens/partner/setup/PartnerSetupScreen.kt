@@ -1,41 +1,67 @@
 package com.example.sportsbook.ui.screens.partner.setup
 
+import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.ArrowDropDown
-import androidx.compose.material3.Button
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ExposedDropdownMenuBox
 import androidx.compose.material3.MenuAnchorType
 import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
-import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
-import androidx.compose.material3.Scaffold
+import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.Text
-import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.example.sportsbook.domain.enums.SportType
+import com.example.sportsbook.ui.theme.DarkBg
+import com.example.sportsbook.ui.theme.DarkBorder
+import com.example.sportsbook.ui.theme.DarkSurface
+import com.example.sportsbook.ui.theme.DarkTextPrimary
+import com.example.sportsbook.ui.theme.DarkTextSecondary
+import com.example.sportsbook.ui.theme.GreenAccent
+
+private val darkFieldColors
+    @Composable get() = OutlinedTextFieldDefaults.colors(
+        focusedTextColor = DarkTextPrimary,
+        unfocusedTextColor = DarkTextPrimary,
+        focusedBorderColor = GreenAccent,
+        unfocusedBorderColor = DarkBorder,
+        focusedLabelColor = GreenAccent,
+        unfocusedLabelColor = DarkTextSecondary,
+        cursorColor = GreenAccent,
+    )
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -54,25 +80,42 @@ fun PartnerSetupScreen(
         }
     }
 
-    Scaffold(
-        topBar = {
-            TopAppBar(
-                title = { Text(if (isCoach) "Coach Profile Setup" else "Venue Setup") },
-                navigationIcon = {
-                    IconButton(onClick = onBack) {
-                        Icon(
-                            imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                            contentDescription = "Back"
-                        )
-                    }
-                }
+    Column(
+        modifier = Modifier
+            .fillMaxSize()
+            .background(DarkBg)
+    ) {
+        // ── Header ───────────────────────────────────────────────────────
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .background(DarkSurface)
+                .padding(horizontal = 16.dp, vertical = 12.dp),
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            Box(
+                modifier = Modifier
+                    .size(40.dp)
+                    .clip(CircleShape)
+                    .background(DarkBg)
+                    .clickable(onClick = onBack),
+                contentAlignment = Alignment.Center,
+            ) {
+                Icon(Icons.AutoMirrored.Filled.ArrowBack, "Back", tint = DarkTextPrimary, modifier = Modifier.size(20.dp))
+            }
+            Spacer(modifier = Modifier.width(12.dp))
+            Text(
+                text = if (isCoach) "Coach Profile Setup" else "Venue Setup",
+                fontSize = 18.sp,
+                fontWeight = FontWeight.Bold,
+                color = DarkTextPrimary,
             )
         }
-    ) { paddingValues ->
+
+        // ── Form ─────────────────────────────────────────────────────────
         LazyColumn(
             modifier = Modifier
                 .fillMaxSize()
-                .padding(paddingValues)
                 .padding(horizontal = 16.dp)
         ) {
             item {
@@ -83,7 +126,8 @@ fun PartnerSetupScreen(
                     onValueChange = { viewModel.onNameChange(it) },
                     label = { Text(if (isCoach) "Full Name" else "Venue Name") },
                     modifier = Modifier.fillMaxWidth(),
-                    singleLine = true
+                    singleLine = true,
+                    colors = darkFieldColors,
                 )
 
                 Spacer(modifier = Modifier.height(12.dp))
@@ -93,7 +137,8 @@ fun PartnerSetupScreen(
                     onValueChange = { viewModel.onDescriptionChange(it) },
                     label = { Text(if (isCoach) "Bio" else "Description") },
                     modifier = Modifier.fillMaxWidth(),
-                    minLines = 3
+                    minLines = 3,
+                    colors = darkFieldColors,
                 )
 
                 Spacer(modifier = Modifier.height(12.dp))
@@ -104,7 +149,8 @@ fun PartnerSetupScreen(
                     label = { Text("Price per Hour") },
                     modifier = Modifier.fillMaxWidth(),
                     keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
-                    singleLine = true
+                    singleLine = true,
+                    colors = darkFieldColors,
                 )
 
                 Spacer(modifier = Modifier.height(12.dp))
@@ -121,12 +167,14 @@ fun PartnerSetupScreen(
                         trailingIcon = {
                             Icon(
                                 imageVector = Icons.Filled.ArrowDropDown,
-                                contentDescription = "Expand sport type menu"
+                                contentDescription = "Expand sport type menu",
+                                tint = DarkTextSecondary,
                             )
                         },
                         modifier = Modifier
                             .fillMaxWidth()
-                            .menuAnchor(MenuAnchorType.PrimaryNotEditable)
+                            .menuAnchor(MenuAnchorType.PrimaryNotEditable),
+                        colors = darkFieldColors,
                     )
 
                     ExposedDropdownMenu(
@@ -152,7 +200,8 @@ fun PartnerSetupScreen(
                     onValueChange = { viewModel.onAddressChange(it) },
                     label = { Text("Address") },
                     modifier = Modifier.fillMaxWidth(),
-                    singleLine = true
+                    singleLine = true,
+                    colors = darkFieldColors,
                 )
 
                 Spacer(modifier = Modifier.height(12.dp))
@@ -162,7 +211,8 @@ fun PartnerSetupScreen(
                     onValueChange = { viewModel.onCityChange(it) },
                     label = { Text("City") },
                     modifier = Modifier.fillMaxWidth(),
-                    singleLine = true
+                    singleLine = true,
+                    colors = darkFieldColors,
                 )
 
                 Spacer(modifier = Modifier.height(12.dp))
@@ -173,7 +223,8 @@ fun PartnerSetupScreen(
                     label = { Text("Phone Number") },
                     modifier = Modifier.fillMaxWidth(),
                     keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Phone),
-                    singleLine = true
+                    singleLine = true,
+                    colors = darkFieldColors,
                 )
 
                 Spacer(modifier = Modifier.height(12.dp))
@@ -184,32 +235,34 @@ fun PartnerSetupScreen(
                     label = { Text("Email") },
                     modifier = Modifier.fillMaxWidth(),
                     keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Email),
-                    singleLine = true
+                    singleLine = true,
+                    colors = darkFieldColors,
                 )
 
                 uiState.error?.let { errorMessage ->
                     Spacer(modifier = Modifier.height(8.dp))
                     Text(
                         text = errorMessage,
-                        style = MaterialTheme.typography.bodySmall,
-                        color = MaterialTheme.colorScheme.error
+                        fontSize = 12.sp,
+                        color = Color(0xFFEF5350),
                     )
                 }
 
                 Spacer(modifier = Modifier.height(24.dp))
 
-                Button(
-                    onClick = {
-                        if (isCoach) {
-                            viewModel.createCoachListing()
-                        } else {
-                            viewModel.createVenueListing()
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .clip(RoundedCornerShape(14.dp))
+                        .background(if (!uiState.isLoading) GreenAccent else Color(0xFF2A3D2B))
+                        .clickable(enabled = !uiState.isLoading) {
+                            if (isCoach) viewModel.createCoachListing()
+                            else viewModel.createVenueListing()
                         }
-                    },
-                    modifier = Modifier.fillMaxWidth(),
-                    enabled = !uiState.isLoading
+                        .padding(vertical = 16.dp),
+                    contentAlignment = Alignment.Center,
                 ) {
-                    Text("Create Listing")
+                    Text("Create Listing", fontSize = 16.sp, fontWeight = FontWeight.Bold, color = Color.White)
                 }
 
                 Spacer(modifier = Modifier.height(16.dp))
@@ -219,162 +272,193 @@ fun PartnerSetupScreen(
 }
 
 @OptIn(ExperimentalMaterial3Api::class)
-@Preview(showBackground = true)
+@Preview(showBackground = true, backgroundColor = 0xFF121212)
 @Composable
 private fun PartnerSetupScreenVenuePreview() {
-    MaterialTheme {
-        Scaffold(
-            topBar = {
-                TopAppBar(
-                    title = { Text("Venue Setup") },
-                    navigationIcon = {
-                        IconButton(onClick = {}) {
-                            Icon(
-                                imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                                contentDescription = "Back"
-                            )
-                        }
-                    }
-                )
-            }
-        ) { paddingValues ->
-            LazyColumn(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .padding(paddingValues)
-                    .padding(horizontal = 16.dp)
+    Column(
+        modifier = Modifier
+            .fillMaxSize()
+            .background(DarkBg)
+    ) {
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .background(DarkSurface)
+                .padding(horizontal = 16.dp, vertical = 12.dp),
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            Box(
+                modifier = Modifier.size(40.dp).clip(CircleShape).background(DarkBg),
+                contentAlignment = Alignment.Center,
             ) {
-                item {
-                    Spacer(modifier = Modifier.height(16.dp))
-                    OutlinedTextField(
-                        value = "City Sports Hall",
-                        onValueChange = {},
-                        label = { Text("Venue Name") },
-                        modifier = Modifier.fillMaxWidth(),
-                        singleLine = true
-                    )
-                    Spacer(modifier = Modifier.height(12.dp))
-                    OutlinedTextField(
-                        value = "A premium indoor sports facility",
-                        onValueChange = {},
-                        label = { Text("Description") },
-                        modifier = Modifier.fillMaxWidth(),
-                        minLines = 3
-                    )
-                    Spacer(modifier = Modifier.height(12.dp))
-                    OutlinedTextField(
-                        value = "45.00",
-                        onValueChange = {},
-                        label = { Text("Price per Hour") },
-                        modifier = Modifier.fillMaxWidth(),
-                        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
-                        singleLine = true
-                    )
-                    Spacer(modifier = Modifier.height(12.dp))
-                    OutlinedTextField(
-                        value = SportType.BASKETBALL.displayName,
-                        onValueChange = {},
-                        readOnly = true,
-                        label = { Text("Sport Type") },
-                        trailingIcon = {
-                            Icon(
-                                imageVector = Icons.Filled.ArrowDropDown,
-                                contentDescription = "Expand sport type menu"
-                            )
-                        },
-                        modifier = Modifier.fillMaxWidth()
-                    )
-                    Spacer(modifier = Modifier.height(12.dp))
-                    OutlinedTextField(
-                        value = "123 Main Street",
-                        onValueChange = {},
-                        label = { Text("Address") },
-                        modifier = Modifier.fillMaxWidth(),
-                        singleLine = true
-                    )
-                    Spacer(modifier = Modifier.height(24.dp))
-                    Button(onClick = {}, modifier = Modifier.fillMaxWidth()) {
-                        Text("Create Listing")
-                    }
-                    Spacer(modifier = Modifier.height(16.dp))
+                Icon(Icons.AutoMirrored.Filled.ArrowBack, "Back", tint = DarkTextPrimary, modifier = Modifier.size(20.dp))
+            }
+            Spacer(modifier = Modifier.width(12.dp))
+            Text("Venue Setup", fontSize = 18.sp, fontWeight = FontWeight.Bold, color = DarkTextPrimary)
+        }
+        LazyColumn(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(horizontal = 16.dp)
+        ) {
+            item {
+                Spacer(modifier = Modifier.height(16.dp))
+                OutlinedTextField(
+                    value = "City Sports Hall",
+                    onValueChange = {},
+                    label = { Text("Venue Name") },
+                    modifier = Modifier.fillMaxWidth(),
+                    singleLine = true,
+                    colors = darkFieldColors,
+                )
+                Spacer(modifier = Modifier.height(12.dp))
+                OutlinedTextField(
+                    value = "A premium indoor sports facility",
+                    onValueChange = {},
+                    label = { Text("Description") },
+                    modifier = Modifier.fillMaxWidth(),
+                    minLines = 3,
+                    colors = darkFieldColors,
+                )
+                Spacer(modifier = Modifier.height(12.dp))
+                OutlinedTextField(
+                    value = "45.00",
+                    onValueChange = {},
+                    label = { Text("Price per Hour") },
+                    modifier = Modifier.fillMaxWidth(),
+                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+                    singleLine = true,
+                    colors = darkFieldColors,
+                )
+                Spacer(modifier = Modifier.height(12.dp))
+                OutlinedTextField(
+                    value = SportType.BASKETBALL.displayName,
+                    onValueChange = {},
+                    readOnly = true,
+                    label = { Text("Sport Type") },
+                    trailingIcon = {
+                        Icon(
+                            imageVector = Icons.Filled.ArrowDropDown,
+                            contentDescription = "Expand sport type menu",
+                            tint = DarkTextSecondary,
+                        )
+                    },
+                    modifier = Modifier.fillMaxWidth(),
+                    colors = darkFieldColors,
+                )
+                Spacer(modifier = Modifier.height(12.dp))
+                OutlinedTextField(
+                    value = "123 Main Street",
+                    onValueChange = {},
+                    label = { Text("Address") },
+                    modifier = Modifier.fillMaxWidth(),
+                    singleLine = true,
+                    colors = darkFieldColors,
+                )
+                Spacer(modifier = Modifier.height(24.dp))
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .clip(RoundedCornerShape(14.dp))
+                        .background(GreenAccent)
+                        .padding(vertical = 16.dp),
+                    contentAlignment = Alignment.Center,
+                ) {
+                    Text("Create Listing", fontSize = 16.sp, fontWeight = FontWeight.Bold, color = Color.White)
                 }
+                Spacer(modifier = Modifier.height(16.dp))
             }
         }
     }
 }
 
 @OptIn(ExperimentalMaterial3Api::class)
-@Preview(showBackground = true)
+@Preview(showBackground = true, backgroundColor = 0xFF121212)
 @Composable
 private fun PartnerSetupScreenCoachPreview() {
-    MaterialTheme {
-        Scaffold(
-            topBar = {
-                TopAppBar(
-                    title = { Text("Coach Profile Setup") },
-                    navigationIcon = {
-                        IconButton(onClick = {}) {
-                            Icon(
-                                imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                                contentDescription = "Back"
-                            )
-                        }
-                    }
-                )
-            }
-        ) { paddingValues ->
-            LazyColumn(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .padding(paddingValues)
-                    .padding(horizontal = 16.dp)
+    Column(
+        modifier = Modifier
+            .fillMaxSize()
+            .background(DarkBg)
+    ) {
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .background(DarkSurface)
+                .padding(horizontal = 16.dp, vertical = 12.dp),
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            Box(
+                modifier = Modifier.size(40.dp).clip(CircleShape).background(DarkBg),
+                contentAlignment = Alignment.Center,
             ) {
-                item {
-                    Spacer(modifier = Modifier.height(16.dp))
-                    OutlinedTextField(
-                        value = "Jane Doe",
-                        onValueChange = {},
-                        label = { Text("Full Name") },
-                        modifier = Modifier.fillMaxWidth(),
-                        singleLine = true
-                    )
-                    Spacer(modifier = Modifier.height(12.dp))
-                    OutlinedTextField(
-                        value = "10+ years coaching experience",
-                        onValueChange = {},
-                        label = { Text("Bio") },
-                        modifier = Modifier.fillMaxWidth(),
-                        minLines = 3
-                    )
-                    Spacer(modifier = Modifier.height(12.dp))
-                    OutlinedTextField(
-                        value = "60.00",
-                        onValueChange = {},
-                        label = { Text("Price per Hour") },
-                        modifier = Modifier.fillMaxWidth(),
-                        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
-                        singleLine = true
-                    )
-                    Spacer(modifier = Modifier.height(12.dp))
-                    OutlinedTextField(
-                        value = SportType.TENNIS.displayName,
-                        onValueChange = {},
-                        readOnly = true,
-                        label = { Text("Sport Type") },
-                        trailingIcon = {
-                            Icon(
-                                imageVector = Icons.Filled.ArrowDropDown,
-                                contentDescription = "Expand sport type menu"
-                            )
-                        },
-                        modifier = Modifier.fillMaxWidth()
-                    )
-                    Spacer(modifier = Modifier.height(24.dp))
-                    Button(onClick = {}, modifier = Modifier.fillMaxWidth()) {
-                        Text("Create Listing")
-                    }
-                    Spacer(modifier = Modifier.height(16.dp))
+                Icon(Icons.AutoMirrored.Filled.ArrowBack, "Back", tint = DarkTextPrimary, modifier = Modifier.size(20.dp))
+            }
+            Spacer(modifier = Modifier.width(12.dp))
+            Text("Coach Profile Setup", fontSize = 18.sp, fontWeight = FontWeight.Bold, color = DarkTextPrimary)
+        }
+        LazyColumn(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(horizontal = 16.dp)
+        ) {
+            item {
+                Spacer(modifier = Modifier.height(16.dp))
+                OutlinedTextField(
+                    value = "Jane Doe",
+                    onValueChange = {},
+                    label = { Text("Full Name") },
+                    modifier = Modifier.fillMaxWidth(),
+                    singleLine = true,
+                    colors = darkFieldColors,
+                )
+                Spacer(modifier = Modifier.height(12.dp))
+                OutlinedTextField(
+                    value = "10+ years coaching experience",
+                    onValueChange = {},
+                    label = { Text("Bio") },
+                    modifier = Modifier.fillMaxWidth(),
+                    minLines = 3,
+                    colors = darkFieldColors,
+                )
+                Spacer(modifier = Modifier.height(12.dp))
+                OutlinedTextField(
+                    value = "60.00",
+                    onValueChange = {},
+                    label = { Text("Price per Hour") },
+                    modifier = Modifier.fillMaxWidth(),
+                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+                    singleLine = true,
+                    colors = darkFieldColors,
+                )
+                Spacer(modifier = Modifier.height(12.dp))
+                OutlinedTextField(
+                    value = SportType.TENNIS.displayName,
+                    onValueChange = {},
+                    readOnly = true,
+                    label = { Text("Sport Type") },
+                    trailingIcon = {
+                        Icon(
+                            imageVector = Icons.Filled.ArrowDropDown,
+                            contentDescription = "Expand sport type menu",
+                            tint = DarkTextSecondary,
+                        )
+                    },
+                    modifier = Modifier.fillMaxWidth(),
+                    colors = darkFieldColors,
+                )
+                Spacer(modifier = Modifier.height(24.dp))
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .clip(RoundedCornerShape(14.dp))
+                        .background(GreenAccent)
+                        .padding(vertical = 16.dp),
+                    contentAlignment = Alignment.Center,
+                ) {
+                    Text("Create Listing", fontSize = 16.sp, fontWeight = FontWeight.Bold, color = Color.White)
                 }
+                Spacer(modifier = Modifier.height(16.dp))
             }
         }
     }

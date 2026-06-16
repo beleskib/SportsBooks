@@ -28,6 +28,8 @@ import com.example.sportsbook.data.remote.dto.SportExpertiseResponseDto
 import com.example.sportsbook.data.remote.dto.UpdateInterestedSportsRequestDto
 import com.example.sportsbook.data.remote.dto.UpdateUserRequestDto
 import com.example.sportsbook.data.remote.dto.UserDto
+import com.example.sportsbook.data.remote.dto.SavedCardDto
+import com.example.sportsbook.data.remote.dto.SetupIntentResultDto
 import com.example.sportsbook.data.remote.dto.FollowCountsDto
 import com.example.sportsbook.data.remote.dto.FeedPostDto
 import com.example.sportsbook.data.remote.dto.FeedCommentDto
@@ -65,9 +67,6 @@ import com.example.sportsbook.data.remote.dto.CreatePartyRequestDto
 import com.example.sportsbook.data.remote.dto.InviteToPartyRequestDto
 import com.example.sportsbook.data.remote.dto.RespondToPartyInviteDto
 import com.example.sportsbook.data.remote.dto.JoinMatchWithPartyDto
-import com.example.sportsbook.data.remote.dto.StripeConnectOnboardingResponseDto
-import com.example.sportsbook.data.remote.dto.StripeAccountStatusResponseDto
-import com.example.sportsbook.data.remote.dto.StripeDashboardLinkResponseDto
 import com.example.sportsbook.data.remote.dto.AvailablePlayerDto
 import com.example.sportsbook.data.remote.dto.RegisterAvailableRequestDto
 import com.example.sportsbook.data.remote.dto.InviteToMatchRequestDto
@@ -540,16 +539,6 @@ interface ApiService {
         @Body request: InviteToMatchRequestDto
     ): ApiResponseDto<Unit>
 
-    // Stripe Connect
-    @POST("api/stripe-connect/onboard")
-    suspend fun stripeConnectOnboard(): ApiResponseDto<StripeConnectOnboardingResponseDto>
-
-    @GET("api/stripe-connect/status")
-    suspend fun getStripeConnectStatus(): ApiResponseDto<StripeAccountStatusResponseDto>
-
-    @POST("api/stripe-connect/dashboard-link")
-    suspend fun getStripeDashboardLink(): ApiResponseDto<StripeDashboardLinkResponseDto>
-
     // ── Gamification ──────────────────────────────────────────────────────
     @GET("api/gamification/me/level")
     suspend fun getMyLevel(): ApiResponseDto<PlayerLevelDto>
@@ -726,4 +715,17 @@ interface ApiService {
 
     @POST("api/venue-booking-lobbies/{id}/teams/leave")
     suspend fun leaveLobbyTeam(@Path("id") lobbyId: Long): ApiResponseDto<VenueBookingLobbyDto>
+
+    // ── Card Management ──────────────────────────────────────────────────
+    @GET("api/cards")
+    suspend fun getSavedCards(): ApiResponseDto<List<SavedCardDto>>
+
+    @POST("api/cards/setup-intent")
+    suspend fun createCardSetupIntent(): ApiResponseDto<SetupIntentResultDto>
+
+    @DELETE("api/cards/{paymentMethodId}")
+    suspend fun deleteCard(@Path("paymentMethodId") paymentMethodId: String): ApiResponseDto<Unit?>
+
+    @PUT("api/cards/{paymentMethodId}/default")
+    suspend fun setDefaultCard(@Path("paymentMethodId") paymentMethodId: String): ApiResponseDto<Unit?>
 }

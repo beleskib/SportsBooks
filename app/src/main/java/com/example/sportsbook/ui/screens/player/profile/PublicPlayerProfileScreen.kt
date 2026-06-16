@@ -1,6 +1,8 @@
 package com.example.sportsbook.ui.screens.player.profile
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -27,24 +29,11 @@ import androidx.compose.material.icons.filled.Person
 import androidx.compose.material.icons.filled.PersonAdd
 import androidx.compose.material.icons.filled.PersonRemove
 import androidx.compose.material.icons.filled.SportsSoccer
-import androidx.compose.material3.AssistChip
-import androidx.compose.material3.Button
-import androidx.compose.material3.ButtonDefaults
-import androidx.compose.material3.Card
-import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
-import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedButton
-import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
-import androidx.compose.material3.TopAppBar
-import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -58,6 +47,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import coil.compose.AsyncImage
@@ -67,14 +57,14 @@ import com.example.sportsbook.domain.model.PublicPlayerProfile
 import com.example.sportsbook.ui.common.ErrorView
 import com.example.sportsbook.ui.common.LoadingIndicator
 import com.example.sportsbook.ui.screens.player.match.components.PlayerRatingStars
-import com.example.sportsbook.ui.theme.BorderGray
-import com.example.sportsbook.ui.theme.LightBg
-import com.example.sportsbook.ui.theme.NavBarBg
-import com.example.sportsbook.ui.theme.SportsBookTheme
-import com.example.sportsbook.ui.theme.GoldAccent
-import com.example.sportsbook.ui.theme.TextPrimary
+import com.example.sportsbook.ui.theme.DarkBorder
+import com.example.sportsbook.ui.theme.DarkBg
+import com.example.sportsbook.ui.theme.DarkSurface
+import com.example.sportsbook.ui.theme.GreenAccent
+import com.example.sportsbook.ui.theme.DarkTextPrimary
+import com.example.sportsbook.ui.theme.DarkTextSecondary
 
-@OptIn(ExperimentalMaterial3Api::class, ExperimentalLayoutApi::class)
+@OptIn(ExperimentalLayoutApi::class)
 @Composable
 fun PublicPlayerProfileScreen(
     onBack: () -> Unit,
@@ -99,28 +89,34 @@ fun PublicPlayerProfileScreen(
         }
     }
 
-    Scaffold(
-        topBar = {
-            TopAppBar(
-                title = { Text("Player Profile", color = TextPrimary) },
-                navigationIcon = {
-                    IconButton(onClick = onBack) {
-                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back", tint = TextPrimary)
-                    }
-                },
-                colors = TopAppBarDefaults.topAppBarColors(
-                    containerColor = NavBarBg
-                )
-            )
-        },
-        snackbarHost = { SnackbarHost(snackbarHostState) },
-        containerColor = NavBarBg
-    ) { padding ->
-        Box(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(padding)
-        ) {
+    Box(
+        modifier = Modifier
+            .fillMaxSize()
+            .background(DarkBg)
+    ) {
+        Column(modifier = Modifier.fillMaxSize()) {
+            // ── Header ───────────────────────────────────────────────────
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 16.dp, vertical = 12.dp),
+                verticalAlignment = Alignment.CenterVertically,
+            ) {
+                Box(
+                    modifier = Modifier
+                        .size(40.dp)
+                        .clip(CircleShape)
+                        .background(DarkSurface)
+                        .clickable(onClick = onBack),
+                    contentAlignment = Alignment.Center,
+                ) {
+                    Icon(Icons.AutoMirrored.Filled.ArrowBack, "Back", tint = DarkTextPrimary, modifier = Modifier.size(20.dp))
+                }
+                Spacer(modifier = Modifier.width(12.dp))
+                Text("Player Profile", fontSize = 18.sp, fontWeight = FontWeight.Bold, color = DarkTextPrimary)
+            }
+
+            // ── Content ──────────────────────────────────────────────────
             when {
                 uiState.isLoading -> LoadingIndicator()
                 uiState.error != null && uiState.profile == null -> ErrorView(
@@ -135,6 +131,11 @@ fun PublicPlayerProfileScreen(
                 )
             }
         }
+
+        SnackbarHost(
+            hostState = snackbarHostState,
+            modifier = Modifier.align(Alignment.BottomCenter)
+        )
     }
 }
 
@@ -174,40 +175,38 @@ private fun PublicPlayerProfileContent(
                         modifier = Modifier
                             .size(110.dp)
                             .clip(CircleShape)
-                            .background(BorderGray),
+                            .background(DarkBorder),
                         contentAlignment = Alignment.Center
                     ) {
                         Icon(
                             imageVector = Icons.Default.Person,
                             contentDescription = "Player avatar",
                             modifier = Modifier.size(56.dp),
-                            tint = GoldAccent
+                            tint = GreenAccent
                         )
                     }
                 }
 
                 Spacer(modifier = Modifier.height(16.dp))
 
-                // Name
                 Text(
                     text = profile.displayName ?: "Unknown Player",
-                    style = MaterialTheme.typography.headlineSmall.copy(fontWeight = FontWeight.Bold),
-                    color = TextPrimary
+                    fontSize = 22.sp,
+                    fontWeight = FontWeight.Bold,
+                    color = DarkTextPrimary,
                 )
 
-                // Bio
                 if (!profile.bio.isNullOrBlank()) {
                     Spacer(modifier = Modifier.height(8.dp))
                     Text(
                         text = profile.bio,
-                        style = MaterialTheme.typography.bodyMedium,
-                        color = TextPrimary.copy(alpha = 0.7f),
+                        fontSize = 14.sp,
+                        color = DarkTextPrimary.copy(alpha = 0.7f),
                         textAlign = TextAlign.Center,
                         modifier = Modifier.padding(horizontal = 24.dp)
                     )
                 }
 
-                // Member since
                 if (profile.createdAt != null) {
                     Spacer(modifier = Modifier.height(6.dp))
                     val memberSince = try {
@@ -217,14 +216,13 @@ private fun PublicPlayerProfileContent(
                     }
                     Text(
                         text = "Member since $memberSince",
-                        style = MaterialTheme.typography.bodySmall,
-                        color = TextPrimary.copy(alpha = 0.4f)
+                        fontSize = 12.sp,
+                        color = DarkTextPrimary.copy(alpha = 0.4f),
                     )
                 }
 
                 Spacer(modifier = Modifier.height(20.dp))
 
-                // ── Friend Action Button ──
                 FriendActionButton(
                     friendshipStatus = profile.friendshipStatus,
                     isLoading = friendActionLoading,
@@ -239,22 +237,13 @@ private fun PublicPlayerProfileContent(
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .background(LightBg.copy(alpha = 0.5f))
+                    .background(DarkSurface)
                     .padding(vertical = 16.dp),
                 horizontalArrangement = Arrangement.SpaceEvenly
             ) {
-                ProfileStatItem(
-                    value = profile.totalMatchesPlayed.toString(),
-                    label = "Matches"
-                )
-                ProfileStatItem(
-                    value = String.format("%.1f", profile.avgPlayerSkillRating),
-                    label = "Skill"
-                )
-                ProfileStatItem(
-                    value = profile.totalPlayerRatings.toString(),
-                    label = "Ratings"
-                )
+                ProfileStatItem(value = profile.totalMatchesPlayed.toString(), label = "Matches")
+                ProfileStatItem(value = String.format("%.1f", profile.avgPlayerSkillRating), label = "Skill")
+                ProfileStatItem(value = profile.totalPlayerRatings.toString(), label = "Ratings")
             }
         }
 
@@ -267,20 +256,20 @@ private fun PublicPlayerProfileContent(
             }
 
             item {
-                Card(
+                Column(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .padding(horizontal = 16.dp),
-                    colors = CardDefaults.cardColors(containerColor = LightBg.copy(alpha = 0.5f)),
-                    shape = RoundedCornerShape(12.dp)
+                        .padding(horizontal = 16.dp)
+                        .clip(RoundedCornerShape(12.dp))
+                        .background(DarkSurface)
+                        .border(1.dp, DarkBorder, RoundedCornerShape(12.dp))
+                        .padding(16.dp)
                 ) {
-                    Column(modifier = Modifier.padding(16.dp)) {
-                        RatingRow(label = "Skill", rating = profile.avgPlayerSkillRating)
-                        Spacer(modifier = Modifier.height(12.dp))
-                        RatingRow(label = "Sportsmanship", rating = profile.avgPlayerSportsmanshipRating)
-                        Spacer(modifier = Modifier.height(12.dp))
-                        RatingRow(label = "Punctuality", rating = profile.avgPlayerPunctualityRating)
-                    }
+                    RatingRow(label = "Skill", rating = profile.avgPlayerSkillRating)
+                    Spacer(modifier = Modifier.height(12.dp))
+                    RatingRow(label = "Sportsmanship", rating = profile.avgPlayerSportsmanshipRating)
+                    Spacer(modifier = Modifier.height(12.dp))
+                    RatingRow(label = "Punctuality", rating = profile.avgPlayerPunctualityRating)
                 }
             }
         }
@@ -299,23 +288,22 @@ private fun PublicPlayerProfileContent(
                     verticalArrangement = Arrangement.spacedBy(8.dp)
                 ) {
                     profile.interestedSports.forEach { sport ->
-                        AssistChip(
-                            onClick = {},
-                            label = {
-                                Text(
-                                    sport.displayName,
-                                    color = TextPrimary
-                                )
-                            },
-                            leadingIcon = {
-                                Icon(
-                                    imageVector = Icons.Default.SportsSoccer,
-                                    contentDescription = null,
-                                    modifier = Modifier.size(16.dp),
-                                    tint = GoldAccent
-                                )
-                            }
-                        )
+                        Row(
+                            modifier = Modifier
+                                .clip(RoundedCornerShape(50))
+                                .background(GreenAccent.copy(alpha = 0.12f))
+                                .padding(horizontal = 12.dp, vertical = 6.dp),
+                            verticalAlignment = Alignment.CenterVertically,
+                        ) {
+                            Icon(
+                                imageVector = Icons.Default.SportsSoccer,
+                                contentDescription = null,
+                                modifier = Modifier.size(16.dp),
+                                tint = GreenAccent
+                            )
+                            Spacer(modifier = Modifier.width(6.dp))
+                            Text(sport.displayName, fontSize = 13.sp, color = DarkTextPrimary)
+                        }
                     }
                 }
             }
@@ -350,124 +338,107 @@ private fun FriendActionButton(
 ) {
     when {
         isLoading -> {
-            Button(
-                onClick = {},
-                enabled = false,
-                modifier = modifier.fillMaxWidth(0.6f),
-                shape = RoundedCornerShape(12.dp),
-                colors = ButtonDefaults.buttonColors(
-                    disabledContainerColor = BorderGray
-                )
+            Box(
+                modifier = modifier
+                    .fillMaxWidth(0.6f)
+                    .clip(RoundedCornerShape(12.dp))
+                    .background(DarkBorder)
+                    .padding(vertical = 12.dp),
+                contentAlignment = Alignment.Center,
             ) {
-                CircularProgressIndicator(
-                    modifier = Modifier.size(18.dp),
-                    strokeWidth = 2.dp,
-                    color = TextPrimary
-                )
-                Spacer(modifier = Modifier.width(8.dp))
-                Text("Loading...", color = TextPrimary.copy(alpha = 0.6f))
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    CircularProgressIndicator(modifier = Modifier.size(18.dp), strokeWidth = 2.dp, color = DarkTextPrimary)
+                    Spacer(modifier = Modifier.width(8.dp))
+                    Text("Loading...", fontSize = 14.sp, color = DarkTextPrimary.copy(alpha = 0.6f))
+                }
             }
         }
         friendshipStatus == null -> {
-            // No relationship — show Add Friend
-            Button(
-                onClick = onSendRequest,
-                modifier = modifier.fillMaxWidth(0.6f),
-                shape = RoundedCornerShape(12.dp),
-                colors = ButtonDefaults.buttonColors(
-                    containerColor = GoldAccent
-                )
+            Box(
+                modifier = modifier
+                    .fillMaxWidth(0.6f)
+                    .clip(RoundedCornerShape(12.dp))
+                    .background(GreenAccent)
+                    .clickable(onClick = onSendRequest)
+                    .padding(vertical = 12.dp),
+                contentAlignment = Alignment.Center,
             ) {
-                Icon(
-                    Icons.Default.PersonAdd,
-                    contentDescription = null,
-                    modifier = Modifier.size(18.dp),
-                    tint = NavBarBg
-                )
-                Spacer(modifier = Modifier.width(8.dp))
-                Text("Add Friend", color = NavBarBg, fontWeight = FontWeight.Bold)
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Icon(Icons.Default.PersonAdd, null, modifier = Modifier.size(18.dp), tint = DarkBg)
+                    Spacer(modifier = Modifier.width(8.dp))
+                    Text("Add Friend", fontSize = 14.sp, color = DarkBg, fontWeight = FontWeight.Bold)
+                }
             }
         }
         friendshipStatus == "pending" -> {
-            // Pending request
-            OutlinedButton(
-                onClick = {},
-                enabled = false,
-                modifier = modifier.fillMaxWidth(0.6f),
-                shape = RoundedCornerShape(12.dp)
+            Box(
+                modifier = modifier
+                    .fillMaxWidth(0.6f)
+                    .clip(RoundedCornerShape(12.dp))
+                    .background(DarkBg)
+                    .border(1.dp, GreenAccent.copy(alpha = 0.4f), RoundedCornerShape(12.dp))
+                    .padding(vertical = 12.dp),
+                contentAlignment = Alignment.Center,
             ) {
-                Icon(
-                    Icons.Default.HourglassTop,
-                    contentDescription = null,
-                    modifier = Modifier.size(18.dp),
-                    tint = GoldAccent
-                )
-                Spacer(modifier = Modifier.width(8.dp))
-                Text("Request Pending", color = GoldAccent)
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Icon(Icons.Default.HourglassTop, null, modifier = Modifier.size(18.dp), tint = GreenAccent)
+                    Spacer(modifier = Modifier.width(8.dp))
+                    Text("Request Pending", fontSize = 14.sp, color = GreenAccent)
+                }
             }
         }
         friendshipStatus == "accepted" -> {
-            // Already friends — show Friends badge with option to remove
             Row(
                 modifier = modifier.fillMaxWidth(0.8f),
                 horizontalArrangement = Arrangement.spacedBy(8.dp)
             ) {
-                Button(
-                    onClick = {},
-                    enabled = false,
-                    modifier = Modifier.weight(1f),
-                    shape = RoundedCornerShape(12.dp),
-                    colors = ButtonDefaults.buttonColors(
-                        disabledContainerColor = Color(0xFF2E7D32).copy(alpha = 0.3f)
-                    )
+                Box(
+                    modifier = Modifier
+                        .weight(1f)
+                        .clip(RoundedCornerShape(12.dp))
+                        .background(Color(0xFF2E7D32).copy(alpha = 0.3f))
+                        .padding(vertical = 12.dp),
+                    contentAlignment = Alignment.Center,
                 ) {
-                    Icon(
-                        Icons.Default.Check,
-                        contentDescription = null,
-                        modifier = Modifier.size(18.dp),
-                        tint = Color(0xFF66BB6A)
-                    )
-                    Spacer(modifier = Modifier.width(6.dp))
-                    Text("Friends", color = Color(0xFF66BB6A))
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        Icon(Icons.Default.Check, null, modifier = Modifier.size(18.dp), tint = Color(0xFF66BB6A))
+                        Spacer(modifier = Modifier.width(6.dp))
+                        Text("Friends", fontSize = 14.sp, color = Color(0xFF66BB6A))
+                    }
                 }
-                OutlinedButton(
-                    onClick = onRemoveFriend,
-                    modifier = Modifier.weight(1f),
-                    shape = RoundedCornerShape(12.dp)
+                Box(
+                    modifier = Modifier
+                        .weight(1f)
+                        .clip(RoundedCornerShape(12.dp))
+                        .background(DarkBg)
+                        .border(1.dp, DarkTextPrimary.copy(alpha = 0.4f), RoundedCornerShape(12.dp))
+                        .clickable(onClick = onRemoveFriend)
+                        .padding(vertical = 12.dp),
+                    contentAlignment = Alignment.Center,
                 ) {
-                    Icon(
-                        Icons.Default.PersonRemove,
-                        contentDescription = null,
-                        modifier = Modifier.size(16.dp),
-                        tint = MaterialTheme.colorScheme.error
-                    )
-                    Spacer(modifier = Modifier.width(6.dp))
-                    Text(
-                        "Remove",
-                        color = MaterialTheme.colorScheme.error,
-                        style = MaterialTheme.typography.labelMedium
-                    )
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        Icon(Icons.Default.PersonRemove, null, modifier = Modifier.size(16.dp), tint = Color(0xFFEF5350))
+                        Spacer(modifier = Modifier.width(6.dp))
+                        Text("Remove", fontSize = 12.sp, color = Color(0xFFEF5350))
+                    }
                 }
             }
         }
         else -> {
-            // Declined/blocked — allow re-send
-            Button(
-                onClick = onSendRequest,
-                modifier = modifier.fillMaxWidth(0.6f),
-                shape = RoundedCornerShape(12.dp),
-                colors = ButtonDefaults.buttonColors(
-                    containerColor = GoldAccent
-                )
+            Box(
+                modifier = modifier
+                    .fillMaxWidth(0.6f)
+                    .clip(RoundedCornerShape(12.dp))
+                    .background(GreenAccent)
+                    .clickable(onClick = onSendRequest)
+                    .padding(vertical = 12.dp),
+                contentAlignment = Alignment.Center,
             ) {
-                Icon(
-                    Icons.Default.PersonAdd,
-                    contentDescription = null,
-                    modifier = Modifier.size(18.dp),
-                    tint = NavBarBg
-                )
-                Spacer(modifier = Modifier.width(8.dp))
-                Text("Add Friend", color = NavBarBg, fontWeight = FontWeight.Bold)
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Icon(Icons.Default.PersonAdd, null, modifier = Modifier.size(18.dp), tint = DarkBg)
+                    Spacer(modifier = Modifier.width(8.dp))
+                    Text("Add Friend", fontSize = 14.sp, color = DarkBg, fontWeight = FontWeight.Bold)
+                }
             }
         }
     }
@@ -483,16 +454,8 @@ private fun ProfileStatItem(
         modifier = modifier,
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
-        Text(
-            text = value,
-            style = MaterialTheme.typography.headlineSmall.copy(fontWeight = FontWeight.Bold),
-            color = GoldAccent
-        )
-        Text(
-            text = label,
-            style = MaterialTheme.typography.labelMedium,
-            color = TextPrimary.copy(alpha = 0.6f)
-        )
+        Text(text = value, fontSize = 22.sp, fontWeight = FontWeight.Bold, color = GreenAccent)
+        Text(text = label, fontSize = 12.sp, color = DarkTextPrimary.copy(alpha = 0.6f))
     }
 }
 
@@ -503,8 +466,9 @@ private fun SectionTitle(
 ) {
     Text(
         text = title,
-        style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.SemiBold),
-        color = TextPrimary,
+        fontSize = 16.sp,
+        fontWeight = FontWeight.SemiBold,
+        color = DarkTextPrimary,
         modifier = modifier
             .fillMaxWidth()
             .padding(horizontal = 16.dp)
@@ -524,8 +488,8 @@ private fun RatingRow(
     ) {
         Text(
             text = label,
-            style = MaterialTheme.typography.bodyMedium,
-            color = TextPrimary.copy(alpha = 0.8f),
+            fontSize = 14.sp,
+            color = DarkTextPrimary.copy(alpha = 0.8f),
             modifier = Modifier.width(120.dp)
         )
         Row(
@@ -533,11 +497,7 @@ private fun RatingRow(
             horizontalArrangement = Arrangement.spacedBy(8.dp)
         ) {
             PlayerRatingStars(rating = rating)
-            Text(
-                text = String.format("%.1f", rating),
-                style = MaterialTheme.typography.bodySmall,
-                color = GoldAccent
-            )
+            Text(text = String.format("%.1f", rating), fontSize = 12.sp, color = GreenAccent)
         }
     }
 }
@@ -547,141 +507,130 @@ private fun RecentMatchItem(
     match: PublicMatchSummary,
     modifier: Modifier = Modifier
 ) {
-    Card(
+    Row(
         modifier = modifier
             .fillMaxWidth()
-            .padding(horizontal = 16.dp),
-        colors = CardDefaults.cardColors(
-            containerColor = LightBg.copy(alpha = 0.5f)
-        ),
-        shape = RoundedCornerShape(12.dp)
+            .padding(horizontal = 16.dp)
+            .clip(RoundedCornerShape(12.dp))
+            .background(DarkSurface)
+            .border(1.dp, DarkBorder, RoundedCornerShape(12.dp))
+            .padding(12.dp),
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.SpaceBetween
     ) {
         Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(12.dp),
             verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.SpaceBetween
+            modifier = Modifier.weight(1f)
         ) {
-            Row(
-                verticalAlignment = Alignment.CenterVertically,
-                modifier = Modifier.weight(1f)
-            ) {
-                Icon(
-                    imageVector = Icons.Default.CalendarMonth,
-                    contentDescription = null,
-                    modifier = Modifier.size(20.dp),
-                    tint = GoldAccent
-                )
-                Spacer(modifier = Modifier.width(12.dp))
-                Column {
-                    Text(
-                        text = match.title,
-                        style = MaterialTheme.typography.bodyMedium.copy(fontWeight = FontWeight.Medium),
-                        color = TextPrimary
-                    )
-                    Text(
-                        text = "${match.sportType.displayName} • ${match.matchDate}",
-                        style = MaterialTheme.typography.bodySmall,
-                        color = TextPrimary.copy(alpha = 0.5f)
-                    )
-                }
-            }
-            Box(
-                modifier = Modifier
-                    .clip(RoundedCornerShape(6.dp))
-                    .background(
-                        when (match.status.lowercase()) {
-                            "completed" -> Color(0xFF2E7D32).copy(alpha = 0.2f)
-                            "in_progress" -> GoldAccent.copy(alpha = 0.2f)
-                            else -> BorderGray.copy(alpha = 0.3f)
-                        }
-                    )
-                    .padding(horizontal = 8.dp, vertical = 4.dp)
-            ) {
+            Icon(
+                imageVector = Icons.Default.CalendarMonth,
+                contentDescription = null,
+                modifier = Modifier.size(20.dp),
+                tint = GreenAccent
+            )
+            Spacer(modifier = Modifier.width(12.dp))
+            Column {
                 Text(
-                    text = match.status.replaceFirstChar { it.uppercase() },
-                    style = MaterialTheme.typography.labelSmall,
-                    color = when (match.status.lowercase()) {
-                        "completed" -> Color(0xFF66BB6A)
-                        "in_progress" -> GoldAccent
-                        else -> TextPrimary.copy(alpha = 0.6f)
+                    text = match.title,
+                    fontSize = 14.sp,
+                    fontWeight = FontWeight.Medium,
+                    color = DarkTextPrimary,
+                )
+                Text(
+                    text = "${match.sportType.displayName} • ${match.matchDate}",
+                    fontSize = 12.sp,
+                    color = DarkTextPrimary.copy(alpha = 0.5f),
+                )
+            }
+        }
+        Box(
+            modifier = Modifier
+                .clip(RoundedCornerShape(6.dp))
+                .background(
+                    when (match.status.lowercase()) {
+                        "completed" -> Color(0xFF2E7D32).copy(alpha = 0.2f)
+                        "in_progress" -> GreenAccent.copy(alpha = 0.2f)
+                        else -> DarkBorder.copy(alpha = 0.3f)
                     }
                 )
-            }
+                .padding(horizontal = 8.dp, vertical = 4.dp)
+        ) {
+            Text(
+                text = match.status.replaceFirstChar { it.uppercase() },
+                fontSize = 10.sp,
+                color = when (match.status.lowercase()) {
+                    "completed" -> Color(0xFF66BB6A)
+                    "in_progress" -> GreenAccent
+                    else -> DarkTextPrimary.copy(alpha = 0.6f)
+                }
+            )
         }
     }
 }
 
-@Preview(showBackground = true, backgroundColor = 0xFF0A1628)
+@Preview(showBackground = true, backgroundColor = 0xFF121212)
 @Composable
 private fun PublicPlayerProfileScreenPreview() {
-    SportsBookTheme {
-        PublicPlayerProfileContent(
-            profile = PublicPlayerProfile(
-                id = 1,
-                displayName = "Alex Johnson",
-                bio = "Passionate basketball and tennis player. Always looking for a game!",
-                interestedSports = listOf(SportType.BASKETBALL, SportType.TENNIS, SportType.FOOTBALL),
-                avgPlayerSkillRating = 4.2,
-                avgPlayerSportsmanshipRating = 4.8,
-                avgPlayerPunctualityRating = 3.9,
-                totalPlayerRatings = 15,
-                totalMatchesPlayed = 23,
-                recentMatches = listOf(
-                    PublicMatchSummary(1, "Friday Basketball", SportType.BASKETBALL, "2026-03-10", "completed"),
-                    PublicMatchSummary(2, "Weekend Tennis", SportType.TENNIS, "2026-03-08", "completed")
-                ),
-                createdAt = "2025-06-15T10:00:00Z",
-                friendshipStatus = null
-            )
+    PublicPlayerProfileContent(
+        profile = PublicPlayerProfile(
+            id = 1,
+            displayName = "Alex Johnson",
+            bio = "Passionate basketball and tennis player. Always looking for a game!",
+            interestedSports = listOf(SportType.BASKETBALL, SportType.TENNIS, SportType.FOOTBALL),
+            avgPlayerSkillRating = 4.2,
+            avgPlayerSportsmanshipRating = 4.8,
+            avgPlayerPunctualityRating = 3.9,
+            totalPlayerRatings = 15,
+            totalMatchesPlayed = 23,
+            recentMatches = listOf(
+                PublicMatchSummary(1, "Friday Basketball", SportType.BASKETBALL, "2026-03-10", "completed"),
+                PublicMatchSummary(2, "Weekend Tennis", SportType.TENNIS, "2026-03-08", "completed")
+            ),
+            createdAt = "2025-06-15T10:00:00Z",
+            friendshipStatus = null
         )
-    }
+    )
 }
 
-@Preview(showBackground = true, backgroundColor = 0xFF0A1628)
+@Preview(showBackground = true, backgroundColor = 0xFF121212)
 @Composable
 private fun PublicPlayerProfileFriendPreview() {
-    SportsBookTheme {
-        PublicPlayerProfileContent(
-            profile = PublicPlayerProfile(
-                id = 2,
-                displayName = "Sarah Wilson",
-                bio = "Tennis enthusiast and weekend warrior.",
-                interestedSports = listOf(SportType.TENNIS, SportType.PADDLE),
-                avgPlayerSkillRating = 3.8,
-                avgPlayerSportsmanshipRating = 4.5,
-                avgPlayerPunctualityRating = 4.7,
-                totalPlayerRatings = 8,
-                totalMatchesPlayed = 12,
-                recentMatches = emptyList(),
-                createdAt = "2025-09-01T10:00:00Z",
-                friendshipStatus = "accepted"
-            )
+    PublicPlayerProfileContent(
+        profile = PublicPlayerProfile(
+            id = 2,
+            displayName = "Sarah Wilson",
+            bio = "Tennis enthusiast and weekend warrior.",
+            interestedSports = listOf(SportType.TENNIS, SportType.PADDLE),
+            avgPlayerSkillRating = 3.8,
+            avgPlayerSportsmanshipRating = 4.5,
+            avgPlayerPunctualityRating = 4.7,
+            totalPlayerRatings = 8,
+            totalMatchesPlayed = 12,
+            recentMatches = emptyList(),
+            createdAt = "2025-09-01T10:00:00Z",
+            friendshipStatus = "accepted"
         )
-    }
+    )
 }
 
-@Preview(showBackground = true, backgroundColor = 0xFF0A1628)
+@Preview(showBackground = true, backgroundColor = 0xFF121212)
 @Composable
 private fun PublicPlayerProfilePendingPreview() {
-    SportsBookTheme {
-        PublicPlayerProfileContent(
-            profile = PublicPlayerProfile(
-                id = 3,
-                displayName = "Mike Chen",
-                photoUrl = null,
-                bio = null,
-                interestedSports = listOf(SportType.VOLLEYBALL),
-                avgPlayerSkillRating = 0.0,
-                avgPlayerSportsmanshipRating = 0.0,
-                avgPlayerPunctualityRating = 0.0,
-                totalPlayerRatings = 0,
-                totalMatchesPlayed = 0,
-                recentMatches = emptyList(),
-                createdAt = "2026-01-20T10:00:00Z",
-                friendshipStatus = "pending"
-            )
+    PublicPlayerProfileContent(
+        profile = PublicPlayerProfile(
+            id = 3,
+            displayName = "Mike Chen",
+            photoUrl = null,
+            bio = null,
+            interestedSports = listOf(SportType.VOLLEYBALL),
+            avgPlayerSkillRating = 0.0,
+            avgPlayerSportsmanshipRating = 0.0,
+            avgPlayerPunctualityRating = 0.0,
+            totalPlayerRatings = 0,
+            totalMatchesPlayed = 0,
+            recentMatches = emptyList(),
+            createdAt = "2026-01-20T10:00:00Z",
+            friendshipStatus = "pending"
         )
-    }
+    )
 }

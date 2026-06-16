@@ -2,6 +2,7 @@ package com.example.sportsbook.ui.screens.player.gamification
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -16,6 +17,7 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.EmojiEvents
@@ -23,18 +25,8 @@ import androidx.compose.material.icons.filled.RateReview
 import androidx.compose.material.icons.filled.Sports
 import androidx.compose.material.icons.filled.SportsSoccer
 import androidx.compose.material.icons.filled.Star
-import androidx.compose.material3.Card
-import androidx.compose.material3.CardDefaults
-import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
-import androidx.compose.material3.LinearProgressIndicator
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
-import androidx.compose.material3.TopAppBar
-import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
@@ -57,13 +49,16 @@ import com.example.sportsbook.domain.repository.GamificationRepository
 import com.example.sportsbook.ui.common.ErrorView
 import com.example.sportsbook.ui.common.LoadingIndicator
 import com.example.sportsbook.ui.common.toDisplayDateTime
-import com.example.sportsbook.ui.theme.GoldDark
+import com.example.sportsbook.ui.theme.GreenDark
 import com.example.sportsbook.ui.theme.GoldLight
-import com.example.sportsbook.ui.theme.NavBarBg
+import com.example.sportsbook.ui.theme.DarkBg
+import com.example.sportsbook.ui.theme.DarkBorder
+import com.example.sportsbook.ui.theme.DarkSurface
 import com.example.sportsbook.ui.theme.SportGreen
 import com.example.sportsbook.ui.theme.CoralRed
-import com.example.sportsbook.ui.theme.GoldAccent
-import com.example.sportsbook.ui.theme.TextPrimary
+import com.example.sportsbook.ui.theme.GreenAccent
+import com.example.sportsbook.ui.theme.DarkTextPrimary
+import com.example.sportsbook.ui.theme.DarkTextSecondary
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.async
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -115,7 +110,6 @@ class PlayerXpLevelViewModel @Inject constructor(
 
 // ─── Screen ──────────────────────────────────────────────────────────────────
 
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun PlayerXpLevelScreen(
     onBack: () -> Unit,
@@ -123,30 +117,33 @@ fun PlayerXpLevelScreen(
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
 
-    Scaffold(
-        containerColor = NavBarBg,
-        topBar = {
-            TopAppBar(
-                title = {
-                    Text(
-                        text = "XP & Levels",
-                        color = TextPrimary,
-                        fontWeight = FontWeight.Bold
-                    )
-                },
-                navigationIcon = {
-                    IconButton(onClick = onBack) {
-                        Icon(
-                            imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                            contentDescription = "Back",
-                            tint = TextPrimary
-                        )
-                    }
-                },
-                colors = TopAppBarDefaults.topAppBarColors(containerColor = NavBarBg)
-            )
+    Column(
+        modifier = Modifier
+            .fillMaxSize()
+            .background(DarkBg)
+    ) {
+        // ── Header ───────────────────────────────────────────────────────
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 16.dp, vertical = 12.dp),
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            Box(
+                modifier = Modifier
+                    .size(40.dp)
+                    .clip(CircleShape)
+                    .background(DarkSurface)
+                    .clickable(onClick = onBack),
+                contentAlignment = Alignment.Center,
+            ) {
+                Icon(Icons.AutoMirrored.Filled.ArrowBack, "Back", tint = DarkTextPrimary, modifier = Modifier.size(20.dp))
+            }
+            Spacer(modifier = Modifier.width(12.dp))
+            Text("XP & Levels", fontSize = 18.sp, fontWeight = FontWeight.Bold, color = DarkTextPrimary)
         }
-    ) { innerPadding ->
+
+        // ── Content ──────────────────────────────────────────────────────
         when {
             uiState.isLoading -> LoadingIndicator()
             uiState.error != null && uiState.level == null -> ErrorView(
@@ -157,7 +154,6 @@ fun PlayerXpLevelScreen(
                 LazyColumn(
                     modifier = Modifier
                         .fillMaxSize()
-                        .padding(innerPadding)
                         .padding(horizontal = 16.dp),
                     horizontalAlignment = Alignment.CenterHorizontally
                 ) {
@@ -176,12 +172,13 @@ fun PlayerXpLevelScreen(
 
                     // XP History header
                     item {
-                        HorizontalDivider(color = TextPrimary.copy(alpha = 0.15f))
+                        Box(modifier = Modifier.fillMaxWidth().height(1.dp).background(DarkBorder))
                         Spacer(modifier = Modifier.height(16.dp))
                         Text(
                             text = "XP History",
-                            style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.SemiBold),
-                            color = TextPrimary,
+                            fontSize = 16.sp,
+                            fontWeight = FontWeight.SemiBold,
+                            color = DarkTextPrimary,
                             modifier = Modifier.fillMaxWidth()
                         )
                         Spacer(modifier = Modifier.height(12.dp))
@@ -197,8 +194,8 @@ fun PlayerXpLevelScreen(
                             ) {
                                 Text(
                                     text = "No XP transactions yet",
-                                    style = MaterialTheme.typography.bodyMedium,
-                                    color = TextPrimary.copy(alpha = 0.5f)
+                                    fontSize = 14.sp,
+                                    color = DarkTextPrimary.copy(alpha = 0.5f),
                                 )
                             }
                         }
@@ -227,13 +224,13 @@ private fun LevelBadge(level: Int) {
             .clip(CircleShape)
             .background(
                 Brush.radialGradient(
-                    colors = listOf(GoldLight.copy(alpha = 0.25f), GoldDark.copy(alpha = 0.05f))
+                    colors = listOf(GoldLight.copy(alpha = 0.25f), GreenDark.copy(alpha = 0.05f))
                 )
             )
             .border(
                 width = 4.dp,
                 brush = Brush.sweepGradient(
-                    colors = listOf(GoldDark, GoldAccent, GoldLight, GoldAccent, GoldDark)
+                    colors = listOf(GreenDark, GreenAccent, GoldLight, GreenAccent, GreenDark)
                 ),
                 shape = CircleShape
             )
@@ -242,21 +239,19 @@ private fun LevelBadge(level: Int) {
             Icon(
                 imageVector = Icons.Default.Star,
                 contentDescription = null,
-                tint = GoldAccent,
+                tint = GreenAccent,
                 modifier = Modifier.size(28.dp)
             )
             Text(
                 text = "$level",
-                style = MaterialTheme.typography.headlineLarge.copy(
-                    fontWeight = FontWeight.ExtraBold,
-                    fontSize = 36.sp
-                ),
-                color = GoldAccent
+                fontSize = 36.sp,
+                fontWeight = FontWeight.ExtraBold,
+                color = GreenAccent,
             )
             Text(
                 text = "Level",
-                style = MaterialTheme.typography.labelSmall,
-                color = TextPrimary.copy(alpha = 0.7f)
+                fontSize = 10.sp,
+                color = DarkTextPrimary.copy(alpha = 0.7f),
             )
         }
     }
@@ -264,54 +259,56 @@ private fun LevelBadge(level: Int) {
 
 @Composable
 private fun XpProgressCard(level: PlayerLevel?) {
-    Card(
-        modifier = Modifier.fillMaxWidth(),
-        colors = CardDefaults.cardColors(
-            containerColor = MaterialTheme.colorScheme.surface.copy(alpha = 0.08f)
-        ),
-        elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)
+    Column(
+        modifier = Modifier
+            .fillMaxWidth()
+            .clip(RoundedCornerShape(16.dp))
+            .background(DarkSurface)
+            .padding(20.dp)
     ) {
-        Column(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(20.dp)
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.SpaceBetween
         ) {
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween
-            ) {
-                Text(
-                    text = if (level != null) "Level ${level.currentLevel}" else "Level 1",
-                    style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold),
-                    color = TextPrimary
-                )
-                Text(
-                    text = if (level != null) "Level ${level.currentLevel + 1}" else "Level 2",
-                    style = MaterialTheme.typography.titleMedium,
-                    color = TextPrimary.copy(alpha = 0.6f)
-                )
-            }
-            Spacer(modifier = Modifier.height(8.dp))
-            LinearProgressIndicator(
-                progress = { level?.progressFraction ?: 0f },
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(10.dp)
-                    .clip(CircleShape),
-                color = GoldAccent,
-                trackColor = TextPrimary.copy(alpha = 0.15f)
-            )
-            Spacer(modifier = Modifier.height(12.dp))
             Text(
-                text = if (level != null) {
-                    "${level.totalXp} XP total  •  ${level.xpToNextLevel} XP to next level"
-                } else {
-                    "0 XP total"
-                },
-                style = MaterialTheme.typography.bodyMedium,
-                color = TextPrimary.copy(alpha = 0.75f)
+                text = if (level != null) "Level ${level.currentLevel}" else "Level 1",
+                fontSize = 16.sp,
+                fontWeight = FontWeight.Bold,
+                color = DarkTextPrimary,
+            )
+            Text(
+                text = if (level != null) "Level ${level.currentLevel + 1}" else "Level 2",
+                fontSize = 16.sp,
+                color = DarkTextPrimary.copy(alpha = 0.6f),
             )
         }
+        Spacer(modifier = Modifier.height(8.dp))
+        // Progress bar
+        Box(
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(10.dp)
+                .clip(CircleShape)
+                .background(DarkBorder)
+        ) {
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth(level?.progressFraction ?: 0f)
+                    .height(10.dp)
+                    .clip(CircleShape)
+                    .background(GreenAccent)
+            )
+        }
+        Spacer(modifier = Modifier.height(12.dp))
+        Text(
+            text = if (level != null) {
+                "${level.totalXp} XP total  •  ${level.xpToNextLevel} XP to next level"
+            } else {
+                "0 XP total"
+            },
+            fontSize = 14.sp,
+            color = DarkTextPrimary.copy(alpha = 0.75f),
+        )
     }
 }
 
@@ -328,79 +325,74 @@ private fun XpTransactionItem(transaction: XpTransaction) {
     val amountColor = if (transaction.amount >= 0) SportGreen else CoralRed
     val amountPrefix = if (transaction.amount >= 0) "+" else ""
 
-    Card(
-        modifier = Modifier.fillMaxWidth(),
-        colors = CardDefaults.cardColors(
-            containerColor = MaterialTheme.colorScheme.surface.copy(alpha = 0.06f)
-        ),
-        elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .clip(RoundedCornerShape(12.dp))
+            .background(DarkSurface)
+            .padding(horizontal = 16.dp, vertical = 12.dp),
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.spacedBy(12.dp)
     ) {
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(horizontal = 16.dp, vertical = 12.dp),
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.spacedBy(12.dp)
-        ) {
-            Icon(
-                imageVector = icon,
-                contentDescription = null,
-                tint = GoldAccent,
-                modifier = Modifier.size(28.dp)
-            )
-            Column(modifier = Modifier.weight(1f)) {
-                Text(
-                    text = transaction.description
-                        ?: transaction.sourceType.replaceFirstChar { it.uppercase() },
-                    style = MaterialTheme.typography.bodyMedium.copy(fontWeight = FontWeight.Medium),
-                    color = TextPrimary
-                )
-                Text(
-                    text = transaction.createdAt.toDisplayDateTime(),
-                    style = MaterialTheme.typography.bodySmall,
-                    color = TextPrimary.copy(alpha = 0.5f)
-                )
-            }
+        Icon(
+            imageVector = icon,
+            contentDescription = null,
+            tint = GreenAccent,
+            modifier = Modifier.size(28.dp)
+        )
+        Column(modifier = Modifier.weight(1f)) {
             Text(
-                text = "$amountPrefix${transaction.amount} XP",
-                style = MaterialTheme.typography.bodyMedium.copy(fontWeight = FontWeight.Bold),
-                color = amountColor
+                text = transaction.description
+                    ?: transaction.sourceType.replaceFirstChar { it.uppercase() },
+                fontSize = 14.sp,
+                fontWeight = FontWeight.Medium,
+                color = DarkTextPrimary,
+            )
+            Text(
+                text = transaction.createdAt.toDisplayDateTime(),
+                fontSize = 12.sp,
+                color = DarkTextPrimary.copy(alpha = 0.5f),
             )
         }
+        Text(
+            text = "$amountPrefix${transaction.amount} XP",
+            fontSize = 14.sp,
+            fontWeight = FontWeight.Bold,
+            color = amountColor,
+        )
     }
 }
 
 // ─── Preview ─────────────────────────────────────────────────────────────────
 
-@Preview(showBackground = true, backgroundColor = 0xFF0A1628)
+@Preview(showBackground = true, backgroundColor = 0xFF121212)
 @Composable
 private fun PlayerXpLevelScreenPreview() {
-    MaterialTheme {
-        Column(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(16.dp),
-            horizontalAlignment = Alignment.CenterHorizontally
-        ) {
-            LevelBadge(level = 5)
-            Spacer(modifier = Modifier.height(20.dp))
-            XpProgressCard(
-                level = PlayerLevel(
-                    currentLevel = 5,
-                    totalXp = 2350,
-                    xpToNextLevel = 150
-                )
+    Column(
+        modifier = Modifier
+            .fillMaxSize()
+            .background(DarkBg)
+            .padding(16.dp),
+        horizontalAlignment = Alignment.CenterHorizontally
+    ) {
+        LevelBadge(level = 5)
+        Spacer(modifier = Modifier.height(20.dp))
+        XpProgressCard(
+            level = PlayerLevel(
+                currentLevel = 5,
+                totalXp = 2350,
+                xpToNextLevel = 150
             )
-            Spacer(modifier = Modifier.height(16.dp))
-            XpTransactionItem(
-                transaction = XpTransaction(
-                    id = 1,
-                    amount = 50,
-                    sourceType = "booking",
-                    description = "Completed booking at Arena Sport",
-                    createdAt = "2026-03-10T10:00:00Z"
-                )
+        )
+        Spacer(modifier = Modifier.height(16.dp))
+        XpTransactionItem(
+            transaction = XpTransaction(
+                id = 1,
+                amount = 50,
+                sourceType = "booking",
+                description = "Completed booking at Arena Sport",
+                createdAt = "2026-03-10T10:00:00Z"
             )
-        }
+        )
     }
 }

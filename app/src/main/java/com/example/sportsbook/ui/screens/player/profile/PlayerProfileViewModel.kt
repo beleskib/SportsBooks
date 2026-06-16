@@ -3,10 +3,13 @@ package com.example.sportsbook.ui.screens.player.profile
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.sportsbook.domain.enums.BookingStatus
+import com.example.sportsbook.domain.enums.ExperienceDuration
+import com.example.sportsbook.domain.enums.SkillLevel
 import com.example.sportsbook.domain.enums.SportType
 import com.example.sportsbook.domain.model.Booking
 import com.example.sportsbook.domain.model.Sport
 import com.example.sportsbook.domain.model.User
+import com.example.sportsbook.domain.model.UserSportExpertise
 import com.example.sportsbook.domain.repository.AuthRepository
 import com.example.sportsbook.domain.repository.BookingRepository
 import com.example.sportsbook.domain.repository.SportRepository
@@ -34,7 +37,18 @@ data class PlayerProfileUiState(
     val editPhoneNumber: String = "",
     val editBio: String = "",
     val selectedSports: List<SportType> = emptyList(),
-    val isEditing: Boolean = false
+    val isEditing: Boolean = false,
+    // Sport expertise
+    val sportExpertise: List<UserSportExpertise> = emptyList(),
+    val isEditingExpertise: Boolean = false,
+    val editExpertise: List<EditableSportExpertise> = emptyList(),
+    val isSavingExpertise: Boolean = false,
+)
+
+data class EditableSportExpertise(
+    val sportType: SportType,
+    val skillLevel: SkillLevel,
+    val experienceDuration: ExperienceDuration,
 )
 
 @HiltViewModel
@@ -51,6 +65,7 @@ class PlayerProfileViewModel @Inject constructor(
     init {
         loadProfile()
         loadPastBookings()
+        loadSportExpertise()
     }
 
     fun loadProfile() {
@@ -174,6 +189,95 @@ class PlayerProfileViewModel @Inject constructor(
                     ?: sportsResult.exceptionOrNull()?.message
                 _uiState.update { it.copy(isSaving = false, error = error) }
             }
+        }
+    }
+
+    // ── Sport Expertise ────────────────────────────────────────────────
+
+    private fun loadSportExpertise() {
+        viewModelScope.launch {
+            userRepository.getSportExpertise()
+                .onSuccess { expertise ->
+                    _uiState.update { it.copy(sportExpertise = expertise) }
+                }
+        }
+    }
+
+    fun startEditingExpertise() {
+        _uiState.update { current ->
+            val editable = current.sportExpertise.map { e ->
+                EditableSportExpertise(e.sportType, e.skillLevel, e.experienceDuration)
+            }
+            current.copy(isEditingExpertise = true, editExpertise = editable)
+        }
+    }
+
+    fun cancelEditingExpertise() {
+        _uiState.update { it.copy(isEditingExpertise = false, editExpertise = emptyList()) }
+    }
+
+    fun addExpertiseSport(sportType: SportType) {
+        _uiState.update { current ->
+            if (current.editExpertise.any { it.sportType == sportType }) return@update current
+            current.copy(
+                editExpertise = current.editExpertise + EditableSportExpertise(
+                    sportType = sportType,
+                    skillLevel = SkillLevel.BEGINNER,
+                    experienceDuration = ExperienceDuration.LESS_THAN_1_YEAR,
+                )
+            )
+        }
+    }
+
+    fun removeExpertiseSport(sportType: SportType) {
+        _uiState.update { current ->
+            current.copy(editExpertise = current.editExpertise.filter { it.sportType != sportType })
+        }
+    }
+
+    fun updateExpertiseSkillLevel(sportType: SportType, skillLevel: SkillLevel) {
+        _uiState.update { current ->
+            current.copy(
+                editExpertise = current.editExpertise.map {
+                    if (it.sportType == sportType) it.copy(skillLevel = skillLevel) else it
+                }
+            )
+        }
+    }
+
+    fun updateExpertiseExperience(sportType: SportType, experience: ExperienceDuration) {
+        _uiState.update { current ->
+            current.copy(
+                editExpertise = current.editExpertise.map {
+                    if (it.sportType == sportType) it.copy(experienceDuration = experience) else it
+                }
+            )
+        }
+    }
+
+    fun saveExpertise() {
+        viewModelScope.launch {
+            _uiState.update { it.copy(isSavingExpertise = true, error = null) }
+            val entries = _uiState.value.editExpertise.map {
+                Triple(it.sportType, it.skillLevel, it.experienceDuration)
+            }
+            userRepository.setSportExpertise(entries)
+                .onSuccess { saved ->
+                    _uiState.update {
+                        it.copy(
+                            sportExpertise = saved,
+                            isEditingExpertise = false,
+                            editExpertise = emptyList(),
+                            isSavingExpertise = false,
+                            saveSuccess = true,
+                        )
+                    }
+                }
+                .onFailure { e ->
+                    _uiState.update {
+                        it.copy(isSavingExpertise = false, error = e.message ?: "Failed to save expertise")
+                    }
+                }
         }
     }
 

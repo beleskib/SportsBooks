@@ -9,30 +9,26 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ExperimentalLayoutApi
 import androidx.compose.foundation.layout.FlowRow
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Check
-import androidx.compose.material3.Button
-import androidx.compose.material3.ButtonDefaults
-import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
-import androidx.compose.material3.TopAppBar
-import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -40,23 +36,23 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.example.sportsbook.domain.enums.SportType
 import com.example.sportsbook.ui.common.LoadingIndicator
-import com.example.sportsbook.ui.theme.TextSecondary
-import com.example.sportsbook.ui.theme.BorderGray
-import com.example.sportsbook.ui.theme.LightBg
-import com.example.sportsbook.ui.theme.CardWhite
-import com.example.sportsbook.ui.theme.NavBarBg
-import com.example.sportsbook.ui.theme.SportsBookTheme
-import com.example.sportsbook.ui.theme.GoldAccent
-import com.example.sportsbook.ui.theme.TextPrimary
+import com.example.sportsbook.ui.theme.DarkBg
+import com.example.sportsbook.ui.theme.DarkBorder
+import com.example.sportsbook.ui.theme.DarkSurface
+import com.example.sportsbook.ui.theme.DarkTextPrimary
+import com.example.sportsbook.ui.theme.DarkTextSecondary
+import com.example.sportsbook.ui.theme.GreenAccent
 
-@OptIn(ExperimentalMaterial3Api::class, ExperimentalLayoutApi::class)
+@OptIn(ExperimentalLayoutApi::class)
 @Composable
 fun SportsIFollowScreen(
     onBack: () -> Unit,
@@ -80,107 +76,106 @@ fun SportsIFollowScreen(
         }
     }
 
-    Scaffold(
-        containerColor = NavBarBg,
-        snackbarHost = { SnackbarHost(snackbarHostState) },
-        topBar = {
-            TopAppBar(
-                title = {
+    Box(modifier = Modifier.fillMaxSize().background(DarkBg)) {
+        Column(modifier = Modifier.fillMaxSize()) {
+            // ── Header ────────────────────────────────────────────────────
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(start = 16.dp, end = 16.dp, top = 56.dp, bottom = 16.dp),
+                verticalAlignment = Alignment.CenterVertically,
+            ) {
+                Box(
+                    modifier = Modifier
+                        .size(40.dp)
+                        .clip(CircleShape)
+                        .background(DarkSurface)
+                        .clickable(onClick = onBack),
+                    contentAlignment = Alignment.Center,
+                ) {
+                    Icon(Icons.AutoMirrored.Filled.ArrowBack, "Back", tint = DarkTextPrimary, modifier = Modifier.size(20.dp))
+                }
+                Spacer(modifier = Modifier.width(16.dp))
+                Text("Sports I Follow", fontSize = 18.sp, fontWeight = FontWeight.Bold, color = DarkTextPrimary)
+            }
+
+            if (uiState.isLoading) {
+                LoadingIndicator(modifier = Modifier.fillMaxSize())
+            } else {
+                Column(
+                    modifier = Modifier
+                        .weight(1f)
+                        .verticalScroll(rememberScrollState())
+                        .padding(horizontal = 16.dp)
+                        .padding(bottom = if (uiState.hasChanges) 80.dp else 0.dp),
+                ) {
+                    Spacer(modifier = Modifier.height(4.dp))
                     Text(
-                        "Sports I Follow",
-                        color = TextPrimary,
-                        fontWeight = FontWeight.Bold
+                        text = "Choose the sports you're interested in. This personalises your home feed, play suggestions, and friend availability.",
+                        fontSize = 13.sp,
+                        color = DarkTextSecondary,
+                        modifier = Modifier.padding(bottom = 20.dp),
                     )
-                },
-                navigationIcon = {
-                    IconButton(onClick = onBack) {
-                        Icon(
-                            Icons.AutoMirrored.Filled.ArrowBack,
-                            contentDescription = "Back",
-                            tint = TextPrimary
-                        )
+                    Text(
+                        text = "${uiState.selectedSports.size} selected",
+                        fontSize = 12.sp,
+                        color = GreenAccent,
+                        fontWeight = FontWeight.SemiBold,
+                        modifier = Modifier.padding(bottom = 12.dp),
+                    )
+                    FlowRow(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.spacedBy(10.dp),
+                        verticalArrangement = Arrangement.spacedBy(10.dp),
+                    ) {
+                        uiState.allSports.forEach { sport ->
+                            val isSelected = sport in uiState.selectedSports
+                            SportToggleChip(
+                                sport = sport,
+                                isSelected = isSelected,
+                                onClick = { viewModel.toggleSport(sport) },
+                            )
+                        }
                     }
-                },
-                colors = TopAppBarDefaults.topAppBarColors(
-                    containerColor = NavBarBg
-                )
-            )
-        },
-        bottomBar = {
-            if (uiState.hasChanges) {
+                    Spacer(modifier = Modifier.height(32.dp))
+                }
+            }
+        }
+
+        // ── Save bar ──────────────────────────────────────────────────────
+        if (uiState.hasChanges) {
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .align(Alignment.BottomCenter)
+                    .background(DarkSurface)
+                    .padding(16.dp),
+            ) {
                 Box(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .background(CardWhite)
-                        .padding(16.dp)
+                        .height(52.dp)
+                        .clip(RoundedCornerShape(12.dp))
+                        .background(if (uiState.isSaving) GreenAccent.copy(alpha = 0.5f) else GreenAccent)
+                        .then(if (!uiState.isSaving) Modifier.clickable(onClick = viewModel::save) else Modifier),
+                    contentAlignment = Alignment.Center,
                 ) {
-                    Button(
-                        onClick = viewModel::save,
-                        modifier = Modifier.fillMaxWidth(),
-                        enabled = !uiState.isSaving,
-                        shape = RoundedCornerShape(12.dp),
-                        colors = ButtonDefaults.buttonColors(
-                            containerColor = GoldAccent,
-                            contentColor = NavBarBg
-                        )
-                    ) {
-                        Text(
-                            text = if (uiState.isSaving) "Saving..." else "Save Changes",
-                            style = MaterialTheme.typography.titleSmall,
-                            fontWeight = FontWeight.Bold,
-                            modifier = Modifier.padding(vertical = 4.dp)
-                        )
+                    if (uiState.isSaving) {
+                        Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                            CircularProgressIndicator(modifier = Modifier.size(18.dp), strokeWidth = 2.dp, color = Color.Black)
+                            Text("Saving...", fontWeight = FontWeight.Bold, fontSize = 15.sp, color = Color.Black)
+                        }
+                    } else {
+                        Text("Save Changes", fontWeight = FontWeight.Bold, fontSize = 15.sp, color = Color.Black)
                     }
                 }
             }
         }
-    ) { padding ->
-        if (uiState.isLoading) {
-            LoadingIndicator()
-            return@Scaffold
-        }
 
-        Column(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(padding)
-                .verticalScroll(rememberScrollState())
-                .padding(horizontal = 16.dp)
-        ) {
-            Spacer(modifier = Modifier.height(8.dp))
-
-            Text(
-                text = "Choose the sports you're interested in. This personalises your home feed, play suggestions, and friend availability.",
-                style = MaterialTheme.typography.bodyMedium,
-                color = TextSecondary,
-                modifier = Modifier.padding(bottom = 20.dp)
-            )
-
-            Text(
-                text = "${uiState.selectedSports.size} selected",
-                style = MaterialTheme.typography.labelMedium,
-                color = GoldAccent,
-                fontWeight = FontWeight.SemiBold,
-                modifier = Modifier.padding(bottom = 12.dp)
-            )
-
-            FlowRow(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.spacedBy(10.dp),
-                verticalArrangement = Arrangement.spacedBy(10.dp)
-            ) {
-                uiState.allSports.forEach { sport ->
-                    val isSelected = sport in uiState.selectedSports
-                    SportToggleChip(
-                        sport = sport,
-                        isSelected = isSelected,
-                        onClick = { viewModel.toggleSport(sport) }
-                    )
-                }
-            }
-
-            Spacer(modifier = Modifier.height(32.dp))
-        }
+        SnackbarHost(
+            hostState = snackbarHostState,
+            modifier = Modifier.align(Alignment.BottomCenter),
+        )
     }
 }
 
@@ -188,19 +183,19 @@ fun SportsIFollowScreen(
 private fun SportToggleChip(
     sport: SportType,
     isSelected: Boolean,
-    onClick: () -> Unit
+    onClick: () -> Unit,
 ) {
     val bgColor by animateColorAsState(
-        targetValue = if (isSelected) GoldAccent.copy(alpha = 0.15f) else LightBg,
-        label = "chipBg"
+        targetValue = if (isSelected) GreenAccent.copy(alpha = 0.15f) else DarkBg,
+        label = "chipBg",
     )
     val borderColor by animateColorAsState(
-        targetValue = if (isSelected) GoldAccent else BorderGray,
-        label = "chipBorder"
+        targetValue = if (isSelected) GreenAccent else DarkBorder,
+        label = "chipBorder",
     )
     val textColor by animateColorAsState(
-        targetValue = if (isSelected) GoldAccent else TextPrimary.copy(alpha = 0.7f),
-        label = "chipText"
+        targetValue = if (isSelected) GreenAccent else DarkTextPrimary.copy(alpha = 0.7f),
+        label = "chipText",
     )
 
     Box(
@@ -209,40 +204,41 @@ private fun SportToggleChip(
             .background(bgColor)
             .border(1.dp, borderColor, RoundedCornerShape(24.dp))
             .clickable(onClick = onClick)
-            .padding(horizontal = 16.dp, vertical = 10.dp)
+            .padding(horizontal = 16.dp, vertical = 10.dp),
     ) {
         if (isSelected) {
-            androidx.compose.foundation.layout.Row(
+            Row(
                 verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.spacedBy(6.dp)
+                horizontalArrangement = Arrangement.spacedBy(6.dp),
             ) {
-                Icon(
-                    Icons.Default.Check,
-                    contentDescription = null,
-                    modifier = Modifier.size(16.dp),
-                    tint = GoldAccent
-                )
-                Text(
-                    text = sport.displayName,
-                    style = MaterialTheme.typography.labelLarge,
-                    color = textColor,
-                    fontWeight = FontWeight.SemiBold
-                )
+                Icon(Icons.Default.Check, contentDescription = null, modifier = Modifier.size(16.dp), tint = GreenAccent)
+                Text(text = sport.displayName, fontSize = 13.sp, color = textColor, fontWeight = FontWeight.SemiBold)
             }
         } else {
-            Text(
-                text = sport.displayName,
-                style = MaterialTheme.typography.labelLarge,
-                color = textColor
-            )
+            Text(text = sport.displayName, fontSize = 13.sp, color = textColor)
         }
     }
 }
 
-@Preview(showBackground = true, backgroundColor = 0xFF0A1628)
+@Preview(showBackground = true, backgroundColor = 0xFF121212)
 @Composable
 private fun SportsIFollowScreenPreview() {
-    SportsBookTheme {
-        SportsIFollowScreen(onBack = {})
+    Column(modifier = Modifier.fillMaxSize().background(DarkBg)) {
+        Row(
+            modifier = Modifier.fillMaxWidth().padding(start = 16.dp, end = 16.dp, top = 56.dp, bottom = 16.dp),
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            Box(modifier = Modifier.size(40.dp).clip(CircleShape).background(DarkSurface), contentAlignment = Alignment.Center) {
+                Icon(Icons.AutoMirrored.Filled.ArrowBack, "Back", tint = DarkTextPrimary, modifier = Modifier.size(20.dp))
+            }
+            Spacer(modifier = Modifier.width(16.dp))
+            Text("Sports I Follow", fontSize = 18.sp, fontWeight = FontWeight.Bold, color = DarkTextPrimary)
+        }
+        Text(
+            text = "Choose the sports you're interested in.",
+            fontSize = 13.sp,
+            color = DarkTextSecondary,
+            modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp),
+        )
     }
 }

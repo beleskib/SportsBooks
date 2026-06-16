@@ -84,9 +84,9 @@ class V2RepositoryImpl @Inject constructor(
 
     override suspend fun paySplitShare(
         shareId: Long,
-        stripePaymentIntentId: String
+        paymentIntentId: String
     ): Result<Unit> = runCatching {
-        v2ApiService.paySplitShare(shareId, PaySplitShareRequestDto(stripePaymentIntentId))
+        v2ApiService.paySplitShare(shareId, PaySplitShareRequestDto(paymentIntentId))
         Unit
     }
 

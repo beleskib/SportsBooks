@@ -1,19 +1,18 @@
 package com.example.sportsbook.ui.screens.player.home
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.ExperimentalLayoutApi
-import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
@@ -23,23 +22,12 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.ArrowForward
-import androidx.compose.material.icons.filled.Add
-import androidx.compose.material.icons.filled.Groups
-import androidx.compose.material.icons.filled.MailOutline
+import androidx.compose.material.icons.filled.Bolt
 import androidx.compose.material.icons.filled.Notifications
-import androidx.compose.material.icons.filled.Search
-import androidx.compose.material.icons.filled.Star
-import androidx.compose.material3.Card
-import androidx.compose.material3.CardDefaults
-import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Scaffold
-import androidx.compose.material3.Snackbar
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
+import androidx.compose.material3.Icon
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -47,79 +35,52 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import coil.compose.AsyncImage
 import com.example.sportsbook.domain.enums.MatchStatus
+import com.example.sportsbook.domain.enums.MatchType
 import com.example.sportsbook.domain.enums.SportType
-import com.example.sportsbook.domain.model.Coach
 import com.example.sportsbook.domain.model.Match
-import com.example.sportsbook.domain.model.Sport
+import com.example.sportsbook.domain.model.Party
 import com.example.sportsbook.domain.model.User
 import com.example.sportsbook.domain.model.Venue
-import com.example.sportsbook.ui.common.DiscountBadge
 import com.example.sportsbook.ui.common.ErrorView
 import com.example.sportsbook.ui.common.LoadingIndicator
-import com.example.sportsbook.ui.common.PriceTag
-import com.example.sportsbook.ui.theme.NavBarBg
+import com.example.sportsbook.ui.theme.DarkBg
+import com.example.sportsbook.ui.theme.DarkBorder
+import com.example.sportsbook.ui.theme.DarkSurface
+import com.example.sportsbook.ui.theme.DarkTextPrimary
+import com.example.sportsbook.ui.theme.DarkTextSecondary
+import com.example.sportsbook.ui.theme.GreenAccent
 import com.example.sportsbook.ui.theme.SportsBookTheme
-import com.example.sportsbook.ui.theme.GoldAccent
-import com.example.sportsbook.ui.theme.SportBasketball
-import com.example.sportsbook.ui.theme.SportFootball
-import com.example.sportsbook.ui.theme.SportTennis
-import com.example.sportsbook.ui.theme.SportPaddle
-import com.example.sportsbook.ui.theme.SportVolleyball
-import com.example.sportsbook.ui.theme.SportSwimming
-import com.example.sportsbook.ui.theme.SportBoxing
-import com.example.sportsbook.ui.theme.SportMMA
-import com.example.sportsbook.ui.theme.SportYoga
-import com.example.sportsbook.ui.theme.SportPilates
-import com.example.sportsbook.ui.theme.SportCrossfit
-import com.example.sportsbook.ui.theme.SportRunning
-import com.example.sportsbook.ui.theme.SportCycling
-import com.example.sportsbook.ui.theme.SportGolf
-import com.example.sportsbook.ui.theme.SportBadminton
-import com.example.sportsbook.ui.theme.SportTableTennis
-import com.example.sportsbook.ui.theme.SportHandball
-import com.example.sportsbook.ui.theme.SportBaseball
-import com.example.sportsbook.ui.theme.SportCricket
 import java.util.Calendar
 
 // ============================================================
-// PlayerHomeScreen — "Discover" tab
-// Visual direction: light / airy / confident.
-//   Matches mockup profile-flow-android.html screen 1.7:
-//   - Light gray background (gray-50)
-//   - White m3-style cards with subtle elevation
-//   - Dark nav bar with gold accents
-//   - Colorful gradient sport tiles in a grid
-//   - Uppercase section labels in gray-500
+// PlayerHomeScreen — Home tab, v3 mockup redesign
+// Dark theme: #121212 bg, #1E1E1E cards, #4CAF50 green accent
 // ============================================================
 
-// ── Design tokens (light theme) ──
-private val LightBg = Color(0xFFF9FAFB)        // gray-50
-private val CardBg = Color.White
-private val CardBorder = Color(0xFFE5E7EB)     // gray-200
-private val TextPrimary = Color(0xFF111827)     // gray-900
-private val TextSecondary = Color(0xFF6B7280)   // gray-500
-private val TextTertiary = Color(0xFF9CA3AF)    // gray-400
-// NavBarBg and GoldAccent imported from com.example.sportsbook.ui.theme
-private val ChipBg = Color.White
-private val ChipBorder = Color(0xFFE5E7EB)
-private val ChipActiveBg = Color(0xFF111827)
-private val ChipActiveText = Color(0xFFFDE047)
+// ── Design tokens ──
+private val ScreenBg = DarkBg
+private val CardBg = DarkSurface
+private val SubtleCardBg = Color.White.copy(alpha = 0.06f)
+private val SubtleBorder = Color.White.copy(alpha = 0.06f)
+private val AccentGreen = GreenAccent
+private val GoldColor = Color(0xFFFFC107)
+private val BlueAccent = Color(0xFF2196F3)
+private val OrangeAccent = Color(0xFFFF9800)
+private val PurpleAccent = Color(0xFF9C27B0)
+private val RedBadge = Color(0xFFEF4444)
 
-// ── Sport visual mapping ──
-
+// ── Sport emoji + gradient mapping ──
 private data class SportVisual(val emoji: String, val gradientStart: Color, val gradientEnd: Color)
 
 private val sportVisuals = mapOf(
@@ -153,6 +114,18 @@ private fun getGreeting(): String {
     }
 }
 
+// ── Avatar colors for placeholder initials ──
+private val avatarColors = listOf(
+    Color(0xFF4CAF50), Color(0xFF2196F3), Color(0xFFFF9800),
+    Color(0xFFE91E63), Color(0xFF9C27B0), Color(0xFF00BCD4)
+)
+
+private fun avatarColor(index: Int) = avatarColors[index % avatarColors.size]
+
+
+// ─────────────────────────────────────────────────────────────
+// Root composable — keep signature unchanged
+// ─────────────────────────────────────────────────────────────
 @Composable
 fun PlayerHomeScreen(
     onSportClick: (String) -> Unit,
@@ -179,7 +152,6 @@ fun PlayerHomeScreen(
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
     val snackbarHostState = remember { SnackbarHostState() }
 
-    // Auto-reload when returning from SportsIFollow (or any screen that sets the trigger)
     LaunchedEffect(refreshTrigger) {
         if (refreshTrigger) {
             viewModel.loadData()
@@ -187,7 +159,6 @@ fun PlayerHomeScreen(
         }
     }
 
-    // Show a snackbar whenever a watched match changes status
     LaunchedEffect(uiState.matchStatusMessage) {
         uiState.matchStatusMessage?.let { message ->
             snackbarHostState.showSnackbar(message)
@@ -195,43 +166,45 @@ fun PlayerHomeScreen(
         }
     }
 
-    Scaffold(
-        snackbarHost = {
-            SnackbarHost(hostState = snackbarHostState) { data ->
-                Snackbar(snackbarData = data)
-            }
+    Box(
+        modifier = Modifier
+            .fillMaxSize()
+            .background(DarkBg),
+    ) {
+        when {
+            uiState.isLoading -> LoadingIndicator(modifier = Modifier.align(Alignment.Center))
+            uiState.error != null -> ErrorView(
+                message = uiState.error!!,
+                onRetry = viewModel::loadData,
+            )
+            else -> PlayerHomeContent(
+                uiState = uiState,
+                onSportClick = onSportClick,
+                onVenueClick = onVenueClick,
+                onCoachClick = onCoachClick,
+                onNavigateToProfile = onNavigateToProfile,
+                onNavigateToNotifications = onNavigateToNotifications,
+                onNavigateToChats = onNavigateToChats,
+                onNavigateToCreateParty = onNavigateToCreateParty,
+                onNavigateToPartyDetail = onNavigateToPartyDetail,
+                onNavigateToSearch = onNavigateToSearch,
+                onNavigateToFavorites = onNavigateToFavorites,
+                onFindMatch = onFindMatch,
+                onMatchClick = onMatchClick,
+                onBrowseAllSports = onBrowseAllSports,
+                notificationCount = uiState.notificationCount,
+            )
         }
-    ) { innerPadding ->
-        Box(modifier = Modifier.padding(innerPadding)) {
-            when {
-                uiState.isLoading -> LoadingIndicator()
-                uiState.error != null -> ErrorView(
-                    message = uiState.error!!,
-                    onRetry = viewModel::loadData
-                )
-                else -> PlayerHomeContent(
-                    uiState = uiState,
-                    onSportClick = onSportClick,
-                    onVenueClick = onVenueClick,
-                    onCoachClick = onCoachClick,
-                    onNavigateToProfile = onNavigateToProfile,
-                    onNavigateToNotifications = onNavigateToNotifications,
-                    onNavigateToChats = onNavigateToChats,
-                    onNavigateToCreateParty = onNavigateToCreateParty,
-                    onNavigateToPartyDetail = onNavigateToPartyDetail,
-                    onNavigateToSearch = onNavigateToSearch,
-                    onNavigateToFavorites = onNavigateToFavorites,
-                    onFindMatch = onFindMatch,
-                    onMatchClick = onMatchClick,
-                    onBrowseAllSports = onBrowseAllSports,
-                    notificationCount = uiState.notificationCount
-                )
-            }
-        }
+        SnackbarHost(
+            hostState = snackbarHostState,
+            modifier = Modifier.align(Alignment.BottomCenter),
+        )
     }
 }
 
-@OptIn(ExperimentalLayoutApi::class)
+// ─────────────────────────────────────────────────────────────
+// Main content — LazyColumn of all sections
+// ─────────────────────────────────────────────────────────────
 @Composable
 private fun PlayerHomeContent(
     uiState: PlayerHomeUiState,
@@ -253,256 +226,117 @@ private fun PlayerHomeContent(
     LazyColumn(
         modifier = Modifier
             .fillMaxSize()
-            .background(LightBg),
-        contentPadding = PaddingValues(bottom = 24.dp)
+            .background(ScreenBg),
+        contentPadding = PaddingValues(bottom = 32.dp)
     ) {
-        // ── Dark Nav Bar ──
+
+        // ── 1. Header ──────────────────────────────────────────
         item {
-            NavBar(
-                location = uiState.cityName ?: "Discover",
-                onInboxClick = onNavigateToChats,
+            HomeHeader(
+                user = uiState.user,
+                notificationCount = notificationCount,
                 onNotificationClick = onNavigateToNotifications,
-                notificationCount = notificationCount
+                onProfileClick = onNavigateToProfile
             )
         }
 
-        // ── Search Bar ──
+        // ── 2. Coming Up card ──────────────────────────────────
         item {
-            SearchBar(onClick = onNavigateToSearch)
-        }
-
-        // ── Your Active Matches ──
-        if (uiState.activeMatches.isNotEmpty()) {
-            item {
-                Row(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(horizontal = 16.dp, vertical = 8.dp),
-                    horizontalArrangement = Arrangement.SpaceBetween,
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    SectionLabel("Your matches · ${uiState.activeMatches.size}")
-                    Text(
-                        text = "See all →",
-                        style = MaterialTheme.typography.bodySmall,
-                        color = Color(0xFF2563EB),
-                        modifier = Modifier.clickable(onClick = onFindMatch)
-                    )
-                }
-            }
-            item {
-                LazyRow(
-                    contentPadding = PaddingValues(horizontal = 16.dp),
-                    horizontalArrangement = Arrangement.spacedBy(12.dp)
-                ) {
-                    items(uiState.activeMatches, key = { "match-${it.id}" }) { match ->
-                        ActiveMatchCard(
-                            match = match,
-                            onClick = { onMatchClick(match.id) }
-                        )
-                    }
-                }
-            }
-        }
-
-        // ── My Parties ──
-        item {
-            Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(horizontal = 16.dp, vertical = 8.dp),
-                horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                SectionLabel("My parties")
-                Text(
-                    text = "+ Create",
-                    style = MaterialTheme.typography.bodySmall,
-                    color = Color(0xFF2563EB),
-                    fontWeight = FontWeight.SemiBold,
-                    modifier = Modifier.clickable(onClick = onNavigateToCreateParty)
+            Spacer(modifier = Modifier.height(8.dp))
+            HomeSectionHeader(
+                title = "⚡ Coming Up",
+                actionLabel = null,
+                onAction = {}
+            )
+            Spacer(modifier = Modifier.height(10.dp))
+            val nextMatch = uiState.activeMatches.firstOrNull()
+            if (nextMatch != null) {
+                ComingUpCard(
+                    match = nextMatch,
+                    onClick = { onMatchClick(nextMatch.id) }
                 )
-            }
-        }
-        if (uiState.activeParties.isNotEmpty()) {
-            item {
-                LazyRow(
-                    contentPadding = PaddingValues(horizontal = 16.dp),
-                    horizontalArrangement = Arrangement.spacedBy(12.dp)
-                ) {
-                    items(uiState.activeParties, key = { "party-${it.id}" }) { party ->
-                        PartyCard(
-                            party = party,
-                            onClick = { onNavigateToPartyDetail(party.id) }
-                        )
-                    }
-                }
-            }
-        } else {
-            item {
-                Card(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(horizontal = 16.dp)
-                        .clickable(onClick = onNavigateToCreateParty),
-                    colors = CardDefaults.cardColors(containerColor = Color.White),
-                    elevation = CardDefaults.cardElevation(defaultElevation = 1.dp),
-                    shape = RoundedCornerShape(12.dp)
-                ) {
-                    Row(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(16.dp),
-                        verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.Center
-                    ) {
-                        Icon(
-                            Icons.Default.Groups,
-                            contentDescription = null,
-                            tint = Color(0xFF9CA3AF),
-                            modifier = Modifier.size(20.dp)
-                        )
-                        Spacer(modifier = Modifier.width(8.dp))
-                        Text(
-                            text = "Create a party to play with friends",
-                            style = MaterialTheme.typography.bodyMedium,
-                            color = Color(0xFF6B7280)
-                        )
-                    }
-                }
+            } else {
+                ComingUpEmptyCard(onFindMatch = onFindMatch)
             }
         }
 
-        // ── Your Sports grid ──
-        if (uiState.mySports.isNotEmpty()) {
-            item {
-                Row(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(horizontal = 16.dp, vertical = 8.dp),
-                    horizontalArrangement = Arrangement.SpaceBetween,
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    SectionLabel("Your sports · ${uiState.mySports.size}")
-                    Text(
-                        text = "Edit →",
-                        style = MaterialTheme.typography.bodySmall,
-                        color = Color(0xFF2563EB),
-                        modifier = Modifier.clickable(onClick = onBrowseAllSports)
-                    )
-                }
-            }
-
-            item {
-                FlowRow(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(horizontal = 16.dp),
-                    horizontalArrangement = Arrangement.spacedBy(8.dp),
-                    verticalArrangement = Arrangement.spacedBy(8.dp),
-                    maxItemsInEachRow = 4
-                ) {
-                    uiState.mySports.forEach { sport ->
-                        SportTile(
-                            sport = sport,
-                            onClick = { onSportClick(sport.sportType.name.lowercase()) },
-                            modifier = Modifier.weight(1f)
-                        )
-                    }
-                    // Fill remaining slots with invisible spacers if needed
-                    val remainder = uiState.mySports.size % 4
-                    if (remainder != 0) {
-                        repeat(4 - remainder) {
-                            Spacer(modifier = Modifier.weight(1f))
-                        }
-                    }
-                }
-            }
+        // ── 3. Quick Actions ───────────────────────────────────
+        item {
+            Spacer(modifier = Modifier.height(20.dp))
+            QuickActionsRow(
+                onFindMatch = onFindMatch,
+                onBookVenue = onNavigateToSearch,
+                onCreateParty = onNavigateToCreateParty
+            )
         }
 
-        // ── Tonight in your sports (Popular Venues) ──
-        val venues = uiState.filteredVenues
-        if (venues.isNotEmpty()) {
+        // ── 4. Active Party Banner (conditional) ──────────────
+        val firstParty = uiState.activeParties.firstOrNull()
+        if (firstParty != null) {
             item {
                 Spacer(modifier = Modifier.height(16.dp))
-                SectionLabel(
-                    text = "Tonight in your sports",
-                    modifier = Modifier.padding(horizontal = 16.dp)
+                ActivePartyBanner(
+                    party = firstParty,
+                    onClick = { onNavigateToPartyDetail(firstParty.id) }
                 )
-                Spacer(modifier = Modifier.height(8.dp))
             }
-            items(venues.take(5), key = { "v-${it.id}" }) { venue ->
-                VenueCard(
+        }
+
+        // ── 5. Upcoming Bookings ───────────────────────────────
+        item {
+            Spacer(modifier = Modifier.height(20.dp))
+            HomeSectionHeader(
+                title = "📅 Upcoming Bookings",
+                actionLabel = "See All",
+                onAction = onNavigateToSearch
+            )
+            Spacer(modifier = Modifier.height(10.dp))
+        }
+        val bookingProxies = uiState.topDealVenues.take(3)
+        if (bookingProxies.isNotEmpty()) {
+            items(bookingProxies, key = { "booking-${it.id}" }) { venue ->
+                UpcomingBookingCard(
                     venue = venue,
                     onClick = { onVenueClick(venue.id) }
                 )
             }
+        } else {
+            item {
+                UpcomingBookingsEmpty(onBook = onNavigateToSearch)
+            }
         }
 
-        // ── Top Coaches ──
-        val coaches = uiState.filteredCoaches
-        if (coaches.isNotEmpty()) {
+        // ── 6. Top Deals ───────────────────────────────────────
+        if (uiState.topDealVenues.isNotEmpty() || uiState.topDealCoaches.isNotEmpty()) {
             item {
-                Spacer(modifier = Modifier.height(16.dp))
-                SectionLabel(
-                    text = "Top coaches",
-                    modifier = Modifier.padding(horizontal = 16.dp)
+                Spacer(modifier = Modifier.height(20.dp))
+                HomeSectionHeader(
+                    title = "🔥 Top Deals",
+                    actionLabel = "See All",
+                    onAction = onNavigateToSearch
                 )
-                Spacer(modifier = Modifier.height(8.dp))
-            }
-            item {
+                Spacer(modifier = Modifier.height(10.dp))
                 LazyRow(
                     contentPadding = PaddingValues(horizontal = 16.dp),
                     horizontalArrangement = Arrangement.spacedBy(12.dp)
                 ) {
-                    items(coaches, key = { "c-${it.id}" }) { coach ->
-                        CoachCard(
-                            coach = coach,
-                            onClick = { onCoachClick(coach.id) }
-                        )
-                    }
-                }
-            }
-        }
-
-        // ── Top Deals ──
-        val dealVenues = uiState.topDealVenues
-        val dealCoaches = uiState.topDealCoaches
-        if (dealVenues.isNotEmpty() || dealCoaches.isNotEmpty()) {
-            item {
-                Spacer(modifier = Modifier.height(16.dp))
-                SectionLabel(
-                    text = "Top deals",
-                    modifier = Modifier.padding(horizontal = 16.dp)
-                )
-                Spacer(modifier = Modifier.height(8.dp))
-            }
-            item {
-                LazyRow(
-                    contentPadding = PaddingValues(horizontal = 16.dp),
-                    horizontalArrangement = Arrangement.spacedBy(12.dp)
-                ) {
-                    items(dealVenues, key = { "dv-${it.id}" }) { venue ->
-                        DealCard(
+                    items(uiState.topDealVenues, key = { "deal-v-${it.id}" }) { venue ->
+                        TopDealCard(
                             name = venue.name,
-                            subtitle = venue.city ?: venue.address,
-                            imageUrl = venue.primaryImageUrl,
-                            price = venue.pricePerHour,
+                            sportType = venue.sportType,
+                            originalPrice = venue.pricePerHour,
                             discountedPrice = venue.discountedPrice,
-                            discountText = venue.activeDiscount?.displayValue,
-                            rating = venue.avgRating,
+                            discountPercent = venue.activeDiscount?.discountPercent,
                             onClick = { onVenueClick(venue.id) }
                         )
                     }
-                    items(dealCoaches, key = { "dc-${it.id}" }) { coach ->
-                        DealCard(
+                    items(uiState.topDealCoaches, key = { "deal-c-${it.id}" }) { coach ->
+                        TopDealCard(
                             name = coach.name,
-                            subtitle = coach.specialization ?: coach.sportType.displayName,
-                            imageUrl = coach.primaryImageUrl,
-                            price = coach.pricePerHour,
+                            sportType = coach.sportType,
+                            originalPrice = coach.pricePerHour,
                             discountedPrice = coach.discountedPrice,
-                            discountText = coach.activeDiscount?.displayValue,
-                            rating = coach.avgRating,
+                            discountPercent = coach.activeDiscount?.discountPercent,
                             onClick = { onCoachClick(coach.id) }
                         )
                     }
@@ -510,68 +344,102 @@ private fun PlayerHomeContent(
             }
         }
 
-        // ── Find a Match CTA ──
+        // ── 7. Activity Feed ───────────────────────────────────
         item {
-            Spacer(modifier = Modifier.height(16.dp))
-            FindMatchCta(onClick = onFindMatch)
+            Spacer(modifier = Modifier.height(20.dp))
+            HomeSectionHeader(
+                title = "📣 Activity Feed",
+                actionLabel = null,
+                onAction = {}
+            )
+            Spacer(modifier = Modifier.height(10.dp))
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 16.dp)
+                    .clip(RoundedCornerShape(14.dp))
+                    .background(SubtleCardBg)
+                    .border(1.dp, SubtleBorder, RoundedCornerShape(14.dp))
+                    .padding(24.dp),
+                contentAlignment = Alignment.Center,
+            ) {
+                Text(
+                    text = "No activity yet",
+                    fontSize = 13.sp,
+                    color = DarkTextSecondary,
+                )
+            }
         }
 
-        // ── "Want to see more sports?" CTA ──
-        if (uiState.otherSports.isNotEmpty()) {
-            item {
-                Spacer(modifier = Modifier.height(12.dp))
-                AddSportCta(onClick = onBrowseAllSports)
-            }
+        // ── 8. Friends Leaderboard Mini ────────────────────────
+        item {
+            Spacer(modifier = Modifier.height(20.dp))
+            FriendsLeaderboardMini(onFullBoard = {})
+            Spacer(modifier = Modifier.height(8.dp))
         }
     }
 }
 
-// ── Dark top nav bar (matches mockup) ──
+// ─────────────────────────────────────────────────────────────
+// Section 1: Header
+// ─────────────────────────────────────────────────────────────
 @Composable
-private fun NavBar(
-    location: String,
-    onInboxClick: () -> Unit,
+private fun HomeHeader(
+    user: User?,
+    notificationCount: Int,
     onNotificationClick: () -> Unit,
-    notificationCount: Int = 0
+    onProfileClick: () -> Unit
 ) {
     Row(
         modifier = Modifier
             .fillMaxWidth()
-            .background(NavBarBg)
-            .padding(horizontal = 16.dp, vertical = 14.dp),
+            .background(ScreenBg)
+            .padding(horizontal = 16.dp, vertical = 20.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {
-        Text(
-            text = "📍 $location",
-            style = MaterialTheme.typography.titleSmall,
-            color = Color.White,
-            fontWeight = FontWeight.SemiBold
-        )
-        Spacer(modifier = Modifier.weight(1f))
-        IconButton(onClick = onInboxClick, modifier = Modifier.size(32.dp)) {
-            Icon(
-                Icons.Default.MailOutline,
-                contentDescription = "Inbox",
-                tint = GoldAccent,
-                modifier = Modifier.size(22.dp)
+        // Left: greeting + name
+        Column(modifier = Modifier.weight(1f)) {
+            Text(
+                text = "${getGreeting()} 👋",
+                fontSize = 12.sp,
+                color = Color.White.copy(alpha = 0.5f),
+                fontWeight = FontWeight.Normal
+            )
+            Spacer(modifier = Modifier.height(2.dp))
+            Text(
+                text = user?.displayName ?: "Athlete",
+                fontSize = 22.sp,
+                fontWeight = FontWeight.Bold,
+                color = DarkTextPrimary
             )
         }
-        Spacer(modifier = Modifier.width(4.dp))
-        Box {
-            IconButton(onClick = onNotificationClick, modifier = Modifier.size(32.dp)) {
-                Icon(
-                    Icons.Default.Notifications,
-                    contentDescription = "Notifications",
-                    tint = GoldAccent,
-                    modifier = Modifier.size(22.dp)
-                )
-            }
+
+        // Right: XP chip
+        XpChipInline()
+
+        Spacer(modifier = Modifier.width(10.dp))
+
+        // Notification bell with badge
+        Box(
+            modifier = Modifier
+                .size(40.dp)
+                .clip(CircleShape)
+                .background(SubtleCardBg)
+                .clickable(onClick = onNotificationClick),
+            contentAlignment = Alignment.Center
+        ) {
+            Icon(
+                imageVector = Icons.Default.Notifications,
+                contentDescription = "Notifications",
+                tint = Color.White.copy(alpha = 0.85f),
+                modifier = Modifier.size(20.dp)
+            )
             if (notificationCount > 0) {
                 Box(
                     modifier = Modifier
                         .align(Alignment.TopEnd)
                         .size(16.dp)
-                        .background(Color(0xFFEF4444), CircleShape),
+                        .background(RedBadge, CircleShape),
                     contentAlignment = Alignment.Center
                 ) {
                     Text(
@@ -587,708 +455,675 @@ private fun NavBar(
     }
 }
 
-// ── Search bar ──
+// Inline XP chip (no hiltViewModel, pure visual) for the header
 @Composable
-private fun SearchBar(onClick: () -> Unit) {
+private fun XpChipInline(xp: Int = 0) {
+    Row(
+        modifier = Modifier
+            .clip(RoundedCornerShape(50.dp))
+            .background(GoldColor.copy(alpha = 0.15f))
+            .border(1.dp, GoldColor.copy(alpha = 0.3f), RoundedCornerShape(50.dp))
+            .padding(horizontal = 10.dp, vertical = 6.dp),
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        Icon(
+            imageVector = Icons.Default.Bolt,
+            contentDescription = null,
+            tint = GoldColor,
+            modifier = Modifier.size(14.dp)
+        )
+        Spacer(modifier = Modifier.width(4.dp))
+        Text(
+            text = if (xp > 0) "$xp XP" else "XP",
+            fontSize = 12.sp,
+            fontWeight = FontWeight.SemiBold,
+            color = GoldColor
+        )
+    }
+}
+
+// ─────────────────────────────────────────────────────────────
+// Section 2: Coming Up card
+// ─────────────────────────────────────────────────────────────
+@Composable
+private fun ComingUpCard(match: Match, onClick: () -> Unit) {
+    val visual = sportVisuals[match.sportType]
+        ?: SportVisual("🏅", Color(0xFF4CAF50), Color(0xFF0288D1))
+
     Box(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(horizontal = 16.dp, vertical = 12.dp)
-            .shadow(1.dp, RoundedCornerShape(24.dp))
-            .clip(RoundedCornerShape(24.dp))
-            .background(CardBg)
+            .padding(horizontal = 16.dp)
+            .clip(RoundedCornerShape(18.dp))
+            .background(
+                Brush.linearGradient(
+                    listOf(
+                        visual.gradientStart.copy(alpha = 0.85f),
+                        visual.gradientEnd.copy(alpha = 0.95f)
+                    )
+                )
+            )
             .clickable(onClick = onClick)
-            .padding(horizontal = 16.dp, vertical = 12.dp)
+            .padding(18.dp)
     ) {
-        Row(verticalAlignment = Alignment.CenterVertically) {
-            Icon(
-                Icons.Default.Search,
-                contentDescription = null,
-                modifier = Modifier.size(18.dp),
-                tint = TextSecondary
-            )
-            Spacer(modifier = Modifier.width(10.dp))
+        Column {
+            // Time badge top-right
+            Box(
+                modifier = Modifier.fillMaxWidth(),
+                contentAlignment = Alignment.TopEnd
+            ) {
+                Box(
+                    modifier = Modifier
+                        .clip(RoundedCornerShape(50.dp))
+                        .background(Color(0xFF4CAF50).copy(alpha = 0.25f))
+                        .border(1.dp, Color(0xFF4CAF50).copy(alpha = 0.5f), RoundedCornerShape(50.dp))
+                        .padding(horizontal = 10.dp, vertical = 4.dp)
+                ) {
+                    Text(
+                        text = "🕐 In 2 hours",
+                        fontSize = 11.sp,
+                        fontWeight = FontWeight.SemiBold,
+                        color = Color.White
+                    )
+                }
+            }
+
+            Spacer(modifier = Modifier.height(6.dp))
+
+            // Sport + match type
             Text(
-                text = "Search venues, coaches…",
-                style = MaterialTheme.typography.bodyMedium,
-                color = TextTertiary
+                text = "${visual.emoji} ${match.sportType.displayName} • ${match.matchType.displayName}",
+                fontSize = 13.sp,
+                color = Color.White.copy(alpha = 0.85f),
+                fontWeight = FontWeight.Medium
             )
+
+            Spacer(modifier = Modifier.height(6.dp))
+
+            // Match title
+            Text(
+                text = match.title,
+                fontSize = 20.sp,
+                fontWeight = FontWeight.Bold,
+                color = Color.White,
+                maxLines = 2,
+                overflow = TextOverflow.Ellipsis
+            )
+
+            Spacer(modifier = Modifier.height(8.dp))
+
+            // Location + time
+            Text(
+                text = "📍 ${match.displayLocation}",
+                fontSize = 12.sp,
+                color = Color.White.copy(alpha = 0.75f)
+            )
+            Spacer(modifier = Modifier.height(2.dp))
+            Text(
+                text = "⏰ ${match.matchDate} · ${match.displayTime}",
+                fontSize = 12.sp,
+                color = Color.White.copy(alpha = 0.75f)
+            )
+
+            Spacer(modifier = Modifier.height(14.dp))
+
+            // Bottom row: avatars + count + view button
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                // Overlapping avatar stack (up to 4)
+                val avatarCount = minOf(match.currentPlayers, 4)
+                Box(modifier = Modifier.height(28.dp)) {
+                    repeat(avatarCount) { idx ->
+                        Box(
+                            modifier = Modifier
+                                .offset(x = (idx * 18).dp)
+                                .size(28.dp)
+                                .clip(CircleShape)
+                                .background(avatarColor(idx))
+                                .border(2.dp, Color.White.copy(alpha = 0.2f), CircleShape),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Text(
+                                text = ('A' + idx).toString(),
+                                fontSize = 11.sp,
+                                fontWeight = FontWeight.Bold,
+                                color = Color.White
+                            )
+                        }
+                    }
+                }
+
+                Spacer(modifier = Modifier.width((avatarCount * 18 + 10).dp))
+
+                Text(
+                    text = "${match.currentPlayers}/${match.maxPlayers} players",
+                    fontSize = 12.sp,
+                    color = Color.White.copy(alpha = 0.8f),
+                    fontWeight = FontWeight.Medium,
+                    modifier = Modifier.weight(1f)
+                )
+
+                Box(
+                    modifier = Modifier
+                        .clip(RoundedCornerShape(8.dp))
+                        .background(Color.White.copy(alpha = 0.2f))
+                        .padding(horizontal = 14.dp, vertical = 6.dp)
+                ) {
+                    Text(
+                        text = "View",
+                        fontSize = 13.sp,
+                        fontWeight = FontWeight.SemiBold,
+                        color = Color.White
+                    )
+                }
+            }
         }
     }
 }
 
-// ── Section label (uppercase, gray-500, small) ──
 @Composable
-private fun SectionLabel(text: String, modifier: Modifier = Modifier) {
-    Text(
-        text = text.uppercase(),
-        style = MaterialTheme.typography.labelSmall,
-        color = TextSecondary,
-        fontWeight = FontWeight.SemiBold,
-        letterSpacing = 0.8.sp,
-        fontSize = 10.sp,
-        modifier = modifier
-    )
-}
-
-// ── Colorful gradient sport tile (matches mockup grid) ──
-@Composable
-private fun SportTile(
-    sport: Sport,
-    onClick: () -> Unit,
-    modifier: Modifier = Modifier
-) {
-    val visual = sportVisuals[sport.sportType]
-        ?: SportVisual("🏀", SportBasketball, SportBasketball)
-
+private fun ComingUpEmptyCard(onFindMatch: () -> Unit) {
     Box(
-        modifier = modifier
-            .aspectRatio(1f)
-            .clip(RoundedCornerShape(14.dp))
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(horizontal = 16.dp)
+            .clip(RoundedCornerShape(18.dp))
             .background(
-                Brush.linearGradient(listOf(visual.gradientStart, visual.gradientEnd))
+                Brush.linearGradient(
+                    listOf(
+                        GreenAccent.copy(alpha = 0.15f),
+                        Color(0xFF0288D1).copy(alpha = 0.15f)
+                    )
+                )
             )
-            .clickable(onClick = onClick),
+            .border(1.dp, SubtleBorder, RoundedCornerShape(18.dp))
+            .clickable(onClick = onFindMatch)
+            .padding(24.dp),
         contentAlignment = Alignment.Center
     ) {
         Column(horizontalAlignment = Alignment.CenterHorizontally) {
-            Text(text = visual.emoji, fontSize = 22.sp)
-            Spacer(modifier = Modifier.height(2.dp))
+            Text(text = "🏅", fontSize = 32.sp)
+            Spacer(modifier = Modifier.height(8.dp))
             Text(
-                text = sport.sportType.displayName,
-                style = MaterialTheme.typography.labelSmall,
-                color = Color.White,
+                text = "No upcoming matches",
+                fontSize = 15.sp,
                 fontWeight = FontWeight.SemiBold,
-                fontSize = 10.sp,
-                maxLines = 1,
-                overflow = TextOverflow.Ellipsis
+                color = DarkTextPrimary
+            )
+            Spacer(modifier = Modifier.height(4.dp))
+            Text(
+                text = "Tap to find a game near you",
+                fontSize = 12.sp,
+                color = Color.White.copy(alpha = 0.5f)
             )
         }
     }
 }
 
-// ── Venue card (white m3-card with subtle shadow, matches mockup) ──
+// ─────────────────────────────────────────────────────────────
+// Section 3: Quick Actions
+// ─────────────────────────────────────────────────────────────
 @Composable
-private fun VenueCard(venue: Venue, onClick: () -> Unit) {
+private fun QuickActionsRow(
+    onFindMatch: () -> Unit,
+    onBookVenue: () -> Unit,
+    onCreateParty: () -> Unit
+) {
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(horizontal = 16.dp),
+        horizontalArrangement = Arrangement.spacedBy(10.dp)
+    ) {
+        QuickActionItem(
+            emoji = "🎯",
+            label = "Find Match",
+            iconBg = GreenAccent.copy(alpha = 0.18f),
+            iconTint = GreenAccent,
+            onClick = onFindMatch,
+            modifier = Modifier.weight(1f)
+        )
+        QuickActionItem(
+            emoji = "📅",
+            label = "Book Venue",
+            iconBg = BlueAccent.copy(alpha = 0.18f),
+            iconTint = BlueAccent,
+            onClick = onBookVenue,
+            modifier = Modifier.weight(1f)
+        )
+        QuickActionItem(
+            emoji = "👥",
+            label = "Create Party",
+            iconBg = OrangeAccent.copy(alpha = 0.18f),
+            iconTint = OrangeAccent,
+            onClick = onCreateParty,
+            modifier = Modifier.weight(1f)
+        )
+    }
+}
+
+@Composable
+private fun QuickActionItem(
+    emoji: String,
+    label: String,
+    iconBg: Color,
+    iconTint: Color,
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier
+) {
+    Column(
+        modifier = modifier
+            .clip(RoundedCornerShape(14.dp))
+            .background(SubtleCardBg)
+            .border(1.dp, SubtleBorder, RoundedCornerShape(14.dp))
+            .clickable(onClick = onClick)
+            .padding(vertical = 16.dp),
+        horizontalAlignment = Alignment.CenterHorizontally
+    ) {
+        Box(
+            modifier = Modifier
+                .size(44.dp)
+                .clip(RoundedCornerShape(12.dp))
+                .background(iconBg),
+            contentAlignment = Alignment.Center
+        ) {
+            Text(text = emoji, fontSize = 20.sp)
+        }
+        Spacer(modifier = Modifier.height(8.dp))
+        Text(
+            text = label,
+            fontSize = 12.sp,
+            fontWeight = FontWeight.SemiBold,
+            color = DarkTextPrimary,
+            maxLines = 1
+        )
+    }
+}
+
+// ─────────────────────────────────────────────────────────────
+// Section 4: Active Party Banner
+// ─────────────────────────────────────────────────────────────
+@Composable
+private fun ActivePartyBanner(party: Party, onClick: () -> Unit) {
+    val memberCount = party.members.size
+    val maxMembers = 6 // fallback; Party model does not expose maxMembers
+
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(horizontal = 16.dp)
+            .clip(RoundedCornerShape(14.dp))
+            .background(PurpleAccent.copy(alpha = 0.08f))
+            .border(1.dp, PurpleAccent.copy(alpha = 0.15f), RoundedCornerShape(14.dp))
+            .clickable(onClick = onClick)
+            .padding(horizontal = 16.dp, vertical = 14.dp),
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        Box(
+            modifier = Modifier
+                .size(40.dp)
+                .clip(RoundedCornerShape(10.dp))
+                .background(PurpleAccent.copy(alpha = 0.18f)),
+            contentAlignment = Alignment.Center
+        ) {
+            Text(text = "👥", fontSize = 18.sp)
+        }
+        Spacer(modifier = Modifier.width(12.dp))
+        Column(modifier = Modifier.weight(1f)) {
+            Text(
+                text = party.name ?: "My Party",
+                fontSize = 14.sp,
+                fontWeight = FontWeight.SemiBold,
+                color = DarkTextPrimary
+            )
+            Text(
+                text = "$memberCount/$maxMembers members",
+                fontSize = 12.sp,
+                color = Color.White.copy(alpha = 0.5f)
+            )
+        }
+        Box(
+            modifier = Modifier
+                .clip(RoundedCornerShape(8.dp))
+                .background(PurpleAccent.copy(alpha = 0.2f))
+                .padding(horizontal = 12.dp, vertical = 6.dp)
+        ) {
+            Text(
+                text = "Open",
+                fontSize = 12.sp,
+                fontWeight = FontWeight.SemiBold,
+                color = PurpleAccent
+            )
+        }
+    }
+}
+
+// ─────────────────────────────────────────────────────────────
+// Section 5: Upcoming Bookings
+// ─────────────────────────────────────────────────────────────
+@Composable
+private fun UpcomingBookingCard(venue: Venue, onClick: () -> Unit) {
     val visual = sportVisuals[venue.sportType]
 
     Row(
         modifier = Modifier
             .fillMaxWidth()
             .padding(horizontal = 16.dp, vertical = 4.dp)
-            .shadow(1.dp, RoundedCornerShape(16.dp))
-            .clip(RoundedCornerShape(16.dp))
-            .background(CardBg)
+            .clip(RoundedCornerShape(14.dp))
+            .background(SubtleCardBg)
+            .border(1.dp, SubtleBorder, RoundedCornerShape(14.dp))
             .clickable(onClick = onClick)
             .padding(14.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {
-        // Thumbnail
+        // Sport icon box
         Box(
             modifier = Modifier
-                .size(56.dp)
-                .clip(RoundedCornerShape(8.dp))
+                .size(48.dp)
+                .clip(RoundedCornerShape(12.dp))
+                .background(BlueAccent.copy(alpha = 0.15f)),
+            contentAlignment = Alignment.Center
         ) {
-            if (venue.primaryImageUrl != null) {
-                AsyncImage(
-                    model = venue.primaryImageUrl,
-                    contentDescription = venue.name,
-                    modifier = Modifier.fillMaxSize(),
-                    contentScale = ContentScale.Crop
-                )
-            } else {
-                Box(
-                    modifier = Modifier
-                        .fillMaxSize()
-                        .background(
-                            Brush.linearGradient(
-                                listOf(
-                                    visual?.gradientStart?.copy(alpha = 0.3f) ?: Color(0xFFA7F3D0),
-                                    visual?.gradientEnd?.copy(alpha = 0.6f) ?: Color(0xFF6EE7B7)
-                                )
-                            )
-                        )
-                )
-            }
+            Text(text = visual?.emoji ?: "🏟️", fontSize = 22.sp)
         }
 
         Spacer(modifier = Modifier.width(12.dp))
 
         Column(modifier = Modifier.weight(1f)) {
-            Row(verticalAlignment = Alignment.CenterVertically) {
-                Text(
-                    text = venue.name,
-                    style = MaterialTheme.typography.titleSmall,
-                    color = TextPrimary,
-                    fontWeight = FontWeight.SemiBold,
-                    maxLines = 1,
-                    overflow = TextOverflow.Ellipsis,
-                    modifier = Modifier.weight(1f, fill = false)
-                )
-                Spacer(modifier = Modifier.width(6.dp))
-                // Sport pill
-                SportPill(
-                    emoji = visual?.emoji ?: "",
-                    label = venue.sportType.displayName,
-                    sportType = venue.sportType
-                )
-            }
+            Text(
+                text = venue.name,
+                fontSize = 14.sp,
+                fontWeight = FontWeight.SemiBold,
+                color = DarkTextPrimary,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis
+            )
             Spacer(modifier = Modifier.height(2.dp))
             Text(
-                text = "${venue.city ?: venue.address} · ${venue.pricePerHour.toInt()} den/h",
-                style = MaterialTheme.typography.bodySmall,
-                color = TextSecondary,
-                fontSize = 11.sp
+                text = "⏰ Today · ${venue.pricePerHour.toInt()} den/h",
+                fontSize = 12.sp,
+                color = Color.White.copy(alpha = 0.5f)
             )
-            if (venue.avgRating > 0) {
-                Row(
-                    verticalAlignment = Alignment.CenterVertically,
-                    modifier = Modifier.padding(top = 2.dp)
-                ) {
-                    Icon(
-                        Icons.Default.Star,
-                        contentDescription = null,
-                        modifier = Modifier.size(12.dp),
-                        tint = Color(0xFFFBBF24)
-                    )
-                    Spacer(modifier = Modifier.width(2.dp))
-                    Text(
-                        text = String.format("%.1f", venue.avgRating),
-                        style = MaterialTheme.typography.labelSmall,
-                        color = TextPrimary,
-                        fontWeight = FontWeight.SemiBold
-                    )
-                }
-            }
+        }
+
+        Spacer(modifier = Modifier.width(8.dp))
+
+        // Status badge
+        val isConfirmed = venue.avgRating > 3.0
+        Box(
+            modifier = Modifier
+                .clip(RoundedCornerShape(6.dp))
+                .background(
+                    if (isConfirmed) GreenAccent.copy(alpha = 0.15f)
+                    else OrangeAccent.copy(alpha = 0.15f)
+                )
+                .padding(horizontal = 8.dp, vertical = 4.dp)
+        ) {
+            Text(
+                text = if (isConfirmed) "Confirmed" else "Pending",
+                fontSize = 11.sp,
+                fontWeight = FontWeight.SemiBold,
+                color = if (isConfirmed) GreenAccent else OrangeAccent
+            )
         }
     }
 }
 
-// ── Sport pill (small colored chip) ──
 @Composable
-private fun SportPill(emoji: String, label: String, sportType: SportType? = null) {
-    val visual = sportType?.let { sportVisuals[it] }
-        ?: sportVisuals.entries.find { it.value.emoji == emoji }?.value
-    val bgColor = visual?.gradientStart?.copy(alpha = 0.12f) ?: Color(0xFFE0E7FF)
-    val textColor = visual?.gradientEnd ?: Color(0xFF4338CA)
-
-    Box(
-        modifier = Modifier
-            .clip(RoundedCornerShape(999.dp))
-            .background(bgColor)
-            .padding(horizontal = 6.dp, vertical = 2.dp)
-    ) {
-        Text(
-            text = "$emoji $label",
-            style = MaterialTheme.typography.labelSmall,
-            color = textColor,
-            fontSize = 10.sp,
-            fontWeight = FontWeight.SemiBold
-        )
-    }
-}
-
-// ── Coach card (horizontal scroll) ──
-@Composable
-private fun CoachCard(coach: Coach, onClick: () -> Unit) {
-    Card(
-        onClick = onClick,
-        modifier = Modifier.width(160.dp),
-        shape = RoundedCornerShape(16.dp),
-        colors = CardDefaults.cardColors(containerColor = CardBg),
-        elevation = CardDefaults.cardElevation(defaultElevation = 1.dp)
-    ) {
-        Column {
-            Box(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(100.dp)
-            ) {
-                if (coach.primaryImageUrl != null) {
-                    AsyncImage(
-                        model = coach.primaryImageUrl,
-                        contentDescription = coach.name,
-                        modifier = Modifier
-                            .fillMaxSize()
-                            .clip(RoundedCornerShape(topStart = 16.dp, topEnd = 16.dp)),
-                        contentScale = ContentScale.Crop
-                    )
-                } else {
-                    val visual = sportVisuals[coach.sportType]
-                    Box(
-                        modifier = Modifier
-                            .fillMaxSize()
-                            .background(
-                                Brush.linearGradient(
-                                    listOf(
-                                        visual?.gradientStart?.copy(alpha = 0.2f) ?: Color(0xFFDDD6FE),
-                                        visual?.gradientEnd?.copy(alpha = 0.4f) ?: Color(0xFFA78BFA)
-                                    )
-                                )
-                            )
-                    )
-                }
-            }
-            Column(modifier = Modifier.padding(10.dp)) {
-                Text(
-                    text = coach.name,
-                    style = MaterialTheme.typography.titleSmall,
-                    color = TextPrimary,
-                    fontWeight = FontWeight.SemiBold,
-                    maxLines = 1,
-                    overflow = TextOverflow.Ellipsis
-                )
-                Text(
-                    text = coach.specialization ?: coach.sportType.displayName,
-                    style = MaterialTheme.typography.bodySmall,
-                    color = TextSecondary,
-                    fontSize = 11.sp,
-                    maxLines = 1
-                )
-                Spacer(modifier = Modifier.height(4.dp))
-                Row(verticalAlignment = Alignment.CenterVertically) {
-                    if (coach.avgRating > 0) {
-                        Icon(
-                            Icons.Default.Star,
-                            contentDescription = null,
-                            modifier = Modifier.size(12.dp),
-                            tint = Color(0xFFFBBF24)
-                        )
-                        Spacer(modifier = Modifier.width(2.dp))
-                        Text(
-                            text = String.format("%.1f", coach.avgRating),
-                            style = MaterialTheme.typography.labelSmall,
-                            color = TextPrimary,
-                            fontWeight = FontWeight.SemiBold
-                        )
-                        Spacer(modifier = Modifier.width(6.dp))
-                    }
-                    Text(
-                        text = "${coach.pricePerHour.toInt()} den/h",
-                        style = MaterialTheme.typography.labelSmall,
-                        color = TextSecondary
-                    )
-                }
-            }
-        }
-    }
-}
-
-// ── Deal card (horizontal scroll) ──
-@Composable
-private fun DealCard(
-    name: String,
-    subtitle: String,
-    imageUrl: String?,
-    price: Double,
-    discountedPrice: Double?,
-    discountText: String?,
-    rating: Double,
-    onClick: () -> Unit
-) {
-    Card(
-        onClick = onClick,
-        modifier = Modifier.width(180.dp),
-        shape = RoundedCornerShape(16.dp),
-        colors = CardDefaults.cardColors(containerColor = CardBg),
-        elevation = CardDefaults.cardElevation(defaultElevation = 1.dp)
-    ) {
-        Column {
-            Box(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(110.dp)
-            ) {
-                if (imageUrl != null) {
-                    AsyncImage(
-                        model = imageUrl,
-                        contentDescription = name,
-                        modifier = Modifier
-                            .fillMaxSize()
-                            .clip(RoundedCornerShape(topStart = 16.dp, topEnd = 16.dp)),
-                        contentScale = ContentScale.Crop
-                    )
-                } else {
-                    Box(
-                        modifier = Modifier
-                            .fillMaxSize()
-                            .background(Color(0xFFF3F4F6))
-                    )
-                }
-                if (discountText != null) {
-                    DiscountBadge(
-                        text = discountText,
-                        modifier = Modifier
-                            .align(Alignment.TopEnd)
-                            .padding(8.dp)
-                    )
-                }
-            }
-            Column(modifier = Modifier.padding(10.dp)) {
-                Text(
-                    text = name,
-                    style = MaterialTheme.typography.titleSmall,
-                    color = TextPrimary,
-                    fontWeight = FontWeight.SemiBold,
-                    maxLines = 1,
-                    overflow = TextOverflow.Ellipsis
-                )
-                Text(
-                    text = subtitle,
-                    style = MaterialTheme.typography.bodySmall,
-                    color = TextSecondary,
-                    fontSize = 11.sp,
-                    maxLines = 1
-                )
-                Spacer(modifier = Modifier.height(4.dp))
-                Row(verticalAlignment = Alignment.CenterVertically) {
-                    PriceTag(price = price, discountedPrice = discountedPrice)
-                    if (rating > 0) {
-                        Spacer(modifier = Modifier.weight(1f))
-                        Icon(
-                            Icons.Default.Star,
-                            contentDescription = null,
-                            modifier = Modifier.size(12.dp),
-                            tint = Color(0xFFFBBF24)
-                        )
-                        Spacer(modifier = Modifier.width(2.dp))
-                        Text(
-                            text = String.format("%.1f", rating),
-                            style = MaterialTheme.typography.labelSmall,
-                            color = TextPrimary
-                        )
-                    }
-                }
-            }
-        }
-    }
-}
-
-// ── Active match card (horizontal scroll, above sports) ──
-@Composable
-private fun ActiveMatchCard(match: Match, onClick: () -> Unit) {
-    val visual = sportVisuals[match.sportType]
-    val statusColor = when (match.status) {
-        MatchStatus.OPEN -> Color(0xFF16A34A)        // green
-        MatchStatus.FULL -> Color(0xFFF59E0B)         // amber
-        MatchStatus.IN_PROGRESS -> Color(0xFF2563EB)  // blue
-        else -> TextSecondary
-    }
-    val statusLabel = when (match.status) {
-        MatchStatus.OPEN -> "Open"
-        MatchStatus.FULL -> "Full"
-        MatchStatus.IN_PROGRESS -> "Live"
-        else -> match.status.name.lowercase().replaceFirstChar { it.uppercase() }
-    }
-
-    Card(
-        onClick = onClick,
-        modifier = Modifier.width(220.dp),
-        shape = RoundedCornerShape(16.dp),
-        colors = CardDefaults.cardColors(containerColor = CardBg),
-        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
-    ) {
-        Column {
-            // Gradient header with sport emoji + status chip
-            Box(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(56.dp)
-                    .background(
-                        Brush.linearGradient(
-                            listOf(
-                                visual?.gradientStart ?: Color(0xFF6366F1),
-                                visual?.gradientEnd ?: Color(0xFF4F46E5)
-                            )
-                        )
-                    )
-                    .padding(horizontal = 12.dp, vertical = 8.dp)
-            ) {
-                Text(
-                    text = visual?.emoji ?: "⚽",
-                    fontSize = 24.sp,
-                    modifier = Modifier.align(Alignment.CenterStart)
-                )
-                // Status chip
-                Box(
-                    modifier = Modifier
-                        .align(Alignment.TopEnd)
-                        .clip(RoundedCornerShape(999.dp))
-                        .background(statusColor.copy(alpha = 0.9f))
-                        .padding(horizontal = 8.dp, vertical = 3.dp)
-                ) {
-                    Text(
-                        text = statusLabel,
-                        style = MaterialTheme.typography.labelSmall,
-                        color = Color.White,
-                        fontWeight = FontWeight.Bold,
-                        fontSize = 10.sp
-                    )
-                }
-            }
-
-            Column(modifier = Modifier.padding(12.dp)) {
-                Text(
-                    text = match.title,
-                    style = MaterialTheme.typography.titleSmall,
-                    color = TextPrimary,
-                    fontWeight = FontWeight.SemiBold,
-                    maxLines = 1,
-                    overflow = TextOverflow.Ellipsis
-                )
-                Spacer(modifier = Modifier.height(4.dp))
-                // Date + time
-                Text(
-                    text = "${match.matchDate} · ${match.displayTime}",
-                    style = MaterialTheme.typography.bodySmall,
-                    color = TextSecondary,
-                    fontSize = 11.sp,
-                    maxLines = 1
-                )
-                // Location
-                Text(
-                    text = match.displayLocation,
-                    style = MaterialTheme.typography.bodySmall,
-                    color = TextSecondary,
-                    fontSize = 11.sp,
-                    maxLines = 1,
-                    overflow = TextOverflow.Ellipsis
-                )
-                Spacer(modifier = Modifier.height(6.dp))
-                // Players + cost
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.SpaceBetween,
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    // Player count
-                    Row(verticalAlignment = Alignment.CenterVertically) {
-                        Text(
-                            text = "👥 ${match.currentPlayers}/${match.maxPlayers}",
-                            style = MaterialTheme.typography.labelSmall,
-                            color = TextPrimary,
-                            fontWeight = FontWeight.Medium
-                        )
-                    }
-                    // Cost
-                    Text(
-                        text = match.displayCost,
-                        style = MaterialTheme.typography.labelSmall,
-                        color = if (match.isFree) Color(0xFF16A34A) else TextPrimary,
-                        fontWeight = FontWeight.SemiBold
-                    )
-                }
-            }
-        }
-    }
-}
-
-// ── Party card ──
-@Composable
-private fun PartyCard(party: com.example.sportsbook.domain.model.Party, onClick: () -> Unit) {
-    val statusColor = when (party.status) {
-        "forming" -> Color(0xFF7C3AED) // purple
-        "ready" -> Color(0xFF16A34A)   // green
-        "in_match" -> Color(0xFF2563EB) // blue
-        else -> Color(0xFF6B7280)
-    }
-    val statusLabel = when (party.status) {
-        "forming" -> "Forming"
-        "ready" -> "Ready"
-        "in_match" -> "In Match"
-        else -> party.status
-    }
-    val sportVisual = party.sportType?.uppercase()?.let {
-        try { sportVisuals[com.example.sportsbook.domain.enums.SportType.valueOf(it)] } catch (_: Exception) { null }
-    }
-
-    Card(
-        onClick = onClick,
-        modifier = Modifier.width(180.dp),
-        shape = RoundedCornerShape(16.dp),
-        colors = CardDefaults.cardColors(containerColor = CardBg),
-        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
-    ) {
-        Column {
-            // Gradient header
-            Box(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(48.dp)
-                    .background(
-                        Brush.linearGradient(
-                            listOf(
-                                sportVisual?.gradientStart ?: Color(0xFF7C3AED),
-                                sportVisual?.gradientEnd ?: Color(0xFF6D28D9)
-                            )
-                        )
-                    )
-                    .padding(horizontal = 12.dp, vertical = 8.dp)
-            ) {
-                Icon(
-                    Icons.Default.Groups,
-                    contentDescription = null,
-                    tint = Color.White,
-                    modifier = Modifier
-                        .size(24.dp)
-                        .align(Alignment.CenterStart)
-                )
-                Box(
-                    modifier = Modifier
-                        .align(Alignment.TopEnd)
-                        .clip(RoundedCornerShape(999.dp))
-                        .background(statusColor.copy(alpha = 0.9f))
-                        .padding(horizontal = 8.dp, vertical = 3.dp)
-                ) {
-                    Text(
-                        text = statusLabel,
-                        style = MaterialTheme.typography.labelSmall,
-                        color = Color.White,
-                        fontWeight = FontWeight.Bold,
-                        fontSize = 10.sp
-                    )
-                }
-            }
-
-            Column(modifier = Modifier.padding(12.dp)) {
-                Text(
-                    text = party.name ?: "Party",
-                    style = MaterialTheme.typography.titleSmall,
-                    color = TextPrimary,
-                    fontWeight = FontWeight.SemiBold,
-                    maxLines = 1,
-                    overflow = TextOverflow.Ellipsis
-                )
-                Spacer(modifier = Modifier.height(4.dp))
-                Text(
-                    text = "${sportVisual?.emoji ?: "🏅"} ${party.sportType ?: "Sports"} · ${party.members.size} members",
-                    style = MaterialTheme.typography.bodySmall,
-                    color = TextSecondary,
-                    fontSize = 11.sp,
-                    maxLines = 1
-                )
-            }
-        }
-    }
-}
-
-// ── Find a Match CTA (dark card with gold text) ──
-@Composable
-private fun FindMatchCta(onClick: () -> Unit) {
+private fun UpcomingBookingsEmpty(onBook: () -> Unit) {
     Box(
         modifier = Modifier
             .fillMaxWidth()
             .padding(horizontal = 16.dp)
-            .clip(RoundedCornerShape(16.dp))
-            .background(NavBarBg)
-            .clickable(onClick = onClick)
-            .padding(horizontal = 20.dp, vertical = 18.dp)
+            .clip(RoundedCornerShape(14.dp))
+            .background(SubtleCardBg)
+            .border(1.dp, SubtleBorder, RoundedCornerShape(14.dp))
+            .clickable(onClick = onBook)
+            .padding(20.dp),
+        contentAlignment = Alignment.Center
     ) {
+        Column(horizontalAlignment = Alignment.CenterHorizontally) {
+            Text(text = "📅", fontSize = 28.sp)
+            Spacer(modifier = Modifier.height(6.dp))
+            Text(
+                text = "No upcoming bookings",
+                fontSize = 13.sp,
+                color = Color.White.copy(alpha = 0.5f)
+            )
+        }
+    }
+}
+
+// ─────────────────────────────────────────────────────────────
+// Section 6: Top Deal Card (horizontal scroll)
+// ─────────────────────────────────────────────────────────────
+@Composable
+private fun TopDealCard(
+    name: String,
+    sportType: SportType,
+    originalPrice: Double,
+    discountedPrice: Double?,
+    discountPercent: Double?,
+    onClick: () -> Unit
+) {
+    val visual = sportVisuals[sportType]
+        ?: SportVisual("🏅", Color(0xFFEC4899), Color(0xFFF97316))
+
+    Box(
+        modifier = Modifier
+            .width(180.dp)
+            .clip(RoundedCornerShape(16.dp))
+            .background(
+                Brush.linearGradient(
+                    listOf(visual.gradientStart.copy(alpha = 0.7f), visual.gradientEnd)
+                )
+            )
+            .clickable(onClick = onClick)
+    ) {
+        Column(modifier = Modifier.padding(14.dp)) {
+            // Top row: emoji + discount badge
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.Top
+            ) {
+                Text(text = visual.emoji, fontSize = 28.sp)
+
+                if (discountPercent != null) {
+                    Box(
+                        modifier = Modifier
+                            .clip(RoundedCornerShape(6.dp))
+                            .background(Color.Black.copy(alpha = 0.3f))
+                            .padding(horizontal = 6.dp, vertical = 3.dp)
+                    ) {
+                        Text(
+                            text = "-${discountPercent.toInt()}%",
+                            fontSize = 11.sp,
+                            fontWeight = FontWeight.Bold,
+                            color = Color.White
+                        )
+                    }
+                }
+            }
+
+            Spacer(modifier = Modifier.height(10.dp))
+
+            Text(
+                text = name,
+                fontSize = 14.sp,
+                fontWeight = FontWeight.Bold,
+                color = Color.White,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis
+            )
+            Text(
+                text = sportType.displayName,
+                fontSize = 11.sp,
+                color = Color.White.copy(alpha = 0.75f)
+            )
+
+            Spacer(modifier = Modifier.height(10.dp))
+
+            // Pricing row
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                if (discountedPrice != null) {
+                    Text(
+                        text = "${originalPrice.toInt()} den",
+                        fontSize = 11.sp,
+                        color = Color.White.copy(alpha = 0.55f),
+                        textDecoration = TextDecoration.LineThrough
+                    )
+                    Spacer(modifier = Modifier.width(6.dp))
+                    Text(
+                        text = "${discountedPrice.toInt()} den",
+                        fontSize = 14.sp,
+                        fontWeight = FontWeight.Bold,
+                        color = Color(0xFF80FF8C)
+                    )
+                } else {
+                    Text(
+                        text = "${originalPrice.toInt()} den/h",
+                        fontSize = 13.sp,
+                        fontWeight = FontWeight.SemiBold,
+                        color = Color.White
+                    )
+                }
+            }
+        }
+    }
+}
+
+
+// ─────────────────────────────────────────────────────────────
+// Section 8: Friends Leaderboard Mini
+// ─────────────────────────────────────────────────────────────
+@Composable
+private fun FriendsLeaderboardMini(onFullBoard: () -> Unit) {
+    Column(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(horizontal = 16.dp)
+            .clip(RoundedCornerShape(16.dp))
+            .background(GoldColor.copy(alpha = 0.05f))
+            .border(1.dp, GoldColor.copy(alpha = 0.15f), RoundedCornerShape(16.dp))
+            .padding(16.dp)
+    ) {
+        // Header
         Row(
             modifier = Modifier.fillMaxWidth(),
             horizontalArrangement = Arrangement.SpaceBetween,
             verticalAlignment = Alignment.CenterVertically
         ) {
-            Column {
-                Text(
-                    text = "Find a Match",
-                    style = MaterialTheme.typography.titleMedium,
-                    color = GoldAccent,
-                    fontWeight = FontWeight.Bold
-                )
-                Spacer(modifier = Modifier.height(2.dp))
-                Text(
-                    text = "Join pickup games or create your own",
-                    style = MaterialTheme.typography.bodySmall,
-                    color = Color.White.copy(alpha = 0.7f)
-                )
-            }
-            Icon(
-                Icons.AutoMirrored.Filled.ArrowForward,
-                contentDescription = "Go",
-                tint = GoldAccent,
-                modifier = Modifier.size(24.dp)
+            Text(
+                text = "🏆 Friends Leaderboard",
+                fontSize = 15.sp,
+                fontWeight = FontWeight.Bold,
+                color = DarkTextPrimary
+            )
+            Text(
+                text = "Full Board →",
+                fontSize = 12.sp,
+                color = GoldColor,
+                fontWeight = FontWeight.SemiBold,
+                modifier = Modifier.clickable(onClick = onFullBoard)
+            )
+        }
+
+        Spacer(modifier = Modifier.height(14.dp))
+
+        Box(
+            modifier = Modifier.fillMaxWidth(),
+            contentAlignment = Alignment.Center,
+        ) {
+            Text(
+                text = "No leaderboard data",
+                fontSize = 13.sp,
+                color = DarkTextSecondary,
             )
         }
     }
 }
 
-// ── "Want to see more sports?" bottom CTA ──
+// ─────────────────────────────────────────────────────────────
+// Shared helpers
+// ─────────────────────────────────────────────────────────────
 @Composable
-private fun AddSportCta(onClick: () -> Unit) {
-    Box(
+private fun HomeSectionHeader(
+    title: String,
+    actionLabel: String?,
+    onAction: () -> Unit
+) {
+    Row(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(horizontal = 16.dp)
-            .clip(RoundedCornerShape(16.dp))
-            .background(CardBg)
-            .clickable(onClick = onClick)
-            .padding(16.dp)
+            .padding(horizontal = 16.dp),
+        horizontalArrangement = Arrangement.SpaceBetween,
+        verticalAlignment = Alignment.CenterVertically
     ) {
-        Column {
+        Text(
+            text = title,
+            fontSize = 16.sp,
+            fontWeight = FontWeight.Bold,
+            color = DarkTextPrimary
+        )
+        if (actionLabel != null) {
             Text(
-                text = "Want to see more sports?",
-                style = MaterialTheme.typography.titleSmall,
-                color = TextPrimary,
-                fontWeight = FontWeight.SemiBold
+                text = actionLabel,
+                fontSize = 12.sp,
+                color = GreenAccent,
+                fontWeight = FontWeight.SemiBold,
+                modifier = Modifier.clickable(onClick = onAction)
             )
-            Spacer(modifier = Modifier.height(2.dp))
-            Text(
-                text = "Add another to your follow list and we'll re-tune the feed.",
-                style = MaterialTheme.typography.bodySmall,
-                color = TextSecondary
-            )
-            Spacer(modifier = Modifier.height(10.dp))
-            Box(
-                modifier = Modifier
-                    .clip(RoundedCornerShape(8.dp))
-                    .background(NavBarBg)
-                    .padding(horizontal = 12.dp, vertical = 8.dp)
-            ) {
-                Text(
-                    text = "+ Add sport",
-                    style = MaterialTheme.typography.labelMedium,
-                    color = GoldAccent,
-                    fontWeight = FontWeight.SemiBold
-                )
-            }
         }
     }
 }
 
-// ── Previews ──
-
-@Preview(showBackground = true)
+// ─────────────────────────────────────────────────────────────
+// Previews
+// ─────────────────────────────────────────────────────────────
+@Preview(showBackground = true, backgroundColor = 0xFF121212)
 @Composable
 private fun PlayerHomeScreenPreview() {
-    val sampleSports = listOf(
-        Sport(id = 1, sportType = SportType.FOOTBALL, name = "Football"),
-        Sport(id = 2, sportType = SportType.TENNIS, name = "Tennis"),
-        Sport(id = 3, sportType = SportType.PADDLE, name = "Paddle"),
-        Sport(id = 4, sportType = SportType.YOGA, name = "Yoga"),
+    val sampleUser = User(
+        id = 1,
+        displayName = "Bojan",
+        email = "bojan@test.com",
+        interestedSports = listOf(SportType.BASKETBALL, SportType.TENNIS)
     )
     val sampleVenues = listOf(
-        Venue(id = 1, name = "Skopje Padel Club", sportType = SportType.PADDLE, pricePerHour = 800.0, address = "Main St", city = "Skopje"),
-        Venue(id = 2, name = "Vodno Tennis Center", sportType = SportType.TENNIS, pricePerHour = 600.0, address = "Vodno", city = "Skopje"),
+        Venue(
+            id = 1, name = "Skopje Arena", sportType = SportType.BASKETBALL,
+            pricePerHour = 800.0, address = "Main St", city = "Skopje", avgRating = 4.5
+        ),
+        Venue(
+            id = 2, name = "Vodno Tennis Center", sportType = SportType.TENNIS,
+            pricePerHour = 600.0, address = "Vodno", city = "Skopje", avgRating = 2.8
+        ),
     )
-    val sampleCoaches = listOf(
-        Coach(id = 1, name = "Coach Goran", sportType = SportType.PADDLE, pricePerHour = 1200.0, specialization = "Paddle pro"),
+    val sampleMatch = Match(
+        id = 1,
+        title = "Friday Night Basketball",
+        sportType = SportType.BASKETBALL,
+        matchType = MatchType.STANDALONE,
+        status = MatchStatus.OPEN,
+        venueName = "Skopje Arena",
+        matchDate = "Fri, Jun 7",
+        startTime = "18:00",
+        endTime = "20:00",
+        currentPlayers = 6,
+        maxPlayers = 10
     )
     val previewState = PlayerHomeUiState(
-        user = User(
-            id = 1,
-            displayName = "Bojan",
-            email = "bojan@test.com",
-            interestedSports = listOf(SportType.FOOTBALL, SportType.TENNIS, SportType.PADDLE, SportType.YOGA)
-        ),
-        sports = sampleSports,
+        user = sampleUser,
+        myMatches = listOf(sampleMatch),
         allVenues = sampleVenues,
-        allCoaches = sampleCoaches,
-        topDealVenues = emptyList(),
-        topDealCoaches = emptyList(),
+        topDealVenues = sampleVenues,
         notificationCount = 3,
         isLoading = false
     )
+
     SportsBookTheme {
         PlayerHomeContent(
             uiState = previewState,
@@ -1307,5 +1142,72 @@ private fun PlayerHomeScreenPreview() {
             onBrowseAllSports = {},
             notificationCount = previewState.notificationCount
         )
+    }
+}
+
+@Preview(showBackground = true, backgroundColor = 0xFF121212)
+@Composable
+private fun HomeHeaderPreview() {
+    SportsBookTheme {
+        HomeHeader(
+            user = User(id = 1, displayName = "Bojan", email = ""),
+            notificationCount = 5,
+            onNotificationClick = {},
+            onProfileClick = {}
+        )
+    }
+}
+
+@Preview(showBackground = true, backgroundColor = 0xFF121212)
+@Composable
+private fun ComingUpCardPreview() {
+    SportsBookTheme {
+        ComingUpCard(
+            match = Match(
+                id = 1,
+                title = "Friday Night Basketball",
+                sportType = SportType.BASKETBALL,
+                matchType = MatchType.STANDALONE,
+                status = MatchStatus.OPEN,
+                venueName = "Skopje Arena",
+                matchDate = "Fri, Jun 7",
+                startTime = "18:00",
+                endTime = "20:00",
+                currentPlayers = 8,
+                maxPlayers = 10
+            ),
+            onClick = {}
+        )
+    }
+}
+
+@Preview(showBackground = true, backgroundColor = 0xFF121212)
+@Composable
+private fun QuickActionsPreview() {
+    SportsBookTheme {
+        QuickActionsRow(onFindMatch = {}, onBookVenue = {}, onCreateParty = {})
+    }
+}
+
+@Preview(showBackground = true, backgroundColor = 0xFF121212)
+@Composable
+private fun TopDealCardPreview() {
+    SportsBookTheme {
+        TopDealCard(
+            name = "Skopje Padel Club",
+            sportType = SportType.PADDLE,
+            originalPrice = 800.0,
+            discountedPrice = 600.0,
+            discountPercent = 25.0,
+            onClick = {}
+        )
+    }
+}
+
+@Preview(showBackground = true, backgroundColor = 0xFF121212)
+@Composable
+private fun FriendsLeaderboardPreview() {
+    SportsBookTheme {
+        FriendsLeaderboardMini(onFullBoard = {})
     }
 }

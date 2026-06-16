@@ -26,37 +26,21 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Add
-import androidx.compose.material.icons.filled.CalendarMonth
 import androidx.compose.material.icons.filled.Close
-import androidx.compose.material.icons.filled.Schedule
-import androidx.compose.material3.AssistChip
-import androidx.compose.material3.Button
-import androidx.compose.material3.ButtonDefaults
-import androidx.compose.material3.Card
-import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.DatePickerDialog
 import androidx.compose.material3.DateRangePicker
 import androidx.compose.material3.DropdownMenuItem
-import androidx.compose.material3.ElevatedCard
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ExposedDropdownMenuBox
 import androidx.compose.material3.MenuAnchorType
-import androidx.compose.material3.FilterChip
-import androidx.compose.material3.FilterChipDefaults
 import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedButton
-import androidx.compose.material3.OutlinedTextField
-import androidx.compose.material3.Scaffold
+
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
-import androidx.compose.material3.TopAppBar
-import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.material3.rememberDateRangePickerState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
@@ -68,6 +52,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -78,12 +63,12 @@ import com.example.sportsbook.domain.model.Venue
 import com.example.sportsbook.domain.repository.CoachRepository
 import com.example.sportsbook.domain.repository.TimeSlotRepository
 import com.example.sportsbook.domain.repository.VenueRepository
-import com.example.sportsbook.ui.common.ErrorView
-import com.example.sportsbook.ui.common.LoadingIndicator
-import com.example.sportsbook.ui.theme.LightBg
-import com.example.sportsbook.ui.theme.NavBarBg
-import com.example.sportsbook.ui.theme.GoldAccent
-import com.example.sportsbook.ui.theme.TextPrimary
+import com.example.sportsbook.ui.theme.DarkBg
+import com.example.sportsbook.ui.theme.DarkBorder
+import com.example.sportsbook.ui.theme.DarkSurface
+import com.example.sportsbook.ui.theme.DarkTextPrimary
+import com.example.sportsbook.ui.theme.DarkTextSecondary
+import com.example.sportsbook.ui.theme.GreenAccent
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -293,344 +278,406 @@ fun TimeSlotManagementScreen(
     var showDatePicker by remember { mutableStateOf(false) }
     var showGenerateSection by remember { mutableStateOf(false) }
 
-    Scaffold(
-        containerColor = NavBarBg,
-        topBar = {
-            TopAppBar(
-                title = { Text("Time Slots", color = TextPrimary) },
-                navigationIcon = {
-                    IconButton(onClick = onBack) {
-                        Icon(Icons.AutoMirrored.Filled.ArrowBack, "Back", tint = TextPrimary)
-                    }
-                },
-                colors = TopAppBarDefaults.topAppBarColors(containerColor = NavBarBg)
-            )
-        }
-    ) { paddingValues ->
-        if (uiState.isLoading) {
-            Box(Modifier.fillMaxSize().padding(paddingValues), contentAlignment = Alignment.Center) {
-                LoadingIndicator()
-            }
-            return@Scaffold
-        }
-
-        LazyColumn(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(paddingValues)
-                .padding(horizontal = 16.dp),
-            verticalArrangement = Arrangement.spacedBy(12.dp)
-        ) {
-            // ─── Entity Selector ──────────────────
-            item {
-                Spacer(Modifier.height(4.dp))
-                Text("Select Venue or Coach", style = MaterialTheme.typography.labelLarge, color = TextPrimary.copy(alpha = 0.7f))
-                Spacer(Modifier.height(8.dp))
-
-                Row(
-                    modifier = Modifier.horizontalScroll(rememberScrollState()),
-                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+    Box(
+        modifier = Modifier
+            .fillMaxSize()
+            .background(DarkBg),
+    ) {
+        Column(modifier = Modifier.fillMaxSize()) {
+            // ── Header ────────────────────────────────────────────────────
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(start = 16.dp, end = 16.dp, top = 56.dp, bottom = 16.dp),
+                verticalAlignment = Alignment.CenterVertically,
+            ) {
+                Box(
+                    modifier = Modifier
+                        .size(40.dp)
+                        .clip(CircleShape)
+                        .background(DarkSurface)
+                        .clickable(onClick = onBack),
+                    contentAlignment = Alignment.Center,
                 ) {
-                    uiState.venues.forEach { venue ->
-                        FilterChip(
-                            selected = uiState.selectedEntityType == "venue" && uiState.selectedEntityId == venue.id,
-                            onClick = { viewModel.selectEntity("venue", venue.id, venue.name) },
-                            label = { Text(venue.name) },
-                            colors = FilterChipDefaults.filterChipColors(
-                                selectedContainerColor = GoldAccent,
-                                selectedLabelColor = NavBarBg,
-                                containerColor = LightBg,
-                                labelColor = TextPrimary
-                            )
-                        )
+                    Icon(Icons.AutoMirrored.Filled.ArrowBack, "Back", tint = DarkTextPrimary, modifier = Modifier.size(20.dp))
+                }
+                Spacer(modifier = Modifier.width(16.dp))
+                Column(modifier = Modifier.weight(1f)) {
+                    Text("Time Slots", fontSize = 18.sp, fontWeight = FontWeight.Bold, color = DarkTextPrimary)
+                    if (uiState.selectedEntityName.isNotBlank()) {
+                        Text(uiState.selectedEntityName, fontSize = 13.sp, color = DarkTextSecondary)
                     }
-                    uiState.coachProfile?.let { coach ->
-                        FilterChip(
-                            selected = uiState.selectedEntityType == "coach" && uiState.selectedEntityId == coach.id,
-                            onClick = { viewModel.selectEntity("coach", coach.id, coach.name) },
-                            label = { Text(coach.name) },
-                            colors = FilterChipDefaults.filterChipColors(
-                                selectedContainerColor = GoldAccent,
-                                selectedLabelColor = NavBarBg,
-                                containerColor = LightBg,
-                                labelColor = TextPrimary
-                            )
-                        )
+                }
+                // Slot count badge
+                if (uiState.slots.isNotEmpty()) {
+                    Box(
+                        modifier = Modifier
+                            .clip(RoundedCornerShape(8.dp))
+                            .background(GreenAccent.copy(alpha = 0.15f))
+                            .padding(horizontal = 10.dp, vertical = 5.dp),
+                    ) {
+                        Text("${uiState.slots.size} slots", fontSize = 11.sp, fontWeight = FontWeight.SemiBold, color = GreenAccent)
                     }
                 }
             }
 
-            // ─── Date Range ───────────────────────
-            item {
-                ElevatedCard(
-                    colors = CardDefaults.elevatedCardColors(containerColor = LightBg)
+            // ── Loading / Content ─────────────────────────────────────────
+            if (uiState.isLoading) {
+                Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                    CircularProgressIndicator(color = GreenAccent)
+                }
+            } else {
+                LazyColumn(
+                    modifier = Modifier.fillMaxSize().padding(horizontal = 16.dp),
+                    verticalArrangement = Arrangement.spacedBy(12.dp),
                 ) {
-                    Column(modifier = Modifier.padding(16.dp)) {
-                        Text("Date Range", style = MaterialTheme.typography.titleSmall, color = TextPrimary)
+                    // ─── Entity Selector ──────────────────
+                    item {
+                        Spacer(Modifier.height(4.dp))
+                        Text("Select Venue or Coach", fontSize = 12.sp, color = DarkTextSecondary)
                         Spacer(Modifier.height(8.dp))
                         Row(
-                            verticalAlignment = Alignment.CenterVertically,
-                            horizontalArrangement = Arrangement.spacedBy(8.dp)
+                            modifier = Modifier.horizontalScroll(rememberScrollState()),
+                            horizontalArrangement = Arrangement.spacedBy(8.dp),
                         ) {
-                            AssistChip(
-                                onClick = { showDatePicker = true },
-                                label = {
-                                    Text(
-                                        "${formatDateShort(uiState.dateFrom)} → ${formatDateShort(uiState.dateTo)}",
-                                        color = TextPrimary
-                                    )
-                                },
-                                leadingIcon = {
-                                    Icon(Icons.Default.CalendarMonth, null, tint = GoldAccent, modifier = Modifier.size(18.dp))
+                            uiState.venues.forEach { venue ->
+                                val selected = uiState.selectedEntityType == "venue" && uiState.selectedEntityId == venue.id
+                                Box(
+                                    modifier = Modifier
+                                        .clip(RoundedCornerShape(20.dp))
+                                        .background(if (selected) GreenAccent else DarkSurface)
+                                        .border(1.dp, if (selected) GreenAccent else DarkBorder, RoundedCornerShape(20.dp))
+                                        .clickable { viewModel.selectEntity("venue", venue.id, venue.name) }
+                                        .padding(horizontal = 14.dp, vertical = 8.dp),
+                                ) {
+                                    Text(venue.name, fontSize = 13.sp, color = if (selected) Color.White else DarkTextSecondary, fontWeight = if (selected) FontWeight.SemiBold else FontWeight.Normal)
                                 }
-                            )
-                        }
-                    }
-                }
-            }
-
-            // ─── Messages ─────────────────────────
-            uiState.successMessage?.let { msg ->
-                item {
-                    Card(
-                        colors = CardDefaults.cardColors(containerColor = Color(0xFF1B5E20).copy(alpha = 0.3f)),
-                        shape = RoundedCornerShape(8.dp)
-                    ) {
-                        Row(
-                            modifier = Modifier.fillMaxWidth().padding(12.dp),
-                            verticalAlignment = Alignment.CenterVertically
-                        ) {
-                            Text(msg, color = Color(0xFF81C784), modifier = Modifier.weight(1f), style = MaterialTheme.typography.bodySmall)
-                            IconButton(onClick = { viewModel.dismissMessage() }, modifier = Modifier.size(24.dp)) {
-                                Icon(Icons.Default.Close, null, tint = Color(0xFF81C784), modifier = Modifier.size(16.dp))
+                            }
+                            uiState.coachProfile?.let { coach ->
+                                val selected = uiState.selectedEntityType == "coach" && uiState.selectedEntityId == coach.id
+                                Box(
+                                    modifier = Modifier
+                                        .clip(RoundedCornerShape(20.dp))
+                                        .background(if (selected) GreenAccent else DarkSurface)
+                                        .border(1.dp, if (selected) GreenAccent else DarkBorder, RoundedCornerShape(20.dp))
+                                        .clickable { viewModel.selectEntity("coach", coach.id, coach.name) }
+                                        .padding(horizontal = 14.dp, vertical = 8.dp),
+                                ) {
+                                    Text(coach.name, fontSize = 13.sp, color = if (selected) Color.White else DarkTextSecondary, fontWeight = if (selected) FontWeight.SemiBold else FontWeight.Normal)
+                                }
                             }
                         }
                     }
-                }
-            }
 
-            uiState.error?.let { err ->
-                item {
-                    Card(
-                        colors = CardDefaults.cardColors(containerColor = Color(0xFFB71C1C).copy(alpha = 0.3f)),
-                        shape = RoundedCornerShape(8.dp)
-                    ) {
-                        Row(
-                            modifier = Modifier.fillMaxWidth().padding(12.dp),
-                            verticalAlignment = Alignment.CenterVertically
+                    // ─── Date Range ───────────────────────
+                    item {
+                        Column(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .clip(RoundedCornerShape(14.dp))
+                                .background(DarkSurface)
+                                .padding(16.dp),
                         ) {
-                            Text(err, color = Color(0xFFEF9A9A), modifier = Modifier.weight(1f), style = MaterialTheme.typography.bodySmall)
-                            IconButton(onClick = { viewModel.dismissMessage() }, modifier = Modifier.size(24.dp)) {
-                                Icon(Icons.Default.Close, null, tint = Color(0xFFEF9A9A), modifier = Modifier.size(16.dp))
-                            }
-                        }
-                    }
-                }
-            }
-
-            // ─── Generate Section Toggle ──────────
-            item {
-                Button(
-                    onClick = { showGenerateSection = !showGenerateSection },
-                    modifier = Modifier.fillMaxWidth(),
-                    colors = ButtonDefaults.buttonColors(
-                        containerColor = if (showGenerateSection) LightBg else GoldAccent,
-                        contentColor = if (showGenerateSection) TextPrimary else NavBarBg
-                    )
-                ) {
-                    Icon(if (showGenerateSection) Icons.Default.Close else Icons.Default.Add, null, modifier = Modifier.size(18.dp))
-                    Spacer(Modifier.width(8.dp))
-                    Text(if (showGenerateSection) "Hide Generator" else "Generate Time Slots")
-                }
-            }
-
-            // ─── Generate Configuration ───────────
-            if (showGenerateSection) {
-                item {
-                    ElevatedCard(colors = CardDefaults.elevatedCardColors(containerColor = LightBg)) {
-                        Column(modifier = Modifier.padding(16.dp)) {
-                            // Operating Hours
-                            Text("Operating Hours", style = MaterialTheme.typography.titleSmall, color = TextPrimary)
-                            Spacer(Modifier.height(8.dp))
+                            Text("Date Range", fontSize = 13.sp, fontWeight = FontWeight.SemiBold, color = DarkTextPrimary)
+                            Spacer(Modifier.height(10.dp))
                             Row(
+                                modifier = Modifier
+                                    .clip(RoundedCornerShape(10.dp))
+                                    .background(DarkBg)
+                                    .border(1.dp, DarkBorder, RoundedCornerShape(10.dp))
+                                    .clickable { showDatePicker = true }
+                                    .padding(horizontal = 14.dp, vertical = 10.dp),
                                 verticalAlignment = Alignment.CenterVertically,
-                                horizontalArrangement = Arrangement.spacedBy(8.dp)
                             ) {
-                                HourPicker(
-                                    label = "From",
-                                    value = uiState.startHour,
-                                    range = 0 until uiState.endHour,
-                                    onValueChange = { viewModel.setStartHour(it) }
-                                )
-                                Text("to", color = TextPrimary.copy(alpha = 0.6f))
-                                HourPicker(
-                                    label = "To",
-                                    value = uiState.endHour,
-                                    range = (uiState.startHour + 1)..23,
-                                    onValueChange = { viewModel.setEndHour(it) }
-                                )
+                                Text("📅", fontSize = 14.sp)
+                                Spacer(Modifier.width(8.dp))
                                 Text(
-                                    "${uiState.endHour - uiState.startHour}h/day",
-                                    style = MaterialTheme.typography.labelSmall,
-                                    color = GoldAccent
+                                    "${formatDateShort(uiState.dateFrom)}  →  ${formatDateShort(uiState.dateTo)}",
+                                    fontSize = 14.sp,
+                                    color = DarkTextPrimary,
+                                    fontWeight = FontWeight.Medium,
                                 )
                             }
+                        }
+                    }
 
-                            Spacer(Modifier.height(16.dp))
+                    // ─── Messages ─────────────────────────
+                    uiState.successMessage?.let { msg ->
+                        item {
+                            Row(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .clip(RoundedCornerShape(10.dp))
+                                    .background(Color(0xFF1B5E20).copy(alpha = 0.3f))
+                                    .border(1.dp, GreenAccent.copy(alpha = 0.3f), RoundedCornerShape(10.dp))
+                                    .padding(12.dp),
+                                verticalAlignment = Alignment.CenterVertically,
+                            ) {
+                                Text("✅", fontSize = 14.sp)
+                                Spacer(Modifier.width(8.dp))
+                                Text(msg, fontSize = 13.sp, color = Color(0xFF81C784), modifier = Modifier.weight(1f))
+                                Box(
+                                    modifier = Modifier
+                                        .size(24.dp)
+                                        .clip(CircleShape)
+                                        .background(Color.White.copy(alpha = 0.05f))
+                                        .clickable { viewModel.dismissMessage() },
+                                    contentAlignment = Alignment.Center,
+                                ) {
+                                    Icon(Icons.Default.Close, null, tint = Color(0xFF81C784), modifier = Modifier.size(14.dp))
+                                }
+                            }
+                        }
+                    }
 
-                            // Days of Week
-                            Text("Available Days", style = MaterialTheme.typography.titleSmall, color = TextPrimary)
-                            Spacer(Modifier.height(8.dp))
+                    uiState.error?.let { err ->
+                        item {
+                            Row(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .clip(RoundedCornerShape(10.dp))
+                                    .background(Color(0xFFB71C1C).copy(alpha = 0.2f))
+                                    .border(1.dp, Color(0xFFEF5350).copy(alpha = 0.3f), RoundedCornerShape(10.dp))
+                                    .padding(12.dp),
+                                verticalAlignment = Alignment.CenterVertically,
+                            ) {
+                                Text("⚠️", fontSize = 14.sp)
+                                Spacer(Modifier.width(8.dp))
+                                Text(err, fontSize = 13.sp, color = Color(0xFFEF9A9A), modifier = Modifier.weight(1f))
+                                Box(
+                                    modifier = Modifier
+                                        .size(24.dp)
+                                        .clip(CircleShape)
+                                        .background(Color.White.copy(alpha = 0.05f))
+                                        .clickable { viewModel.dismissMessage() },
+                                    contentAlignment = Alignment.Center,
+                                ) {
+                                    Icon(Icons.Default.Close, null, tint = Color(0xFFEF9A9A), modifier = Modifier.size(14.dp))
+                                }
+                            }
+                        }
+                    }
 
-                            val dayLabels = listOf("Mon" to 1, "Tue" to 2, "Wed" to 3, "Thu" to 4, "Fri" to 5, "Sat" to 6, "Sun" to 0)
+                    // ─── Generate Section Toggle ──────────
+                    item {
+                        Box(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .clip(RoundedCornerShape(12.dp))
+                                .background(if (showGenerateSection) DarkSurface else GreenAccent)
+                                .clickable { showGenerateSection = !showGenerateSection }
+                                .padding(vertical = 14.dp),
+                            contentAlignment = Alignment.Center,
+                        ) {
+                            Row(verticalAlignment = Alignment.CenterVertically) {
+                                Icon(
+                                    if (showGenerateSection) Icons.Default.Close else Icons.Default.Add,
+                                    null,
+                                    tint = if (showGenerateSection) DarkTextPrimary else Color.White,
+                                    modifier = Modifier.size(18.dp),
+                                )
+                                Spacer(Modifier.width(8.dp))
+                                Text(
+                                    if (showGenerateSection) "Hide Generator" else "⚡ Generate Time Slots",
+                                    fontSize = 14.sp,
+                                    fontWeight = FontWeight.Bold,
+                                    color = if (showGenerateSection) DarkTextPrimary else Color.White,
+                                )
+                            }
+                        }
+                    }
 
-                            FlowRow(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
-                                dayLabels.forEach { (label, dayNum) ->
-                                    val selected = uiState.selectedDays.contains(dayNum)
+                    // ─── Generate Configuration ───────────
+                    if (showGenerateSection) {
+                        item {
+                            Column(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .clip(RoundedCornerShape(14.dp))
+                                    .background(DarkSurface)
+                                    .padding(16.dp),
+                            ) {
+                                // Operating Hours
+                                Text("🕐 Operating Hours", fontSize = 13.sp, fontWeight = FontWeight.SemiBold, color = DarkTextPrimary)
+                                Spacer(Modifier.height(10.dp))
+                                Row(
+                                    verticalAlignment = Alignment.CenterVertically,
+                                    horizontalArrangement = Arrangement.spacedBy(10.dp),
+                                ) {
+                                    HourPicker(
+                                        label = "From",
+                                        value = uiState.startHour,
+                                        range = 0 until uiState.endHour,
+                                        onValueChange = { viewModel.setStartHour(it) },
+                                    )
+                                    Text("→", fontSize = 14.sp, color = DarkTextSecondary)
+                                    HourPicker(
+                                        label = "To",
+                                        value = uiState.endHour,
+                                        range = (uiState.startHour + 1)..23,
+                                        onValueChange = { viewModel.setEndHour(it) },
+                                    )
                                     Box(
                                         modifier = Modifier
                                             .clip(RoundedCornerShape(8.dp))
-                                            .background(if (selected) GoldAccent else NavBarBg.copy(alpha = 0.5f))
-                                            .border(1.dp, if (selected) GoldAccent else TextPrimary.copy(alpha = 0.2f), RoundedCornerShape(8.dp))
-                                            .clickable { viewModel.toggleDay(dayNum) }
-                                            .padding(horizontal = 12.dp, vertical = 8.dp),
-                                        contentAlignment = Alignment.Center
+                                            .background(GreenAccent.copy(alpha = 0.15f))
+                                            .padding(horizontal = 8.dp, vertical = 5.dp),
                                     ) {
-                                        Text(
-                                            label,
-                                            style = MaterialTheme.typography.labelMedium,
-                                            color = if (selected) NavBarBg else TextPrimary.copy(alpha = 0.7f),
-                                            fontWeight = if (selected) FontWeight.Bold else FontWeight.Normal
-                                        )
+                                        Text("${uiState.endHour - uiState.startHour}h/day", fontSize = 12.sp, color = GreenAccent, fontWeight = FontWeight.SemiBold)
                                     }
                                 }
-                            }
 
-                            Spacer(Modifier.height(4.dp))
-                            Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
-                                TextButton(onClick = { viewModel.selectWeekdays() }) {
-                                    Text("Weekdays", color = GoldAccent, style = MaterialTheme.typography.labelSmall)
-                                }
-                                TextButton(onClick = { viewModel.selectAllDays() }) {
-                                    Text("Every day", color = GoldAccent, style = MaterialTheme.typography.labelSmall)
-                                }
-                            }
+                                Spacer(Modifier.height(16.dp))
 
-                            Spacer(Modifier.height(12.dp))
+                                // Days of Week
+                                Text("📆 Available Days", fontSize = 13.sp, fontWeight = FontWeight.SemiBold, color = DarkTextPrimary)
+                                Spacer(Modifier.height(10.dp))
 
-                            Button(
-                                onClick = { viewModel.generateSlots() },
-                                modifier = Modifier.fillMaxWidth(),
-                                enabled = !uiState.isGenerating && uiState.selectedEntityId != null,
-                                colors = ButtonDefaults.buttonColors(
-                                    containerColor = GoldAccent,
-                                    contentColor = NavBarBg
-                                )
-                            ) {
-                                Icon(Icons.Default.Schedule, null, modifier = Modifier.size(18.dp))
-                                Spacer(Modifier.width(8.dp))
-                                Text(
-                                    if (uiState.isGenerating) "Generating..." else "Generate Slots",
-                                    fontWeight = FontWeight.Bold
-                                )
-                            }
-                        }
-                    }
-                }
-            }
+                                val dayLabels = listOf("Mon" to 1, "Tue" to 2, "Wed" to 3, "Thu" to 4, "Fri" to 5, "Sat" to 6, "Sun" to 0)
 
-            // ─── Existing Slots ───────────────────
-            val slotsByDate = uiState.slots.groupBy { it.slotDate }.toSortedMap()
-
-            if (slotsByDate.isEmpty() && uiState.selectedEntityId != null) {
-                item {
-                    Card(
-                        colors = CardDefaults.cardColors(containerColor = LightBg),
-                        modifier = Modifier.fillMaxWidth()
-                    ) {
-                        Column(
-                            modifier = Modifier.padding(32.dp),
-                            horizontalAlignment = Alignment.CenterHorizontally
-                        ) {
-                            Icon(Icons.Default.CalendarMonth, null, tint = TextPrimary.copy(alpha = 0.3f), modifier = Modifier.size(48.dp))
-                            Spacer(Modifier.height(12.dp))
-                            Text(
-                                "No time slots for this range",
-                                color = TextPrimary.copy(alpha = 0.5f),
-                                textAlign = TextAlign.Center
-                            )
-                            Text(
-                                "Generate slots to get started",
-                                style = MaterialTheme.typography.bodySmall,
-                                color = TextPrimary.copy(alpha = 0.3f),
-                                textAlign = TextAlign.Center
-                            )
-                        }
-                    }
-                }
-            }
-
-            slotsByDate.forEach { (date, daySlots) ->
-                item {
-                    val localDate = LocalDate.parse(date)
-                    val dayName = localDate.dayOfWeek.getDisplayName(TextStyle.FULL, Locale.getDefault())
-                    val formatted = localDate.format(DateTimeFormatter.ofPattern("dd-MM-yyyy"))
-
-                    Text(
-                        "$dayName, $formatted",
-                        style = MaterialTheme.typography.titleSmall,
-                        color = TextPrimary,
-                        modifier = Modifier.padding(top = 8.dp)
-                    )
-                }
-
-                item {
-                    FlowRow(
-                        horizontalArrangement = Arrangement.spacedBy(6.dp),
-                        verticalArrangement = Arrangement.spacedBy(6.dp)
-                    ) {
-                        daySlots.sortedBy { it.startTime }.forEach { slot ->
-                            val bgColor = if (slot.isAvailable) Color(0xFF1B5E20).copy(alpha = 0.3f) else Color(0xFFB71C1C).copy(alpha = 0.3f)
-                            val borderColor = if (slot.isAvailable) Color(0xFF4CAF50).copy(alpha = 0.4f) else Color(0xFFEF5350).copy(alpha = 0.4f)
-
-                            Box(
-                                modifier = Modifier
-                                    .clip(RoundedCornerShape(8.dp))
-                                    .background(bgColor)
-                                    .border(1.dp, borderColor, RoundedCornerShape(8.dp))
-                                    .padding(horizontal = 10.dp, vertical = 6.dp)
-                            ) {
-                                Row(verticalAlignment = Alignment.CenterVertically) {
-                                    Text(
-                                        slot.startTime.take(5),
-                                        style = MaterialTheme.typography.labelMedium,
-                                        color = TextPrimary,
-                                        fontWeight = FontWeight.Medium
-                                    )
-                                    if (slot.isAvailable) {
-                                        Spacer(Modifier.width(6.dp))
+                                FlowRow(horizontalArrangement = Arrangement.spacedBy(6.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
+                                    dayLabels.forEach { (label, dayNum) ->
+                                        val selected = uiState.selectedDays.contains(dayNum)
                                         Box(
                                             modifier = Modifier
-                                                .size(20.dp)
-                                                .clip(CircleShape)
-                                                .background(Color(0xFFB71C1C).copy(alpha = 0.6f))
-                                                .clickable { viewModel.deleteSlot(slot.id) },
-                                            contentAlignment = Alignment.Center
+                                                .clip(RoundedCornerShape(8.dp))
+                                                .background(if (selected) GreenAccent else DarkBg)
+                                                .border(1.dp, if (selected) GreenAccent else DarkBorder, RoundedCornerShape(8.dp))
+                                                .clickable { viewModel.toggleDay(dayNum) }
+                                                .padding(horizontal = 12.dp, vertical = 8.dp),
+                                            contentAlignment = Alignment.Center,
                                         ) {
-                                            Icon(Icons.Default.Close, null, tint = TextPrimary, modifier = Modifier.size(12.dp))
+                                            Text(
+                                                label,
+                                                fontSize = 13.sp,
+                                                color = if (selected) Color.White else DarkTextSecondary,
+                                                fontWeight = if (selected) FontWeight.Bold else FontWeight.Normal,
+                                            )
                                         }
+                                    }
+                                }
+
+                                Spacer(Modifier.height(8.dp))
+                                Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+                                    Text(
+                                        "Weekdays",
+                                        fontSize = 12.sp,
+                                        color = GreenAccent,
+                                        fontWeight = FontWeight.SemiBold,
+                                        modifier = Modifier.clickable { viewModel.selectWeekdays() },
+                                    )
+                                    Text(
+                                        "Every day",
+                                        fontSize = 12.sp,
+                                        color = GreenAccent,
+                                        fontWeight = FontWeight.SemiBold,
+                                        modifier = Modifier.clickable { viewModel.selectAllDays() },
+                                    )
+                                }
+
+                                Spacer(Modifier.height(14.dp))
+
+                                Box(
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .clip(RoundedCornerShape(12.dp))
+                                        .background(if (!uiState.isGenerating && uiState.selectedEntityId != null) GreenAccent else DarkBorder)
+                                        .clickable(enabled = !uiState.isGenerating && uiState.selectedEntityId != null) { viewModel.generateSlots() }
+                                        .padding(vertical = 14.dp),
+                                    contentAlignment = Alignment.Center,
+                                ) {
+                                    if (uiState.isGenerating) {
+                                        CircularProgressIndicator(modifier = Modifier.size(20.dp), strokeWidth = 2.dp, color = Color.White)
                                     } else {
-                                        Spacer(Modifier.width(6.dp))
-                                        Text("Booked", style = MaterialTheme.typography.labelSmall, color = Color(0xFFEF9A9A))
+                                        Text("⚡ Generate Slots", fontSize = 14.sp, fontWeight = FontWeight.Bold, color = Color.White)
                                     }
                                 }
                             }
                         }
                     }
+
+                    // ─── Existing Slots ───────────────────
+                    val slotsByDate = uiState.slots.groupBy { it.slotDate }.toSortedMap()
+
+                    if (slotsByDate.isEmpty() && uiState.selectedEntityId != null) {
+                        item {
+                            Column(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .clip(RoundedCornerShape(14.dp))
+                                    .background(DarkSurface)
+                                    .padding(32.dp),
+                                horizontalAlignment = Alignment.CenterHorizontally,
+                            ) {
+                                Text("📅", fontSize = 40.sp)
+                                Spacer(Modifier.height(12.dp))
+                                Text("No time slots", fontSize = 16.sp, fontWeight = FontWeight.Bold, color = DarkTextPrimary)
+                                Text("Generate slots to get started", fontSize = 13.sp, color = DarkTextSecondary, textAlign = TextAlign.Center, modifier = Modifier.padding(top = 4.dp))
+                            }
+                        }
+                    }
+
+                    slotsByDate.forEach { (date, daySlots) ->
+                        item {
+                            val localDate = LocalDate.parse(date)
+                            val dayName = localDate.dayOfWeek.getDisplayName(TextStyle.FULL, Locale.getDefault())
+                            val formatted = localDate.format(DateTimeFormatter.ofPattern("dd MMM yyyy"))
+                            Row(
+                                modifier = Modifier.padding(top = 8.dp, bottom = 4.dp),
+                                verticalAlignment = Alignment.CenterVertically,
+                            ) {
+                                Box(modifier = Modifier.size(4.dp).clip(CircleShape).background(GreenAccent))
+                                Spacer(Modifier.width(8.dp))
+                                Text("$dayName, $formatted", fontSize = 13.sp, fontWeight = FontWeight.SemiBold, color = DarkTextPrimary)
+                            }
+                        }
+
+                        item {
+                            FlowRow(
+                                horizontalArrangement = Arrangement.spacedBy(6.dp),
+                                verticalArrangement = Arrangement.spacedBy(6.dp),
+                            ) {
+                                daySlots.sortedBy { it.startTime }.forEach { slot ->
+                                    val isAvailable = slot.isAvailable
+                                    val bgColor = if (isAvailable) Color(0xFF1B5E20).copy(alpha = 0.25f) else Color(0xFFB71C1C).copy(alpha = 0.2f)
+                                    val borderColor = if (isAvailable) GreenAccent.copy(alpha = 0.5f) else Color(0xFFEF5350).copy(alpha = 0.4f)
+                                    val textColor = if (isAvailable) Color(0xFF81C784) else Color(0xFFEF9A9A)
+
+                                    Box(
+                                        modifier = Modifier
+                                            .clip(RoundedCornerShape(8.dp))
+                                            .background(bgColor)
+                                            .border(1.dp, borderColor, RoundedCornerShape(8.dp))
+                                            .padding(horizontal = 10.dp, vertical = 6.dp),
+                                    ) {
+                                        Row(verticalAlignment = Alignment.CenterVertically) {
+                                            Text(slot.startTime.take(5), fontSize = 13.sp, color = textColor, fontWeight = FontWeight.Medium)
+                                            if (isAvailable) {
+                                                Spacer(Modifier.width(6.dp))
+                                                Box(
+                                                    modifier = Modifier
+                                                        .size(18.dp)
+                                                        .clip(CircleShape)
+                                                        .background(Color(0xFFB71C1C).copy(alpha = 0.6f))
+                                                        .clickable { viewModel.deleteSlot(slot.id) },
+                                                    contentAlignment = Alignment.Center,
+                                                ) {
+                                                    Icon(Icons.Default.Close, null, tint = Color.White, modifier = Modifier.size(10.dp))
+                                                }
+                                            } else {
+                                                Spacer(Modifier.width(6.dp))
+                                                Text("Booked", fontSize = 10.sp, color = Color(0xFFEF9A9A))
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+
+                    item { Spacer(Modifier.height(32.dp)) }
                 }
             }
-
-            item { Spacer(Modifier.height(24.dp)) }
         }
     }
 
@@ -653,7 +700,7 @@ fun TimeSlotManagementScreen(
             },
             dismissButton = {
                 TextButton(onClick = { showDatePicker = false }) { Text("Cancel") }
-            }
+            },
         ) {
             DateRangePicker(state = dateRangePickerState, modifier = Modifier.height(500.dp))
         }
@@ -668,20 +715,25 @@ private fun HourPicker(
     label: String,
     value: Int,
     range: IntRange,
-    onValueChange: (Int) -> Unit
+    onValueChange: (Int) -> Unit,
 ) {
     var expanded by remember { mutableStateOf(false) }
 
     ExposedDropdownMenuBox(expanded = expanded, onExpandedChange = { expanded = it }) {
-        OutlinedTextField(
-            value = "%02d:00".format(value),
-            onValueChange = {},
-            readOnly = true,
-            label = { Text(label, color = TextPrimary.copy(alpha = 0.6f)) },
-            modifier = Modifier.width(100.dp).menuAnchor(MenuAnchorType.PrimaryNotEditable),
-            textStyle = MaterialTheme.typography.bodyMedium.copy(color = TextPrimary),
-            singleLine = true
-        )
+        Box(
+            modifier = Modifier
+                .width(90.dp)
+                .clip(RoundedCornerShape(10.dp))
+                .background(DarkBg)
+                .border(1.dp, DarkBorder, RoundedCornerShape(10.dp))
+                .menuAnchor(MenuAnchorType.PrimaryNotEditable)
+                .padding(horizontal = 12.dp, vertical = 10.dp),
+        ) {
+            Column {
+                Text(label, fontSize = 10.sp, color = DarkTextSecondary)
+                Text("%02d:00".format(value), fontSize = 14.sp, color = DarkTextPrimary, fontWeight = FontWeight.SemiBold)
+            }
+        }
         ExposedDropdownMenu(expanded = expanded, onDismissRequest = { expanded = false }) {
             range.forEach { h ->
                 DropdownMenuItem(
@@ -689,7 +741,7 @@ private fun HourPicker(
                     onClick = {
                         onValueChange(h)
                         expanded = false
-                    }
+                    },
                 )
             }
         }
@@ -705,125 +757,62 @@ private fun formatDateShort(dateStr: String): String {
     }
 }
 
-@Preview(showBackground = true)
+@Preview(showBackground = true, backgroundColor = 0xFF121212)
 @Composable
 private fun TimeSlotManagementScreenPreview() {
-    MaterialTheme {
-        Scaffold(
-            containerColor = NavBarBg,
-            topBar = {
-                @OptIn(ExperimentalMaterial3Api::class)
-                TopAppBar(
-                    title = { Text("Time Slots", color = TextPrimary) },
-                    navigationIcon = {
-                        IconButton(onClick = {}) {
-                            Icon(Icons.AutoMirrored.Filled.ArrowBack, "Back", tint = TextPrimary)
-                        }
-                    },
-                    colors = TopAppBarDefaults.topAppBarColors(containerColor = NavBarBg)
-                )
+    Column(
+        modifier = Modifier.fillMaxSize().background(DarkBg),
+    ) {
+            Row(
+                modifier = Modifier.fillMaxWidth().padding(start = 16.dp, end = 16.dp, top = 56.dp, bottom = 16.dp),
+                verticalAlignment = Alignment.CenterVertically,
+            ) {
+                Box(modifier = Modifier.size(40.dp).clip(CircleShape).background(DarkSurface), contentAlignment = Alignment.Center) {
+                    Icon(Icons.AutoMirrored.Filled.ArrowBack, "Back", tint = DarkTextPrimary, modifier = Modifier.size(20.dp))
+                }
+                Spacer(Modifier.width(16.dp))
+                Text("Time Slots", fontSize = 18.sp, fontWeight = FontWeight.Bold, color = DarkTextPrimary, modifier = Modifier.weight(1f))
+                Box(
+                    modifier = Modifier.clip(RoundedCornerShape(8.dp)).background(GreenAccent.copy(alpha = 0.15f)).padding(horizontal = 10.dp, vertical = 5.dp),
+                ) {
+                    Text("13 slots", fontSize = 11.sp, fontWeight = FontWeight.SemiBold, color = GreenAccent)
+                }
             }
-        ) { paddingValues ->
             LazyColumn(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .padding(paddingValues)
-                    .padding(horizontal = 16.dp),
-                verticalArrangement = Arrangement.spacedBy(12.dp)
+                modifier = Modifier.fillMaxSize().padding(horizontal = 16.dp),
+                verticalArrangement = Arrangement.spacedBy(12.dp),
             ) {
                 item {
-                    Spacer(Modifier.height(4.dp))
-                    Text(
-                        "Select Venue or Coach",
-                        style = MaterialTheme.typography.labelLarge,
-                        color = TextPrimary.copy(alpha = 0.7f)
-                    )
-                    Spacer(Modifier.height(8.dp))
-                    Row(
-                        modifier = Modifier.horizontalScroll(rememberScrollState()),
-                        horizontalArrangement = Arrangement.spacedBy(8.dp)
-                    ) {
-                        FilterChip(
-                            selected = true,
-                            onClick = {},
-                            label = { Text("City Sports Hall") },
-                            colors = FilterChipDefaults.filterChipColors(
-                                selectedContainerColor = GoldAccent,
-                                selectedLabelColor = NavBarBg,
-                                containerColor = LightBg,
-                                labelColor = TextPrimary
-                            )
-                        )
-                        FilterChip(
-                            selected = false,
-                            onClick = {},
-                            label = { Text("Jane Doe") },
-                            colors = FilterChipDefaults.filterChipColors(
-                                selectedContainerColor = GoldAccent,
-                                selectedLabelColor = NavBarBg,
-                                containerColor = LightBg,
-                                labelColor = TextPrimary
-                            )
-                        )
-                    }
-                }
-
-                item {
-                    ElevatedCard(colors = CardDefaults.elevatedCardColors(containerColor = LightBg)) {
-                        Column(modifier = Modifier.padding(16.dp)) {
-                            Text("Date Range", style = MaterialTheme.typography.titleSmall, color = TextPrimary)
-                            Spacer(Modifier.height(8.dp))
-                            AssistChip(
-                                onClick = {},
-                                label = { Text("24-03 → 31-03", color = TextPrimary) },
-                                leadingIcon = {
-                                    Icon(Icons.Default.CalendarMonth, null, tint = GoldAccent, modifier = Modifier.size(18.dp))
-                                }
-                            )
+                    Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                        Box(modifier = Modifier.clip(RoundedCornerShape(20.dp)).background(GreenAccent).padding(horizontal = 14.dp, vertical = 8.dp)) {
+                            Text("City Tennis Center", fontSize = 13.sp, color = Color.White, fontWeight = FontWeight.SemiBold)
+                        }
+                        Box(modifier = Modifier.clip(RoundedCornerShape(20.dp)).background(DarkSurface).border(1.dp, DarkBorder, RoundedCornerShape(20.dp)).padding(horizontal = 14.dp, vertical = 8.dp)) {
+                            Text("Downtown Basketball", fontSize = 13.sp, color = DarkTextSecondary)
                         }
                     }
                 }
-
                 item {
-                    Button(
-                        onClick = {},
-                        modifier = Modifier.fillMaxWidth(),
-                        colors = ButtonDefaults.buttonColors(containerColor = GoldAccent, contentColor = NavBarBg)
-                    ) {
-                        Icon(Icons.Default.Add, null, modifier = Modifier.size(18.dp))
-                        Spacer(Modifier.width(8.dp))
-                        Text("Generate Time Slots")
-                    }
-                }
-
-                item {
-                    Card(
-                        colors = CardDefaults.cardColors(containerColor = LightBg),
-                        modifier = Modifier.fillMaxWidth()
-                    ) {
-                        Column(
-                            modifier = Modifier.padding(32.dp),
-                            horizontalAlignment = Alignment.CenterHorizontally
+                    Column(modifier = Modifier.fillMaxWidth().clip(RoundedCornerShape(14.dp)).background(DarkSurface).padding(16.dp)) {
+                        Text("Date Range", fontSize = 13.sp, fontWeight = FontWeight.SemiBold, color = DarkTextPrimary)
+                        Spacer(Modifier.height(10.dp))
+                        Row(
+                            modifier = Modifier.clip(RoundedCornerShape(10.dp)).background(DarkBg).border(1.dp, DarkBorder, RoundedCornerShape(10.dp)).padding(horizontal = 14.dp, vertical = 10.dp),
+                            verticalAlignment = Alignment.CenterVertically,
                         ) {
-                            Icon(Icons.Default.CalendarMonth, null, tint = TextPrimary.copy(alpha = 0.3f), modifier = Modifier.size(48.dp))
-                            Spacer(Modifier.height(12.dp))
-                            Text(
-                                "No time slots for this range",
-                                color = TextPrimary.copy(alpha = 0.5f),
-                                textAlign = TextAlign.Center
-                            )
-                            Text(
-                                "Generate slots to get started",
-                                style = MaterialTheme.typography.bodySmall,
-                                color = TextPrimary.copy(alpha = 0.3f),
-                                textAlign = TextAlign.Center
-                            )
+                            Text("📅", fontSize = 14.sp)
+                            Spacer(Modifier.width(8.dp))
+                            Text("02-06  →  09-06", fontSize = 14.sp, color = DarkTextPrimary, fontWeight = FontWeight.Medium)
                         }
                     }
                 }
-
+                item {
+                    Box(modifier = Modifier.fillMaxWidth().clip(RoundedCornerShape(12.dp)).background(GreenAccent).padding(vertical = 14.dp), contentAlignment = Alignment.Center) {
+                        Text("⚡ Generate Time Slots", fontSize = 14.sp, fontWeight = FontWeight.Bold, color = Color.White)
+                    }
+                }
                 item { Spacer(Modifier.height(24.dp)) }
             }
         }
     }
-}
+

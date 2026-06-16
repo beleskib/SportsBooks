@@ -1,6 +1,7 @@
 package com.example.sportsbook.ui.screens.player.party
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -15,426 +16,665 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
-import androidx.compose.material.icons.filled.Check
-import androidx.compose.material.icons.filled.Close
-import androidx.compose.material.icons.filled.Groups
-import androidx.compose.material.icons.filled.Person
-import androidx.compose.material.icons.filled.PersonAdd
-import androidx.compose.material.icons.filled.Search
-import androidx.compose.material3.Button
-import androidx.compose.material3.Card
-import androidx.compose.material3.CardDefaults
-import androidx.compose.material3.CircularProgressIndicator
-import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.FilledTonalButton
 import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedButton
-import androidx.compose.material3.Scaffold
-import androidx.compose.material3.SuggestionChip
+import androidx.compose.material3.SnackbarHost
+import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
-import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.graphics.Brush
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import coil.compose.AsyncImage
 import com.example.sportsbook.domain.model.Party
 import com.example.sportsbook.domain.model.PartyMember
 import com.example.sportsbook.ui.common.ErrorView
 import com.example.sportsbook.ui.common.LoadingIndicator
+import com.example.sportsbook.ui.theme.DarkBg
+import com.example.sportsbook.ui.theme.DarkBorder
+import com.example.sportsbook.ui.theme.DarkSurface
+import com.example.sportsbook.ui.theme.DarkTextPrimary
+import com.example.sportsbook.ui.theme.DarkTextSecondary
+import com.example.sportsbook.ui.theme.GreenAccent
 
-@OptIn(ExperimentalMaterial3Api::class)
+// ── Screen ───────────────────────────────────────────────────────────────────
+
 @Composable
 fun PartyDetailScreen(
     onInviteFriends: (Long) -> Unit,
     onFindMatch: () -> Unit,
+    onMatchClick: (Long) -> Unit = {},
     onBack: () -> Unit,
     viewModel: PartyDetailViewModel = hiltViewModel()
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
+    val snackbarHostState = remember { SnackbarHostState() }
 
     LaunchedEffect(uiState.disbanded) {
-        if (uiState.disbanded) {
-            onBack()
-        }
+        if (uiState.disbanded) onBack()
     }
 
-    Scaffold(
-        topBar = {
-            TopAppBar(
-                title = { Text("Party") },
-                navigationIcon = {
-                    IconButton(onClick = onBack) {
-                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back")
-                    }
-                }
-            )
-        }
-    ) { padding ->
+    LaunchedEffect(uiState.error) {
+        uiState.error?.let { snackbarHostState.showSnackbar(it) }
+    }
+
+    Box(
+        modifier = Modifier
+            .fillMaxSize()
+            .background(DarkBg),
+    ) {
         when {
-            uiState.isLoading -> LoadingIndicator()
+            uiState.isLoading && uiState.party == null -> LoadingIndicator(modifier = Modifier.align(Alignment.Center))
             uiState.error != null && uiState.party == null -> ErrorView(
                 message = uiState.error!!,
                 onRetry = viewModel::loadParty,
-                modifier = Modifier.padding(padding)
             )
-            uiState.party != null -> {
-                val party = uiState.party!!
-                LazyColumn(
-                    modifier = Modifier
-                        .fillMaxSize()
-                        .padding(padding)
-                        .padding(horizontal = 16.dp),
-                    verticalArrangement = Arrangement.spacedBy(16.dp)
-                ) {
-                    item { Spacer(modifier = Modifier.height(8.dp)) }
+            else -> {
+                val party = uiState.party
 
-                    // Party info card
+                LazyColumn(modifier = Modifier.fillMaxSize()) {
+                    // ── Header
                     item {
-                        Card(modifier = Modifier.fillMaxWidth()) {
-                            Column(
-                                modifier = Modifier.padding(16.dp),
-                                verticalArrangement = Arrangement.spacedBy(8.dp)
-                            ) {
-                                Row(
-                                    modifier = Modifier.fillMaxWidth(),
-                                    horizontalArrangement = Arrangement.SpaceBetween,
-                                    verticalAlignment = Alignment.CenterVertically
-                                ) {
-                                    Text(
-                                        text = party.name ?: "Unnamed Party",
-                                        style = MaterialTheme.typography.titleLarge,
-                                        fontWeight = FontWeight.Bold,
-                                        modifier = Modifier.weight(1f)
-                                    )
-                                    PartyStatusChip(status = party.status)
-                                }
-                                if (!party.sportType.isNullOrBlank()) {
-                                    Text(
-                                        text = party.sportType.replace("_", " ")
-                                            .replaceFirstChar { it.uppercase() },
-                                        style = MaterialTheme.typography.bodyMedium,
-                                        color = MaterialTheme.colorScheme.primary
-                                    )
-                                }
-                                Text(
-                                    text = "Led by ${party.leaderName ?: "Unknown"}",
-                                    style = MaterialTheme.typography.bodySmall,
-                                    color = MaterialTheme.colorScheme.onSurfaceVariant
-                                )
-                            }
-                        }
-                    }
-
-                    // Members header
-                    item {
-                        Text(
-                            text = "Members (${party.members.size})",
-                            style = MaterialTheme.typography.titleMedium,
-                            fontWeight = FontWeight.Bold
-                        )
-                    }
-
-                    // Member cards
-                    items(party.members, key = { it.id }) { member ->
-                        PartyMemberCard(member = member)
-                    }
-
-                    if (party.members.isEmpty()) {
-                        item {
+                        Row(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(start = 16.dp, end = 16.dp, top = 12.dp, bottom = 12.dp),
+                            verticalAlignment = Alignment.CenterVertically,
+                        ) {
                             Box(
                                 modifier = Modifier
-                                    .fillMaxWidth()
-                                    .padding(vertical = 16.dp),
-                                contentAlignment = Alignment.Center
+                                    .size(36.dp)
+                                    .clip(CircleShape)
+                                    .background(DarkSurface)
+                                    .clickable(onClick = onBack),
+                                contentAlignment = Alignment.Center,
                             ) {
+                                Icon(Icons.AutoMirrored.Filled.ArrowBack, "Back", tint = DarkTextPrimary, modifier = Modifier.size(18.dp))
+                            }
+                            Spacer(modifier = Modifier.weight(1f))
+                            Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                                Box(
+                                    modifier = Modifier
+                                        .size(36.dp)
+                                        .clip(CircleShape)
+                                        .background(DarkSurface),
+                                    contentAlignment = Alignment.Center,
+                                ) { Text("↗", fontSize = 16.sp, color = DarkTextPrimary) }
+                                Box(
+                                    modifier = Modifier
+                                        .size(36.dp)
+                                        .clip(CircleShape)
+                                        .background(DarkSurface),
+                                    contentAlignment = Alignment.Center,
+                                ) { Text("⋮", fontSize = 16.sp, color = DarkTextPrimary) }
+                            }
+                        }
+                    }
+
+                    // ── Hero card
+                    item {
+                        Box(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(horizontal = 16.dp)
+                                .padding(bottom = 16.dp)
+                                .clip(RoundedCornerShape(16.dp))
+                                .background(Brush.linearGradient(listOf(Color(0xFFE65100), Color(0xFFFF9800), Color(0xFFFFB74D))))
+                                .padding(20.dp),
+                        ) {
+                            Column {
+                                Row(
+                                    verticalAlignment = Alignment.CenterVertically,
+                                    horizontalArrangement = Arrangement.spacedBy(8.dp),
+                                    modifier = Modifier.padding(bottom = 10.dp),
+                                ) {
+                                    val sportEmoji = partySportEmoji(party?.sportType)
+                                    Text(sportEmoji, fontSize = 24.sp)
+                                    Box(
+                                        modifier = Modifier
+                                            .clip(RoundedCornerShape(6.dp))
+                                            .background(Color.Black.copy(alpha = 0.2f))
+                                            .padding(horizontal = 10.dp, vertical = 4.dp),
+                                    ) {
+                                        Text(
+                                            party?.sportType?.replace("_", " ")?.replaceFirstChar { it.uppercase() } ?: "Sport",
+                                            fontSize = 11.sp,
+                                            fontWeight = FontWeight.SemiBold,
+                                            color = Color.White,
+                                        )
+                                    }
+                                    val statusColor = if (party?.status == "active" || party?.status == "ready") Color(0xFF4CAF50) else Color(0xFFFF9800)
+                                    Box(
+                                        modifier = Modifier
+                                            .clip(RoundedCornerShape(6.dp))
+                                            .background(statusColor)
+                                            .padding(horizontal = 10.dp, vertical = 4.dp),
+                                    ) {
+                                        Text(
+                                            (party?.status ?: "forming").replaceFirstChar { it.uppercase() },
+                                            fontSize = 11.sp,
+                                            fontWeight = FontWeight.SemiBold,
+                                            color = Color.White,
+                                        )
+                                    }
+                                }
                                 Text(
-                                    text = "No members yet. Invite your friends!",
-                                    style = MaterialTheme.typography.bodyMedium,
-                                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                                    party?.name ?: "Party",
+                                    fontSize = 22.sp,
+                                    fontWeight = FontWeight.ExtraBold,
+                                    color = Color.White,
+                                    modifier = Modifier.padding(bottom = 4.dp),
+                                )
+                                Text(
+                                    "Led by ${party?.leaderName ?: "Unknown"} • ${party?.members?.size ?: 0} members",
+                                    fontSize = 13.sp,
+                                    color = Color.White.copy(alpha = 0.8f),
                                 )
                             }
                         }
                     }
 
-                    // Error message (non-fatal)
-                    if (uiState.error != null) {
+                    // ── Stats row
+                    item {
+                        Row(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(horizontal = 16.dp)
+                                .padding(bottom = 16.dp),
+                            horizontalArrangement = Arrangement.spacedBy(8.dp),
+                        ) {
+                            listOf(
+                                "${party?.members?.size ?: 0}/8" to "Members",
+                                (if (uiState.partyMatch != null) "1" else "0") to "Matches",
+                                (party?.status?.replaceFirstChar { it.uppercase() } ?: "—") to "Status",
+                            ).forEach { (value, label) ->
+                                Column(
+                                    modifier = Modifier
+                                        .weight(1f)
+                                        .clip(RoundedCornerShape(12.dp))
+                                        .background(DarkSurface)
+                                        .padding(vertical = 12.dp),
+                                    horizontalAlignment = Alignment.CenterHorizontally,
+                                ) {
+                                    Text(value, fontSize = 18.sp, fontWeight = FontWeight.ExtraBold, color = DarkTextPrimary)
+                                    Text(label, fontSize = 10.sp, color = DarkTextSecondary, modifier = Modifier.padding(top = 2.dp))
+                                }
+                            }
+                        }
+                    }
+
+                    // ── Action buttons
+                    item {
+                        Row(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(horizontal = 16.dp)
+                                .padding(bottom = 16.dp),
+                            horizontalArrangement = Arrangement.spacedBy(8.dp),
+                        ) {
+                            // Find Match
+                            Box(
+                                modifier = Modifier
+                                    .weight(1f)
+                                    .clip(RoundedCornerShape(12.dp))
+                                    .background(Color(0xFFFF9800))
+                                    .clickable(enabled = uiState.isLeader) { onFindMatch() }
+                                    .padding(vertical = 12.dp),
+                                contentAlignment = Alignment.Center,
+                            ) {
+                                Text("🔍 Find Match", fontSize = 13.sp, fontWeight = FontWeight.SemiBold, color = Color.Black)
+                            }
+                            // Invite
+                            Box(
+                                modifier = Modifier
+                                    .weight(1f)
+                                    .clip(RoundedCornerShape(12.dp))
+                                    .background(DarkSurface)
+                                    .clickable(enabled = uiState.isLeader) {
+                                        party?.let { onInviteFriends(it.id) }
+                                    }
+                                    .padding(vertical = 12.dp),
+                                contentAlignment = Alignment.Center,
+                            ) {
+                                Text("👥 Invite", fontSize = 13.sp, fontWeight = FontWeight.SemiBold, color = DarkTextPrimary)
+                            }
+                            // Chat
+                            Box(
+                                modifier = Modifier
+                                    .weight(1f)
+                                    .clip(RoundedCornerShape(12.dp))
+                                    .background(Color.Transparent)
+                                    .then(
+                                        Modifier.background(
+                                            Color.Transparent,
+                                        ),
+                                    )
+                                    .clickable { }
+                                    .padding(vertical = 11.dp),
+                                contentAlignment = Alignment.Center,
+                            ) {
+                                Box(
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .clip(RoundedCornerShape(12.dp))
+                                        .background(DarkSurface),
+                                    contentAlignment = Alignment.Center,
+                                ) {
+                                    Text("💬 Chat", fontSize = 13.sp, fontWeight = FontWeight.SemiBold, color = DarkTextSecondary, modifier = Modifier.padding(vertical = 12.dp))
+                                }
+                            }
+                        }
+                    }
+
+                    // ── Invite accept/decline for invited members
+                    if (uiState.isInvitedMember) {
                         item {
+                            Row(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .padding(horizontal = 16.dp)
+                                    .padding(bottom = 16.dp),
+                                horizontalArrangement = Arrangement.spacedBy(8.dp),
+                            ) {
+                                Box(
+                                    modifier = Modifier
+                                        .weight(1f)
+                                        .clip(RoundedCornerShape(12.dp))
+                                        .background(GreenAccent)
+                                        .clickable(enabled = !uiState.isActioning) { viewModel.respondToInvite(true) }
+                                        .padding(vertical = 14.dp),
+                                    contentAlignment = Alignment.Center,
+                                ) {
+                                    Text("✓ Accept", fontSize = 14.sp, fontWeight = FontWeight.Bold, color = Color.White)
+                                }
+                                Box(
+                                    modifier = Modifier
+                                        .weight(1f)
+                                        .clip(RoundedCornerShape(12.dp))
+                                        .background(DarkSurface)
+                                        .clickable(enabled = !uiState.isActioning) { viewModel.respondToInvite(false) }
+                                        .padding(vertical = 14.dp),
+                                    contentAlignment = Alignment.Center,
+                                ) {
+                                    Text("✕ Decline", fontSize = 14.sp, fontWeight = FontWeight.SemiBold, color = DarkTextSecondary)
+                                }
+                            }
+                        }
+                    }
+
+                    // ── Members section
+                    item {
+                        Row(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(horizontal = 16.dp)
+                                .padding(bottom = 10.dp),
+                            horizontalArrangement = Arrangement.SpaceBetween,
+                            verticalAlignment = Alignment.CenterVertically,
+                        ) {
                             Text(
-                                text = uiState.error!!,
-                                color = MaterialTheme.colorScheme.error,
-                                style = MaterialTheme.typography.bodySmall
+                                "Members (${party?.members?.size ?: 0}/8)",
+                                fontSize = 16.sp,
+                                fontWeight = FontWeight.Bold,
+                                color = DarkTextPrimary,
+                            )
+                            Text(
+                                "Invite +",
+                                fontSize = 13.sp,
+                                color = GreenAccent,
+                                modifier = Modifier.clickable(enabled = uiState.isLeader) {
+                                    party?.let { onInviteFriends(it.id) }
+                                },
                             )
                         }
                     }
 
-                    // Action buttons
+                    val members = party?.members ?: emptyList()
+                    if (members.isEmpty()) {
+                        item {
+                            Box(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .padding(horizontal = 16.dp)
+                                    .clip(RoundedCornerShape(10.dp))
+                                    .background(DarkSurface)
+                                    .padding(20.dp),
+                                contentAlignment = Alignment.Center,
+                            ) {
+                                Text("No members yet", fontSize = 13.sp, color = DarkTextSecondary)
+                            }
+                        }
+                    } else {
+                        items(members, key = { it.id }) { member ->
+                            MemberRow(
+                                member = member,
+                                isLeader = member.userId == party?.leaderId,
+                                isCurrentUser = member.userId == uiState.currentUserId,
+                            )
+                        }
+                    }
+
+                    // ── Upcoming Matches section
                     item {
-                        Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                            // Invited member: accept / decline
-                            if (uiState.isInvitedMember) {
-                                Row(
-                                    modifier = Modifier.fillMaxWidth(),
-                                    horizontalArrangement = Arrangement.spacedBy(8.dp)
-                                ) {
-                                    Button(
-                                        onClick = { viewModel.respondToInvite(true) },
-                                        enabled = !uiState.isActioning,
-                                        modifier = Modifier.weight(1f)
-                                    ) {
-                                        Icon(Icons.Default.Check, null)
-                                        Spacer(modifier = Modifier.width(4.dp))
-                                        Text("Accept")
-                                    }
-                                    OutlinedButton(
-                                        onClick = { viewModel.respondToInvite(false) },
-                                        enabled = !uiState.isActioning,
-                                        modifier = Modifier.weight(1f)
-                                    ) {
-                                        Icon(Icons.Default.Close, null)
-                                        Spacer(modifier = Modifier.width(4.dp))
-                                        Text("Decline")
-                                    }
-                                }
-                            }
+                        Spacer(modifier = Modifier.height(8.dp))
+                        Row(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(horizontal = 16.dp)
+                                .padding(bottom = 10.dp),
+                            horizontalArrangement = Arrangement.SpaceBetween,
+                            verticalAlignment = Alignment.CenterVertically,
+                        ) {
+                            Text("Upcoming Matches", fontSize = 16.sp, fontWeight = FontWeight.Bold, color = DarkTextPrimary)
+                            Text("See All", fontSize = 13.sp, color = GreenAccent)
+                        }
+                    }
 
-                            // Leader: invite friends button (status == forming)
-                            if (uiState.isLeader && party.status == "forming") {
-                                FilledTonalButton(
-                                    onClick = { onInviteFriends(party.id) },
-                                    modifier = Modifier.fillMaxWidth()
+                    item {
+                        val partyMatch = uiState.partyMatch
+                        if (partyMatch != null) {
+                            Row(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .padding(horizontal = 16.dp)
+                                    .clip(RoundedCornerShape(12.dp))
+                                    .background(Color(0xFF1B3A1E))
+                                    .clickable { onMatchClick(partyMatch.id) }
+                                    .padding(14.dp),
+                                verticalAlignment = Alignment.CenterVertically,
+                                horizontalArrangement = Arrangement.spacedBy(12.dp),
+                            ) {
+                                Box(
+                                    modifier = Modifier
+                                        .size(44.dp)
+                                        .clip(RoundedCornerShape(10.dp))
+                                        .background(GreenAccent.copy(alpha = 0.2f)),
+                                    contentAlignment = Alignment.Center,
                                 ) {
-                                    Icon(Icons.Default.PersonAdd, null)
-                                    Spacer(modifier = Modifier.width(4.dp))
-                                    Text("Invite Friends")
+                                    Text("⚽", fontSize = 22.sp)
                                 }
+                                Column(modifier = Modifier.weight(1f)) {
+                                    Text(
+                                        partyMatch.title,
+                                        fontSize = 14.sp,
+                                        fontWeight = FontWeight.Bold,
+                                        color = DarkTextPrimary,
+                                    )
+                                    Text(
+                                        "${partyMatch.matchDate} • ${partyMatch.startTime}" +
+                                            if (partyMatch.locationName != null) " • ${partyMatch.locationName}" else "",
+                                        fontSize = 12.sp,
+                                        color = DarkTextSecondary,
+                                    )
+                                }
+                                Text(
+                                    partyMatch.status.name,
+                                    fontSize = 11.sp,
+                                    fontWeight = FontWeight.SemiBold,
+                                    color = GreenAccent,
+                                )
                             }
-
-                            // Leader: find match button (status == ready)
-                            if (uiState.isLeader && party.status == "ready") {
-                                Button(
-                                    onClick = onFindMatch,
-                                    modifier = Modifier.fillMaxWidth()
-                                ) {
-                                    Icon(Icons.Default.Search, null)
-                                    Spacer(modifier = Modifier.width(4.dp))
-                                    Text("Find a Match")
-                                }
-                            }
-
-                            // Leader: disband button
-                            if (uiState.isLeader) {
-                                TextButton(
-                                    onClick = viewModel::disbandParty,
-                                    enabled = !uiState.isActioning,
-                                    modifier = Modifier.fillMaxWidth()
-                                ) {
-                                    if (uiState.isActioning) {
-                                        CircularProgressIndicator(
-                                            strokeWidth = 2.dp,
-                                            modifier = Modifier.size(16.dp)
-                                        )
-                                    } else {
-                                        Text(
-                                            text = "Disband Party",
-                                            color = MaterialTheme.colorScheme.error
-                                        )
-                                    }
-                                }
+                        } else {
+                            Box(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .padding(horizontal = 16.dp)
+                                    .clip(RoundedCornerShape(10.dp))
+                                    .background(DarkSurface)
+                                    .padding(20.dp),
+                                contentAlignment = Alignment.Center,
+                            ) {
+                                Text("No upcoming matches", fontSize = 13.sp, color = DarkTextSecondary)
                             }
                         }
                     }
 
-                    item { Spacer(modifier = Modifier.height(16.dp)) }
+                    // ── Party Record
+                    item {
+                        Spacer(modifier = Modifier.height(8.dp))
+                        Text(
+                            "Record",
+                            fontSize = 16.sp,
+                            fontWeight = FontWeight.Bold,
+                            color = DarkTextPrimary,
+                            modifier = Modifier.padding(horizontal = 16.dp, vertical = 6.dp),
+                        )
+                        Row(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(horizontal = 16.dp)
+                                .clip(RoundedCornerShape(12.dp))
+                                .background(DarkSurface)
+                                .padding(16.dp),
+                            horizontalArrangement = Arrangement.SpaceEvenly,
+                        ) {
+                            val memberCount = party?.members?.filter { it.status == "accepted" }?.size ?: 0
+                            val matchCount = if (uiState.partyMatch != null) 1 else 0
+                            Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                                Text("$memberCount", fontSize = 22.sp, fontWeight = FontWeight.Bold, color = GreenAccent)
+                                Text("Members", fontSize = 11.sp, color = DarkTextSecondary)
+                            }
+                            Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                                Text("$matchCount", fontSize = 22.sp, fontWeight = FontWeight.Bold, color = GreenAccent)
+                                Text("Matches", fontSize = 11.sp, color = DarkTextSecondary)
+                            }
+                            Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                                Text("—", fontSize = 22.sp, fontWeight = FontWeight.Bold, color = DarkTextSecondary)
+                                Text("W/L", fontSize = 11.sp, color = DarkTextSecondary)
+                            }
+                        }
+                    }
+
+                    // ── Chat preview
+                    item {
+                        Spacer(modifier = Modifier.height(8.dp))
+                        Row(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(horizontal = 16.dp)
+                                .padding(bottom = 10.dp),
+                        ) {
+                            Text("Party Chat", fontSize = 16.sp, fontWeight = FontWeight.Bold, color = DarkTextPrimary)
+                        }
+                        Column(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(horizontal = 16.dp)
+                                .clip(RoundedCornerShape(12.dp))
+                                .background(DarkSurface)
+                                .padding(14.dp),
+                            verticalArrangement = Arrangement.spacedBy(8.dp),
+                        ) {
+                            Box(
+                                modifier = Modifier.fillMaxWidth(),
+                                contentAlignment = Alignment.Center,
+                            ) {
+                                Text("No messages yet", fontSize = 13.sp, color = DarkTextSecondary)
+                            }
+                            Box(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .clickable { }
+                                    .padding(top = 4.dp),
+                                contentAlignment = Alignment.Center,
+                            ) {
+                                Text("Open Chat →", fontSize = 13.sp, fontWeight = FontWeight.SemiBold, color = Color(0xFFFF9800))
+                            }
+                        }
+                    }
+
+                    // ── Disband button (leader only)
+                    if (uiState.isLeader) {
+                        item {
+                            Spacer(modifier = Modifier.height(12.dp))
+                            Box(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .padding(horizontal = 16.dp)
+                                    .clip(RoundedCornerShape(12.dp))
+                                    .background(Color(0xFFEF5350).copy(alpha = 0.1f))
+                                    .clickable(enabled = !uiState.isActioning) { viewModel.disbandParty() }
+                                    .padding(vertical = 14.dp),
+                                contentAlignment = Alignment.Center,
+                            ) {
+                                Text(
+                                    if (uiState.isActioning) "Disbanding..." else "Disband Party",
+                                    fontSize = 14.sp,
+                                    fontWeight = FontWeight.SemiBold,
+                                    color = Color(0xFFEF5350),
+                                )
+                            }
+                        }
+                    }
+
+                    item { Spacer(modifier = Modifier.height(32.dp)) }
                 }
             }
         }
+
+        SnackbarHost(hostState = snackbarHostState, modifier = Modifier.align(Alignment.BottomCenter))
     }
 }
 
+// ── Member row ────────────────────────────────────────────────────────────────
+
 @Composable
-private fun PartyStatusChip(status: String) {
-    val (label, containerColor, contentColor) = when (status) {
-        "forming" -> Triple(
-            "Forming",
-            MaterialTheme.colorScheme.secondaryContainer,
-            MaterialTheme.colorScheme.onSecondaryContainer
-        )
-        "ready" -> Triple(
-            "Ready",
-            MaterialTheme.colorScheme.primaryContainer,
-            MaterialTheme.colorScheme.onPrimaryContainer
-        )
-        "in_match" -> Triple(
-            "In Match",
-            MaterialTheme.colorScheme.tertiaryContainer,
-            MaterialTheme.colorScheme.onTertiaryContainer
-        )
-        "disbanded" -> Triple(
-            "Disbanded",
-            MaterialTheme.colorScheme.errorContainer,
-            MaterialTheme.colorScheme.onErrorContainer
-        )
-        else -> Triple(
-            status.replaceFirstChar { it.uppercase() },
-            MaterialTheme.colorScheme.surfaceVariant,
-            MaterialTheme.colorScheme.onSurfaceVariant
-        )
-    }
-    Box(
+private fun MemberRow(member: PartyMember, isLeader: Boolean, isCurrentUser: Boolean) {
+    val avatarColor = memberAvatarColor(member.userId)
+    val initial = member.userName?.firstOrNull()?.uppercaseChar()?.toString() ?: "?"
+
+    Row(
         modifier = Modifier
-            .clip(MaterialTheme.shapes.small)
-            .background(containerColor)
-            .padding(horizontal = 8.dp, vertical = 4.dp)
+            .fillMaxWidth()
+            .padding(horizontal = 16.dp)
+            .padding(bottom = 8.dp)
+            .clip(RoundedCornerShape(10.dp))
+            .background(DarkSurface)
+            .padding(horizontal = 12.dp, vertical = 10.dp),
+        verticalAlignment = Alignment.CenterVertically,
     ) {
-        Text(text = label, style = MaterialTheme.typography.labelSmall, color = contentColor)
-    }
-}
-
-@Composable
-private fun PartyMemberCard(
-    member: PartyMember,
-    modifier: Modifier = Modifier
-) {
-    Card(
-        modifier = modifier.fillMaxWidth(),
-        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
-        elevation = CardDefaults.cardElevation(defaultElevation = 1.dp)
-    ) {
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(12.dp),
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.spacedBy(12.dp)
-        ) {
-            PartyMemberAvatar(photoUrl = member.userPhotoUrl)
-            Column(modifier = Modifier.weight(1f)) {
-                Text(
-                    text = member.userName ?: "Unknown Player",
-                    style = MaterialTheme.typography.bodyLarge.copy(fontWeight = FontWeight.Medium)
-                )
-                Text(
-                    text = member.status.replaceFirstChar { it.uppercase() },
-                    style = MaterialTheme.typography.bodySmall,
-                    color = when (member.status) {
-                        "accepted" -> MaterialTheme.colorScheme.primary
-                        "declined" -> MaterialTheme.colorScheme.error
-                        else -> MaterialTheme.colorScheme.onSurfaceVariant
-                    }
-                )
+        Box(modifier = Modifier.size(40.dp)) {
+            Box(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .clip(CircleShape)
+                    .background(avatarColor),
+                contentAlignment = Alignment.Center,
+            ) {
+                Text(initial, fontSize = 14.sp, fontWeight = FontWeight.Bold, color = Color.White)
             }
-            MemberStatusIcon(status = member.status)
-        }
-    }
-}
-
-@Composable
-private fun PartyMemberAvatar(
-    photoUrl: String?,
-    modifier: Modifier = Modifier
-) {
-    if (!photoUrl.isNullOrBlank()) {
-        AsyncImage(
-            model = photoUrl,
-            contentDescription = "Member avatar",
-            modifier = modifier
-                .size(40.dp)
-                .clip(CircleShape),
-            contentScale = ContentScale.Crop
-        )
-    } else {
-        Box(
-            modifier = modifier
-                .size(40.dp)
-                .clip(CircleShape)
-                .background(MaterialTheme.colorScheme.primaryContainer),
-            contentAlignment = Alignment.Center
-        ) {
-            Icon(
-                imageVector = Icons.Default.Person,
-                contentDescription = null,
-                modifier = Modifier.size(22.dp),
-                tint = MaterialTheme.colorScheme.onPrimaryContainer
+            // Online dot
+            val isOnline = member.status == "accepted"
+            Box(
+                modifier = Modifier
+                    .size(12.dp)
+                    .clip(CircleShape)
+                    .background(if (isOnline) Color(0xFF4CAF50) else Color(0xFF555555))
+                    .align(Alignment.BottomEnd),
             )
         }
+        Spacer(modifier = Modifier.width(12.dp))
+        Column(modifier = Modifier.weight(1f)) {
+            Text(member.userName ?: "Unknown", fontSize = 14.sp, fontWeight = FontWeight.SemiBold, color = DarkTextPrimary)
+            Text(
+                when (member.status) {
+                    "accepted" -> "Online"
+                    "invited" -> "Invited"
+                    "declined" -> "Declined"
+                    else -> member.status
+                },
+                fontSize = 11.sp,
+                color = DarkTextSecondary,
+            )
+        }
+        when {
+            isLeader -> {
+                Box(
+                    modifier = Modifier
+                        .clip(RoundedCornerShape(6.dp))
+                        .background(Color(0xFFFFA726))
+                        .padding(horizontal = 8.dp, vertical = 3.dp),
+                ) { Text("LEADER", fontSize = 10.sp, fontWeight = FontWeight.Bold, color = Color.Black) }
+            }
+            isCurrentUser -> {
+                Box(
+                    modifier = Modifier
+                        .clip(RoundedCornerShape(6.dp))
+                        .background(GreenAccent)
+                        .padding(horizontal = 8.dp, vertical = 3.dp),
+                ) { Text("YOU", fontSize = 10.sp, fontWeight = FontWeight.Bold, color = Color.White) }
+            }
+        }
     }
 }
 
-@Composable
-private fun MemberStatusIcon(status: String) {
-    when (status) {
-        "accepted" -> Icon(
-            Icons.Default.Check,
-            contentDescription = "Accepted",
-            tint = MaterialTheme.colorScheme.primary,
-            modifier = Modifier.size(20.dp)
-        )
-        "declined" -> Icon(
-            Icons.Default.Close,
-            contentDescription = "Declined",
-            tint = MaterialTheme.colorScheme.error,
-            modifier = Modifier.size(20.dp)
-        )
-        else -> Icon(
-            Icons.Default.Groups,
-            contentDescription = "Invited",
-            tint = MaterialTheme.colorScheme.onSurfaceVariant,
-            modifier = Modifier.size(20.dp)
-        )
-    }
+
+// ── Helpers ───────────────────────────────────────────────────────────────────
+
+private fun memberAvatarColor(userId: Long): Color {
+    val colors = listOf(
+        Color(0xFFFFA726), Color(0xFF4CAF50), Color(0xFF2196F3),
+        Color(0xFFE91E63), Color(0xFF9C27B0), Color(0xFF00BCD4),
+    )
+    return colors[(userId % colors.size).toInt()]
 }
 
-@Preview(showBackground = true)
+private fun partySportEmoji(sport: String?): String = when (sport?.uppercase()) {
+    "BASKETBALL" -> "🏀"
+    "FOOTBALL" -> "⚽"
+    "TENNIS" -> "🎾"
+    "VOLLEYBALL" -> "🏐"
+    "PADDLE" -> "🎾"
+    else -> "🏅"
+}
+
+
+// ── Preview ───────────────────────────────────────────────────────────────────
+
+@Preview(showBackground = true, backgroundColor = 0xFF121212)
 @Composable
 private fun PartyDetailScreenPreview() {
-    MaterialTheme {
-        Box(modifier = Modifier.fillMaxSize().padding(16.dp)) {
-            Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                Text("The Dream Team", style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold)
-                Text("Football", color = MaterialTheme.colorScheme.primary)
-                Text("Led by Alex", style = MaterialTheme.typography.bodySmall)
-                Spacer(modifier = Modifier.height(16.dp))
-                PartyMemberCard(
-                    member = PartyMember(
-                        id = 1, userId = 10, userName = "Alex Johnson",
-                        status = "accepted"
-                    )
-                )
-                PartyMemberCard(
-                    member = PartyMember(
-                        id = 2, userId = 11, userName = "Maria Garcia",
-                        status = "invited"
-                    )
-                )
+    val previewMembers = listOf(
+        PartyMember(1L, 10L, "Stefan M.", null, "accepted"),
+        PartyMember(2L, 11L, "Bojan B.", null, "accepted"),
+        PartyMember(3L, 12L, "Marko T.", null, "invited"),
+    )
+    Box(
+            modifier = Modifier
+                .fillMaxSize()
+                .background(DarkBg),
+        ) {
+            LazyColumn(modifier = Modifier.fillMaxSize()) {
+                item {
+                    Box(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(horizontal = 16.dp, vertical = 16.dp)
+                            .clip(RoundedCornerShape(16.dp))
+                            .background(Brush.linearGradient(listOf(Color(0xFFE65100), Color(0xFFFF9800))))
+                            .padding(20.dp),
+                    ) {
+                        Column {
+                            Text("🏀 Basketball • Active", fontSize = 13.sp, color = Color.White.copy(alpha = 0.8f))
+                            Text("Skopje Ballers", fontSize = 22.sp, fontWeight = FontWeight.ExtraBold, color = Color.White)
+                        }
+                    }
+                }
+                items(previewMembers) { member ->
+                    MemberRow(member = member, isLeader = member.userId == 10L, isCurrentUser = member.userId == 11L)
+                }
             }
         }
-    }
-}
-
-@Preview(showBackground = true)
-@Composable
-private fun PartyMemberCardPreview() {
-    MaterialTheme {
-        PartyMemberCard(
-            member = PartyMember(
-                id = 1, userId = 42,
-                userName = "Jordan Williams",
-                status = "declined"
-            )
-        )
-    }
 }

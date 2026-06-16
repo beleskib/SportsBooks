@@ -35,24 +35,15 @@ import androidx.compose.material.icons.filled.LocationOn
 import androidx.compose.material.icons.filled.Remove
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material.icons.filled.SportsTennis
-import androidx.compose.material3.Button
-import androidx.compose.material3.ButtonDefaults
-import androidx.compose.material3.Card
-import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
-import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.OutlinedTextFieldDefaults
-import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
-import androidx.compose.material3.TopAppBar
-import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -63,11 +54,13 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
@@ -82,13 +75,13 @@ import com.example.sportsbook.ui.common.toDisplayDate
 import com.example.sportsbook.ui.common.toDisplayTime
 import com.example.sportsbook.ui.navigation.Route
 import com.example.sportsbook.ui.theme.CoralRed
-import com.example.sportsbook.ui.theme.TextSecondary
-import com.example.sportsbook.ui.theme.LightBg
-import com.example.sportsbook.ui.theme.CardWhite
-import com.example.sportsbook.ui.theme.NavBarBg
+import com.example.sportsbook.ui.theme.DarkBorder
+import com.example.sportsbook.ui.theme.DarkTextSecondary
+import com.example.sportsbook.ui.theme.DarkBg
+import com.example.sportsbook.ui.theme.DarkSurface
 import com.example.sportsbook.ui.theme.SportGreen
-import com.example.sportsbook.ui.theme.GoldAccent
-import com.example.sportsbook.ui.theme.TextPrimary
+import com.example.sportsbook.ui.theme.GreenAccent
+import com.example.sportsbook.ui.theme.DarkTextPrimary
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -308,138 +301,161 @@ fun CreateVenueBookingLobbyScreen(
     }
 
     val fieldColors = OutlinedTextFieldDefaults.colors(
-        focusedBorderColor = GoldAccent,
-        unfocusedBorderColor = TextPrimary.copy(alpha = 0.3f),
-        focusedLabelColor = GoldAccent,
-        unfocusedLabelColor = TextPrimary.copy(alpha = 0.6f),
-        focusedTextColor = TextPrimary,
-        unfocusedTextColor = TextPrimary,
-        cursorColor = GoldAccent
+        focusedBorderColor = GreenAccent,
+        unfocusedBorderColor = DarkBorder,
+        focusedLabelColor = GreenAccent,
+        unfocusedLabelColor = DarkTextSecondary,
+        focusedTextColor = DarkTextPrimary,
+        unfocusedTextColor = DarkTextPrimary,
+        cursorColor = GreenAccent
     )
 
-    Scaffold(
-        containerColor = NavBarBg,
-        snackbarHost = { SnackbarHost(hostState = snackbarHostState) },
-        topBar = {
-            TopAppBar(
-                title = { Text("Create Venue Lobby", color = TextPrimary) },
-                navigationIcon = {
-                    IconButton(onClick = onBack) {
-                        Icon(
-                            imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                            contentDescription = "Back",
-                            tint = TextPrimary
-                        )
-                    }
-                },
-                colors = TopAppBarDefaults.topAppBarColors(containerColor = CardWhite)
-            )
-        }
-    ) { paddingValues ->
-        Column(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(paddingValues)
-                .verticalScroll(rememberScrollState())
-                .imePadding()
-                .padding(horizontal = 16.dp, vertical = 16.dp),
-            verticalArrangement = Arrangement.spacedBy(16.dp)
-        ) {
-            // Step 1: Venue Selection
-            VenueSelectionCard(
-                selectedVenue = uiState.selectedVenue,
-                isLoading = uiState.isLoadingVenues,
-                onPickVenue = { showVenuePicker = true },
-                onClearVenue = viewModel::clearVenue
-            )
-
-            // Step 2: Time Slot Selection (only when venue selected)
-            if (uiState.selectedVenue != null) {
-                DateSelector(
-                    selectedDate = uiState.selectedDate,
-                    onDateSelected = viewModel::onDateSelected
-                )
-
-                TimeSlotGrid(
-                    slots = uiState.availableSlots,
-                    selectedSlot = uiState.selectedTimeSlot,
-                    isLoading = uiState.isLoadingSlots,
-                    onSlotSelected = viewModel::selectTimeSlot,
-                    venuePricePerHour = uiState.selectedVenue?.pricePerHour ?: 0.0
-                )
+    Box(
+        modifier = Modifier
+            .fillMaxSize()
+            .background(DarkBg)
+    ) {
+        Column(modifier = Modifier.fillMaxSize()) {
+            // ── Header ───────────────────────────────────────────────────
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .background(DarkSurface)
+                    .padding(horizontal = 16.dp, vertical = 12.dp),
+                verticalAlignment = Alignment.CenterVertically,
+            ) {
+                Box(
+                    modifier = Modifier
+                        .size(40.dp)
+                        .clip(CircleShape)
+                        .background(DarkBg)
+                        .clickable(onClick = onBack),
+                    contentAlignment = Alignment.Center,
+                ) {
+                    Icon(Icons.AutoMirrored.Filled.ArrowBack, "Back", tint = DarkTextPrimary, modifier = Modifier.size(20.dp))
+                }
+                Spacer(modifier = Modifier.width(12.dp))
+                Text("Create Venue Lobby", fontSize = 18.sp, fontWeight = FontWeight.Bold, color = DarkTextPrimary)
             }
 
-            // Step 3: Lobby Details (only when time slot selected)
-            if (uiState.selectedTimeSlot != null) {
-                // Title field
-                OutlinedTextField(
-                    value = uiState.title,
-                    onValueChange = viewModel::onTitleChange,
-                    label = { Text("Lobby Title *") },
-                    modifier = Modifier.fillMaxWidth(),
-                    colors = fieldColors,
-                    singleLine = true
+            // ── Content ──────────────────────────────────────────────────
+            Column(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .verticalScroll(rememberScrollState())
+                    .imePadding()
+                    .padding(horizontal = 16.dp, vertical = 16.dp),
+                verticalArrangement = Arrangement.spacedBy(16.dp)
+            ) {
+                // Step 1: Venue Selection
+                VenueSelectionCard(
+                    selectedVenue = uiState.selectedVenue,
+                    isLoading = uiState.isLoadingVenues,
+                    onPickVenue = { showVenuePicker = true },
+                    onClearVenue = viewModel::clearVenue
                 )
 
-                // Payment type selector
-                PaymentTypeSelector(
-                    selectedType = uiState.paymentType,
-                    onTypeSelected = viewModel::onPaymentTypeChange
-                )
+                // Step 2: Time Slot Selection (only when venue selected)
+                if (uiState.selectedVenue != null) {
+                    DateSelector(
+                        selectedDate = uiState.selectedDate,
+                        onDateSelected = viewModel::onDateSelected
+                    )
 
-                // Player count picker
-                PlayerCountPicker(
-                    count = uiState.maxPlayers,
-                    onIncrease = viewModel::onMaxPlayersIncrease,
-                    onDecrease = viewModel::onMaxPlayersDecrease
-                )
-
-                // Price breakdown
-                if (uiState.totalPrice > 0) {
-                    PriceBreakdownCard(
-                        totalPrice = uiState.totalPrice,
-                        maxPlayers = uiState.maxPlayers,
-                        paymentType = uiState.paymentType,
-                        pricePerPlayer = uiState.pricePerPlayer
+                    TimeSlotGrid(
+                        slots = uiState.availableSlots,
+                        selectedSlot = uiState.selectedTimeSlot,
+                        isLoading = uiState.isLoadingSlots,
+                        onSlotSelected = viewModel::selectTimeSlot,
+                        venuePricePerHour = uiState.selectedVenue?.pricePerHour ?: 0.0
                     )
                 }
 
-                // Description
-                OutlinedTextField(
-                    value = uiState.description,
-                    onValueChange = viewModel::onDescriptionChange,
-                    label = { Text("Description (optional)") },
-                    modifier = Modifier.fillMaxWidth(),
-                    colors = fieldColors,
-                    minLines = 2,
-                    maxLines = 4
-                )
+                // Step 3: Lobby Details (only when time slot selected)
+                if (uiState.selectedTimeSlot != null) {
+                    // Title field
+                    OutlinedTextField(
+                        value = uiState.title,
+                        onValueChange = viewModel::onTitleChange,
+                        label = { Text("Lobby Title *") },
+                        modifier = Modifier.fillMaxWidth(),
+                        colors = fieldColors,
+                        singleLine = true
+                    )
 
-                Spacer(modifier = Modifier.height(4.dp))
+                    // Payment type selector
+                    PaymentTypeSelector(
+                        selectedType = uiState.paymentType,
+                        onTypeSelected = viewModel::onPaymentTypeChange
+                    )
 
-                Button(
-                    onClick = viewModel::createLobby,
-                    modifier = Modifier.fillMaxWidth(),
-                    enabled = uiState.isValid && !uiState.isCreating,
-                    colors = ButtonDefaults.buttonColors(containerColor = GoldAccent),
-                    shape = RoundedCornerShape(8.dp)
-                ) {
-                    if (uiState.isCreating) {
-                        CircularProgressIndicator(
-                            color = NavBarBg,
-                            modifier = Modifier.size(20.dp)
+                    // Player count picker
+                    PlayerCountPicker(
+                        count = uiState.maxPlayers,
+                        onIncrease = viewModel::onMaxPlayersIncrease,
+                        onDecrease = viewModel::onMaxPlayersDecrease
+                    )
+
+                    // Price breakdown
+                    if (uiState.totalPrice > 0) {
+                        PriceBreakdownCard(
+                            totalPrice = uiState.totalPrice,
+                            maxPlayers = uiState.maxPlayers,
+                            paymentType = uiState.paymentType,
+                            pricePerPlayer = uiState.pricePerPlayer
                         )
-                    } else {
-                        Text(
-                            text = "Create Lobby",
-                            color = NavBarBg,
-                            fontWeight = FontWeight.SemiBold,
-                            style = MaterialTheme.typography.labelLarge
-                        )
+                    }
+
+                    // Description
+                    OutlinedTextField(
+                        value = uiState.description,
+                        onValueChange = viewModel::onDescriptionChange,
+                        label = { Text("Description (optional)") },
+                        modifier = Modifier.fillMaxWidth(),
+                        colors = fieldColors,
+                        minLines = 2,
+                        maxLines = 4
+                    )
+
+                    Spacer(modifier = Modifier.height(4.dp))
+
+                    Box(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .clip(RoundedCornerShape(14.dp))
+                            .background(
+                                if (uiState.isValid && !uiState.isCreating) GreenAccent
+                                else Color(0xFF2A3D2B)
+                            )
+                            .clickable(enabled = uiState.isValid && !uiState.isCreating) {
+                                viewModel.createLobby()
+                            }
+                            .padding(vertical = 16.dp),
+                        contentAlignment = Alignment.Center,
+                    ) {
+                        if (uiState.isCreating) {
+                            CircularProgressIndicator(
+                                color = Color.White,
+                                modifier = Modifier.size(20.dp)
+                            )
+                        } else {
+                            Text(
+                                text = "Create Lobby",
+                                color = Color.White,
+                                fontWeight = FontWeight.Bold,
+                                fontSize = 16.sp
+                            )
+                        }
                     }
                 }
             }
         }
+
+        // ── Snackbar ─────────────────────────────────────────────────────
+        SnackbarHost(
+            hostState = snackbarHostState,
+            modifier = Modifier.align(Alignment.BottomCenter)
+        )
     }
 
     // Venue Picker Bottom Sheet
@@ -467,79 +483,92 @@ private fun VenueSelectionCard(
     onPickVenue: () -> Unit,
     onClearVenue: () -> Unit
 ) {
-    Card(
-        modifier = Modifier.fillMaxWidth(),
-        colors = CardDefaults.cardColors(containerColor = CardWhite),
-        shape = RoundedCornerShape(12.dp)
+    Column(
+        modifier = Modifier
+            .fillMaxWidth()
+            .clip(RoundedCornerShape(12.dp))
+            .background(DarkSurface)
+            .border(1.dp, DarkBorder, RoundedCornerShape(12.dp))
+            .padding(16.dp)
     ) {
-        Column(modifier = Modifier.padding(16.dp)) {
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                Text(
-                    text = "Venue",
-                    style = MaterialTheme.typography.titleSmall,
-                    color = GoldAccent,
-                    fontWeight = FontWeight.SemiBold
-                )
-                if (selectedVenue != null) {
-                    IconButton(onClick = onClearVenue, modifier = Modifier.size(28.dp)) {
-                        Icon(
-                            Icons.Default.Close,
-                            contentDescription = "Change venue",
-                            tint = TextPrimary.copy(alpha = 0.6f),
-                            modifier = Modifier.size(18.dp)
-                        )
-                    }
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Text(
+                text = "Venue",
+                fontSize = 14.sp,
+                color = GreenAccent,
+                fontWeight = FontWeight.SemiBold
+            )
+            if (selectedVenue != null) {
+                Box(
+                    modifier = Modifier
+                        .size(28.dp)
+                        .clip(CircleShape)
+                        .background(DarkBg)
+                        .clickable(onClick = onClearVenue),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Icon(
+                        Icons.Default.Close,
+                        contentDescription = "Change venue",
+                        tint = DarkTextPrimary.copy(alpha = 0.6f),
+                        modifier = Modifier.size(18.dp)
+                    )
                 }
             }
-            Spacer(modifier = Modifier.height(8.dp))
+        }
+        Spacer(modifier = Modifier.height(8.dp))
 
-            if (isLoading) {
-                Box(modifier = Modifier.fillMaxWidth(), contentAlignment = Alignment.Center) {
-                    CircularProgressIndicator(color = GoldAccent, modifier = Modifier.size(24.dp))
-                }
-            } else if (selectedVenue != null) {
-                Row(verticalAlignment = Alignment.CenterVertically) {
-                    Icon(
-                        Icons.Default.LocationOn,
-                        contentDescription = null,
-                        tint = GoldAccent,
-                        modifier = Modifier.size(20.dp)
-                    )
-                    Spacer(modifier = Modifier.width(8.dp))
-                    Column(modifier = Modifier.weight(1f)) {
-                        Text(
-                            text = selectedVenue.name,
-                            style = MaterialTheme.typography.bodyLarge,
-                            color = TextPrimary,
-                            fontWeight = FontWeight.SemiBold
-                        )
-                        Text(
-                            text = "${selectedVenue.address} | ${selectedVenue.sportType.name.lowercase().replaceFirstChar { it.uppercase() }}",
-                            style = MaterialTheme.typography.bodySmall,
-                            color = TextPrimary.copy(alpha = 0.6f)
-                        )
-                    }
+        if (isLoading) {
+            Box(modifier = Modifier.fillMaxWidth(), contentAlignment = Alignment.Center) {
+                CircularProgressIndicator(color = GreenAccent, modifier = Modifier.size(24.dp))
+            }
+        } else if (selectedVenue != null) {
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Icon(
+                    Icons.Default.LocationOn,
+                    contentDescription = null,
+                    tint = GreenAccent,
+                    modifier = Modifier.size(20.dp)
+                )
+                Spacer(modifier = Modifier.width(8.dp))
+                Column(modifier = Modifier.weight(1f)) {
                     Text(
-                        text = "${"%.0f".format(selectedVenue.pricePerHour)} MKD/h",
-                        style = MaterialTheme.typography.labelLarge,
-                        color = GoldAccent,
-                        fontWeight = FontWeight.Bold
+                        text = selectedVenue.name,
+                        fontSize = 16.sp,
+                        color = DarkTextPrimary,
+                        fontWeight = FontWeight.SemiBold
+                    )
+                    Text(
+                        text = "${selectedVenue.address} | ${selectedVenue.sportType.name.lowercase().replaceFirstChar { it.uppercase() }}",
+                        fontSize = 12.sp,
+                        color = DarkTextPrimary.copy(alpha = 0.6f)
                     )
                 }
-            } else {
-                Button(
-                    onClick = onPickVenue,
-                    modifier = Modifier.fillMaxWidth(),
-                    colors = ButtonDefaults.buttonColors(containerColor = LightBg),
-                    shape = RoundedCornerShape(8.dp)
-                ) {
-                    Icon(Icons.Default.LocationOn, contentDescription = null, tint = GoldAccent, modifier = Modifier.size(18.dp))
+                Text(
+                    text = "${"%.0f".format(selectedVenue.pricePerHour)} MKD/h",
+                    fontSize = 14.sp,
+                    color = GreenAccent,
+                    fontWeight = FontWeight.Bold
+                )
+            }
+        } else {
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .clip(RoundedCornerShape(8.dp))
+                    .background(DarkBg)
+                    .clickable(onClick = onPickVenue)
+                    .padding(vertical = 12.dp),
+                contentAlignment = Alignment.Center,
+            ) {
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Icon(Icons.Default.LocationOn, contentDescription = null, tint = GreenAccent, modifier = Modifier.size(18.dp))
                     Spacer(modifier = Modifier.width(8.dp))
-                    Text("Select Venue", color = TextPrimary)
+                    Text("Select Venue", color = DarkTextPrimary, fontSize = 14.sp)
                 }
             }
         }
@@ -563,7 +592,7 @@ private fun VenuePickerSheet(
     ModalBottomSheet(
         onDismissRequest = onDismiss,
         sheetState = sheetState,
-        containerColor = CardWhite,
+        containerColor = DarkSurface,
         shape = RoundedCornerShape(topStart = 16.dp, topEnd = 16.dp)
     ) {
         Column(
@@ -574,8 +603,8 @@ private fun VenuePickerSheet(
         ) {
             Text(
                 text = "Select Venue",
-                style = MaterialTheme.typography.titleMedium,
-                color = TextPrimary,
+                fontSize = 16.sp,
+                color = DarkTextPrimary,
                 fontWeight = FontWeight.Bold,
                 modifier = Modifier.padding(bottom = 12.dp)
             )
@@ -583,15 +612,15 @@ private fun VenuePickerSheet(
             OutlinedTextField(
                 value = searchQuery,
                 onValueChange = onSearchChange,
-                placeholder = { Text("Search venues...", color = TextSecondary) },
-                leadingIcon = { Icon(Icons.Default.Search, contentDescription = null, tint = TextSecondary) },
+                placeholder = { Text("Search venues...", color = DarkTextSecondary) },
+                leadingIcon = { Icon(Icons.Default.Search, contentDescription = null, tint = DarkTextSecondary) },
                 modifier = Modifier.fillMaxWidth(),
                 colors = OutlinedTextFieldDefaults.colors(
-                    focusedBorderColor = GoldAccent,
-                    unfocusedBorderColor = TextPrimary.copy(alpha = 0.3f),
-                    focusedTextColor = TextPrimary,
-                    unfocusedTextColor = TextPrimary,
-                    cursorColor = GoldAccent
+                    focusedBorderColor = GreenAccent,
+                    unfocusedBorderColor = DarkBorder,
+                    focusedTextColor = DarkTextPrimary,
+                    unfocusedTextColor = DarkTextPrimary,
+                    cursorColor = GreenAccent
                 ),
                 singleLine = true,
                 shape = RoundedCornerShape(8.dp)
@@ -606,7 +635,7 @@ private fun VenuePickerSheet(
                         .height(200.dp),
                     contentAlignment = Alignment.Center
                 ) {
-                    CircularProgressIndicator(color = GoldAccent)
+                    CircularProgressIndicator(color = GreenAccent)
                 }
             } else if (venues.isEmpty()) {
                 Box(
@@ -615,7 +644,7 @@ private fun VenuePickerSheet(
                         .height(120.dp),
                     contentAlignment = Alignment.Center
                 ) {
-                    Text("No venues found", color = TextSecondary)
+                    Text("No venues found", color = DarkTextSecondary, fontSize = 14.sp)
                 }
             } else {
                 LazyColumn(
@@ -636,65 +665,60 @@ private fun VenuePickerItem(
     venue: VenueDto,
     onClick: () -> Unit
 ) {
-    Card(
+    Row(
         modifier = Modifier
             .fillMaxWidth()
-            .clickable(onClick = onClick),
-        colors = CardDefaults.cardColors(containerColor = NavBarBg),
-        shape = RoundedCornerShape(8.dp)
+            .clip(RoundedCornerShape(8.dp))
+            .background(DarkBg)
+            .clickable(onClick = onClick)
+            .padding(12.dp),
+        verticalAlignment = Alignment.CenterVertically
     ) {
-        Row(
+        Box(
             modifier = Modifier
-                .fillMaxWidth()
-                .padding(12.dp),
-            verticalAlignment = Alignment.CenterVertically
+                .size(40.dp)
+                .clip(CircleShape)
+                .background(GreenAccent.copy(alpha = 0.15f)),
+            contentAlignment = Alignment.Center
         ) {
-            Box(
-                modifier = Modifier
-                    .size(40.dp)
-                    .clip(CircleShape)
-                    .background(GoldAccent.copy(alpha = 0.15f)),
-                contentAlignment = Alignment.Center
-            ) {
-                Icon(
-                    Icons.Default.SportsTennis,
-                    contentDescription = null,
-                    tint = GoldAccent,
-                    modifier = Modifier.size(20.dp)
-                )
-            }
-            Spacer(modifier = Modifier.width(12.dp))
-            Column(modifier = Modifier.weight(1f)) {
-                Text(
-                    text = venue.name,
-                    style = MaterialTheme.typography.bodyMedium,
-                    color = TextPrimary,
-                    fontWeight = FontWeight.SemiBold,
-                    maxLines = 1,
-                    overflow = TextOverflow.Ellipsis
-                )
-                Text(
-                    text = "${venue.sportType.name.lowercase().replaceFirstChar { it.uppercase() }} | ${venue.address}",
-                    style = MaterialTheme.typography.bodySmall,
-                    color = TextSecondary,
-                    maxLines = 1,
-                    overflow = TextOverflow.Ellipsis
-                )
-            }
-            Spacer(modifier = Modifier.width(8.dp))
-            Column(horizontalAlignment = Alignment.End) {
-                Text(
-                    text = "${"%.0f".format(venue.pricePerHour)} MKD",
-                    style = MaterialTheme.typography.labelLarge,
-                    color = GoldAccent,
-                    fontWeight = FontWeight.Bold
-                )
-                Text(
-                    text = "per hour",
-                    style = MaterialTheme.typography.labelSmall,
-                    color = TextSecondary
-                )
-            }
+            Icon(
+                Icons.Default.SportsTennis,
+                contentDescription = null,
+                tint = GreenAccent,
+                modifier = Modifier.size(20.dp)
+            )
+        }
+        Spacer(modifier = Modifier.width(12.dp))
+        Column(modifier = Modifier.weight(1f)) {
+            Text(
+                text = venue.name,
+                fontSize = 14.sp,
+                color = DarkTextPrimary,
+                fontWeight = FontWeight.SemiBold,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis
+            )
+            Text(
+                text = "${venue.sportType.name.lowercase().replaceFirstChar { it.uppercase() }} | ${venue.address}",
+                fontSize = 12.sp,
+                color = DarkTextSecondary,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis
+            )
+        }
+        Spacer(modifier = Modifier.width(8.dp))
+        Column(horizontalAlignment = Alignment.End) {
+            Text(
+                text = "${"%.0f".format(venue.pricePerHour)} MKD",
+                fontSize = 14.sp,
+                color = GreenAccent,
+                fontWeight = FontWeight.Bold
+            )
+            Text(
+                text = "per hour",
+                fontSize = 10.sp,
+                color = DarkTextSecondary
+            )
         }
     }
 }
@@ -721,8 +745,8 @@ private fun DateSelector(
     Column {
         Text(
             text = "Select Date",
-            style = MaterialTheme.typography.titleSmall,
-            color = TextPrimary.copy(alpha = 0.85f),
+            fontSize = 14.sp,
+            color = DarkTextPrimary.copy(alpha = 0.85f),
             fontWeight = FontWeight.SemiBold
         )
         Spacer(modifier = Modifier.height(8.dp))
@@ -737,10 +761,10 @@ private fun DateSelector(
                 Box(
                     modifier = Modifier
                         .clip(RoundedCornerShape(8.dp))
-                        .background(if (isSelected) GoldAccent.copy(alpha = 0.15f) else CardWhite)
+                        .background(if (isSelected) GreenAccent.copy(alpha = 0.15f) else DarkSurface)
                         .border(
                             width = if (isSelected) 1.5.dp else 1.dp,
-                            color = if (isSelected) GoldAccent else TextPrimary.copy(alpha = 0.2f),
+                            color = if (isSelected) GreenAccent else DarkBorder,
                             shape = RoundedCornerShape(8.dp)
                         )
                         .clickable { onDateSelected(date) }
@@ -748,8 +772,8 @@ private fun DateSelector(
                 ) {
                     Text(
                         text = display,
-                        style = MaterialTheme.typography.labelMedium,
-                        color = if (isSelected) GoldAccent else TextPrimary,
+                        fontSize = 12.sp,
+                        color = if (isSelected) GreenAccent else DarkTextPrimary,
                         fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Normal
                     )
                 }
@@ -771,8 +795,8 @@ private fun TimeSlotGrid(
     Column {
         Text(
             text = "Available Time Slots",
-            style = MaterialTheme.typography.titleSmall,
-            color = TextPrimary.copy(alpha = 0.85f),
+            fontSize = 14.sp,
+            color = DarkTextPrimary.copy(alpha = 0.85f),
             fontWeight = FontWeight.SemiBold
         )
         Spacer(modifier = Modifier.height(8.dp))
@@ -785,19 +809,21 @@ private fun TimeSlotGrid(
                         .height(100.dp),
                     contentAlignment = Alignment.Center
                 ) {
-                    CircularProgressIndicator(color = GoldAccent, modifier = Modifier.size(24.dp))
+                    CircularProgressIndicator(color = GreenAccent, modifier = Modifier.size(24.dp))
                 }
             }
             slots.isEmpty() -> {
-                Card(
-                    modifier = Modifier.fillMaxWidth(),
-                    colors = CardDefaults.cardColors(containerColor = CardWhite),
-                    shape = RoundedCornerShape(8.dp)
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .clip(RoundedCornerShape(8.dp))
+                        .background(DarkSurface)
+                        .border(1.dp, DarkBorder, RoundedCornerShape(8.dp))
                 ) {
                     Text(
                         text = "No available time slots for this date",
-                        style = MaterialTheme.typography.bodySmall,
-                        color = TextSecondary,
+                        fontSize = 12.sp,
+                        color = DarkTextSecondary,
                         modifier = Modifier
                             .fillMaxWidth()
                             .padding(24.dp),
@@ -822,12 +848,12 @@ private fun TimeSlotGrid(
                                         .weight(1f)
                                         .clip(RoundedCornerShape(8.dp))
                                         .background(
-                                            if (isSelected) GoldAccent.copy(alpha = 0.15f)
-                                            else CardWhite
+                                            if (isSelected) GreenAccent.copy(alpha = 0.15f)
+                                            else DarkSurface
                                         )
                                         .border(
                                             width = if (isSelected) 1.5.dp else 1.dp,
-                                            color = if (isSelected) GoldAccent else TextPrimary.copy(alpha = 0.2f),
+                                            color = if (isSelected) GreenAccent else DarkBorder,
                                             shape = RoundedCornerShape(8.dp)
                                         )
                                         .clickable { onSlotSelected(slot) }
@@ -839,22 +865,22 @@ private fun TimeSlotGrid(
                                             Icon(
                                                 Icons.Default.Check,
                                                 contentDescription = null,
-                                                tint = GoldAccent,
+                                                tint = GreenAccent,
                                                 modifier = Modifier.size(14.dp)
                                             )
                                             Spacer(modifier = Modifier.height(2.dp))
                                         }
                                         Text(
                                             text = "${slot.startTime.toDisplayTime()} - ${slot.endTime.toDisplayTime()}",
-                                            style = MaterialTheme.typography.labelMedium,
-                                            color = if (isSelected) GoldAccent else TextPrimary,
+                                            fontSize = 12.sp,
+                                            color = if (isSelected) GreenAccent else DarkTextPrimary,
                                             fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Normal,
                                             textAlign = TextAlign.Center
                                         )
                                         Text(
                                             text = "${"%.0f".format(price)} MKD",
-                                            style = MaterialTheme.typography.labelSmall,
-                                            color = if (isSelected) GoldAccent.copy(alpha = 0.8f) else TextSecondary,
+                                            fontSize = 10.sp,
+                                            color = if (isSelected) GreenAccent.copy(alpha = 0.8f) else DarkTextSecondary,
                                             textAlign = TextAlign.Center
                                         )
                                     }
@@ -882,8 +908,8 @@ private fun PaymentTypeSelector(
     Column {
         Text(
             text = "Payment Type",
-            style = MaterialTheme.typography.titleSmall,
-            color = TextPrimary.copy(alpha = 0.85f),
+            fontSize = 14.sp,
+            color = DarkTextPrimary.copy(alpha = 0.85f),
             fontWeight = FontWeight.SemiBold
         )
         Spacer(modifier = Modifier.height(8.dp))
@@ -895,7 +921,7 @@ private fun PaymentTypeSelector(
                 label = "Split Equally",
                 description = "Each player pays their share",
                 isSelected = selectedType == "split",
-                color = GoldAccent,
+                color = GreenAccent,
                 onClick = { onTypeSelected("split") },
                 modifier = Modifier.weight(1f)
             )
@@ -911,7 +937,7 @@ private fun PaymentTypeSelector(
         Spacer(modifier = Modifier.height(8.dp))
         PaymentTypeOption(
             label = "Split to Teams",
-            description = "Divide cost by teams \u2014 team leader pays",
+            description = "Divide cost by teams — team leader pays",
             isSelected = selectedType == "split_to_teams",
             color = CoralRed,
             onClick = { onTypeSelected("split_to_teams") },
@@ -925,12 +951,12 @@ private fun PaymentTypeOption(
     label: String,
     description: String,
     isSelected: Boolean,
-    color: androidx.compose.ui.graphics.Color,
+    color: Color,
     onClick: () -> Unit,
     modifier: Modifier = Modifier
 ) {
-    val borderColor = if (isSelected) color else TextPrimary.copy(alpha = 0.2f)
-    val bgColor = if (isSelected) color.copy(alpha = 0.1f) else CardWhite
+    val borderColor = if (isSelected) color else DarkBorder
+    val bgColor = if (isSelected) color.copy(alpha = 0.1f) else DarkSurface
 
     Box(
         modifier = modifier
@@ -947,15 +973,15 @@ private fun PaymentTypeOption(
         Column {
             Text(
                 text = label,
-                style = MaterialTheme.typography.labelLarge,
-                color = if (isSelected) color else TextPrimary,
+                fontSize = 14.sp,
+                color = if (isSelected) color else DarkTextPrimary,
                 fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Normal
             )
             Spacer(modifier = Modifier.height(2.dp))
             Text(
                 text = description,
-                style = MaterialTheme.typography.labelSmall,
-                color = if (isSelected) color.copy(alpha = 0.8f) else TextSecondary
+                fontSize = 10.sp,
+                color = if (isSelected) color.copy(alpha = 0.8f) else DarkTextSecondary
             )
         }
     }
@@ -977,48 +1003,58 @@ private fun PlayerCountPicker(
         Column {
             Text(
                 text = "Max Players",
-                style = MaterialTheme.typography.titleSmall,
-                color = TextPrimary.copy(alpha = 0.85f),
+                fontSize = 14.sp,
+                color = DarkTextPrimary.copy(alpha = 0.85f),
                 fontWeight = FontWeight.SemiBold
             )
             Text(
                 text = "Min 2, max 10",
-                style = MaterialTheme.typography.labelSmall,
-                color = TextSecondary
+                fontSize = 10.sp,
+                color = DarkTextSecondary
             )
         }
         Row(
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.spacedBy(12.dp)
         ) {
-            IconButton(
-                onClick = onDecrease,
-                enabled = count > 2
+            Box(
+                modifier = Modifier
+                    .size(36.dp)
+                    .clip(CircleShape)
+                    .background(DarkSurface)
+                    .clickable(enabled = count > 2, onClick = onDecrease),
+                contentAlignment = Alignment.Center
             ) {
                 Icon(
                     imageVector = Icons.Default.Remove,
                     contentDescription = "Decrease",
-                    tint = if (count > 2) GoldAccent else TextPrimary.copy(alpha = 0.3f)
+                    tint = if (count > 2) GreenAccent else DarkTextPrimary.copy(alpha = 0.3f),
+                    modifier = Modifier.size(20.dp)
                 )
             }
             Row(verticalAlignment = Alignment.CenterVertically) {
-                Icon(Icons.Default.Group, contentDescription = null, tint = GoldAccent, modifier = Modifier.size(18.dp))
+                Icon(Icons.Default.Group, contentDescription = null, tint = GreenAccent, modifier = Modifier.size(18.dp))
                 Spacer(modifier = Modifier.width(4.dp))
                 Text(
                     text = count.toString(),
-                    style = MaterialTheme.typography.titleLarge,
-                    color = TextPrimary,
+                    fontSize = 22.sp,
+                    color = DarkTextPrimary,
                     fontWeight = FontWeight.Bold
                 )
             }
-            IconButton(
-                onClick = onIncrease,
-                enabled = count < 10
+            Box(
+                modifier = Modifier
+                    .size(36.dp)
+                    .clip(CircleShape)
+                    .background(DarkSurface)
+                    .clickable(enabled = count < 10, onClick = onIncrease),
+                contentAlignment = Alignment.Center
             ) {
                 Icon(
                     imageVector = Icons.Default.Add,
                     contentDescription = "Increase",
-                    tint = if (count < 10) GoldAccent else TextPrimary.copy(alpha = 0.3f)
+                    tint = if (count < 10) GreenAccent else DarkTextPrimary.copy(alpha = 0.3f),
+                    modifier = Modifier.size(20.dp)
                 )
             }
         }
@@ -1034,70 +1070,67 @@ private fun PriceBreakdownCard(
     paymentType: String,
     pricePerPlayer: Double
 ) {
-    Card(
-        modifier = Modifier.fillMaxWidth(),
-        colors = CardDefaults.cardColors(containerColor = GoldAccent.copy(alpha = 0.1f)),
-        shape = RoundedCornerShape(8.dp)
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .clip(RoundedCornerShape(8.dp))
+            .background(GreenAccent.copy(alpha = 0.1f))
+            .border(1.dp, GreenAccent.copy(alpha = 0.3f), RoundedCornerShape(8.dp))
+            .padding(12.dp),
+        horizontalArrangement = Arrangement.SpaceBetween,
+        verticalAlignment = Alignment.CenterVertically
     ) {
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(12.dp),
-            horizontalArrangement = Arrangement.SpaceBetween,
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            Column {
-                Text(
-                    text = "Total Cost",
-                    style = MaterialTheme.typography.labelSmall,
-                    color = TextPrimary.copy(alpha = 0.6f)
-                )
-                Text(
-                    text = "${"%.0f".format(totalPrice)} MKD",
-                    style = MaterialTheme.typography.bodyLarge,
-                    color = TextPrimary,
-                    fontWeight = FontWeight.SemiBold
-                )
-            }
-            when (paymentType) {
-                "split" -> {
-                    Column(horizontalAlignment = Alignment.End) {
-                        Text(
-                            text = "Per Player ($maxPlayers players)",
-                            style = MaterialTheme.typography.labelSmall,
-                            color = TextPrimary.copy(alpha = 0.6f)
-                        )
-                        Text(
-                            text = "${"%.0f".format(pricePerPlayer)} MKD",
-                            style = MaterialTheme.typography.bodyLarge,
-                            color = GoldAccent,
-                            fontWeight = FontWeight.Bold
-                        )
-                    }
-                }
-                "split_to_teams" -> {
-                    Column(horizontalAlignment = Alignment.End) {
-                        Text(
-                            text = "Per Team (2 default teams)",
-                            style = MaterialTheme.typography.labelSmall,
-                            color = TextPrimary.copy(alpha = 0.6f)
-                        )
-                        Text(
-                            text = "${"%.0f".format(totalPrice / 2)} MKD",
-                            style = MaterialTheme.typography.bodyLarge,
-                            color = CoralRed,
-                            fontWeight = FontWeight.Bold
-                        )
-                    }
-                }
-                else -> {
+        Column {
+            Text(
+                text = "Total Cost",
+                fontSize = 10.sp,
+                color = DarkTextPrimary.copy(alpha = 0.6f)
+            )
+            Text(
+                text = "${"%.0f".format(totalPrice)} MKD",
+                fontSize = 16.sp,
+                color = DarkTextPrimary,
+                fontWeight = FontWeight.SemiBold
+            )
+        }
+        when (paymentType) {
+            "split" -> {
+                Column(horizontalAlignment = Alignment.End) {
                     Text(
-                        text = "You pay all",
-                        style = MaterialTheme.typography.labelMedium,
-                        color = SportGreen,
-                        fontWeight = FontWeight.SemiBold
+                        text = "Per Player ($maxPlayers players)",
+                        fontSize = 10.sp,
+                        color = DarkTextPrimary.copy(alpha = 0.6f)
+                    )
+                    Text(
+                        text = "${"%.0f".format(pricePerPlayer)} MKD",
+                        fontSize = 16.sp,
+                        color = GreenAccent,
+                        fontWeight = FontWeight.Bold
                     )
                 }
+            }
+            "split_to_teams" -> {
+                Column(horizontalAlignment = Alignment.End) {
+                    Text(
+                        text = "Per Team (2 default teams)",
+                        fontSize = 10.sp,
+                        color = DarkTextPrimary.copy(alpha = 0.6f)
+                    )
+                    Text(
+                        text = "${"%.0f".format(totalPrice / 2)} MKD",
+                        fontSize = 16.sp,
+                        color = CoralRed,
+                        fontWeight = FontWeight.Bold
+                    )
+                }
+            }
+            else -> {
+                Text(
+                    text = "You pay all",
+                    fontSize = 12.sp,
+                    color = SportGreen,
+                    fontWeight = FontWeight.SemiBold
+                )
             }
         }
     }
@@ -1105,30 +1138,40 @@ private fun PriceBreakdownCard(
 
 // ── Preview ──────────────────────────────────────────────────────────────────
 
-@OptIn(ExperimentalMaterial3Api::class)
-@Preview(showBackground = true)
+@Preview(showBackground = true, backgroundColor = 0xFF121212)
 @Composable
 private fun CreateVenueBookingLobbyScreenPreview() {
-    Scaffold(
-        containerColor = NavBarBg,
-        topBar = {
-            TopAppBar(
-                title = { Text("Create Venue Lobby", color = TextPrimary) },
-                colors = TopAppBarDefaults.topAppBarColors(containerColor = CardWhite)
-            )
+    Column(
+        modifier = Modifier
+            .fillMaxSize()
+            .background(DarkBg)
+    ) {
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .background(DarkSurface)
+                .padding(horizontal = 16.dp, vertical = 12.dp),
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            Box(
+                modifier = Modifier.size(40.dp).clip(CircleShape).background(DarkBg),
+                contentAlignment = Alignment.Center,
+            ) {
+                Icon(Icons.AutoMirrored.Filled.ArrowBack, "Back", tint = DarkTextPrimary, modifier = Modifier.size(20.dp))
+            }
+            Spacer(modifier = Modifier.width(12.dp))
+            Text("Create Venue Lobby", fontSize = 18.sp, fontWeight = FontWeight.Bold, color = DarkTextPrimary)
         }
-    ) { padding ->
         Column(
             modifier = Modifier
                 .fillMaxSize()
-                .padding(padding)
                 .padding(horizontal = 16.dp, vertical = 16.dp),
             verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
             Text(
                 text = "1. Select Venue  >  2. Pick Time Slot  >  3. Fill Details",
-                color = TextSecondary,
-                style = MaterialTheme.typography.labelMedium,
+                color = DarkTextSecondary,
+                fontSize = 12.sp,
                 textAlign = TextAlign.Center,
                 modifier = Modifier.fillMaxWidth()
             )

@@ -15,29 +15,9 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.ArrowBack
-import androidx.compose.material.icons.automirrored.filled.KeyboardArrowRight
-import androidx.compose.material.icons.filled.Add
-import androidx.compose.material.icons.filled.CalendarToday
-import androidx.compose.material.icons.filled.Groups
-import androidx.compose.material.icons.filled.Person
-import androidx.compose.material.icons.filled.SportsSoccer
-import androidx.compose.material3.Card
-import androidx.compose.material3.CardDefaults
-import androidx.compose.material3.CircularProgressIndicator
-import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Scaffold
-import androidx.compose.material3.Tab
-import androidx.compose.material3.TabRow
 import androidx.compose.material3.Text
-import androidx.compose.material3.TopAppBar
-import androidx.compose.material3.TopAppBarDefaults
-import androidx.compose.material3.pulltorefresh.PullToRefreshBox
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
@@ -46,25 +26,25 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.example.sportsbook.ui.common.LoadingIndicator
+import com.example.sportsbook.ui.theme.DarkBg
+import com.example.sportsbook.ui.theme.DarkBorder
+import com.example.sportsbook.ui.theme.DarkSurface
+import com.example.sportsbook.ui.theme.DarkTextPrimary
+import com.example.sportsbook.ui.theme.DarkTextSecondary
+import com.example.sportsbook.ui.theme.GreenAccent
 
-// ── Light-theme design tokens (mirrors the rest of the player UI) ─────────────
-private val LightBg = Color(0xFFF9FAFB)
-private val CardWhite = Color.White
-private val TextPrimary = Color(0xFF111827)
-private val TextSecondary = Color(0xFF6B7280)
-private val TextTertiary = Color(0xFF9CA3AF)
-private val BorderGray = Color(0xFFE5E7EB)
+// ── Screen ───────────────────────────────────────────────────────────────────
 
-// ── Screen ────────────────────────────────────────────────────────────────────
-
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ChatsListScreen(
     onNavigateToBookingChat: (bookingId: Long) -> Unit,
@@ -78,449 +58,203 @@ fun ChatsListScreen(
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
     var selectedTab by remember { mutableIntStateOf(0) }
 
-    Scaffold(
-        containerColor = LightBg,
-        topBar = {
-            TopAppBar(
-                title = {
-                    Text(
-                        text = "Chats",
-                        style = MaterialTheme.typography.titleMedium.copy(
-                            fontWeight = FontWeight.Bold,
-                        ),
-                        color = TextPrimary,
-                    )
-                },
-                navigationIcon = {
-                    IconButton(onClick = onBack) {
-                        Icon(
-                            Icons.AutoMirrored.Filled.ArrowBack,
-                            contentDescription = "Back",
-                            tint = TextPrimary,
-                        )
-                    }
-                },
-                actions = {
-                    IconButton(onClick = onCreateParty) {
-                        Icon(
-                            Icons.Default.Add,
-                            contentDescription = "Create Party",
-                            tint = TextPrimary,
-                        )
-                    }
-                },
-                colors = TopAppBarDefaults.topAppBarColors(
-                    containerColor = CardWhite,
-                ),
-            )
-        },
-    ) { innerPadding ->
-        Column(
+    val allChats = uiState.friendChats + uiState.matchChats + uiState.bookingChats + uiState.partyChats
+    val tabs = listOf("All" to allChats.size, "Direct" to uiState.friendChats.size, "Groups" to uiState.matchChats.size + uiState.partyChats.size, "Bookings" to uiState.bookingChats.size)
+
+    val displayedChats = when (selectedTab) {
+        0 -> allChats
+        1 -> uiState.friendChats
+        2 -> uiState.matchChats + uiState.partyChats
+        3 -> uiState.bookingChats
+        else -> allChats
+    }
+
+    val isEmpty = displayedChats.isEmpty() && !uiState.isLoading
+
+    Column(
+        modifier = Modifier
+            .fillMaxSize()
+            .background(DarkBg),
+    ) {
+        // ── Header ───────────────────────────────────────────────────
+        Row(
             modifier = Modifier
-                .fillMaxSize()
-                .padding(innerPadding),
+                .fillMaxWidth()
+                .padding(start = 16.dp, end = 16.dp, top = 12.dp, bottom = 8.dp),
+            verticalAlignment = Alignment.CenterVertically,
         ) {
-            // ── Tab row ──────────────────────────────────────────────────────
-            TabRow(
-                selectedTabIndex = selectedTab,
-                containerColor = CardWhite,
-                contentColor = TextPrimary,
-                divider = {
-                    Box(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .height(1.dp)
-                            .background(BorderGray),
-                    )
-                },
+            Text("Messages", fontSize = 20.sp, fontWeight = FontWeight.Bold, color = DarkTextPrimary, modifier = Modifier.weight(1f))
+            Box(
+                modifier = Modifier
+                    .size(36.dp)
+                    .clip(CircleShape)
+                    .background(DarkSurface)
+                    .clickable { },
+                contentAlignment = Alignment.Center,
             ) {
-                Tab(
-                    selected = selectedTab == 0,
-                    onClick = { selectedTab = 0 },
-                    text = {
-                        Text(
-                            "Bookings",
-                            style = MaterialTheme.typography.labelLarge,
-                            color = if (selectedTab == 0) TextPrimary else TextTertiary,
-                        )
-                    },
-                )
-                Tab(
-                    selected = selectedTab == 1,
-                    onClick = { selectedTab = 1 },
-                    text = {
-                        Text(
-                            "Matches",
-                            style = MaterialTheme.typography.labelLarge,
-                            color = if (selectedTab == 1) TextPrimary else TextTertiary,
-                        )
-                    },
-                )
-                Tab(
-                    selected = selectedTab == 2,
-                    onClick = { selectedTab = 2 },
-                    text = {
-                        Text(
-                            "Friends",
-                            style = MaterialTheme.typography.labelLarge,
-                            color = if (selectedTab == 2) TextPrimary else TextTertiary,
-                        )
-                    },
-                )
-                Tab(
-                    selected = selectedTab == 3,
-                    onClick = { selectedTab = 3 },
-                    text = {
-                        Text(
-                            "Team",
-                            style = MaterialTheme.typography.labelLarge,
-                            color = if (selectedTab == 3) TextPrimary else TextTertiary,
-                        )
-                    },
-                )
+                Text("✏", fontSize = 16.sp)
             }
+        }
 
-            // ── Content with pull-to-refresh ──────────────────────────────────
-            PullToRefreshBox(
-                isRefreshing = uiState.isLoading,
-                onRefresh = viewModel::refresh,
-                modifier = Modifier.fillMaxSize(),
-            ) {
-                when {
-                    uiState.isLoading && uiState.bookingChats.isEmpty() && uiState.matchChats.isEmpty() && uiState.partyChats.isEmpty() -> {
-                        Box(
-                            modifier = Modifier.fillMaxSize(),
-                            contentAlignment = Alignment.Center,
-                        ) {
-                            CircularProgressIndicator(color = TextPrimary)
+        // ── Search bar ───────────────────────────────────────────────
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 16.dp)
+                .padding(bottom = 12.dp)
+                .clip(RoundedCornerShape(12.dp))
+                .background(DarkSurface)
+                .padding(horizontal = 16.dp, vertical = 12.dp),
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            Text("🔍", fontSize = 16.sp)
+            Spacer(modifier = Modifier.width(10.dp))
+            Text("Search conversations...", fontSize = 14.sp, color = DarkTextSecondary)
+        }
+
+        // ── Tab bar ──────────────────────────────────────────────────
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 16.dp)
+                .padding(bottom = 8.dp),
+            horizontalArrangement = Arrangement.spacedBy(4.dp),
+        ) {
+            tabs.forEachIndexed { index, (label, count) ->
+                val isActive = selectedTab == index
+                Box(
+                    modifier = Modifier
+                        .clip(RoundedCornerShape(10.dp))
+                        .background(if (isActive) GreenAccent else Color.Transparent)
+                        .clickable { selectedTab = index }
+                        .padding(horizontal = 14.dp, vertical = 8.dp),
+                ) {
+                    Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(4.dp)) {
+                        Text(label, fontSize = 13.sp, fontWeight = FontWeight.SemiBold, color = if (isActive) Color.White else DarkTextSecondary)
+                        if (count > 0) {
+                            Box(
+                                modifier = Modifier
+                                    .clip(CircleShape)
+                                    .background(if (isActive) Color.White.copy(alpha = 0.3f) else DarkSurface)
+                                    .padding(horizontal = 6.dp, vertical = 1.dp),
+                            ) {
+                                Text("$count", fontSize = 10.sp, fontWeight = FontWeight.Bold, color = if (isActive) Color.White else DarkTextSecondary)
+                            }
                         }
                     }
+                }
+            }
+        }
 
-                    uiState.error != null -> {
-                        Box(
-                            modifier = Modifier
-                                .fillMaxSize()
-                                .padding(24.dp),
-                            contentAlignment = Alignment.Center,
-                        ) {
-                            Text(
-                                text = uiState.error!!,
-                                style = MaterialTheme.typography.bodyMedium,
-                                color = TextSecondary,
-                            )
-                        }
-                    }
-
-                    selectedTab == 0 -> {
-                        ChatConversationList(
-                            conversations = uiState.bookingChats,
-                            emptyMessage = "No booking chats yet.\nApproved or completed bookings appear here.",
-                            onConversationClick = { onNavigateToBookingChat(it.id) },
-                        )
-                    }
-
-                    selectedTab == 1 -> {
-                        ChatConversationList(
-                            conversations = uiState.matchChats,
-                            emptyMessage = "No match chats yet.\nJoin a match to start chatting.",
-                            onConversationClick = { onNavigateToMatchChat(it.id) },
-                        )
-                    }
-
-                    selectedTab == 2 -> {
-                        ChatConversationList(
-                            conversations = uiState.friendChats,
-                            emptyMessage = "No direct messages yet.\nMessage a friend from your Friends list.",
-                            onConversationClick = { conversation ->
-                                val friendId = conversation.friendUserId ?: return@ChatConversationList
-                                onNavigateToFriendChat(friendId, conversation.title, null)
+        // ── Content ──────────────────────────────────────────────────
+        when {
+            uiState.isLoading -> LoadingIndicator(modifier = Modifier.fillMaxSize())
+            isEmpty -> {
+                Box(
+                    modifier = Modifier.fillMaxSize(),
+                    contentAlignment = Alignment.Center,
+                ) {
+                    Text(
+                        text = "No conversations yet.\nStart chatting after a booking or match!",
+                        fontSize = 14.sp,
+                        color = DarkTextSecondary,
+                        textAlign = androidx.compose.ui.text.style.TextAlign.Center,
+                        modifier = Modifier.padding(horizontal = 32.dp),
+                    )
+                }
+            }
+            else -> {
+                LazyColumn(modifier = Modifier.fillMaxSize()) {
+                    items(displayedChats) { conv ->
+                        ChatConversationRow(
+                            conv = conv,
+                            onClick = {
+                                when (conv.type) {
+                                    ChatType.BOOKING -> onNavigateToBookingChat(conv.id)
+                                    ChatType.MATCH -> onNavigateToMatchChat(conv.id)
+                                    ChatType.FRIEND -> onNavigateToFriendChat(conv.friendUserId ?: conv.id, conv.title, conv.friendPhotoUrl)
+                                    ChatType.PARTY -> onNavigateToPartyChat(conv.id)
+                                }
                             },
                         )
                     }
-
-                    else -> {
-                        ChatConversationList(
-                            conversations = uiState.partyChats,
-                            emptyMessage = "No party chats yet.\nCreate or join a party to start chatting.",
-                            onConversationClick = { onNavigateToPartyChat(it.id) },
-                        )
-                    }
+                    item { Spacer(modifier = Modifier.height(24.dp)) }
                 }
             }
         }
     }
 }
 
-// ── Conversation list ─────────────────────────────────────────────────────────
+// ── Chat row ──────────────────────────────────────────────────────────────────
 
 @Composable
-private fun ChatConversationList(
-    conversations: List<ChatConversation>,
-    emptyMessage: String,
-    onConversationClick: (ChatConversation) -> Unit,
-    modifier: Modifier = Modifier,
-) {
-    if (conversations.isEmpty()) {
+private fun ChatConversationRow(conv: ChatConversation, onClick: () -> Unit) {
+    val (emoji, avatarBg) = when (conv.type) {
+        ChatType.FRIEND -> "👤" to Brush.linearGradient(listOf(Color(0xFF1565C0), Color(0xFF2196F3)))
+        ChatType.MATCH -> "⚽" to Brush.linearGradient(listOf(Color(0xFF2E7D32), Color(0xFF4CAF50)))
+        ChatType.BOOKING -> "📅" to Brush.linearGradient(listOf(Color(0xFF5E35B1), Color(0xFF9C27B0)))
+        ChatType.PARTY -> "🎉" to Brush.linearGradient(listOf(Color(0xFFAD1457), Color(0xFFE91E63)))
+    }
+    val typeLabel = when (conv.type) {
+        ChatType.MATCH -> "Match"
+        ChatType.BOOKING -> "Booking"
+        ChatType.PARTY -> "Party"
+        else -> null
+    }
+    val typeLabelColor = when (conv.type) {
+        ChatType.MATCH -> GreenAccent
+        ChatType.BOOKING -> Color(0xFF9C27B0)
+        ChatType.PARTY -> Color(0xFFE91E63)
+        else -> null
+    }
+
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .clickable(onClick = onClick)
+            .padding(horizontal = 16.dp, vertical = 14.dp),
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
         Box(
-            modifier = modifier
-                .fillMaxSize()
-                .padding(32.dp),
+            modifier = Modifier
+                .size(50.dp)
+                .clip(CircleShape)
+                .background(avatarBg),
             contentAlignment = Alignment.Center,
         ) {
-            Text(
-                text = emptyMessage,
-                style = MaterialTheme.typography.bodyMedium,
-                color = TextSecondary,
-                textAlign = androidx.compose.ui.text.style.TextAlign.Center,
-            )
+            Text(emoji, fontSize = 22.sp)
         }
-    } else {
-        LazyColumn(
-            modifier = modifier
-                .fillMaxSize()
-                .padding(horizontal = 16.dp),
-            verticalArrangement = Arrangement.spacedBy(8.dp),
-        ) {
-            item { Spacer(modifier = Modifier.height(8.dp)) }
-            items(conversations, key = { "${it.type}-${it.id}" }) { conversation ->
-                ChatConversationRow(
-                    conversation = conversation,
-                    onClick = { onConversationClick(conversation) },
-                )
+        Spacer(modifier = Modifier.width(14.dp))
+        Column(modifier = Modifier.weight(1f)) {
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                if (typeLabel != null && typeLabelColor != null) {
+                    Box(
+                        modifier = Modifier
+                            .clip(RoundedCornerShape(4.dp))
+                            .background(typeLabelColor.copy(alpha = 0.15f))
+                            .padding(horizontal = 6.dp, vertical = 1.dp),
+                    ) {
+                        Text(typeLabel, fontSize = 10.sp, fontWeight = FontWeight.Bold, color = typeLabelColor)
+                    }
+                    Spacer(modifier = Modifier.width(6.dp))
+                }
+                Text(conv.title, fontSize = 14.sp, fontWeight = FontWeight.SemiBold, color = DarkTextPrimary, maxLines = 1, overflow = TextOverflow.Ellipsis)
             }
-            item { Spacer(modifier = Modifier.height(8.dp)) }
+            Text(conv.subtitle, fontSize = 12.sp, color = DarkTextSecondary, maxLines = 1, overflow = TextOverflow.Ellipsis, modifier = Modifier.padding(top = 3.dp))
         }
     }
+    Box(modifier = Modifier.fillMaxWidth().height(1.dp).padding(start = 80.dp, end = 16.dp).background(DarkBorder))
 }
 
-// ── Single conversation row ───────────────────────────────────────────────────
-
-@Composable
-private fun ChatConversationRow(
-    conversation: ChatConversation,
-    onClick: () -> Unit,
-    modifier: Modifier = Modifier,
-) {
-    Card(
-        modifier = modifier
-            .fillMaxWidth()
-            .clickable(onClick = onClick),
-        colors = CardDefaults.cardColors(containerColor = CardWhite),
-        elevation = CardDefaults.cardElevation(defaultElevation = 1.dp),
-        shape = RoundedCornerShape(12.dp),
-    ) {
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(horizontal = 16.dp, vertical = 14.dp),
-            verticalAlignment = Alignment.CenterVertically,
-        ) {
-            // ── Leading icon ──────────────────────────────────────────────
-            val (iconBg, iconTint, iconVector) = when (conversation.type) {
-                ChatType.BOOKING -> Triple(
-                    Color(0xFFF0FDF4),   // green-50
-                    Color(0xFF16A34A),   // green-600
-                    Icons.Default.CalendarToday,
-                )
-                ChatType.MATCH -> Triple(
-                    Color(0xFFEFF6FF),   // blue-50
-                    Color(0xFF2563EB),   // blue-600
-                    Icons.Default.SportsSoccer,
-                )
-                ChatType.FRIEND -> Triple(
-                    Color(0xFFFEF9C3),   // yellow-100
-                    Color(0xFF854D0E),   // yellow-800
-                    Icons.Default.Person,
-                )
-                ChatType.PARTY -> Triple(
-                    Color(0xFFF3E8FF),   // purple-100
-                    Color(0xFF7C3AED),   // purple-600
-                    Icons.Default.Groups,
-                )
-            }
-            Box(
-                modifier = Modifier
-                    .size(44.dp)
-                    .clip(RoundedCornerShape(10.dp))
-                    .background(iconBg),
-                contentAlignment = Alignment.Center,
-            ) {
-                Icon(
-                    imageVector = iconVector,
-                    contentDescription = null,
-                    tint = iconTint,
-                    modifier = Modifier.size(22.dp),
-                )
-            }
-
-            Spacer(modifier = Modifier.width(12.dp))
-
-            // ── Title + subtitle ──────────────────────────────────────────
-            Column(modifier = Modifier.weight(1f)) {
-                Text(
-                    text = conversation.title,
-                    style = MaterialTheme.typography.bodyMedium.copy(
-                        fontWeight = FontWeight.SemiBold,
-                    ),
-                    color = TextPrimary,
-                    maxLines = 1,
-                )
-                Spacer(modifier = Modifier.height(2.dp))
-                Text(
-                    text = conversation.subtitle,
-                    style = MaterialTheme.typography.bodySmall,
-                    color = TextSecondary,
-                    maxLines = 1,
-                )
-            }
-
-            Spacer(modifier = Modifier.width(8.dp))
-
-            // ── Status badge + chevron ────────────────────────────────────
-            Column(horizontalAlignment = Alignment.End) {
-                StatusBadge(status = conversation.status)
-                Spacer(modifier = Modifier.height(4.dp))
-                Icon(
-                    imageVector = Icons.AutoMirrored.Filled.KeyboardArrowRight,
-                    contentDescription = "Open chat",
-                    tint = TextTertiary,
-                    modifier = Modifier.size(18.dp),
-                )
-            }
-        }
-    }
-}
-
-// ── Status badge ──────────────────────────────────────────────────────────────
-
-@Composable
-private fun StatusBadge(
-    status: String,
-    modifier: Modifier = Modifier,
-) {
-    val (bgColor, textColor) = when (status.lowercase()) {
-        "approved" -> Color(0xFFDCFCE7) to Color(0xFF166534)   // green
-        "confirmed" -> Color(0xFFDBEAFE) to Color(0xFF1E40AF)  // blue
-        "completed" -> Color(0xFFF3F4F6) to Color(0xFF374151)  // gray
-        "open" -> Color(0xFFDCFCE7) to Color(0xFF166534)       // green
-        "ongoing" -> Color(0xFFDBEAFE) to Color(0xFF1E40AF)    // blue
-        "full" -> Color(0xFFFEF9C3) to Color(0xFF92400E)       // amber
-        "cancelled" -> Color(0xFFFEE2E2) to Color(0xFF991B1B)  // red
-        "forming" -> Color(0xFFF3E8FF) to Color(0xFF6D28D9)    // purple
-        "ready" -> Color(0xFFDCFCE7) to Color(0xFF166534)      // green
-        "in_match" -> Color(0xFFDBEAFE) to Color(0xFF1E40AF)   // blue
-        else -> Color(0xFFF3F4F6) to Color(0xFF374151)          // gray
-    }
-
-    Box(
-        modifier = modifier
-            .clip(RoundedCornerShape(4.dp))
-            .background(bgColor)
-            .padding(horizontal = 6.dp, vertical = 2.dp),
-    ) {
-        Text(
-            text = status,
-            style = MaterialTheme.typography.labelSmall.copy(
-                fontSize = 10.sp,
-                fontWeight = FontWeight.SemiBold,
-            ),
-            color = textColor,
-        )
-    }
-}
 
 // ── Preview ───────────────────────────────────────────────────────────────────
 
-@Preview(showBackground = true, backgroundColor = 0xFFF9FAFB)
+@Preview(showBackground = true, backgroundColor = 0xFF121212)
 @Composable
 private fun ChatsListScreenPreview() {
-    val venueChats = listOf(
-        ChatConversation(
-            id = 1L,
-            title = "City Tennis Center",
-            subtitle = "2026-05-10 · 10:00–11:00",
-            type = ChatType.BOOKING,
-            status = "Approved",
-        ),
-        ChatConversation(
-            id = 2L,
-            title = "Coach Maria Garcia",
-            subtitle = "2026-05-12 · 14:00–15:00",
-            type = ChatType.BOOKING,
-            status = "Completed",
-        ),
-    )
-    val matchChats = listOf(
-        ChatConversation(
-            id = 10L,
-            title = "Sunday Basketball 5v5",
-            subtitle = "Basketball · 2026-05-11",
-            type = ChatType.MATCH,
-            status = "Open",
-        ),
-    )
-    val friendChats = listOf(
-        ChatConversation(
-            id = 20L,
-            title = "Alex Johnson",
-            subtitle = "See you on the court!",
-            type = ChatType.FRIEND,
-            status = "DM",
-            friendUserId = 99L,
-        ),
-    )
-    val partyChats = listOf(
-        ChatConversation(
-            id = 30L,
-            title = "Weekend Warriors",
-            subtitle = "3 members · forming",
-            type = ChatType.PARTY,
-            status = "forming",
-        ),
-    )
-
-    androidx.compose.material3.MaterialTheme {
-        Column(modifier = Modifier.fillMaxSize().background(LightBg)) {
-            var selectedTab by remember { mutableIntStateOf(0) }
-            TabRow(
-                selectedTabIndex = selectedTab,
-                containerColor = CardWhite,
-                contentColor = TextPrimary,
-            ) {
-                Tab(
-                    selected = selectedTab == 0,
-                    onClick = { selectedTab = 0 },
-                    text = { Text("Bookings") },
-                )
-                Tab(
-                    selected = selectedTab == 1,
-                    onClick = { selectedTab = 1 },
-                    text = { Text("Matches") },
-                )
-                Tab(
-                    selected = selectedTab == 2,
-                    onClick = { selectedTab = 2 },
-                    text = { Text("Friends") },
-                )
-                Tab(
-                    selected = selectedTab == 3,
-                    onClick = { selectedTab = 3 },
-                    text = { Text("Team") },
-                )
-            }
-
-            val conversations = when (selectedTab) {
-                0 -> venueChats
-                1 -> matchChats
-                2 -> friendChats
-                3 -> partyChats
-                else -> emptyList()
-            }
-            ChatConversationList(
-                conversations = conversations,
-                emptyMessage = "No chats.",
-                onConversationClick = {},
-            )
-        }
-    }
+    ChatsListScreen(
+            onNavigateToBookingChat = {},
+            onNavigateToMatchChat = {},
+            onBack = {},
+        )
 }

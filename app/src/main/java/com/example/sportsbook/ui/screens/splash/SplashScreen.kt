@@ -1,33 +1,44 @@
 package com.example.sportsbook.ui.screens.splash
 
+import androidx.compose.animation.core.LinearEasing
+import androidx.compose.animation.core.RepeatMode
+import androidx.compose.animation.core.animateFloat
+import androidx.compose.animation.core.infiniteRepeatable
+import androidx.compose.animation.core.rememberInfiniteTransition
+import androidx.compose.animation.core.tween
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.SportsSoccer
-import androidx.compose.material3.CircularProgressIndicator
-import androidx.compose.material3.Icon
-import androidx.compose.material3.MaterialTheme
+import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Brush
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import com.example.sportsbook.ui.theme.CardWhite
-import com.example.sportsbook.ui.theme.GoldAccent
-import com.example.sportsbook.ui.theme.NavBarBg
-import com.example.sportsbook.ui.theme.SportsBookTheme
+import com.example.sportsbook.ui.theme.DarkBg
+import com.example.sportsbook.ui.theme.DarkSurface
+import com.example.sportsbook.ui.theme.DarkTextSecondary
+import com.example.sportsbook.ui.theme.GreenAccent
+import com.example.sportsbook.ui.theme.GreenDark
 
 @Composable
 fun SplashScreen(
@@ -57,55 +68,103 @@ fun SplashScreen(
 @Composable
 private fun SplashScreenContent(
     isLoading: Boolean,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
 ) {
     Box(
         modifier = modifier
             .fillMaxSize()
-            .background(NavBarBg),
-        contentAlignment = Alignment.Center
+            .background(DarkBg),
+        contentAlignment = Alignment.Center,
     ) {
         Column(
             horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.Center
+            verticalArrangement = Arrangement.Center,
         ) {
-            Icon(
-                imageVector = Icons.Default.SportsSoccer,
-                contentDescription = "SportsBook app icon",
-                modifier = Modifier.size(80.dp),
-                tint = GoldAccent
-            )
-            Spacer(modifier = Modifier.height(16.dp))
-            Text(
-                text = "SportsBook",
-                style = MaterialTheme.typography.displayMedium.copy(
-                    fontWeight = FontWeight.Bold
-                ),
-                color = CardWhite
-            )
-            Spacer(modifier = Modifier.height(32.dp))
-            if (isLoading) {
-                CircularProgressIndicator(
-                    color = GoldAccent,
-                    strokeWidth = 3.dp
-                )
+            // ── Logo circle ──────────────────────────────────────────────
+            Box(
+                modifier = Modifier
+                    .size(100.dp)
+                    .clip(CircleShape)
+                    .background(Brush.linearGradient(listOf(GreenAccent, GreenDark))),
+                contentAlignment = Alignment.Center,
+            ) {
+                Text("⚽", fontSize = 48.sp)
             }
+
+            Spacer(modifier = Modifier.height(24.dp))
+
+            // ── App name ─────────────────────────────────────────────────
+            Text(
+                text = "SportsBooks",
+                fontSize = 32.sp,
+                fontWeight = FontWeight.ExtraBold,
+                color = GreenAccent,
+            )
+
+            // ── Tagline ──────────────────────────────────────────────────
+            Text(
+                text = "Book  •  Play  •  Compete",
+                fontSize = 14.sp,
+                color = DarkTextSecondary,
+                modifier = Modifier.padding(top = 8.dp),
+            )
+
+            Spacer(modifier = Modifier.height(48.dp))
+
+            // ── Loading bar ──────────────────────────────────────────────
+            if (isLoading) {
+                val infiniteTransition = rememberInfiniteTransition(label = "splash_bar")
+                val progress by infiniteTransition.animateFloat(
+                    initialValue = 0f,
+                    targetValue = 1f,
+                    animationSpec = infiniteRepeatable(
+                        animation = tween(durationMillis = 1400, easing = LinearEasing),
+                        repeatMode = RepeatMode.Restart,
+                    ),
+                    label = "bar_progress",
+                )
+
+                Box(
+                    modifier = Modifier
+                        .width(200.dp)
+                        .height(4.dp)
+                        .clip(RoundedCornerShape(2.dp))
+                        .background(DarkSurface),
+                ) {
+                    Box(
+                        modifier = Modifier
+                            .fillMaxWidth(progress)
+                            .height(4.dp)
+                            .clip(RoundedCornerShape(2.dp))
+                            .background(
+                                Brush.linearGradient(listOf(GreenAccent, GreenDark))
+                            ),
+                    )
+                }
+            }
+
+            Spacer(modifier = Modifier.height(16.dp))
+
+            // ── Version ──────────────────────────────────────────────────
+            Text(
+                text = "v2.0.0",
+                fontSize = 12.sp,
+                color = Color(0xFF444444),
+            )
         }
     }
 }
 
-@Preview(showBackground = true)
+// ── Previews ──────────────────────────────────────────────────────────────────
+
+@Preview(showBackground = true, backgroundColor = 0xFF121212)
 @Composable
 private fun SplashScreenLoadingPreview() {
-    SportsBookTheme {
-        SplashScreenContent(isLoading = true)
-    }
+    SplashScreenContent(isLoading = true)
 }
 
-@Preview(showBackground = true)
+@Preview(showBackground = true, backgroundColor = 0xFF121212)
 @Composable
 private fun SplashScreenIdlePreview() {
-    SportsBookTheme {
-        SplashScreenContent(isLoading = false)
-    }
+    SplashScreenContent(isLoading = false)
 }

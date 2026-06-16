@@ -28,25 +28,15 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.material.icons.filled.CheckCircle
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.LocationOn
 import androidx.compose.material.icons.filled.Person
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material.icons.filled.Star
-import androidx.compose.material3.Button
-import androidx.compose.material3.ButtonDefaults
-import androidx.compose.material3.Card
-import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
-import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedTextField
-import androidx.compose.material3.OutlinedTextFieldDefaults
-import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Slider
 import androidx.compose.material3.SliderDefaults
 import androidx.compose.material3.SnackbarHost
@@ -54,7 +44,7 @@ import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Switch
 import androidx.compose.material3.SwitchDefaults
 import androidx.compose.material3.Text
-import androidx.compose.material3.TopAppBar
+import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -73,11 +63,14 @@ import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.example.sportsbook.domain.model.Friendship
-import com.example.sportsbook.ui.theme.GoldDark
+import com.example.sportsbook.ui.theme.DarkBg
+import com.example.sportsbook.ui.theme.DarkBorder
+import com.example.sportsbook.ui.theme.DarkSurface
+import com.example.sportsbook.ui.theme.DarkTextPrimary
+import com.example.sportsbook.ui.theme.DarkTextSecondary
 import com.example.sportsbook.ui.theme.GoldLight
-import com.example.sportsbook.ui.theme.GoldAccent
-import com.stripe.android.paymentsheet.PaymentSheet
-import com.stripe.android.paymentsheet.rememberPaymentSheet
+import com.example.sportsbook.ui.theme.GreenAccent
+import com.example.sportsbook.ui.theme.GreenDark
 import kotlin.math.roundToInt
 
 private val XpGreen = Color(0xFF2E7D32)
@@ -85,7 +78,6 @@ private val XpGreenLight = Color(0xFF4CAF50)
 private val SplitBlue = Color(0xFF1565C0)
 private val SplitBlueLight = Color(0xFF42A5F5)
 
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun PaymentCheckoutScreen(
     onPaymentSuccess: () -> Unit,
@@ -94,10 +86,6 @@ fun PaymentCheckoutScreen(
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
     val snackbarHostState = remember { SnackbarHostState() }
-
-    val paymentSheet = rememberPaymentSheet { result ->
-        viewModel.onPaymentSheetResult(result)
-    }
 
     LaunchedEffect(uiState.paymentSuccess) {
         if (uiState.paymentSuccess) {
@@ -112,17 +100,6 @@ fun PaymentCheckoutScreen(
         }
     }
 
-    LaunchedEffect(uiState.clientSecret) {
-        uiState.clientSecret?.let { secret ->
-            paymentSheet.presentWithPaymentIntent(
-                paymentIntentClientSecret = secret,
-                configuration = PaymentSheet.Configuration(
-                    merchantDisplayName = "SportsBook",
-                )
-            )
-        }
-    }
-
     val finalAmount = (uiState.amount - uiState.xpDiscount).coerceAtLeast(0.0)
     val isFreeWithXp = uiState.amount > 0 && finalAmount == 0.0 && uiState.xpRedeemed
     val displayPayAmount = if (uiState.splitEnabled && uiState.selectedFriends.isNotEmpty()) {
@@ -131,42 +108,67 @@ fun PaymentCheckoutScreen(
         finalAmount
     }
 
-    Scaffold(
-        topBar = {
-            TopAppBar(
-                title = { Text("Checkout") },
-                navigationIcon = {
-                    IconButton(onClick = onBack) {
-                        Icon(
-                            imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                            contentDescription = "Back"
-                        )
-                    }
-                }
-            )
-        },
-        snackbarHost = { SnackbarHost(hostState = snackbarHostState) }
-    ) { paddingValues ->
+    Box(
+        modifier = Modifier
+            .fillMaxSize()
+            .background(com.example.sportsbook.ui.theme.DarkBg),
+    ) {
         if (uiState.isLoadingBooking) {
-            Box(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .padding(paddingValues),
-                contentAlignment = Alignment.Center
+            Column(
+                modifier = Modifier.align(Alignment.Center),
+                horizontalAlignment = Alignment.CenterHorizontally,
             ) {
-                Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                    CircularProgressIndicator()
-                    Spacer(modifier = Modifier.height(12.dp))
-                    Text("Loading booking details...", style = MaterialTheme.typography.bodyMedium)
-                }
+                CircularProgressIndicator(color = GreenAccent)
+                Spacer(modifier = Modifier.height(12.dp))
+                Text("Loading booking details...", color = com.example.sportsbook.ui.theme.DarkTextSecondary)
             }
         } else {
             Column(
                 modifier = Modifier
                     .fillMaxSize()
-                    .padding(paddingValues)
                     .verticalScroll(rememberScrollState())
+                    .padding(bottom = 100.dp),
             ) {
+                // ── Custom header
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(start = 16.dp, end = 16.dp, top = 12.dp, bottom = 16.dp),
+                    verticalAlignment = Alignment.CenterVertically,
+                ) {
+                    Box(
+                        modifier = Modifier
+                            .size(40.dp)
+                            .clip(CircleShape)
+                            .background(com.example.sportsbook.ui.theme.DarkSurface)
+                            .clickable(onClick = onBack),
+                        contentAlignment = Alignment.Center,
+                    ) {
+                        Icon(Icons.AutoMirrored.Filled.ArrowBack, "Back", tint = com.example.sportsbook.ui.theme.DarkTextPrimary, modifier = Modifier.size(20.dp))
+                    }
+                    Spacer(modifier = Modifier.width(16.dp))
+                    Text("Payment", fontSize = 18.sp, fontWeight = FontWeight.Bold, color = com.example.sportsbook.ui.theme.DarkTextPrimary)
+                }
+
+                // ── Step indicators
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = 16.dp)
+                        .padding(bottom = 24.dp),
+                    horizontalArrangement = Arrangement.spacedBy(8.dp),
+                ) {
+                    listOf(true, true, true).forEachIndexed { i, _ ->
+                        Box(
+                            modifier = Modifier
+                                .weight(1f)
+                                .height(4.dp)
+                                .clip(RoundedCornerShape(2.dp))
+                                .background(if (i < 2) GreenDark else GreenAccent),
+                        )
+                    }
+                }
+
                 // ── Booking Details Card ─────────────────────────────
                 BookingDetailsCard(
                     venueName = uiState.venueName,
@@ -174,7 +176,7 @@ fun PaymentCheckoutScreen(
                     slotDate = uiState.slotDate,
                     slotTime = uiState.slotTime,
                     sportType = uiState.sportType,
-                    modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp)
+                    modifier = Modifier.padding(horizontal = 16.dp).padding(bottom = 16.dp)
                 )
 
                 // ── XP Spend Section ─────────────────────────────────
@@ -190,7 +192,7 @@ fun PaymentCheckoutScreen(
                         onXpSliderChange = viewModel::onXpSliderChange,
                         onQuickXp = viewModel::setQuickXp,
                         onApplyXpDiscount = viewModel::redeemXp,
-                        modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp)
+                        modifier = Modifier.padding(horizontal = 16.dp).padding(bottom = 16.dp)
                     )
                 }
 
@@ -209,7 +211,7 @@ fun PaymentCheckoutScreen(
                         onSearchQueryChange = viewModel::onFriendSearchQueryChange,
                         onToggleFriend = viewModel::toggleFriendSelection,
                         isFriendSelected = viewModel::isFriendSelected,
-                        modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp)
+                        modifier = Modifier.padding(horizontal = 16.dp).padding(bottom = 16.dp)
                     )
                 }
 
@@ -224,92 +226,98 @@ fun PaymentCheckoutScreen(
                     splitEnabled = uiState.splitEnabled && uiState.selectedFriends.isNotEmpty(),
                     splitPartySize = uiState.splitPartySize,
                     yourShare = uiState.yourShare,
-                    modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp)
+                    modifier = Modifier.padding(horizontal = 16.dp).padding(bottom = 16.dp)
                 )
 
-                Spacer(modifier = Modifier.height(8.dp))
-
-                // ── Pay Button ───────────────────────────────────────
-                Box(
+                // ── Secure note
+                Row(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .padding(horizontal = 16.dp),
-                    contentAlignment = Alignment.Center
+                        .padding(horizontal = 16.dp, vertical = 4.dp),
+                    horizontalArrangement = Arrangement.Center,
+                    verticalAlignment = Alignment.CenterVertically,
                 ) {
-                    when {
-                        uiState.isCreatingIntent || uiState.isProcessingPayment || uiState.isCreatingSplit -> {
-                            Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                                CircularProgressIndicator()
-                                Spacer(modifier = Modifier.height(8.dp))
-                                Text(
-                                    text = when {
-                                        uiState.isCreatingSplit -> "Setting up split..."
-                                        uiState.isCreatingIntent -> "Preparing payment..."
-                                        else -> "Processing..."
-                                    },
-                                    style = MaterialTheme.typography.bodyMedium
-                                )
-                            }
+                    Text("🔒 Secured payment • Firebase encrypted", fontSize = 12.sp, color = Color(0xFF555555))
+                }
+            }
+        }
+
+        // ── Bottom pay button
+        if (!uiState.isLoadingBooking) {
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .align(Alignment.BottomCenter)
+                    .background(
+                        Brush.verticalGradient(listOf(Color.Transparent, com.example.sportsbook.ui.theme.DarkBg, com.example.sportsbook.ui.theme.DarkBg)),
+                    )
+                    .padding(16.dp),
+            ) {
+                when {
+                    uiState.isCreatingIntent || uiState.isProcessingPayment || uiState.isCreatingSplit -> {
+                        Column(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalAlignment = Alignment.CenterHorizontally,
+                        ) {
+                            CircularProgressIndicator(color = GreenAccent, modifier = Modifier.size(24.dp))
+                            Spacer(modifier = Modifier.height(8.dp))
+                            Text(
+                                text = when {
+                                    uiState.isCreatingSplit -> "Setting up split..."
+                                    uiState.isCreatingIntent -> "Preparing payment..."
+                                    else -> "Processing..."
+                                },
+                                color = com.example.sportsbook.ui.theme.DarkTextSecondary,
+                                fontSize = 14.sp,
+                            )
                         }
-                        isFreeWithXp -> {
-                            Button(
-                                onClick = { viewModel.initiatePayment() },
-                                modifier = Modifier
-                                    .fillMaxWidth()
-                                    .height(56.dp),
-                                colors = ButtonDefaults.buttonColors(
-                                    containerColor = XpGreen
-                                ),
-                                shape = RoundedCornerShape(16.dp)
-                            ) {
-                                Icon(
-                                    imageVector = Icons.Default.Star,
-                                    contentDescription = null,
-                                    modifier = Modifier.size(20.dp)
-                                )
-                                Spacer(modifier = Modifier.width(8.dp))
-                                Text(
-                                    "Complete Booking — Free with XP!",
-                                    fontWeight = FontWeight.Bold,
-                                    fontSize = 16.sp
-                                )
-                            }
+                    }
+                    isFreeWithXp -> {
+                        Box(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .clip(RoundedCornerShape(16.dp))
+                                .background(Brush.linearGradient(listOf(XpGreen, XpGreenLight)))
+                                .clickable { viewModel.initiatePayment() }
+                                .padding(vertical = 18.dp),
+                            contentAlignment = Alignment.Center,
+                        ) {
+                            Text("⭐ Complete Booking — Free with XP!", fontSize = 17.sp, fontWeight = FontWeight.Bold, color = Color.White)
                         }
-                        uiState.clientSecret == null -> {
-                            Button(
-                                onClick = { viewModel.initiatePayment() },
-                                modifier = Modifier
-                                    .fillMaxWidth()
-                                    .height(56.dp),
-                                shape = RoundedCornerShape(16.dp),
-                                colors = if (uiState.splitEnabled && uiState.selectedFriends.isNotEmpty()) {
-                                    ButtonDefaults.buttonColors(containerColor = SplitBlue)
-                                } else {
-                                    ButtonDefaults.buttonColors()
-                                }
-                            ) {
-                                if (uiState.splitEnabled && uiState.selectedFriends.isNotEmpty()) {
-                                    Text(
-                                        text = "Pay Your Share — ${"%.0f".format(displayPayAmount)} ден",
-                                        fontWeight = FontWeight.Bold,
-                                        fontSize = 16.sp
-                                    )
-                                } else {
-                                    val amt = if (uiState.amount > 0) displayPayAmount else uiState.amount
-                                    Text(
-                                        text = if (amt > 0) "Pay ${"%.0f".format(amt)} ден" else "Proceed to Payment",
-                                        fontWeight = FontWeight.Bold,
-                                        fontSize = 16.sp
-                                    )
-                                }
+                    }
+                    else -> {
+                        Box(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .clip(RoundedCornerShape(16.dp))
+                                .background(
+                                    if (uiState.splitEnabled && uiState.selectedFriends.isNotEmpty())
+                                        Brush.linearGradient(listOf(SplitBlue, SplitBlueLight))
+                                    else
+                                        Brush.linearGradient(listOf(GreenAccent, GreenDark)),
+                                )
+                                .clickable { viewModel.initiatePayment() }
+                                .padding(vertical = 18.dp),
+                            contentAlignment = Alignment.Center,
+                        ) {
+                            val amt = if (uiState.amount > 0) displayPayAmount else uiState.amount
+                            val label = when {
+                                uiState.splitEnabled && uiState.selectedFriends.isNotEmpty() ->
+                                    "Pay Your Share — ${"%.0f".format(displayPayAmount)} ден"
+                                amt > 0 -> "🔒 Pay ${"%.0f".format(amt)} ден"
+                                else -> "🔒 Proceed to Payment"
                             }
+                            Text(label, fontSize = 17.sp, fontWeight = FontWeight.Bold, color = Color.White)
                         }
                     }
                 }
-
-                Spacer(modifier = Modifier.height(24.dp))
             }
         }
+
+        SnackbarHost(
+            hostState = snackbarHostState,
+            modifier = Modifier.align(Alignment.BottomCenter).padding(bottom = 88.dp),
+        )
     }
 }
 
@@ -325,54 +333,26 @@ private fun BookingDetailsCard(
     sportType: String?,
     modifier: Modifier = Modifier
 ) {
-    Card(
-        modifier = modifier.fillMaxWidth(),
-        colors = CardDefaults.cardColors(
-            containerColor = MaterialTheme.colorScheme.surfaceContainerHigh
-        ),
-        shape = RoundedCornerShape(16.dp)
+    Column(
+        modifier = modifier
+            .fillMaxWidth()
+            .clip(RoundedCornerShape(16.dp))
+            .background(DarkSurface)
+            .border(1.dp, DarkBorder, RoundedCornerShape(16.dp))
+            .padding(16.dp),
     ) {
-        Column(modifier = Modifier.padding(16.dp)) {
-            // Entity name
-            val entityName = venueName ?: coachName ?: "Booking"
-            val entityIcon = if (venueName != null) Icons.Default.LocationOn else Icons.Default.Person
-            Row(verticalAlignment = Alignment.CenterVertically) {
-                Icon(
-                    imageVector = entityIcon,
-                    contentDescription = null,
-                    tint = GoldAccent,
-                    modifier = Modifier.size(24.dp)
-                )
-                Spacer(modifier = Modifier.width(8.dp))
-                Text(
-                    text = entityName,
-                    style = MaterialTheme.typography.titleMedium,
-                    fontWeight = FontWeight.Bold,
-                    maxLines = 1,
-                    overflow = TextOverflow.Ellipsis
-                )
-            }
-
-            Spacer(modifier = Modifier.height(12.dp))
-
-            // Date & Time row
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween
-            ) {
-                slotDate?.let { date ->
-                    DetailChip(label = "Date", value = date)
-                }
-                slotTime?.let { time ->
-                    DetailChip(label = "Time", value = time)
-                }
-                sportType?.let { sport ->
-                    DetailChip(
-                        label = "Sport",
-                        value = sport.lowercase().replaceFirstChar { it.uppercase() }
-                    )
-                }
-            }
+        val entityName = venueName ?: coachName ?: "Booking"
+        val entityIcon = if (venueName != null) Icons.Default.LocationOn else Icons.Default.Person
+        Row(verticalAlignment = Alignment.CenterVertically) {
+            Icon(imageVector = entityIcon, contentDescription = null, tint = GreenAccent, modifier = Modifier.size(24.dp))
+            Spacer(modifier = Modifier.width(8.dp))
+            Text(text = entityName, fontSize = 16.sp, fontWeight = FontWeight.Bold, color = DarkTextPrimary, maxLines = 1, overflow = TextOverflow.Ellipsis)
+        }
+        Spacer(modifier = Modifier.height(12.dp))
+        Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
+            slotDate?.let { date -> DetailChip(label = "Date", value = date) }
+            slotTime?.let { time -> DetailChip(label = "Time", value = time) }
+            sportType?.let { sport -> DetailChip(label = "Sport", value = sport.lowercase().replaceFirstChar { it.uppercase() }) }
         }
     }
 }
@@ -380,17 +360,9 @@ private fun BookingDetailsCard(
 @Composable
 private fun DetailChip(label: String, value: String) {
     Column(horizontalAlignment = Alignment.CenterHorizontally) {
-        Text(
-            text = label,
-            style = MaterialTheme.typography.labelSmall,
-            color = MaterialTheme.colorScheme.onSurfaceVariant
-        )
+        Text(text = label, fontSize = 11.sp, color = DarkTextSecondary)
         Spacer(modifier = Modifier.height(2.dp))
-        Text(
-            text = value,
-            style = MaterialTheme.typography.bodyMedium,
-            fontWeight = FontWeight.SemiBold
-        )
+        Text(text = value, fontSize = 14.sp, fontWeight = FontWeight.SemiBold, color = DarkTextPrimary)
     }
 }
 
@@ -413,216 +385,97 @@ private fun SplitWithFriendsSection(
     isFriendSelected: (Friendship) -> Boolean,
     modifier: Modifier = Modifier
 ) {
-    Card(
-        modifier = modifier.fillMaxWidth(),
-        shape = RoundedCornerShape(16.dp),
-        colors = CardDefaults.cardColors(
-            containerColor = Color.Transparent
-        )
+    Box(
+        modifier = modifier
+            .fillMaxWidth()
+            .clip(RoundedCornerShape(16.dp))
+            .background(Brush.linearGradient(listOf(SplitBlue.copy(alpha = 0.10f), SplitBlueLight.copy(alpha = 0.06f), Color.White.copy(alpha = 0.02f))))
+            .border(1.dp, Brush.linearGradient(listOf(SplitBlue.copy(alpha = 0.4f), SplitBlueLight.copy(alpha = 0.2f))), RoundedCornerShape(16.dp)),
     ) {
-        Box(
-            modifier = Modifier
-                .fillMaxWidth()
-                .background(
-                    brush = Brush.linearGradient(
-                        colors = listOf(
-                            SplitBlue.copy(alpha = 0.10f),
-                            SplitBlueLight.copy(alpha = 0.06f),
-                            Color.White.copy(alpha = 0.02f)
-                        )
-                    )
-                )
-                .border(
-                    width = 1.dp,
-                    brush = Brush.linearGradient(
-                        colors = listOf(
-                            SplitBlue.copy(alpha = 0.4f),
-                            SplitBlueLight.copy(alpha = 0.2f)
-                        )
-                    ),
-                    shape = RoundedCornerShape(16.dp)
-                )
-        ) {
-            Column(modifier = Modifier.padding(16.dp)) {
-                // ── Header with toggle ──────────────────────────────
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.SpaceBetween
-                ) {
-                    Row(verticalAlignment = Alignment.CenterVertically) {
-                        Box(
-                            modifier = Modifier
-                                .size(36.dp)
-                                .clip(CircleShape)
-                                .background(SplitBlue.copy(alpha = 0.15f)),
-                            contentAlignment = Alignment.Center
-                        ) {
-                            Icon(
-                                imageVector = Icons.Default.Person,
-                                contentDescription = null,
-                                tint = SplitBlue,
-                                modifier = Modifier.size(20.dp)
-                            )
+        Column(modifier = Modifier.padding(16.dp)) {
+            // ── Header with toggle ──────────────────────────────
+            Row(modifier = Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.SpaceBetween) {
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Box(modifier = Modifier.size(36.dp).clip(CircleShape).background(SplitBlue.copy(alpha = 0.15f)), contentAlignment = Alignment.Center) {
+                        Icon(imageVector = Icons.Default.Person, contentDescription = null, tint = SplitBlue, modifier = Modifier.size(20.dp))
+                    }
+                    Spacer(modifier = Modifier.width(10.dp))
+                    Column {
+                        Text("Split with Friends", fontSize = 16.sp, fontWeight = FontWeight.Bold, color = DarkTextPrimary)
+                        Text("Split the cost equally", fontSize = 11.sp, color = DarkTextSecondary)
+                    }
+                }
+                Switch(checked = splitEnabled, onCheckedChange = onToggleSplit,
+                    colors = SwitchDefaults.colors(checkedThumbColor = Color.White, checkedTrackColor = SplitBlue))
+            }
+
+            // ── Expanded content when enabled ───────────────────
+            AnimatedVisibility(visible = splitEnabled, enter = expandVertically() + fadeIn(), exit = shrinkVertically() + fadeOut()) {
+                Column {
+                    Spacer(modifier = Modifier.height(14.dp))
+
+                    if (selectedFriends.isNotEmpty()) {
+                        Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                            selectedFriends.forEach { friend ->
+                                SelectedFriendChip(name = friend.friendName ?: "Friend", onRemove = { onToggleFriend(friend) })
+                            }
                         }
-                        Spacer(modifier = Modifier.width(10.dp))
-                        Column {
-                            Text(
-                                text = "Split with Friends",
-                                style = MaterialTheme.typography.titleMedium,
-                                fontWeight = FontWeight.Bold
-                            )
-                            Text(
-                                text = "Split the cost equally",
-                                style = MaterialTheme.typography.labelSmall,
-                                color = MaterialTheme.colorScheme.onSurfaceVariant
-                            )
+                        Spacer(modifier = Modifier.height(10.dp))
+                    }
+
+                    // Search field
+                    Row(
+                        modifier = Modifier.fillMaxWidth().clip(RoundedCornerShape(12.dp)).background(DarkBg)
+                            .border(1.dp, SplitBlue.copy(alpha = 0.4f), RoundedCornerShape(12.dp)).padding(horizontal = 12.dp, vertical = 10.dp),
+                        verticalAlignment = Alignment.CenterVertically,
+                    ) {
+                        Icon(imageVector = Icons.Default.Search, contentDescription = null, modifier = Modifier.size(18.dp), tint = DarkTextSecondary)
+                        Spacer(modifier = Modifier.width(8.dp))
+                        BasicTextField(
+                            value = searchQuery, onValueChange = onSearchQueryChange, singleLine = true,
+                            textStyle = androidx.compose.ui.text.TextStyle(color = DarkTextPrimary, fontSize = 14.sp),
+                            cursorBrush = SolidColor(GreenAccent), modifier = Modifier.weight(1f),
+                            decorationBox = { inner ->
+                                Box { if (searchQuery.isEmpty()) Text("Search friends...", fontSize = 14.sp, color = Color(0xFF555555)); inner() }
+                            },
+                        )
+                    }
+
+                    Spacer(modifier = Modifier.height(10.dp))
+
+                    if (isLoading) {
+                        Box(modifier = Modifier.fillMaxWidth().padding(vertical = 16.dp), contentAlignment = Alignment.Center) {
+                            CircularProgressIndicator(modifier = Modifier.size(24.dp), strokeWidth = 2.dp, color = SplitBlueLight)
+                        }
+                    } else if (friends.isEmpty()) {
+                        Text(text = if (searchQuery.isNotBlank()) "No friends found" else "No friends yet",
+                            fontSize = 13.sp, color = DarkTextSecondary, modifier = Modifier.padding(vertical = 8.dp))
+                    } else {
+                        Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
+                            friends.take(5).forEach { friend ->
+                                FriendRow(friend = friend, isSelected = isFriendSelected(friend), onToggle = { onToggleFriend(friend) })
+                            }
+                            if (friends.size > 5) {
+                                Text("Search to find more friends...", fontSize = 11.sp, color = DarkTextSecondary, modifier = Modifier.padding(start = 8.dp, top = 4.dp))
+                            }
                         }
                     }
-                    Switch(
-                        checked = splitEnabled,
-                        onCheckedChange = onToggleSplit,
-                        colors = SwitchDefaults.colors(
-                            checkedThumbColor = Color.White,
-                            checkedTrackColor = SplitBlue
-                        )
-                    )
-                }
 
-                // ── Expanded content when enabled ───────────────────
-                AnimatedVisibility(
-                    visible = splitEnabled,
-                    enter = expandVertically() + fadeIn(),
-                    exit = shrinkVertically() + fadeOut()
-                ) {
-                    Column {
-                        Spacer(modifier = Modifier.height(14.dp))
-
-                        // Selected friends chips
-                        if (selectedFriends.isNotEmpty()) {
-                            Row(
-                                modifier = Modifier.fillMaxWidth(),
-                                horizontalArrangement = Arrangement.spacedBy(8.dp)
-                            ) {
-                                selectedFriends.forEach { friend ->
-                                    SelectedFriendChip(
-                                        name = friend.friendName ?: "Friend",
-                                        onRemove = { onToggleFriend(friend) }
-                                    )
-                                }
+                    if (selectedFriends.isNotEmpty()) {
+                        Spacer(modifier = Modifier.height(12.dp))
+                        Box(modifier = Modifier.fillMaxWidth().height(1.dp).background(SplitBlue.copy(alpha = 0.2f)))
+                        Spacer(modifier = Modifier.height(12.dp))
+                        Row(
+                            modifier = Modifier.fillMaxWidth().clip(RoundedCornerShape(12.dp)).background(SplitBlue.copy(alpha = 0.08f)).padding(12.dp),
+                            verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.SpaceBetween,
+                        ) {
+                            Column {
+                                Text("Splitting $splitPartySize ways", fontSize = 14.sp, fontWeight = FontWeight.SemiBold, color = SplitBlue)
+                                Text("${"%.0f".format(totalAmount)} ден ÷ $splitPartySize people", fontSize = 11.sp, color = SplitBlue.copy(alpha = 0.7f))
                             }
-                            Spacer(modifier = Modifier.height(10.dp))
-                        }
-
-                        // Search field
-                        OutlinedTextField(
-                            value = searchQuery,
-                            onValueChange = onSearchQueryChange,
-                            placeholder = { Text("Search friends...", fontSize = 14.sp) },
-                            leadingIcon = {
-                                Icon(
-                                    imageVector = Icons.Default.Search,
-                                    contentDescription = null,
-                                    modifier = Modifier.size(18.dp),
-                                    tint = MaterialTheme.colorScheme.onSurfaceVariant
-                                )
-                            },
-                            modifier = Modifier.fillMaxWidth(),
-                            shape = RoundedCornerShape(12.dp),
-                            singleLine = true,
-                            colors = OutlinedTextFieldDefaults.colors(
-                                focusedBorderColor = SplitBlue,
-                                unfocusedBorderColor = MaterialTheme.colorScheme.outline.copy(alpha = 0.3f)
-                            ),
-                            textStyle = MaterialTheme.typography.bodyMedium
-                        )
-
-                        Spacer(modifier = Modifier.height(10.dp))
-
-                        // Friend list
-                        if (isLoading) {
-                            Box(
-                                modifier = Modifier
-                                    .fillMaxWidth()
-                                    .padding(vertical = 16.dp),
-                                contentAlignment = Alignment.Center
-                            ) {
-                                CircularProgressIndicator(
-                                    modifier = Modifier.size(24.dp),
-                                    strokeWidth = 2.dp
-                                )
-                            }
-                        } else if (friends.isEmpty()) {
-                            Text(
-                                text = if (searchQuery.isNotBlank()) "No friends found" else "No friends yet",
-                                style = MaterialTheme.typography.bodySmall,
-                                color = MaterialTheme.colorScheme.onSurfaceVariant,
-                                modifier = Modifier.padding(vertical = 8.dp)
-                            )
-                        } else {
-                            Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
-                                friends.take(5).forEach { friend ->
-                                    FriendRow(
-                                        friend = friend,
-                                        isSelected = isFriendSelected(friend),
-                                        onToggle = { onToggleFriend(friend) }
-                                    )
-                                }
-                                if (friends.size > 5) {
-                                    Text(
-                                        text = "Search to find more friends...",
-                                        style = MaterialTheme.typography.labelSmall,
-                                        color = MaterialTheme.colorScheme.onSurfaceVariant,
-                                        modifier = Modifier.padding(start = 8.dp, top = 4.dp)
-                                    )
-                                }
-                            }
-                        }
-
-                        // Split summary
-                        if (selectedFriends.isNotEmpty()) {
-                            Spacer(modifier = Modifier.height(12.dp))
-                            HorizontalDivider(
-                                color = SplitBlue.copy(alpha = 0.2f)
-                            )
-                            Spacer(modifier = Modifier.height(12.dp))
-
-                            // Split calculation display
-                            Row(
-                                modifier = Modifier
-                                    .fillMaxWidth()
-                                    .clip(RoundedCornerShape(12.dp))
-                                    .background(SplitBlue.copy(alpha = 0.08f))
-                                    .padding(12.dp),
-                                verticalAlignment = Alignment.CenterVertically,
-                                horizontalArrangement = Arrangement.SpaceBetween
-                            ) {
-                                Column {
-                                    Text(
-                                        text = "Splitting $splitPartySize ways",
-                                        style = MaterialTheme.typography.bodyMedium,
-                                        fontWeight = FontWeight.SemiBold,
-                                        color = SplitBlue
-                                    )
-                                    Text(
-                                        text = "${"%.0f".format(totalAmount)} ден ÷ $splitPartySize people",
-                                        style = MaterialTheme.typography.labelSmall,
-                                        color = SplitBlue.copy(alpha = 0.7f)
-                                    )
-                                }
-                                Column(horizontalAlignment = Alignment.End) {
-                                    Text(
-                                        text = "${"%.0f".format(yourShare)} ден",
-                                        style = MaterialTheme.typography.titleMedium,
-                                        fontWeight = FontWeight.ExtraBold,
-                                        color = SplitBlue
-                                    )
-                                    Text(
-                                        text = "each",
-                                        style = MaterialTheme.typography.labelSmall,
-                                        color = SplitBlue.copy(alpha = 0.7f)
-                                    )
-                                }
+                            Column(horizontalAlignment = Alignment.End) {
+                                Text("${"%.0f".format(yourShare)} ден", fontSize = 16.sp, fontWeight = FontWeight.ExtraBold, color = SplitBlue)
+                                Text("each", fontSize = 11.sp, color = SplitBlue.copy(alpha = 0.7f))
                             }
                         }
                     }
@@ -673,7 +526,7 @@ private fun FriendRow(
     onToggle: () -> Unit
 ) {
     val bgColor = if (isSelected) SplitBlue.copy(alpha = 0.10f) else Color.Transparent
-    val borderColor = if (isSelected) SplitBlue.copy(alpha = 0.4f) else MaterialTheme.colorScheme.outline.copy(alpha = 0.15f)
+    val borderColor = if (isSelected) SplitBlue.copy(alpha = 0.4f) else DarkBorder.copy(alpha = 0.5f)
 
     Row(
         modifier = Modifier
@@ -683,47 +536,30 @@ private fun FriendRow(
             .border(1.dp, borderColor, RoundedCornerShape(10.dp))
             .clickable(onClick = onToggle)
             .padding(horizontal = 12.dp, vertical = 10.dp),
-        verticalAlignment = Alignment.CenterVertically
+        verticalAlignment = Alignment.CenterVertically,
     ) {
-        // Avatar placeholder
         Box(
             modifier = Modifier
                 .size(32.dp)
                 .clip(CircleShape)
-                .background(
-                    if (isSelected) SplitBlue.copy(alpha = 0.2f)
-                    else MaterialTheme.colorScheme.surfaceContainerHighest
-                ),
-            contentAlignment = Alignment.Center
+                .background(if (isSelected) SplitBlue.copy(alpha = 0.2f) else DarkSurface),
+            contentAlignment = Alignment.Center,
         ) {
             val initial = friend.friendName?.firstOrNull()?.uppercase() ?: "?"
-            Text(
-                text = initial,
-                fontSize = 14.sp,
-                fontWeight = FontWeight.Bold,
-                color = if (isSelected) SplitBlue else MaterialTheme.colorScheme.onSurfaceVariant
-            )
+            Text(initial, fontSize = 14.sp, fontWeight = FontWeight.Bold, color = if (isSelected) SplitBlue else DarkTextSecondary)
         }
-
         Spacer(modifier = Modifier.width(10.dp))
-
         Text(
             text = friend.friendName ?: "Unknown",
-            style = MaterialTheme.typography.bodyMedium,
+            fontSize = 14.sp,
             fontWeight = if (isSelected) FontWeight.SemiBold else FontWeight.Normal,
-            color = if (isSelected) SplitBlue else MaterialTheme.colorScheme.onSurface,
+            color = if (isSelected) SplitBlue else DarkTextPrimary,
             modifier = Modifier.weight(1f),
             maxLines = 1,
-            overflow = TextOverflow.Ellipsis
+            overflow = TextOverflow.Ellipsis,
         )
-
         if (isSelected) {
-            Icon(
-                imageVector = Icons.Default.CheckCircle,
-                contentDescription = "Selected",
-                tint = SplitBlue,
-                modifier = Modifier.size(20.dp)
-            )
+            Icon(imageVector = Icons.Default.CheckCircle, contentDescription = "Selected", tint = SplitBlue, modifier = Modifier.size(20.dp))
         }
     }
 }
@@ -749,89 +585,33 @@ private fun XpSpendSection(
     val maxDiscountMkd = maxRedeemable / 100.0
     val canCoverFull = maxRedeemable >= (totalPrice * 100).roundToInt()
 
-    Card(
-        modifier = modifier.fillMaxWidth(),
-        shape = RoundedCornerShape(16.dp),
-        colors = CardDefaults.cardColors(
-            containerColor = Color.Transparent
-        )
+    Box(
+        modifier = modifier
+            .fillMaxWidth()
+            .clip(RoundedCornerShape(16.dp))
+            .background(Brush.linearGradient(listOf(GreenDark.copy(alpha = 0.15f), GreenAccent.copy(alpha = 0.08f), GoldLight.copy(alpha = 0.05f))))
+            .border(1.dp, Brush.linearGradient(listOf(GreenAccent.copy(alpha = 0.5f), GoldLight.copy(alpha = 0.3f))), RoundedCornerShape(16.dp)),
     ) {
-        Box(
-            modifier = Modifier
-                .fillMaxWidth()
-                .background(
-                    brush = Brush.linearGradient(
-                        colors = listOf(
-                            GoldDark.copy(alpha = 0.15f),
-                            GoldAccent.copy(alpha = 0.08f),
-                            GoldLight.copy(alpha = 0.05f)
-                        )
-                    )
-                )
-                .border(
-                    width = 1.dp,
-                    brush = Brush.linearGradient(
-                        colors = listOf(GoldAccent.copy(alpha = 0.5f), GoldLight.copy(alpha = 0.3f))
-                    ),
-                    shape = RoundedCornerShape(16.dp)
-                )
-        ) {
-            Column(modifier = Modifier.padding(16.dp)) {
-                // ── Header row: XP icon + title + balance ────────
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.SpaceBetween
-                ) {
-                    Row(verticalAlignment = Alignment.CenterVertically) {
-                        // XP badge
-                        Box(
-                            modifier = Modifier
-                                .size(36.dp)
-                                .clip(CircleShape)
-                                .background(
-                                    brush = Brush.radialGradient(
-                                        colors = listOf(GoldAccent, GoldDark)
-                                    )
-                                ),
-                            contentAlignment = Alignment.Center
-                        ) {
-                            Text(
-                                text = "XP",
-                                fontSize = 12.sp,
-                                fontWeight = FontWeight.ExtraBold,
-                                color = Color.Black
-                            )
-                        }
-                        Spacer(modifier = Modifier.width(10.dp))
-                        Column {
-                            Text(
-                                text = "Use XP as Discount",
-                                style = MaterialTheme.typography.titleMedium,
-                                fontWeight = FontWeight.Bold
-                            )
-                            Text(
-                                text = "Level $currentLevel  •  100 XP = 1 ден",
-                                style = MaterialTheme.typography.labelSmall,
-                                color = MaterialTheme.colorScheme.onSurfaceVariant
-                            )
-                        }
-                    }
-                    // XP balance badge
+        Column(modifier = Modifier.padding(16.dp)) {
+            // ── Header row: XP icon + title + balance ────────
+            Row(modifier = Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.SpaceBetween) {
+                Row(verticalAlignment = Alignment.CenterVertically) {
                     Box(
-                        modifier = Modifier
-                            .clip(RoundedCornerShape(20.dp))
-                            .background(GoldAccent.copy(alpha = 0.2f))
-                            .padding(horizontal = 12.dp, vertical = 6.dp)
+                        modifier = Modifier.size(36.dp).clip(CircleShape).background(Brush.radialGradient(colors = listOf(GreenAccent, GreenDark))),
+                        contentAlignment = Alignment.Center,
                     ) {
-                        Text(
-                            text = "$availableXp XP",
-                            fontWeight = FontWeight.Bold,
-                            fontSize = 13.sp,
-                            color = GoldAccent
-                        )
+                        Text("XP", fontSize = 12.sp, fontWeight = FontWeight.ExtraBold, color = Color.Black)
+                    }
+                    Spacer(modifier = Modifier.width(10.dp))
+                    Column {
+                        Text("Use XP as Discount", fontSize = 16.sp, fontWeight = FontWeight.Bold, color = DarkTextPrimary)
+                        Text("Level $currentLevel  •  100 XP = 1 ден", fontSize = 11.sp, color = DarkTextSecondary)
                     }
                 }
+                Box(modifier = Modifier.clip(RoundedCornerShape(20.dp)).background(GreenAccent.copy(alpha = 0.2f)).padding(horizontal = 12.dp, vertical = 6.dp)) {
+                    Text("$availableXp XP", fontWeight = FontWeight.Bold, fontSize = 13.sp, color = GreenAccent)
+                }
+            }
 
                 Spacer(modifier = Modifier.height(16.dp))
 
@@ -865,7 +645,7 @@ private fun XpSpendSection(
                             )
                             Text(
                                 text = "$xpToRedeem XP redeemed for ${"%.0f".format(xpDiscount)} ден off",
-                                style = MaterialTheme.typography.bodySmall,
+                                fontSize = 12.sp,
                                 color = XpGreenLight.copy(alpha = 0.8f)
                             )
                         }
@@ -880,13 +660,7 @@ private fun XpSpendSection(
                 ) {
                     Column {
                         if (maxRedeemable > 0) {
-                            // Quick pick buttons
-                            Text(
-                                text = "Quick select",
-                                style = MaterialTheme.typography.labelSmall,
-                                color = MaterialTheme.colorScheme.onSurfaceVariant,
-                                modifier = Modifier.padding(bottom = 8.dp)
-                            )
+                            Text("Quick select", fontSize = 11.sp, color = DarkTextSecondary, modifier = Modifier.padding(bottom = 8.dp))
 
                             Row(
                                 modifier = Modifier.fillMaxWidth(),
@@ -934,101 +708,62 @@ private fun XpSpendSection(
                                 valueRange = 0f..maxRedeemable.toFloat(),
                                 steps = ((maxRedeemable / 100) - 1).coerceAtLeast(0),
                                 colors = SliderDefaults.colors(
-                                    thumbColor = GoldAccent,
-                                    activeTrackColor = GoldAccent,
-                                    inactiveTrackColor = GoldAccent.copy(alpha = 0.2f)
+                                    thumbColor = GreenAccent,
+                                    activeTrackColor = GreenAccent,
+                                    inactiveTrackColor = GreenAccent.copy(alpha = 0.2f)
                                 ),
                                 modifier = Modifier.fillMaxWidth()
                             )
 
-                            // Value label
-                            Row(
-                                modifier = Modifier.fillMaxWidth(),
-                                horizontalArrangement = Arrangement.SpaceBetween
-                            ) {
+                            Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
+                                Text("0 XP", fontSize = 11.sp, color = DarkTextSecondary)
                                 Text(
-                                    text = "0 XP",
-                                    style = MaterialTheme.typography.labelSmall,
-                                    color = MaterialTheme.colorScheme.onSurfaceVariant
-                                )
-                                Text(
-                                    text = if (xpToRedeem > 0) {
-                                        "$xpToRedeem XP = ${"%.0f".format(xpToRedeem / 100.0)} ден discount"
-                                    } else {
-                                        "Slide to select amount"
-                                    },
-                                    style = MaterialTheme.typography.labelSmall,
+                                    text = if (xpToRedeem > 0) "$xpToRedeem XP = ${"%.0f".format(xpToRedeem / 100.0)} ден discount" else "Slide to select amount",
+                                    fontSize = 11.sp,
                                     fontWeight = if (xpToRedeem > 0) FontWeight.Bold else FontWeight.Normal,
-                                    color = if (xpToRedeem > 0) GoldAccent else MaterialTheme.colorScheme.onSurfaceVariant
+                                    color = if (xpToRedeem > 0) GreenAccent else DarkTextSecondary,
                                 )
-                                Text(
-                                    text = "$maxRedeemable XP",
-                                    style = MaterialTheme.typography.labelSmall,
-                                    color = MaterialTheme.colorScheme.onSurfaceVariant
-                                )
+                                Text("$maxRedeemable XP", fontSize = 11.sp, color = DarkTextSecondary)
                             }
 
                             Spacer(modifier = Modifier.height(14.dp))
 
-                            // Apply button
-                            Button(
-                                onClick = onApplyXpDiscount,
-                                enabled = xpToRedeem > 0 && !isRedeemingXp,
+                            val canApply = xpToRedeem > 0 && !isRedeemingXp
+                            Box(
                                 modifier = Modifier
                                     .fillMaxWidth()
-                                    .height(48.dp),
-                                colors = ButtonDefaults.buttonColors(
-                                    containerColor = GoldAccent,
-                                    contentColor = Color.Black,
-                                    disabledContainerColor = GoldAccent.copy(alpha = 0.3f)
-                                ),
-                                shape = RoundedCornerShape(12.dp)
+                                    .height(48.dp)
+                                    .clip(RoundedCornerShape(12.dp))
+                                    .background(if (canApply) GreenAccent else GreenAccent.copy(alpha = 0.3f))
+                                    .then(if (canApply) Modifier.clickable(onClick = onApplyXpDiscount) else Modifier),
+                                contentAlignment = Alignment.Center,
                             ) {
                                 if (isRedeemingXp) {
-                                    CircularProgressIndicator(
-                                        modifier = Modifier.size(20.dp),
-                                        strokeWidth = 2.dp,
-                                        color = Color.Black
-                                    )
-                                    Spacer(modifier = Modifier.width(8.dp))
-                                    Text("Applying...", fontWeight = FontWeight.Bold)
+                                    Row(verticalAlignment = Alignment.CenterVertically) {
+                                        CircularProgressIndicator(modifier = Modifier.size(20.dp), strokeWidth = 2.dp, color = Color.Black)
+                                        Spacer(modifier = Modifier.width(8.dp))
+                                        Text("Applying...", fontWeight = FontWeight.Bold, color = Color.Black)
+                                    }
                                 } else if (xpToRedeem > 0) {
-                                    Icon(
-                                        imageVector = Icons.Default.Star,
-                                        contentDescription = null,
-                                        modifier = Modifier.size(18.dp)
-                                    )
-                                    Spacer(modifier = Modifier.width(6.dp))
-                                    Text(
-                                        text = "Apply $xpToRedeem XP (save ${"%.0f".format(xpToRedeem / 100.0)} ден)",
-                                        fontWeight = FontWeight.Bold
-                                    )
+                                    Row(verticalAlignment = Alignment.CenterVertically) {
+                                        Icon(imageVector = Icons.Default.Star, contentDescription = null, modifier = Modifier.size(18.dp), tint = Color.Black)
+                                        Spacer(modifier = Modifier.width(6.dp))
+                                        Text("Apply $xpToRedeem XP (save ${"%.0f".format(xpToRedeem / 100.0)} ден)", fontWeight = FontWeight.Bold, color = Color.Black)
+                                    }
                                 } else {
-                                    Text("Select XP to Redeem", fontWeight = FontWeight.Bold)
+                                    Text("Select XP to Redeem", fontWeight = FontWeight.Bold, color = Color.Black)
                                 }
                             }
 
-                            // Cover full hint
                             if (canCoverFull) {
                                 Spacer(modifier = Modifier.height(8.dp))
-                                Text(
-                                    text = "You have enough XP to cover this booking entirely!",
-                                    style = MaterialTheme.typography.labelSmall,
-                                    color = XpGreenLight,
-                                    fontWeight = FontWeight.SemiBold,
-                                    modifier = Modifier.fillMaxWidth()
-                                )
+                                Text("You have enough XP to cover this booking entirely!", fontSize = 11.sp, color = XpGreenLight, fontWeight = FontWeight.SemiBold, modifier = Modifier.fillMaxWidth())
                             }
                         } else {
-                            Text(
-                                text = "You need at least 100 XP to apply a discount.",
-                                style = MaterialTheme.typography.bodySmall,
-                                color = MaterialTheme.colorScheme.onSurfaceVariant
-                            )
+                            Text("You need at least 100 XP to apply a discount.", fontSize = 13.sp, color = DarkTextSecondary)
                         }
                     }
                 }
-            }
         }
     }
 }
@@ -1041,9 +776,9 @@ private fun QuickPickChip(
     onClick: () -> Unit,
     modifier: Modifier = Modifier
 ) {
-    val bgColor = if (isSelected) GoldAccent.copy(alpha = 0.25f) else Color.Transparent
-    val borderColor = if (isSelected) GoldAccent else MaterialTheme.colorScheme.outline.copy(alpha = 0.4f)
-    val textColor = if (isSelected) GoldAccent else MaterialTheme.colorScheme.onSurface
+    val bgColor = if (isSelected) GreenAccent.copy(alpha = 0.25f) else Color.Transparent
+    val borderColor = if (isSelected) GreenAccent else DarkBorder
+    val textColor = if (isSelected) GreenAccent else DarkTextPrimary
 
     Box(
         modifier = modifier
@@ -1088,31 +823,22 @@ private fun PriceBreakdownCard(
     yourShare: Double = 0.0,
     modifier: Modifier = Modifier
 ) {
-    Card(
-        modifier = modifier.fillMaxWidth(),
-        shape = RoundedCornerShape(16.dp),
-        colors = CardDefaults.cardColors(
-            containerColor = MaterialTheme.colorScheme.surfaceContainerHigh
-        )
+    Column(
+        modifier = modifier
+            .fillMaxWidth()
+            .clip(RoundedCornerShape(16.dp))
+            .background(DarkSurface)
+            .border(1.dp, DarkBorder, RoundedCornerShape(16.dp))
+            .padding(16.dp),
     ) {
-        Column(modifier = Modifier.padding(16.dp)) {
-            Text(
-                text = "Price Summary",
-                style = MaterialTheme.typography.titleMedium,
-                fontWeight = FontWeight.Bold
-            )
+        Text("Price Summary", fontSize = 16.sp, fontWeight = FontWeight.Bold, color = DarkTextPrimary)
+        Spacer(modifier = Modifier.height(12.dp))
 
-            Spacer(modifier = Modifier.height(12.dp))
-
-            // Original price
             PriceRow(
                 label = "Booking Price",
                 value = "${"%.0f".format(originalPrice)} ден",
                 decoration = if (xpRedeemed && xpDiscount > 0) TextDecoration.LineThrough else null,
-                valueColor = if (xpRedeemed && xpDiscount > 0)
-                    MaterialTheme.colorScheme.onSurfaceVariant
-                else
-                    MaterialTheme.colorScheme.onSurface
+                valueColor = if (xpRedeemed && xpDiscount > 0) DarkTextSecondary else DarkTextPrimary,
             )
 
             // XP Discount line
@@ -1150,47 +876,26 @@ private fun PriceBreakdownCard(
             }
 
             Spacer(modifier = Modifier.height(8.dp))
-            HorizontalDivider(color = MaterialTheme.colorScheme.outline.copy(alpha = 0.3f))
+            Box(modifier = Modifier.fillMaxWidth().height(1.dp).background(DarkBorder))
             Spacer(modifier = Modifier.height(8.dp))
 
-            // Final total
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                Text(
-                    text = if (splitEnabled) "Your Share" else "Total",
-                    style = MaterialTheme.typography.titleMedium,
-                    fontWeight = FontWeight.Bold
-                )
+            Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
+                Text(text = if (splitEnabled) "Your Share" else "Total", fontSize = 16.sp, fontWeight = FontWeight.Bold, color = DarkTextPrimary)
                 if (isFreeWithXp) {
                     Row(verticalAlignment = Alignment.CenterVertically) {
-                        Icon(
-                            imageVector = Icons.Default.Star,
-                            contentDescription = null,
-                            tint = GoldAccent,
-                            modifier = Modifier.size(18.dp)
-                        )
+                        Icon(imageVector = Icons.Default.Star, contentDescription = null, tint = GreenAccent, modifier = Modifier.size(18.dp))
                         Spacer(modifier = Modifier.width(4.dp))
-                        Text(
-                            text = "FREE",
-                            style = MaterialTheme.typography.titleLarge,
-                            fontWeight = FontWeight.ExtraBold,
-                            color = XpGreenLight
-                        )
+                        Text("FREE", fontSize = 20.sp, fontWeight = FontWeight.ExtraBold, color = XpGreenLight)
                     }
                 } else {
                     val displayAmount = if (splitEnabled) yourShare else finalAmount
                     Text(
                         text = "${"%.0f".format(displayAmount)} ден",
-                        style = MaterialTheme.typography.titleLarge,
-                        fontWeight = FontWeight.ExtraBold,
-                        color = if (splitEnabled) SplitBlue else MaterialTheme.colorScheme.primary
+                        fontSize = 20.sp, fontWeight = FontWeight.ExtraBold,
+                        color = if (splitEnabled) SplitBlue else GreenAccent,
                     )
                 }
             }
-        }
     }
 }
 
@@ -1198,122 +903,73 @@ private fun PriceBreakdownCard(
 private fun PriceRow(
     label: String,
     value: String,
-    valueColor: Color = MaterialTheme.colorScheme.onSurface,
-    labelColor: Color = MaterialTheme.colorScheme.onSurfaceVariant,
-    decoration: TextDecoration? = null
+    valueColor: Color = DarkTextPrimary,
+    labelColor: Color = DarkTextSecondary,
+    decoration: TextDecoration? = null,
 ) {
-    Row(
-        modifier = Modifier.fillMaxWidth(),
-        horizontalArrangement = Arrangement.SpaceBetween,
-        verticalAlignment = Alignment.CenterVertically
-    ) {
-        Text(
-            text = label,
-            style = MaterialTheme.typography.bodyMedium,
-            color = labelColor
-        )
-        Text(
-            text = value,
-            style = MaterialTheme.typography.bodyMedium,
-            fontWeight = FontWeight.SemiBold,
-            color = valueColor,
-            textDecoration = decoration
-        )
+    Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
+        Text(text = label, fontSize = 14.sp, color = labelColor)
+        Text(text = value, fontSize = 14.sp, fontWeight = FontWeight.SemiBold, color = valueColor, textDecoration = decoration)
     }
 }
 
 // ═════════════════════════════════════════════════════════════════
 // Preview
 // ═════════════════════════════════════════════════════════════════
-@OptIn(ExperimentalMaterial3Api::class)
-@Preview(showBackground = true)
+@Preview(showBackground = true, backgroundColor = 0xFF121212)
 @Composable
 private fun PaymentCheckoutScreenPreview() {
-    MaterialTheme {
-        Scaffold(
-            topBar = {
-                TopAppBar(
-                    title = { Text("Checkout") },
-                    navigationIcon = {
-                        IconButton(onClick = {}) {
-                            Icon(Icons.AutoMirrored.Filled.ArrowBack, "Back")
-                        }
-                    }
-                )
-            }
-        ) { paddingValues ->
-            Column(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .padding(paddingValues)
-                    .verticalScroll(rememberScrollState())
+    Box(modifier = Modifier.fillMaxSize().background(DarkBg)) {
+        Column(
+            modifier = Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(bottom = 100.dp),
+        ) {
+            Row(
+                modifier = Modifier.fillMaxWidth().padding(start = 16.dp, end = 16.dp, top = 12.dp, bottom = 16.dp),
+                verticalAlignment = Alignment.CenterVertically,
             ) {
-                BookingDetailsCard(
-                    venueName = "Arena Sports Center",
-                    coachName = null,
-                    slotDate = "2026-03-25",
-                    slotTime = "10:00 - 11:00",
-                    sportType = "BASKETBALL",
-                    modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp)
-                )
-                XpSpendSection(
-                    availableXp = 2450,
-                    currentLevel = 5,
-                    totalPrice = 1500.0,
-                    xpToRedeem = 500,
-                    xpDiscount = 5.0,
-                    xpRedeemed = false,
-                    isRedeemingXp = false,
-                    onXpSliderChange = {},
-                    onQuickXp = {},
-                    onApplyXpDiscount = {},
-                    modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp)
-                )
-                SplitWithFriendsSection(
-                    splitEnabled = true,
-                    friends = listOf(
-                        Friendship(id = 1, friendId = 10, friendName = "Marko"),
-                        Friendship(id = 2, friendId = 11, friendName = "Stefan"),
-                        Friendship(id = 3, friendId = 12, friendName = "Ana"),
-                    ),
-                    selectedFriends = listOf(
-                        Friendship(id = 1, friendId = 10, friendName = "Marko"),
-                    ),
-                    searchQuery = "",
-                    isLoading = false,
-                    totalAmount = 1000.0,
-                    splitPartySize = 2,
-                    yourShare = 500.0,
-                    onToggleSplit = {},
-                    onSearchQueryChange = {},
-                    onToggleFriend = {},
-                    isFriendSelected = { it.friendId == 10L },
-                    modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp)
-                )
-                PriceBreakdownCard(
-                    originalPrice = 1000.0,
-                    xpDiscount = 0.0,
-                    xpRedeemed = false,
-                    xpAmount = 0,
-                    finalAmount = 1000.0,
-                    isFreeWithXp = false,
-                    splitEnabled = true,
-                    splitPartySize = 2,
-                    yourShare = 500.0,
-                    modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp)
-                )
-                Spacer(modifier = Modifier.height(16.dp))
-                Button(
-                    onClick = {},
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(horizontal = 16.dp)
-                        .height(56.dp),
-                    shape = RoundedCornerShape(16.dp),
-                    colors = ButtonDefaults.buttonColors(containerColor = SplitBlue)
-                ) {
-                    Text("Pay Your Share — 500 ден", fontWeight = FontWeight.Bold, fontSize = 16.sp)
+                Box(modifier = Modifier.size(40.dp).clip(CircleShape).background(DarkSurface), contentAlignment = Alignment.Center) {
+                    Icon(Icons.AutoMirrored.Filled.ArrowBack, "Back", tint = DarkTextPrimary, modifier = Modifier.size(20.dp))
                 }
+                Spacer(modifier = Modifier.width(16.dp))
+                Text("Payment", fontSize = 18.sp, fontWeight = FontWeight.Bold, color = DarkTextPrimary)
+            }
+            BookingDetailsCard(
+                venueName = "Arena Sports Center", coachName = null,
+                slotDate = "2026-03-25", slotTime = "10:00 - 11:00", sportType = "BASKETBALL",
+                modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp),
+            )
+            XpSpendSection(
+                availableXp = 2450, currentLevel = 5, totalPrice = 1500.0,
+                xpToRedeem = 500, xpDiscount = 5.0, xpRedeemed = false, isRedeemingXp = false,
+                onXpSliderChange = {}, onQuickXp = {}, onApplyXpDiscount = {},
+                modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp),
+            )
+            SplitWithFriendsSection(
+                splitEnabled = true,
+                friends = listOf(Friendship(id = 1, friendId = 10, friendName = "Marko"), Friendship(id = 2, friendId = 11, friendName = "Stefan")),
+                selectedFriends = listOf(Friendship(id = 1, friendId = 10, friendName = "Marko")),
+                searchQuery = "", isLoading = false, totalAmount = 1000.0,
+                splitPartySize = 2, yourShare = 500.0,
+                onToggleSplit = {}, onSearchQueryChange = {}, onToggleFriend = {},
+                isFriendSelected = { it.friendId == 10L },
+                modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp),
+            )
+            PriceBreakdownCard(
+                originalPrice = 1000.0, xpDiscount = 0.0, xpRedeemed = false, xpAmount = 0,
+                finalAmount = 1000.0, isFreeWithXp = false, splitEnabled = true, splitPartySize = 2, yourShare = 500.0,
+                modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp),
+            )
+        }
+        Box(
+            modifier = Modifier.fillMaxWidth().align(Alignment.BottomCenter)
+                .background(Brush.verticalGradient(listOf(Color.Transparent, DarkBg, DarkBg))).padding(16.dp),
+        ) {
+            Box(
+                modifier = Modifier.fillMaxWidth().height(56.dp).clip(RoundedCornerShape(16.dp))
+                    .background(Brush.linearGradient(listOf(SplitBlue, SplitBlueLight))),
+                contentAlignment = Alignment.Center,
+            ) {
+                Text("Pay Your Share — 500 ден", fontWeight = FontWeight.Bold, fontSize = 16.sp, color = Color.White)
             }
         }
     }

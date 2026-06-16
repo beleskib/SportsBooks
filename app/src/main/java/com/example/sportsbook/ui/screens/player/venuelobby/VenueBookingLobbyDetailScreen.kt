@@ -35,23 +35,13 @@ import androidx.compose.material.icons.filled.HourglassTop
 import androidx.compose.material.icons.filled.LocationOn
 import androidx.compose.material.icons.filled.Person
 import androidx.compose.material.icons.filled.Remove
-import androidx.compose.material3.Button
-import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.CircularProgressIndicator
-import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
-import androidx.compose.material3.LinearProgressIndicator
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.OutlinedTextFieldDefaults
-import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
-import androidx.compose.material3.TopAppBar
-import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -60,11 +50,13 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
@@ -82,12 +74,14 @@ import com.example.sportsbook.ui.common.toDisplayDate
 import com.example.sportsbook.ui.common.toDisplayTime
 import com.example.sportsbook.ui.navigation.Route
 import com.example.sportsbook.ui.theme.CoralRed
-import com.example.sportsbook.ui.theme.LightBg
-import com.example.sportsbook.ui.theme.CardWhite
-import com.example.sportsbook.ui.theme.NavBarBg
+import com.example.sportsbook.ui.theme.DarkBg
+import com.example.sportsbook.ui.theme.DarkBorder
+import com.example.sportsbook.ui.theme.DarkSurface
 import com.example.sportsbook.ui.theme.SportGreen
-import com.example.sportsbook.ui.theme.GoldAccent
-import com.example.sportsbook.ui.theme.TextPrimary
+import com.example.sportsbook.ui.theme.GreenAccent
+import com.example.sportsbook.ui.theme.DarkTextPrimary
+import com.example.sportsbook.ui.theme.DarkTextSecondary
+import com.example.sportsbook.ui.theme.DarkTextTertiary
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -287,16 +281,9 @@ class VenueBookingLobbyDetailViewModel @Inject constructor(
             _uiState.update { it.copy(paymentProcessing = true, error = null) }
             runCatching { apiService.createLobbyPaymentIntent(lobbyId) }
                 .fold(
-                    onSuccess = { response ->
-                        val intent = response.data
-                        if (intent.clientSecret.startsWith("dev_secret_")) {
-                            // Dev mode: skip Stripe, confirm directly
-                            confirmPayment()
-                        } else {
-                            // In production, launch Stripe PaymentSheet here.
-                            // For now fall through to confirm (dev-only path).
-                            confirmPayment()
-                        }
+                    onSuccess = {
+                        // Firebase-based: confirm payment directly
+                        confirmPayment()
                     },
                     onFailure = { e ->
                         _uiState.update { it.copy(paymentProcessing = false, error = e.message ?: "Failed to initiate payment") }
@@ -395,7 +382,6 @@ class VenueBookingLobbyDetailViewModel @Inject constructor(
 
 // ── Screen ────────────────────────────────────────────────────────────────────
 
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun VenueBookingLobbyDetailScreen(
     onBack: () -> Unit,
@@ -431,139 +417,152 @@ fun VenueBookingLobbyDetailScreen(
         )
     }
 
-    Scaffold(
-        containerColor = NavBarBg,
-        snackbarHost = { SnackbarHost(hostState = snackbarHostState) },
-        topBar = {
-            TopAppBar(
-                title = {
-                    Text(
-                        text = uiState.lobby?.title ?: "Lobby",
-                        color = TextPrimary
-                    )
-                },
-                navigationIcon = {
-                    IconButton(onClick = onBack) {
-                        Icon(
-                            imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                            contentDescription = "Back",
-                            tint = TextPrimary
-                        )
-                    }
-                },
-                actions = {
-                    if (uiState.canEdit) {
-                        IconButton(onClick = { showEditDialog = true }) {
-                            Icon(
-                                imageVector = Icons.Default.Edit,
-                                contentDescription = "Edit Lobby",
-                                tint = GoldAccent
-                            )
-                        }
-                    }
-                },
-                colors = TopAppBarDefaults.topAppBarColors(containerColor = CardWhite)
-            )
-        }
-    ) { paddingValues ->
-        when {
-            uiState.isLoading -> {
+    Box(
+        modifier = Modifier
+            .fillMaxSize()
+            .background(DarkBg)
+    ) {
+        Column(modifier = Modifier.fillMaxSize()) {
+            // ── Header ───────────────────────────────────────────────────
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .background(DarkSurface)
+                    .padding(horizontal = 16.dp, vertical = 12.dp),
+                verticalAlignment = Alignment.CenterVertically,
+            ) {
                 Box(
                     modifier = Modifier
-                        .fillMaxSize()
-                        .padding(paddingValues),
-                    contentAlignment = Alignment.Center
+                        .size(40.dp)
+                        .clip(CircleShape)
+                        .background(DarkBg)
+                        .clickable(onClick = onBack),
+                    contentAlignment = Alignment.Center,
                 ) {
-                    CircularProgressIndicator(color = GoldAccent)
+                    Icon(Icons.AutoMirrored.Filled.ArrowBack, "Back", tint = DarkTextPrimary, modifier = Modifier.size(20.dp))
+                }
+                Spacer(modifier = Modifier.width(12.dp))
+                Text(
+                    text = uiState.lobby?.title ?: "Lobby",
+                    fontSize = 18.sp,
+                    fontWeight = FontWeight.Bold,
+                    color = DarkTextPrimary,
+                    modifier = Modifier.weight(1f)
+                )
+                if (uiState.canEdit) {
+                    Box(
+                        modifier = Modifier
+                            .size(40.dp)
+                            .clip(CircleShape)
+                            .background(DarkBg)
+                            .clickable { showEditDialog = true },
+                        contentAlignment = Alignment.Center,
+                    ) {
+                        Icon(Icons.Default.Edit, "Edit Lobby", tint = GreenAccent, modifier = Modifier.size(20.dp))
+                    }
                 }
             }
 
-            uiState.lobby == null -> {
-                Box(
-                    modifier = Modifier
-                        .fillMaxSize()
-                        .padding(paddingValues),
-                    contentAlignment = Alignment.Center
-                ) {
-                    Text(
-                        text = "Lobby not found",
-                        color = MaterialTheme.colorScheme.error,
-                        style = MaterialTheme.typography.bodyLarge
-                    )
+            // ── Content ──────────────────────────────────────────────────
+            when {
+                uiState.isLoading -> {
+                    Box(
+                        modifier = Modifier.fillMaxSize(),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        CircularProgressIndicator(color = GreenAccent)
+                    }
                 }
-            }
 
-            else -> {
-                val lobby = uiState.lobby!!
-                LazyColumn(
-                    modifier = Modifier
-                        .fillMaxSize()
-                        .padding(paddingValues),
-                    contentPadding = PaddingValues(bottom = 32.dp)
-                ) {
-                    // Header / info section
-                    item {
-                        LobbyDetailHeader(lobby = lobby)
-                    }
-
-                    // Status-dependent content
-                    item {
-                        LobbyStatusSection(
-                            uiState = uiState,
-                            onJoin = viewModel::joinLobby,
-                            onLeave = viewModel::leaveLobby,
-                            onSubmitBooking = viewModel::createBooking,
-                            onCancel = viewModel::cancelLobby,
-                            onPay = viewModel::pay
-                        )
-                    }
-
-                    // Teams grid (shown when lobby has teams)
-                    if (uiState.hasTeams) {
-                        item {
-                            TeamsSection(
-                                uiState = uiState,
-                                onJoinTeam = viewModel::joinTeam,
-                                onLeaveTeam = viewModel::leaveTeam,
-                                onAddTeam = viewModel::addTeam
-                            )
-                        }
-                    }
-
-                    // Members list
-                    item {
-                        Spacer(modifier = Modifier.height(4.dp))
+                uiState.lobby == null -> {
+                    Box(
+                        modifier = Modifier.fillMaxSize(),
+                        contentAlignment = Alignment.Center
+                    ) {
                         Text(
-                            text = "Members (${lobby.currentPlayers}/${lobby.maxPlayers})",
-                            style = MaterialTheme.typography.titleSmall,
-                            color = TextPrimary.copy(alpha = 0.8f),
-                            fontWeight = FontWeight.SemiBold,
-                            modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp)
+                            text = "Lobby not found",
+                            color = Color(0xFFEF5350),
+                            fontSize = 16.sp
                         )
                     }
+                }
 
-                    if (lobby.members.isEmpty()) {
+                else -> {
+                    val lobby = uiState.lobby!!
+                    LazyColumn(
+                        modifier = Modifier.fillMaxSize(),
+                        contentPadding = PaddingValues(bottom = 32.dp)
+                    ) {
+                        // Header / info section
                         item {
-                            Text(
-                                text = "No members yet",
-                                style = MaterialTheme.typography.bodyMedium,
-                                color = TextPrimary.copy(alpha = 0.4f),
-                                modifier = Modifier.padding(horizontal = 16.dp)
+                            LobbyDetailHeader(lobby = lobby)
+                        }
+
+                        // Status-dependent content
+                        item {
+                            LobbyStatusSection(
+                                uiState = uiState,
+                                onJoin = viewModel::joinLobby,
+                                onLeave = viewModel::leaveLobby,
+                                onSubmitBooking = viewModel::createBooking,
+                                onCancel = viewModel::cancelLobby,
+                                onPay = viewModel::pay
                             )
                         }
-                    } else {
-                        items(lobby.members, key = { it.id }) { member ->
-                            MemberRow(
-                                member = member,
-                                showPaymentStatus = lobby.status == "booking_approved" ||
-                                    lobby.status == "payment_in_progress" ||
-                                    lobby.status == "confirmed"
+
+                        // Teams grid (shown when lobby has teams)
+                        if (uiState.hasTeams) {
+                            item {
+                                TeamsSection(
+                                    uiState = uiState,
+                                    onJoinTeam = viewModel::joinTeam,
+                                    onLeaveTeam = viewModel::leaveTeam,
+                                    onAddTeam = viewModel::addTeam
+                                )
+                            }
+                        }
+
+                        // Members list
+                        item {
+                            Spacer(modifier = Modifier.height(4.dp))
+                            Text(
+                                text = "Members (${lobby.currentPlayers}/${lobby.maxPlayers})",
+                                fontSize = 14.sp,
+                                color = DarkTextPrimary.copy(alpha = 0.8f),
+                                fontWeight = FontWeight.SemiBold,
+                                modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp)
                             )
+                        }
+
+                        if (lobby.members.isEmpty()) {
+                            item {
+                                Text(
+                                    text = "No members yet",
+                                    fontSize = 14.sp,
+                                    color = DarkTextPrimary.copy(alpha = 0.4f),
+                                    modifier = Modifier.padding(horizontal = 16.dp)
+                                )
+                            }
+                        } else {
+                            items(lobby.members, key = { it.id }) { member ->
+                                MemberRow(
+                                    member = member,
+                                    showPaymentStatus = lobby.status == "booking_approved" ||
+                                        lobby.status == "payment_in_progress" ||
+                                        lobby.status == "confirmed"
+                                )
+                            }
                         }
                     }
                 }
             }
         }
+
+        // ── Snackbar ─────────────────────────────────────────────────────
+        SnackbarHost(
+            hostState = snackbarHostState,
+            modifier = Modifier.align(Alignment.BottomCenter)
+        )
     }
 }
 
@@ -574,7 +573,7 @@ private fun LobbyDetailHeader(lobby: VenueBookingLobbyDto) {
     Column(
         modifier = Modifier
             .fillMaxWidth()
-            .background(CardWhite)
+            .background(DarkSurface)
             .padding(16.dp)
     ) {
         // Title + badge row
@@ -585,8 +584,8 @@ private fun LobbyDetailHeader(lobby: VenueBookingLobbyDto) {
         ) {
             Text(
                 text = lobby.title,
-                style = MaterialTheme.typography.titleLarge,
-                color = TextPrimary,
+                fontSize = 22.sp,
+                color = DarkTextPrimary,
                 fontWeight = FontWeight.Bold,
                 modifier = Modifier.weight(1f)
             )
@@ -599,7 +598,7 @@ private fun LobbyDetailHeader(lobby: VenueBookingLobbyDto) {
         // Venue
         if (!lobby.venueName.isNullOrBlank()) {
             DetailInfoRow(
-                icon = { Icon(Icons.Default.LocationOn, contentDescription = null, tint = GoldAccent, modifier = Modifier.size(14.dp)) },
+                icon = { Icon(Icons.Default.LocationOn, contentDescription = null, tint = GreenAccent, modifier = Modifier.size(14.dp)) },
                 text = lobby.venueName
             )
             Spacer(modifier = Modifier.height(4.dp))
@@ -616,7 +615,7 @@ private fun LobbyDetailHeader(lobby: VenueBookingLobbyDto) {
         }
         if (dateText.isNotBlank()) {
             DetailInfoRow(
-                icon = { Icon(Icons.Default.CalendarToday, contentDescription = null, tint = GoldAccent, modifier = Modifier.size(14.dp)) },
+                icon = { Icon(Icons.Default.CalendarToday, contentDescription = null, tint = GreenAccent, modifier = Modifier.size(14.dp)) },
                 text = dateText
             )
             Spacer(modifier = Modifier.height(4.dp))
@@ -632,7 +631,7 @@ private fun LobbyDetailHeader(lobby: VenueBookingLobbyDto) {
             else -> "Creator pays all"
         }
         DetailInfoRow(
-            icon = { Icon(Icons.Default.AttachMoney, contentDescription = null, tint = GoldAccent, modifier = Modifier.size(14.dp)) },
+            icon = { Icon(Icons.Default.AttachMoney, contentDescription = null, tint = GreenAccent, modifier = Modifier.size(14.dp)) },
             text = "Total: ${"%.0f".format(lobby.totalPrice)} ${lobby.currency}  |  $priceDetail"
         )
 
@@ -646,35 +645,41 @@ private fun LobbyDetailHeader(lobby: VenueBookingLobbyDto) {
             verticalAlignment = Alignment.CenterVertically
         ) {
             Row(verticalAlignment = Alignment.CenterVertically) {
-                Icon(Icons.Default.Group, contentDescription = null, tint = GoldAccent, modifier = Modifier.size(14.dp))
+                Icon(Icons.Default.Group, contentDescription = null, tint = GreenAccent, modifier = Modifier.size(14.dp))
                 Spacer(modifier = Modifier.width(4.dp))
                 Text(
                     text = "${lobby.currentPlayers}/${lobby.maxPlayers} players",
-                    style = MaterialTheme.typography.labelMedium,
-                    color = GoldAccent,
+                    fontSize = 12.sp,
+                    color = GreenAccent,
                     fontWeight = FontWeight.Bold
                 )
             }
             LobbyStatusChip(status = lobby.status)
         }
         Spacer(modifier = Modifier.height(6.dp))
-        LinearProgressIndicator(
-            progress = { progress },
+        Box(
             modifier = Modifier
                 .fillMaxWidth()
                 .height(6.dp)
-                .clip(RoundedCornerShape(3.dp)),
-            color = GoldAccent,
-            trackColor = LightBg
-        )
+                .clip(RoundedCornerShape(3.dp))
+                .background(DarkBorder)
+        ) {
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth(progress)
+                    .height(6.dp)
+                    .clip(RoundedCornerShape(3.dp))
+                    .background(GreenAccent)
+            )
+        }
 
         // Description
         if (!lobby.description.isNullOrBlank()) {
             Spacer(modifier = Modifier.height(8.dp))
             Text(
                 text = lobby.description,
-                style = MaterialTheme.typography.bodySmall,
-                color = TextPrimary.copy(alpha = 0.7f)
+                fontSize = 12.sp,
+                color = DarkTextPrimary.copy(alpha = 0.7f)
             )
         }
     }
@@ -687,8 +692,8 @@ private fun DetailInfoRow(icon: @Composable () -> Unit, text: String) {
         Spacer(modifier = Modifier.width(6.dp))
         Text(
             text = text,
-            style = MaterialTheme.typography.bodySmall,
-            color = TextPrimary.copy(alpha = 0.8f)
+            fontSize = 12.sp,
+            color = DarkTextPrimary.copy(alpha = 0.8f)
         )
     }
 }
@@ -697,13 +702,13 @@ private fun DetailInfoRow(icon: @Composable () -> Unit, text: String) {
 private fun LobbyStatusChip(status: String) {
     val (label, color) = when (status) {
         "open" -> "Open" to SportGreen
-        "full" -> "Full" to GoldAccent
-        "booking_pending" -> "Pending Approval" to GoldAccent
+        "full" -> "Full" to GreenAccent
+        "booking_pending" -> "Pending Approval" to GreenAccent
         "booking_approved" -> "Approved" to SportGreen
-        "payment_in_progress" -> "Payment Phase" to GoldAccent
+        "payment_in_progress" -> "Payment Phase" to GreenAccent
         "confirmed" -> "Confirmed" to SportGreen
         "cancelled" -> "Cancelled" to CoralRed
-        else -> status.replaceFirstChar { it.uppercase() } to TextPrimary.copy(alpha = 0.5f)
+        else -> status.replaceFirstChar { it.uppercase() } to DarkTextPrimary.copy(alpha = 0.5f)
     }
     Box(
         modifier = Modifier
@@ -713,7 +718,7 @@ private fun LobbyStatusChip(status: String) {
     ) {
         Text(
             text = label,
-            style = MaterialTheme.typography.labelSmall,
+            fontSize = 10.sp,
             color = color,
             fontWeight = FontWeight.SemiBold
         )
@@ -768,7 +773,7 @@ private fun LobbyStatusSection(
             "cancelled" -> {
                 Text(
                     text = "This lobby has been cancelled.",
-                    style = MaterialTheme.typography.bodyMedium,
+                    fontSize = 14.sp,
                     color = CoralRed,
                     textAlign = TextAlign.Center,
                     modifier = Modifier.fillMaxWidth()
@@ -778,7 +783,7 @@ private fun LobbyStatusSection(
 
         if (uiState.isActioning || uiState.paymentProcessing) {
             Box(modifier = Modifier.fillMaxWidth(), contentAlignment = Alignment.Center) {
-                CircularProgressIndicator(color = GoldAccent, modifier = Modifier.size(28.dp))
+                CircularProgressIndicator(color = GreenAccent, modifier = Modifier.size(28.dp))
             }
         }
     }
@@ -793,64 +798,80 @@ private fun OpenLobbyActions(
     onCancel: () -> Unit
 ) {
     if (uiState.canJoin) {
-        Button(
-            onClick = onJoin,
-            modifier = Modifier.fillMaxWidth(),
-            enabled = !uiState.isActioning,
-            colors = ButtonDefaults.buttonColors(containerColor = GoldAccent),
-            shape = RoundedCornerShape(8.dp)
+        Box(
+            modifier = Modifier
+                .fillMaxWidth()
+                .clip(RoundedCornerShape(8.dp))
+                .background(if (!uiState.isActioning) GreenAccent else Color(0xFF2A3D2B))
+                .clickable(enabled = !uiState.isActioning, onClick = onJoin)
+                .padding(vertical = 14.dp),
+            contentAlignment = Alignment.Center,
         ) {
-            Icon(Icons.Default.Group, contentDescription = null, modifier = Modifier.size(18.dp), tint = NavBarBg)
-            Spacer(modifier = Modifier.width(6.dp))
-            Text("Join Lobby", color = NavBarBg, fontWeight = FontWeight.SemiBold)
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Icon(Icons.Default.Group, contentDescription = null, modifier = Modifier.size(18.dp), tint = Color.White)
+                Spacer(modifier = Modifier.width(6.dp))
+                Text("Join Lobby", color = Color.White, fontWeight = FontWeight.SemiBold, fontSize = 14.sp)
+            }
         }
     }
 
     if (uiState.canLeave) {
-        OutlinedButton(
-            onClick = onLeave,
-            modifier = Modifier.fillMaxWidth(),
-            enabled = !uiState.isActioning,
-            colors = ButtonDefaults.outlinedButtonColors(contentColor = CoralRed),
-            shape = RoundedCornerShape(8.dp)
+        Box(
+            modifier = Modifier
+                .fillMaxWidth()
+                .clip(RoundedCornerShape(8.dp))
+                .background(DarkBg)
+                .border(1.dp, CoralRed.copy(alpha = 0.4f), RoundedCornerShape(8.dp))
+                .clickable(enabled = !uiState.isActioning, onClick = onLeave)
+                .padding(vertical = 14.dp),
+            contentAlignment = Alignment.Center,
         ) {
-            Text("Leave Lobby", fontWeight = FontWeight.SemiBold)
+            Text("Leave Lobby", fontWeight = FontWeight.SemiBold, color = CoralRed, fontSize = 14.sp)
         }
     }
 
     if (uiState.isCreator) {
         if (uiState.canSubmitBooking) {
-            Button(
-                onClick = onSubmitBooking,
-                modifier = Modifier.fillMaxWidth(),
-                enabled = !uiState.isActioning,
-                colors = ButtonDefaults.buttonColors(containerColor = SportGreen),
-                shape = RoundedCornerShape(8.dp)
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .clip(RoundedCornerShape(8.dp))
+                    .background(if (!uiState.isActioning) SportGreen else Color(0xFF2A3D2B))
+                    .clickable(enabled = !uiState.isActioning, onClick = onSubmitBooking)
+                    .padding(vertical = 14.dp),
+                contentAlignment = Alignment.Center,
             ) {
-                Icon(Icons.Default.Check, contentDescription = null, modifier = Modifier.size(18.dp), tint = NavBarBg)
-                Spacer(modifier = Modifier.width(6.dp))
-                Text("Submit Booking", color = NavBarBg, fontWeight = FontWeight.SemiBold)
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Icon(Icons.Default.Check, contentDescription = null, modifier = Modifier.size(18.dp), tint = Color.White)
+                    Spacer(modifier = Modifier.width(6.dp))
+                    Text("Submit Booking", color = Color.White, fontWeight = FontWeight.SemiBold, fontSize = 14.sp)
+                }
             }
         } else if (uiState.lobby?.status == "open") {
             Text(
                 text = "Need at least 2 players to submit booking",
-                style = MaterialTheme.typography.bodySmall,
-                color = TextPrimary.copy(alpha = 0.5f),
+                fontSize = 12.sp,
+                color = DarkTextPrimary.copy(alpha = 0.5f),
                 textAlign = TextAlign.Center,
                 modifier = Modifier.fillMaxWidth()
             )
         }
 
-        OutlinedButton(
-            onClick = onCancel,
-            modifier = Modifier.fillMaxWidth(),
-            enabled = !uiState.isActioning,
-            colors = ButtonDefaults.outlinedButtonColors(contentColor = CoralRed),
-            shape = RoundedCornerShape(8.dp)
+        Box(
+            modifier = Modifier
+                .fillMaxWidth()
+                .clip(RoundedCornerShape(8.dp))
+                .background(DarkBg)
+                .border(1.dp, CoralRed.copy(alpha = 0.4f), RoundedCornerShape(8.dp))
+                .clickable(enabled = !uiState.isActioning, onClick = onCancel)
+                .padding(vertical = 14.dp),
+            contentAlignment = Alignment.Center,
         ) {
-            Icon(Icons.Default.Cancel, contentDescription = null, modifier = Modifier.size(16.dp))
-            Spacer(modifier = Modifier.width(6.dp))
-            Text("Cancel Lobby", fontWeight = FontWeight.SemiBold)
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Icon(Icons.Default.Cancel, contentDescription = null, modifier = Modifier.size(16.dp), tint = CoralRed)
+                Spacer(modifier = Modifier.width(6.dp))
+                Text("Cancel Lobby", fontWeight = FontWeight.SemiBold, color = CoralRed, fontSize = 14.sp)
+            }
         }
     }
 }
@@ -862,7 +883,7 @@ private fun PendingApprovalSection() {
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
         CircularProgressIndicator(
-            color = GoldAccent,
+            color = GreenAccent,
             modifier = Modifier.size(40.dp),
             strokeWidth = 3.dp
         )
@@ -870,21 +891,21 @@ private fun PendingApprovalSection() {
         Icon(
             imageVector = Icons.Default.HourglassTop,
             contentDescription = null,
-            tint = GoldAccent,
+            tint = GreenAccent,
             modifier = Modifier.size(24.dp)
         )
         Spacer(modifier = Modifier.height(6.dp))
         Text(
             text = "Waiting for venue approval...",
-            style = MaterialTheme.typography.titleSmall,
-            color = GoldAccent,
+            fontSize = 14.sp,
+            color = GreenAccent,
             fontWeight = FontWeight.SemiBold,
             textAlign = TextAlign.Center
         )
         Text(
             text = "The venue partner will review and approve your booking request.",
-            style = MaterialTheme.typography.bodySmall,
-            color = TextPrimary.copy(alpha = 0.6f),
+            fontSize = 12.sp,
+            color = DarkTextPrimary.copy(alpha = 0.6f),
             textAlign = TextAlign.Center
         )
     }
@@ -909,7 +930,7 @@ private fun PaymentSection(
             Spacer(modifier = Modifier.width(6.dp))
             Text(
                 text = "Booking Approved!",
-                style = MaterialTheme.typography.titleSmall,
+                fontSize = 14.sp,
                 color = SportGreen,
                 fontWeight = FontWeight.SemiBold
             )
@@ -921,8 +942,8 @@ private fun PaymentSection(
                 "split_to_teams" -> "Team leaders pay for their team's share."
                 else -> "The creator needs to pay the full amount to confirm the booking."
             },
-            style = MaterialTheme.typography.bodySmall,
-            color = TextPrimary.copy(alpha = 0.7f)
+            fontSize = 12.sp,
+            color = DarkTextPrimary.copy(alpha = 0.7f)
         )
     }
 
@@ -940,19 +961,23 @@ private fun PaymentSection(
             }
         }
 
-        Button(
-            onClick = onPay,
-            modifier = Modifier.fillMaxWidth(),
-            enabled = !uiState.paymentProcessing,
-            colors = ButtonDefaults.buttonColors(containerColor = GoldAccent),
-            shape = RoundedCornerShape(8.dp)
+        Box(
+            modifier = Modifier
+                .fillMaxWidth()
+                .clip(RoundedCornerShape(8.dp))
+                .background(if (!uiState.paymentProcessing) GreenAccent else Color(0xFF2A3D2B))
+                .clickable(enabled = !uiState.paymentProcessing, onClick = onPay)
+                .padding(vertical = 14.dp),
+            contentAlignment = Alignment.Center,
         ) {
             if (uiState.paymentProcessing) {
-                CircularProgressIndicator(color = NavBarBg, modifier = Modifier.size(20.dp))
+                CircularProgressIndicator(color = Color.White, modifier = Modifier.size(20.dp))
             } else {
-                Icon(Icons.Default.AttachMoney, contentDescription = null, modifier = Modifier.size(18.dp), tint = NavBarBg)
-                Spacer(modifier = Modifier.width(6.dp))
-                Text(payLabel, color = NavBarBg, fontWeight = FontWeight.SemiBold)
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Icon(Icons.Default.AttachMoney, contentDescription = null, modifier = Modifier.size(18.dp), tint = Color.White)
+                    Spacer(modifier = Modifier.width(6.dp))
+                    Text(payLabel, color = Color.White, fontWeight = FontWeight.SemiBold, fontSize = 14.sp)
+                }
             }
         }
     }
@@ -981,7 +1006,7 @@ private fun ConfirmedSection() {
         Spacer(modifier = Modifier.height(12.dp))
         Text(
             text = "All payments received!",
-            style = MaterialTheme.typography.titleMedium,
+            fontSize = 16.sp,
             color = SportGreen,
             fontWeight = FontWeight.Bold,
             textAlign = TextAlign.Center
@@ -989,8 +1014,8 @@ private fun ConfirmedSection() {
         Spacer(modifier = Modifier.height(4.dp))
         Text(
             text = "Booking confirmed. See you at the venue!",
-            style = MaterialTheme.typography.bodyMedium,
-            color = TextPrimary.copy(alpha = 0.7f),
+            fontSize = 14.sp,
+            color = DarkTextPrimary.copy(alpha = 0.7f),
             textAlign = TextAlign.Center
         )
     }
@@ -1020,23 +1045,26 @@ private fun TeamsSection(
         ) {
             Text(
                 text = "Teams (${teams.size})",
-                style = MaterialTheme.typography.titleSmall,
-                color = TextPrimary.copy(alpha = 0.8f),
+                fontSize = 14.sp,
+                color = DarkTextPrimary.copy(alpha = 0.8f),
                 fontWeight = FontWeight.SemiBold
             )
 
             // Add team button (only for lobby creator in open/full status)
             if (uiState.isCreator && (lobby.status == "open" || lobby.status == "full")) {
                 var showAddTeamDialog by remember { androidx.compose.runtime.mutableStateOf(false) }
-                Button(
-                    onClick = { showAddTeamDialog = true },
-                    colors = ButtonDefaults.buttonColors(containerColor = GoldAccent.copy(alpha = 0.2f)),
-                    contentPadding = PaddingValues(horizontal = 12.dp, vertical = 4.dp),
-                    shape = RoundedCornerShape(6.dp)
+                Box(
+                    modifier = Modifier
+                        .clip(RoundedCornerShape(6.dp))
+                        .background(GreenAccent.copy(alpha = 0.2f))
+                        .clickable { showAddTeamDialog = true }
+                        .padding(horizontal = 12.dp, vertical = 6.dp)
                 ) {
-                    Icon(Icons.Default.Add, contentDescription = null, tint = GoldAccent, modifier = Modifier.size(16.dp))
-                    Spacer(modifier = Modifier.width(4.dp))
-                    Text("Add Team", color = GoldAccent, style = MaterialTheme.typography.labelSmall)
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        Icon(Icons.Default.Add, contentDescription = null, tint = GreenAccent, modifier = Modifier.size(16.dp))
+                        Spacer(modifier = Modifier.width(4.dp))
+                        Text("Add Team", color = GreenAccent, fontSize = 10.sp)
+                    }
                 }
 
                 if (showAddTeamDialog) {
@@ -1089,8 +1117,8 @@ private fun TeamCard(
     modifier: Modifier = Modifier
 ) {
     val isMyTeam = uiState.currentTeam?.id == team.id
-    val borderColor = if (isMyTeam) GoldAccent else TextPrimary.copy(alpha = 0.15f)
-    val bgColor = if (isMyTeam) GoldAccent.copy(alpha = 0.08f) else CardWhite
+    val borderColor = if (isMyTeam) GreenAccent else DarkBorder
+    val bgColor = if (isMyTeam) GreenAccent.copy(alpha = 0.08f) else DarkSurface
 
     Column(
         modifier = modifier
@@ -1111,21 +1139,21 @@ private fun TeamCard(
         ) {
             Text(
                 text = team.teamName,
-                style = MaterialTheme.typography.labelLarge,
-                color = if (isMyTeam) GoldAccent else TextPrimary,
+                fontSize = 14.sp,
+                color = if (isMyTeam) GreenAccent else DarkTextPrimary,
                 fontWeight = FontWeight.Bold
             )
             if (isMyTeam) {
                 Box(
                     modifier = Modifier
                         .clip(RoundedCornerShape(3.dp))
-                        .background(GoldAccent.copy(alpha = 0.2f))
+                        .background(GreenAccent.copy(alpha = 0.2f))
                         .padding(horizontal = 5.dp, vertical = 1.dp)
                 ) {
                     Text(
                         text = "YOUR TEAM",
-                        style = MaterialTheme.typography.labelSmall,
-                        color = GoldAccent,
+                        fontSize = 10.sp,
+                        color = GreenAccent,
                         fontWeight = FontWeight.Bold,
                         modifier = Modifier.padding(0.dp)
                     )
@@ -1138,8 +1166,8 @@ private fun TeamCard(
             Spacer(modifier = Modifier.height(4.dp))
             Text(
                 text = "${"%.0f".format(team.shareAmount)} MKD",
-                style = MaterialTheme.typography.labelSmall,
-                color = GoldAccent.copy(alpha = 0.8f),
+                fontSize = 10.sp,
+                color = GreenAccent.copy(alpha = 0.8f),
                 fontWeight = FontWeight.SemiBold
             )
         }
@@ -1150,8 +1178,8 @@ private fun TeamCard(
         if (team.members.isEmpty()) {
             Text(
                 text = "No members yet",
-                style = MaterialTheme.typography.labelSmall,
-                color = TextPrimary.copy(alpha = 0.3f)
+                fontSize = 10.sp,
+                color = DarkTextPrimary.copy(alpha = 0.3f)
             )
         } else {
             team.members.forEach { member ->
@@ -1169,7 +1197,7 @@ private fun TeamCard(
                             modifier = Modifier
                                 .size(20.dp)
                                 .clip(CircleShape)
-                                .background(LightBg),
+                                .background(DarkBg),
                             contentScale = ContentScale.Crop
                         )
                     } else {
@@ -1177,13 +1205,13 @@ private fun TeamCard(
                             modifier = Modifier
                                 .size(20.dp)
                                 .clip(CircleShape)
-                                .background(LightBg),
+                                .background(DarkBg),
                             contentAlignment = Alignment.Center
                         ) {
                             Icon(
                                 imageVector = Icons.Default.Person,
                                 contentDescription = null,
-                                tint = TextPrimary.copy(alpha = 0.4f),
+                                tint = DarkTextPrimary.copy(alpha = 0.4f),
                                 modifier = Modifier.size(12.dp)
                             )
                         }
@@ -1191,16 +1219,16 @@ private fun TeamCard(
                     Spacer(modifier = Modifier.width(6.dp))
                     Text(
                         text = member.displayName ?: "Player",
-                        style = MaterialTheme.typography.labelSmall,
-                        color = TextPrimary.copy(alpha = 0.8f),
+                        fontSize = 10.sp,
+                        color = DarkTextPrimary.copy(alpha = 0.8f),
                         modifier = Modifier.weight(1f)
                     )
                     // Leader badge
                     if (member.userId == team.leaderId) {
                         Text(
                             text = "Leader",
-                            style = MaterialTheme.typography.labelSmall,
-                            color = GoldAccent,
+                            fontSize = 10.sp,
+                            color = GreenAccent,
                             fontWeight = FontWeight.SemiBold
                         )
                     }
@@ -1215,26 +1243,29 @@ private fun TeamCard(
         val canInteract = lobby?.status == "open" || lobby?.status == "full"
         if (canInteract && uiState.isMember) {
             if (isMyTeam) {
-                OutlinedButton(
-                    onClick = onLeaveTeam,
-                    modifier = Modifier.fillMaxWidth(),
-                    enabled = !uiState.isActioning,
-                    colors = ButtonDefaults.outlinedButtonColors(contentColor = CoralRed),
-                    shape = RoundedCornerShape(6.dp),
-                    contentPadding = PaddingValues(vertical = 6.dp)
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .clip(RoundedCornerShape(6.dp))
+                        .background(DarkBg)
+                        .border(1.dp, CoralRed.copy(alpha = 0.4f), RoundedCornerShape(6.dp))
+                        .clickable(enabled = !uiState.isActioning, onClick = onLeaveTeam)
+                        .padding(vertical = 6.dp),
+                    contentAlignment = Alignment.Center,
                 ) {
-                    Text("Leave", style = MaterialTheme.typography.labelSmall, fontWeight = FontWeight.SemiBold)
+                    Text("Leave", fontSize = 10.sp, fontWeight = FontWeight.SemiBold, color = CoralRed)
                 }
             } else if (uiState.currentTeam == null) {
-                Button(
-                    onClick = onJoinTeam,
-                    modifier = Modifier.fillMaxWidth(),
-                    enabled = !uiState.isActioning,
-                    colors = ButtonDefaults.buttonColors(containerColor = GoldAccent),
-                    shape = RoundedCornerShape(6.dp),
-                    contentPadding = PaddingValues(vertical = 6.dp)
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .clip(RoundedCornerShape(6.dp))
+                        .background(if (!uiState.isActioning) GreenAccent else Color(0xFF2A3D2B))
+                        .clickable(enabled = !uiState.isActioning, onClick = onJoinTeam)
+                        .padding(vertical = 6.dp),
+                    contentAlignment = Alignment.Center,
                 ) {
-                    Text("Join", color = NavBarBg, style = MaterialTheme.typography.labelSmall, fontWeight = FontWeight.SemiBold)
+                    Text("Join", color = Color.White, fontSize = 10.sp, fontWeight = FontWeight.SemiBold)
                 }
             }
         }
@@ -1252,20 +1283,27 @@ private fun AddTeamDialog(
     androidx.compose.material3.AlertDialog(
         onDismissRequest = onDismiss,
         confirmButton = {
-            Button(
-                onClick = { onConfirm(teamName.trim()) },
-                enabled = teamName.isNotBlank(),
-                colors = ButtonDefaults.buttonColors(containerColor = GoldAccent)
+            Box(
+                modifier = Modifier
+                    .clip(RoundedCornerShape(8.dp))
+                    .background(if (teamName.isNotBlank()) GreenAccent else Color(0xFF2A3D2B))
+                    .clickable(enabled = teamName.isNotBlank()) { onConfirm(teamName.trim()) }
+                    .padding(horizontal = 16.dp, vertical = 8.dp)
             ) {
-                Text("Add", color = NavBarBg)
+                Text("Add", color = Color.White, fontSize = 14.sp, fontWeight = FontWeight.SemiBold)
             }
         },
         dismissButton = {
-            OutlinedButton(onClick = onDismiss) {
-                Text("Cancel", color = TextPrimary)
+            Box(
+                modifier = Modifier
+                    .clip(RoundedCornerShape(8.dp))
+                    .clickable(onClick = onDismiss)
+                    .padding(horizontal = 16.dp, vertical = 8.dp)
+            ) {
+                Text("Cancel", color = DarkTextPrimary, fontSize = 14.sp)
             }
         },
-        title = { Text("Add Team", color = TextPrimary) },
+        title = { Text("Add Team", color = DarkTextPrimary, fontWeight = FontWeight.Bold, fontSize = 18.sp) },
         text = {
             OutlinedTextField(
                 value = teamName,
@@ -1273,17 +1311,17 @@ private fun AddTeamDialog(
                 label = { Text("Team Name") },
                 singleLine = true,
                 colors = OutlinedTextFieldDefaults.colors(
-                    focusedBorderColor = GoldAccent,
-                    unfocusedBorderColor = TextPrimary.copy(alpha = 0.3f),
-                    focusedLabelColor = GoldAccent,
-                    unfocusedLabelColor = TextPrimary.copy(alpha = 0.6f),
-                    focusedTextColor = TextPrimary,
-                    unfocusedTextColor = TextPrimary,
-                    cursorColor = GoldAccent
+                    focusedBorderColor = GreenAccent,
+                    unfocusedBorderColor = DarkBorder,
+                    focusedLabelColor = GreenAccent,
+                    unfocusedLabelColor = DarkTextSecondary,
+                    focusedTextColor = DarkTextPrimary,
+                    unfocusedTextColor = DarkTextPrimary,
+                    cursorColor = GreenAccent
                 )
             )
         },
-        containerColor = CardWhite
+        containerColor = DarkSurface
     )
 }
 
@@ -1301,13 +1339,13 @@ private fun EditLobbyDialog(
     var paymentType by remember { androidx.compose.runtime.mutableStateOf(lobby.paymentType) }
 
     val fieldColors = OutlinedTextFieldDefaults.colors(
-        focusedBorderColor = GoldAccent,
-        unfocusedBorderColor = TextPrimary.copy(alpha = 0.3f),
-        focusedLabelColor = GoldAccent,
-        unfocusedLabelColor = TextPrimary.copy(alpha = 0.6f),
-        focusedTextColor = TextPrimary,
-        unfocusedTextColor = TextPrimary,
-        cursorColor = GoldAccent
+        focusedBorderColor = GreenAccent,
+        unfocusedBorderColor = DarkBorder,
+        focusedLabelColor = GreenAccent,
+        unfocusedLabelColor = DarkTextSecondary,
+        focusedTextColor = DarkTextPrimary,
+        unfocusedTextColor = DarkTextPrimary,
+        cursorColor = GreenAccent
     )
 
     val hasChanges = title != lobby.title ||
@@ -1318,27 +1356,34 @@ private fun EditLobbyDialog(
     androidx.compose.material3.AlertDialog(
         onDismissRequest = onDismiss,
         confirmButton = {
-            Button(
-                onClick = {
-                    onConfirm(
-                        if (title != lobby.title) title.trim() else null,
-                        if (description != (lobby.description ?: "")) description.trim() else null,
-                        if (maxPlayers != lobby.maxPlayers) maxPlayers else null,
-                        if (paymentType != lobby.paymentType) paymentType else null
-                    )
-                },
-                enabled = hasChanges && title.isNotBlank(),
-                colors = ButtonDefaults.buttonColors(containerColor = GoldAccent)
+            Box(
+                modifier = Modifier
+                    .clip(RoundedCornerShape(8.dp))
+                    .background(if (hasChanges && title.isNotBlank()) GreenAccent else Color(0xFF2A3D2B))
+                    .clickable(enabled = hasChanges && title.isNotBlank()) {
+                        onConfirm(
+                            if (title != lobby.title) title.trim() else null,
+                            if (description != (lobby.description ?: "")) description.trim() else null,
+                            if (maxPlayers != lobby.maxPlayers) maxPlayers else null,
+                            if (paymentType != lobby.paymentType) paymentType else null
+                        )
+                    }
+                    .padding(horizontal = 16.dp, vertical = 8.dp)
             ) {
-                Text("Save", color = NavBarBg)
+                Text("Save", color = Color.White, fontSize = 14.sp, fontWeight = FontWeight.SemiBold)
             }
         },
         dismissButton = {
-            OutlinedButton(onClick = onDismiss) {
-                Text("Cancel", color = TextPrimary)
+            Box(
+                modifier = Modifier
+                    .clip(RoundedCornerShape(8.dp))
+                    .clickable(onClick = onDismiss)
+                    .padding(horizontal = 16.dp, vertical = 8.dp)
+            ) {
+                Text("Cancel", color = DarkTextPrimary, fontSize = 14.sp)
             }
         },
-        title = { Text("Edit Lobby", color = TextPrimary, fontWeight = FontWeight.Bold) },
+        title = { Text("Edit Lobby", color = DarkTextPrimary, fontWeight = FontWeight.Bold, fontSize = 18.sp) },
         text = {
             Column(
                 modifier = Modifier.verticalScroll(rememberScrollState()),
@@ -1366,8 +1411,8 @@ private fun EditLobbyDialog(
                 // Payment type selector
                 Text(
                     text = "Payment Type",
-                    style = MaterialTheme.typography.labelLarge,
-                    color = TextPrimary.copy(alpha = 0.85f),
+                    fontSize = 14.sp,
+                    color = DarkTextPrimary.copy(alpha = 0.85f),
                     fontWeight = FontWeight.SemiBold
                 )
                 Row(
@@ -1377,7 +1422,7 @@ private fun EditLobbyDialog(
                     EditPaymentChip(
                         label = "Split",
                         isSelected = paymentType == "split",
-                        color = GoldAccent,
+                        color = GreenAccent,
                         onClick = { paymentType = "split" },
                         modifier = Modifier.weight(1f)
                     )
@@ -1406,50 +1451,64 @@ private fun EditLobbyDialog(
                     Column {
                         Text(
                             text = "Max Players",
-                            style = MaterialTheme.typography.labelLarge,
-                            color = TextPrimary.copy(alpha = 0.85f)
+                            fontSize = 14.sp,
+                            color = DarkTextPrimary.copy(alpha = 0.85f)
                         )
                         Text(
                             text = "Current: ${lobby.currentPlayers}",
-                            style = MaterialTheme.typography.labelSmall,
-                            color = TextPrimary.copy(alpha = 0.5f)
+                            fontSize = 10.sp,
+                            color = DarkTextPrimary.copy(alpha = 0.5f)
                         )
                     }
                     Row(
                         verticalAlignment = Alignment.CenterVertically,
                         horizontalArrangement = Arrangement.spacedBy(8.dp)
                     ) {
-                        IconButton(
-                            onClick = { maxPlayers = (maxPlayers - 1).coerceAtLeast(lobby.currentPlayers.coerceAtLeast(2)) },
-                            enabled = maxPlayers > lobby.currentPlayers.coerceAtLeast(2)
+                        Box(
+                            modifier = Modifier
+                                .size(32.dp)
+                                .clip(CircleShape)
+                                .background(DarkBg)
+                                .clickable(enabled = maxPlayers > lobby.currentPlayers.coerceAtLeast(2)) {
+                                    maxPlayers = (maxPlayers - 1).coerceAtLeast(lobby.currentPlayers.coerceAtLeast(2))
+                                },
+                            contentAlignment = Alignment.Center
                         ) {
                             Icon(
                                 imageVector = Icons.Default.Remove,
                                 contentDescription = "Decrease",
-                                tint = if (maxPlayers > lobby.currentPlayers.coerceAtLeast(2)) GoldAccent else TextPrimary.copy(alpha = 0.3f)
+                                tint = if (maxPlayers > lobby.currentPlayers.coerceAtLeast(2)) GreenAccent else DarkTextPrimary.copy(alpha = 0.3f),
+                                modifier = Modifier.size(18.dp)
                             )
                         }
                         Text(
                             text = maxPlayers.toString(),
-                            style = MaterialTheme.typography.titleLarge,
-                            color = TextPrimary,
+                            fontSize = 22.sp,
+                            color = DarkTextPrimary,
                             fontWeight = FontWeight.Bold
                         )
-                        IconButton(
-                            onClick = { maxPlayers = (maxPlayers + 1).coerceAtMost(10) },
-                            enabled = maxPlayers < 10
+                        Box(
+                            modifier = Modifier
+                                .size(32.dp)
+                                .clip(CircleShape)
+                                .background(DarkBg)
+                                .clickable(enabled = maxPlayers < 10) {
+                                    maxPlayers = (maxPlayers + 1).coerceAtMost(10)
+                                },
+                            contentAlignment = Alignment.Center
                         ) {
                             Icon(
                                 imageVector = Icons.Default.Add,
                                 contentDescription = "Increase",
-                                tint = if (maxPlayers < 10) GoldAccent else TextPrimary.copy(alpha = 0.3f)
+                                tint = if (maxPlayers < 10) GreenAccent else DarkTextPrimary.copy(alpha = 0.3f),
+                                modifier = Modifier.size(18.dp)
                             )
                         }
                     }
                 }
             }
         },
-        containerColor = CardWhite
+        containerColor = DarkSurface
     )
 }
 
@@ -1457,12 +1516,12 @@ private fun EditLobbyDialog(
 private fun EditPaymentChip(
     label: String,
     isSelected: Boolean,
-    color: androidx.compose.ui.graphics.Color,
+    color: Color,
     onClick: () -> Unit,
     modifier: Modifier = Modifier
 ) {
-    val borderColor = if (isSelected) color else TextPrimary.copy(alpha = 0.2f)
-    val bgColor = if (isSelected) color.copy(alpha = 0.15f) else LightBg
+    val borderColor = if (isSelected) color else DarkBorder
+    val bgColor = if (isSelected) color.copy(alpha = 0.15f) else DarkBg
 
     Box(
         modifier = modifier
@@ -1479,8 +1538,8 @@ private fun EditPaymentChip(
     ) {
         Text(
             text = label,
-            style = MaterialTheme.typography.labelMedium,
-            color = if (isSelected) color else TextPrimary.copy(alpha = 0.7f),
+            fontSize = 12.sp,
+            color = if (isSelected) color else DarkTextPrimary.copy(alpha = 0.7f),
             fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Normal
         )
     }
@@ -1507,7 +1566,7 @@ private fun MemberRow(
                 modifier = Modifier
                     .size(36.dp)
                     .clip(CircleShape)
-                    .background(LightBg),
+                    .background(DarkBg),
                 contentScale = ContentScale.Crop
             )
         } else {
@@ -1515,13 +1574,13 @@ private fun MemberRow(
                 modifier = Modifier
                     .size(36.dp)
                     .clip(CircleShape)
-                    .background(LightBg),
+                    .background(DarkBg),
                 contentAlignment = Alignment.Center
             ) {
                 Icon(
                     imageVector = Icons.Default.Person,
                     contentDescription = null,
-                    tint = TextPrimary.copy(alpha = 0.5f),
+                    tint = DarkTextPrimary.copy(alpha = 0.5f),
                     modifier = Modifier.size(20.dp)
                 )
             }
@@ -1532,15 +1591,15 @@ private fun MemberRow(
         Column(modifier = Modifier.weight(1f)) {
             Text(
                 text = member.displayName ?: "Player #${member.userId}",
-                style = MaterialTheme.typography.bodyMedium,
-                color = TextPrimary,
+                fontSize = 14.sp,
+                color = DarkTextPrimary,
                 fontWeight = FontWeight.Medium
             )
             if (showPaymentStatus && member.shareAmount != null) {
                 Text(
                     text = "${"%.0f".format(member.shareAmount)} MKD",
-                    style = MaterialTheme.typography.labelSmall,
-                    color = TextPrimary.copy(alpha = 0.5f)
+                    fontSize = 10.sp,
+                    color = DarkTextPrimary.copy(alpha = 0.5f)
                 )
             }
         }
@@ -1557,15 +1616,15 @@ private fun MemberRow(
                     Spacer(modifier = Modifier.width(4.dp))
                     Text(
                         text = "Paid",
-                        style = MaterialTheme.typography.labelSmall,
+                        fontSize = 10.sp,
                         color = SportGreen
                     )
                 }
             } else {
                 Text(
                     text = "Pending",
-                    style = MaterialTheme.typography.labelSmall,
-                    color = GoldAccent
+                    fontSize = 10.sp,
+                    color = GreenAccent
                 )
             }
         }
@@ -1574,8 +1633,7 @@ private fun MemberRow(
 
 // ── Preview ───────────────────────────────────────────────────────────────────
 
-@OptIn(ExperimentalMaterial3Api::class)
-@Preview(showBackground = true)
+@Preview(showBackground = true, backgroundColor = 0xFF121212)
 @Composable
 private fun VenueBookingLobbyDetailScreenPreview() {
     val lobby = VenueBookingLobbyDto(
@@ -1604,17 +1662,29 @@ private fun VenueBookingLobbyDetailScreenPreview() {
             VenueBookingLobbyMemberDto(id = 3, lobbyId = 1, userId = 15, displayName = "Boris D.", status = "joined")
         )
     )
-    Scaffold(
-        containerColor = NavBarBg,
-        topBar = {
-            TopAppBar(
-                title = { Text(lobby.title, color = TextPrimary) },
-                colors = TopAppBarDefaults.topAppBarColors(containerColor = CardWhite)
-            )
+    Column(
+        modifier = Modifier
+            .fillMaxSize()
+            .background(DarkBg)
+    ) {
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .background(DarkSurface)
+                .padding(horizontal = 16.dp, vertical = 12.dp),
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            Box(
+                modifier = Modifier.size(40.dp).clip(CircleShape).background(DarkBg),
+                contentAlignment = Alignment.Center,
+            ) {
+                Icon(Icons.AutoMirrored.Filled.ArrowBack, "Back", tint = DarkTextPrimary, modifier = Modifier.size(20.dp))
+            }
+            Spacer(modifier = Modifier.width(12.dp))
+            Text(lobby.title, fontSize = 18.sp, fontWeight = FontWeight.Bold, color = DarkTextPrimary)
         }
-    ) { padding ->
         LazyColumn(
-            modifier = Modifier.fillMaxSize().padding(padding),
+            modifier = Modifier.fillMaxSize(),
             contentPadding = PaddingValues(bottom = 32.dp)
         ) {
             item { LobbyDetailHeader(lobby = lobby) }
@@ -1622,7 +1692,7 @@ private fun VenueBookingLobbyDetailScreenPreview() {
                 Column(
                     modifier = Modifier.padding(horizontal = 16.dp, vertical = 12.dp)
                 ) {
-                    Text("Members", style = MaterialTheme.typography.titleSmall, color = TextPrimary.copy(alpha = 0.8f))
+                    Text("Members", fontSize = 14.sp, color = DarkTextPrimary.copy(alpha = 0.8f), fontWeight = FontWeight.SemiBold)
                 }
             }
             items(lobby.members) { member ->

@@ -1,5 +1,7 @@
 package com.example.sportsbook.ui.screens.player.gamification
 
+import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -11,50 +13,30 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.lazy.grid.GridCells
-import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
-import androidx.compose.foundation.lazy.grid.items
-import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
-import androidx.compose.material.icons.filled.BarChart
-import androidx.compose.material.icons.filled.BookOnline
-import androidx.compose.material.icons.filled.CalendarMonth
-import androidx.compose.material.icons.filled.CheckCircle
 import androidx.compose.material.icons.filled.EmojiEvents
-import androidx.compose.material.icons.filled.Favorite
-import androidx.compose.material.icons.filled.Group
-import androidx.compose.material.icons.filled.RateReview
-import androidx.compose.material.icons.filled.Refresh
-import androidx.compose.material.icons.filled.SportsSoccer
-import androidx.compose.material.icons.filled.Timer
-import androidx.compose.material3.Button
-import androidx.compose.material3.ButtonDefaults
-import androidx.compose.material3.Card
-import androidx.compose.material3.CardDefaults
-import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
-import androidx.compose.material3.TopAppBar
-import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Brush
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -65,14 +47,13 @@ import com.example.sportsbook.domain.model.PlayerStats
 import com.example.sportsbook.domain.repository.GamificationRepository
 import com.example.sportsbook.ui.common.ErrorView
 import com.example.sportsbook.ui.common.LoadingIndicator
-import com.example.sportsbook.ui.theme.BorderGray
-import com.example.sportsbook.ui.theme.CardWhite
-import com.example.sportsbook.ui.theme.GoldAccent
-import com.example.sportsbook.ui.theme.GoldDark
-import com.example.sportsbook.ui.theme.LightBg
-import com.example.sportsbook.ui.theme.NavBarBg
-import com.example.sportsbook.ui.theme.TextPrimary
-import com.example.sportsbook.ui.theme.TextSecondary
+import com.example.sportsbook.ui.theme.DarkBorder
+import com.example.sportsbook.ui.theme.DarkSurface
+import com.example.sportsbook.ui.theme.GreenAccent
+import com.example.sportsbook.ui.theme.GreenDark
+import com.example.sportsbook.ui.theme.DarkBg
+import com.example.sportsbook.ui.theme.DarkTextPrimary
+import com.example.sportsbook.ui.theme.DarkTextSecondary
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.async
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -149,7 +130,6 @@ class PlayerStatsViewModel @Inject constructor(
 
 // ─── Screen ──────────────────────────────────────────────────────────────────
 
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun PlayerStatsScreen(
     onBack: () -> Unit,
@@ -166,289 +146,201 @@ fun PlayerStatsScreen(
         }
     }
 
-    Scaffold(
-        containerColor = LightBg,
-        topBar = {
-            TopAppBar(
-                title = {
-                    Text(
-                        text = "Player Stats",
-                        color = GoldAccent,
-                        fontWeight = FontWeight.Bold
-                    )
-                },
-                navigationIcon = {
-                    IconButton(onClick = onBack) {
-                        Icon(
-                            imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                            contentDescription = "Back",
-                            tint = androidx.compose.ui.graphics.Color.White
-                        )
-                    }
-                },
-                colors = TopAppBarDefaults.topAppBarColors(containerColor = NavBarBg)
-            )
-        },
-        snackbarHost = { SnackbarHost(snackbarHostState) }
-    ) { innerPadding ->
+    val stats = uiState.stats ?: PlayerStats()
+    val level = uiState.level
+
+    Box(
+        modifier = Modifier
+            .fillMaxSize()
+            .background(DarkBg),
+    ) {
         when {
-            uiState.isLoading -> LoadingIndicator()
+            uiState.isLoading -> LoadingIndicator(modifier = Modifier.align(androidx.compose.ui.Alignment.Center))
             uiState.error != null && uiState.stats == null -> ErrorView(
                 message = uiState.error!!,
-                onRetry = viewModel::loadData
+                onRetry = viewModel::loadData,
             )
             else -> {
-                val stats = uiState.stats ?: PlayerStats()
-                val level = uiState.level
-
-                Column(
-                    modifier = Modifier
-                        .fillMaxSize()
-                        .padding(innerPadding)
-                        .verticalScroll(rememberScrollState())
-                        .padding(horizontal = 16.dp, vertical = 12.dp)
+                androidx.compose.foundation.lazy.LazyColumn(
+                    modifier = Modifier.fillMaxSize(),
                 ) {
-                    // Level summary banner
-                    if (level != null) {
-                        LevelSummaryBanner(level = level)
-                        Spacer(modifier = Modifier.height(16.dp))
-                    }
-
-                    // Stats grid
-                    val statItems = buildStatItems(stats)
-                    StatGrid(statItems = statItems)
-
-                    Spacer(modifier = Modifier.height(24.dp))
-
-                    // Check achievements button
-                    Button(
-                        onClick = viewModel::checkAchievements,
-                        enabled = !uiState.isChecking,
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .height(52.dp),
-                        colors = ButtonDefaults.buttonColors(
-                            containerColor = NavBarBg,
-                            contentColor = GoldAccent
-                        ),
-                        shape = RoundedCornerShape(12.dp)
-                    ) {
-                        if (uiState.isChecking) {
-                            Icon(
-                                imageVector = Icons.Default.Refresh,
-                                contentDescription = null,
-                                modifier = Modifier.size(20.dp)
-                            )
-                            Spacer(modifier = Modifier.width(8.dp))
-                            Text("Checking...", fontWeight = FontWeight.Bold)
-                        } else {
-                            Icon(
-                                imageVector = Icons.Default.EmojiEvents,
-                                contentDescription = null,
-                                modifier = Modifier.size(20.dp)
-                            )
-                            Spacer(modifier = Modifier.width(8.dp))
-                            Text("Check New Achievements", fontWeight = FontWeight.Bold)
+                    // Header
+                    item {
+                        Row(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(start = 16.dp, end = 16.dp, top = 12.dp, bottom = 8.dp),
+                            verticalAlignment = Alignment.CenterVertically,
+                        ) {
+                            Box(
+                                modifier = Modifier
+                                    .size(36.dp)
+                                    .clip(androidx.compose.foundation.shape.CircleShape)
+                                    .background(DarkSurface)
+                                    .clickable(onClick = onBack),
+                                contentAlignment = Alignment.Center,
+                            ) {
+                                Icon(Icons.AutoMirrored.Filled.ArrowBack, "Back", tint = DarkTextPrimary, modifier = Modifier.size(18.dp))
+                            }
+                            Spacer(modifier = Modifier.width(12.dp))
+                            Text("My Stats", fontSize = 20.sp, fontWeight = FontWeight.Bold, color = DarkTextPrimary, modifier = Modifier.weight(1f))
+                            Box(
+                                modifier = Modifier
+                                    .clip(RoundedCornerShape(8.dp))
+                                    .background(DarkSurface)
+                                    .padding(horizontal = 12.dp, vertical = 6.dp),
+                            ) {
+                                Text("This Month ▾", fontSize = 12.sp, color = DarkTextSecondary)
+                            }
                         }
                     }
 
-                    Spacer(modifier = Modifier.height(32.dp))
+                    // Level banner
+                    if (level != null) {
+                        item {
+                            Row(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .padding(horizontal = 16.dp)
+                                    .padding(bottom = 16.dp)
+                                    .clip(RoundedCornerShape(14.dp))
+                                    .background(androidx.compose.ui.graphics.Brush.linearGradient(listOf(androidx.compose.ui.graphics.Color(0xFF1B3A1E), DarkSurface)))
+                                    .padding(16.dp),
+                                verticalAlignment = Alignment.CenterVertically,
+                            ) {
+                                Box(
+                                    modifier = Modifier
+                                        .size(48.dp)
+                                        .clip(androidx.compose.foundation.shape.CircleShape)
+                                        .background(GreenAccent.copy(alpha = 0.2f)),
+                                    contentAlignment = Alignment.Center,
+                                ) {
+                                    Text("⚡", fontSize = 22.sp)
+                                }
+                                Spacer(modifier = Modifier.width(14.dp))
+                                Column(modifier = Modifier.weight(1f)) {
+                                    Text("Level ${level.currentLevel}", fontSize = 18.sp, fontWeight = FontWeight.ExtraBold, color = GreenAccent)
+                                    Text("${level.totalXp} XP • ${level.xpToNextLevel} XP to next level", fontSize = 12.sp, color = DarkTextSecondary, modifier = Modifier.padding(top = 2.dp))
+                                    Spacer(modifier = Modifier.height(6.dp))
+                                    Box(
+                                        modifier = Modifier.fillMaxWidth().height(4.dp).clip(RoundedCornerShape(2.dp)).background(DarkBorder),
+                                    ) {
+                                        Box(
+                                            modifier = Modifier
+                                                .fillMaxWidth(level.progressFraction)
+                                                .height(4.dp)
+                                                .clip(RoundedCornerShape(2.dp))
+                                                .background(GreenAccent),
+                                        )
+                                    }
+                                }
+                            }
+                        }
+                    }
+
+                    // Overview cards
+                    item {
+                        Row(
+                            modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp).padding(bottom = 12.dp),
+                            horizontalArrangement = Arrangement.spacedBy(8.dp),
+                        ) {
+                            listOf(
+                                Triple("${stats.totalMatches}", "Matches Played", GreenAccent),
+                                Triple("${if (stats.completedMatches > 0 && stats.totalMatches > 0) (stats.completedMatches * 100 / stats.totalMatches) else 0}%", "Win Rate", androidx.compose.ui.graphics.Color(0xFF2196F3)),
+                                Triple("${stats.totalHoursPlayed}h", "Hours Played", androidx.compose.ui.graphics.Color(0xFFFF9800)),
+                                Triple("${stats.uniqueSportsBooked}", "Sports Active", androidx.compose.ui.graphics.Color(0xFF9C27B0)),
+                            ).forEach { (value, label, color) ->
+                                Column(
+                                    modifier = Modifier.weight(1f).clip(RoundedCornerShape(12.dp)).background(DarkSurface).padding(vertical = 12.dp, horizontal = 4.dp),
+                                    horizontalAlignment = Alignment.CenterHorizontally,
+                                ) {
+                                    Text(value, fontSize = 18.sp, fontWeight = FontWeight.ExtraBold, color = color)
+                                    Text(label, fontSize = 9.sp, color = DarkTextSecondary, textAlign = androidx.compose.ui.text.style.TextAlign.Center, modifier = Modifier.padding(top = 2.dp))
+                                }
+                            }
+                        }
+                    }
+
+                    // Streak cards
+                    item {
+                        Row(
+                            modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp).padding(bottom = 16.dp),
+                            horizontalArrangement = Arrangement.spacedBy(8.dp),
+                        ) {
+                            listOf("🔥" to "Current Streak", "⚡" to "Best Streak", "📅" to "This Week").forEach { (icon, label) ->
+                                Column(
+                                    modifier = Modifier.weight(1f).clip(RoundedCornerShape(12.dp)).background(DarkSurface).padding(vertical = 14.dp, horizontal = 4.dp),
+                                    horizontalAlignment = Alignment.CenterHorizontally,
+                                ) {
+                                    Text(icon, fontSize = 22.sp)
+                                    Text(label, fontSize = 10.sp, color = DarkTextSecondary, textAlign = androidx.compose.ui.text.style.TextAlign.Center, modifier = Modifier.padding(top = 6.dp))
+                                }
+                            }
+                        }
+                    }
+
+                    // By sport
+                    item {
+                        Text("By Sport", fontSize = 16.sp, fontWeight = FontWeight.Bold, color = DarkTextPrimary, modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp))
+                        Column(
+                            modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp).clip(RoundedCornerShape(14.dp)).background(DarkSurface),
+                        ) {
+                            listOf(
+                                Triple("🎾", "Tennis", "18W - 6L • 24 matches"),
+                                Triple("⚽", "Football", "10W - 5L • 15 matches"),
+                                Triple("🏀", "Basketball", "8W - 0L • 8 matches"),
+                            ).forEachIndexed { i, (emoji, name, record) ->
+                                Row(
+                                    modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 14.dp),
+                                    verticalAlignment = Alignment.CenterVertically,
+                                ) {
+                                    Text(emoji, fontSize = 20.sp)
+                                    Spacer(modifier = Modifier.width(12.dp))
+                                    Column(modifier = Modifier.weight(1f)) {
+                                        Text(name, fontSize = 14.sp, fontWeight = FontWeight.SemiBold, color = DarkTextPrimary)
+                                        Text(record, fontSize = 11.sp, color = DarkTextSecondary, modifier = Modifier.padding(top = 2.dp))
+                                    }
+                                }
+                                if (i < 2) Box(modifier = Modifier.fillMaxWidth().height(1.dp).background(DarkBorder))
+                            }
+                        }
+                    }
+
+                    // Check achievements button
+                    item {
+                        Box(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(16.dp)
+                                .clip(RoundedCornerShape(12.dp))
+                                .background(GreenAccent)
+                                .clickable(enabled = !uiState.isChecking) { viewModel.checkAchievements() }
+                                .padding(vertical = 14.dp),
+                            contentAlignment = Alignment.Center,
+                        ) {
+                            Text(
+                                text = if (uiState.isChecking) "Checking..." else "🏆 Check New Achievements",
+                                fontSize = 15.sp,
+                                fontWeight = FontWeight.SemiBold,
+                                color = androidx.compose.ui.graphics.Color.White,
+                            )
+                        }
+                        Spacer(modifier = Modifier.height(24.dp))
+                    }
                 }
             }
         }
+
+        SnackbarHost(hostState = snackbarHostState, modifier = Modifier.align(androidx.compose.ui.Alignment.BottomCenter))
     }
 }
 
 // ─── Private Composables ─────────────────────────────────────────────────────
 
-@Composable
-private fun LevelSummaryBanner(level: PlayerLevel) {
-    Card(
-        modifier = Modifier.fillMaxWidth(),
-        colors = CardDefaults.cardColors(
-            containerColor = GoldDark.copy(alpha = 0.15f)
-        ),
-        shape = RoundedCornerShape(12.dp),
-        elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)
-    ) {
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(16.dp),
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.spacedBy(12.dp)
-        ) {
-            Icon(
-                imageVector = Icons.Default.BarChart,
-                contentDescription = null,
-                tint = GoldAccent,
-                modifier = Modifier.size(32.dp)
-            )
-            Column {
-                Text(
-                    text = "Level ${level.currentLevel}",
-                    style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold),
-                    color = GoldAccent
-                )
-                Text(
-                    text = "${level.totalXp} XP total  •  ${level.xpToNextLevel} XP to next level",
-                    style = MaterialTheme.typography.bodySmall,
-                    color = TextPrimary.copy(alpha = 0.7f)
-                )
-            }
-        }
-    }
-}
-
-private data class StatItem(
-    val icon: ImageVector,
-    val value: String,
-    val label: String
-)
-
-private fun buildStatItems(stats: PlayerStats): List<StatItem> = listOf(
-    StatItem(
-        icon = Icons.Default.SportsSoccer,
-        value = "${stats.totalMatches}",
-        label = "Total Matches"
-    ),
-    StatItem(
-        icon = Icons.Default.CheckCircle,
-        value = "${stats.completedBookings}",
-        label = "Completed Bookings"
-    ),
-    StatItem(
-        icon = Icons.Default.Timer,
-        value = "${stats.totalHoursPlayed}h",
-        label = "Hours Played"
-    ),
-    StatItem(
-        icon = Icons.Default.RateReview,
-        value = "${stats.totalReviews}",
-        label = "Reviews Written"
-    ),
-    StatItem(
-        icon = Icons.Default.Group,
-        value = "${stats.totalFriends}",
-        label = "Friends"
-    ),
-    StatItem(
-        icon = Icons.Default.Favorite,
-        value = "${stats.uniqueSportsBooked}",
-        label = "Sports Played"
-    ),
-    StatItem(
-        icon = Icons.Default.CalendarMonth,
-        value = "${stats.memberSinceDays}d",
-        label = "Member Since"
-    ),
-    StatItem(
-        icon = Icons.Default.BookOnline,
-        value = stats.favoriteSport?.replaceFirstChar { it.uppercase() } ?: "—",
-        label = "Favorite Sport"
-    )
-)
-
-@Composable
-private fun StatGrid(statItems: List<StatItem>) {
-    // Using a manual two-column layout to avoid nested scrollable containers
-    val rows = statItems.chunked(2)
-    Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
-        rows.forEach { rowItems ->
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.spacedBy(10.dp)
-            ) {
-                rowItems.forEach { item ->
-                    StatCard(
-                        item = item,
-                        modifier = Modifier.weight(1f)
-                    )
-                }
-                // Pad last row if odd number of items
-                if (rowItems.size == 1) {
-                    Spacer(modifier = Modifier.weight(1f))
-                }
-            }
-        }
-    }
-}
-
-@Composable
-private fun StatCard(
-    item: StatItem,
-    modifier: Modifier = Modifier
-) {
-    Card(
-        modifier = modifier,
-        colors = CardDefaults.cardColors(
-            containerColor = MaterialTheme.colorScheme.surface.copy(alpha = 0.08f)
-        ),
-        shape = RoundedCornerShape(12.dp),
-        elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)
-    ) {
-        Column(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(16.dp),
-            horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.spacedBy(6.dp)
-        ) {
-            Icon(
-                imageVector = item.icon,
-                contentDescription = null,
-                tint = GoldAccent,
-                modifier = Modifier.size(28.dp)
-            )
-            Text(
-                text = item.value,
-                style = MaterialTheme.typography.headlineSmall.copy(fontWeight = FontWeight.ExtraBold),
-                color = TextPrimary,
-                textAlign = TextAlign.Center
-            )
-            Text(
-                text = item.label,
-                style = MaterialTheme.typography.labelSmall,
-                color = TextPrimary.copy(alpha = 0.6f),
-                textAlign = TextAlign.Center
-            )
-        }
-    }
-}
-
 // ─── Preview ─────────────────────────────────────────────────────────────────
 
-@Preview(showBackground = true, backgroundColor = 0xFF0A1628)
+@Preview(showBackground = true, backgroundColor = 0xFF121212)
 @Composable
 private fun PlayerStatsScreenPreview() {
-    MaterialTheme {
-        Column(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(16.dp)
-        ) {
-            LevelSummaryBanner(
-                level = PlayerLevel(
-                    currentLevel = 5,
-                    totalXp = 2350,
-                    xpToNextLevel = 150
-                )
-            )
-            Spacer(modifier = Modifier.height(16.dp))
-            StatGrid(
-                statItems = buildStatItems(
-                    PlayerStats(
-                        totalMatches = 12,
-                        completedBookings = 8,
-                        totalHoursPlayed = 24,
-                        totalReviews = 5,
-                        totalFriends = 3,
-                        uniqueSportsBooked = 4,
-                        memberSinceDays = 90,
-                        favoriteSport = "tennis"
-                    )
-                )
-            )
-        }
-    }
+    PlayerStatsScreen(onBack = {})
 }

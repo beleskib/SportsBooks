@@ -10,7 +10,6 @@ import com.example.sportsbook.domain.repository.BookingRepository
 import com.example.sportsbook.domain.repository.FriendshipRepository
 import com.example.sportsbook.domain.repository.GamificationRepository
 import com.example.sportsbook.domain.repository.PaymentRepository
-import com.stripe.android.paymentsheet.PaymentSheetResult
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
@@ -22,7 +21,6 @@ import kotlinx.coroutines.launch
 import javax.inject.Inject
 
 data class PaymentCheckoutUiState(
-    val clientSecret: String? = null,
     val paymentId: Long? = null,
     val bookingId: Long? = null,
     val amount: Double = 0.0,
@@ -266,7 +264,7 @@ class PaymentCheckoutViewModel @Inject constructor(
             _uiState.update { it.copy(isCreatingSplit = true, error = null) }
             try {
                 val friendIds = _uiState.value.selectedFriends.map { it.friendId }
-                val response = apiService.createSplit(
+                apiService.createSplit(
                     bookingId = bookingId,
                     request = CreateSplitRequestDto(
                         payerUserIds = friendIds
@@ -299,42 +297,17 @@ class PaymentCheckoutViewModel @Inject constructor(
                 bookingId = bookingId,
             ).fold(
                 onSuccess = { response ->
-                    when {
-                        response.clientSecret.isNullOrEmpty() -> {
-                            // XP fully covered the payment — no Stripe needed
-                            _uiState.update {
-                                it.copy(
-                                    isCreatingIntent = false,
-                                    paymentSuccess = true,
-                                )
-                            }
-                        }
-                        response.clientSecret.startsWith("dev_secret_") -> {
-                            // Dev mode — skip Stripe PaymentSheet, confirm directly
-                            _uiState.update {
-                                it.copy(
-                                    isCreatingIntent = false,
-                                    paymentId = response.paymentId,
-                                    bookingId = response.bookingId,
-                                    amount = response.amount,
-                                    currency = response.currency,
-                                )
-                            }
-                            confirmPayment()
-                        }
-                        else -> {
-                            _uiState.update {
-                                it.copy(
-                                    isCreatingIntent = false,
-                                    clientSecret = response.clientSecret,
-                                    paymentId = response.paymentId,
-                                    bookingId = response.bookingId,
-                                    amount = response.amount,
-                                    currency = response.currency,
-                                )
-                            }
-                        }
+                    _uiState.update {
+                        it.copy(
+                            isCreatingIntent = false,
+                            paymentId = response.paymentId,
+                            bookingId = response.bookingId,
+                            amount = response.amount,
+                            currency = response.currency,
+                        )
                     }
+                    // Firebase-based: confirm payment directly (no Stripe PaymentSheet)
+                    confirmPayment()
                 },
                 onFailure = { error ->
                     _uiState.update {
@@ -345,16 +318,6 @@ class PaymentCheckoutViewModel @Inject constructor(
                     }
                 },
             )
-        }
-    }
-
-    fun onPaymentSheetResult(result: PaymentSheetResult) {
-        when (result) {
-            is PaymentSheetResult.Completed -> confirmPayment()
-            is PaymentSheetResult.Failed -> failPayment(result.error.localizedMessage)
-            is PaymentSheetResult.Canceled -> {
-                failPayment("Payment was cancelled")
-            }
         }
     }
 

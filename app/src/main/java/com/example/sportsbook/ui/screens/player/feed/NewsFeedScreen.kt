@@ -31,27 +31,19 @@ import androidx.compose.material.icons.filled.Person
 import androidx.compose.material.icons.filled.SportsScore
 import androidx.compose.material.icons.filled.Star
 import androidx.compose.material.icons.filled.WorkspacePremium
-import androidx.compose.material3.AssistChip
-import androidx.compose.material3.AssistChipDefaults
-import androidx.compose.material3.Card
-import androidx.compose.material3.CardDefaults
+import androidx.compose.foundation.border
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
-import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ModalBottomSheet
-import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextField
 import androidx.compose.material3.TextFieldDefaults
-import androidx.compose.material3.TopAppBar
-import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.material3.pulltorefresh.PullToRefreshBox
 import androidx.compose.material3.rememberModalBottomSheetState
+import androidx.compose.ui.unit.sp
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.DisposableEffect
@@ -77,16 +69,14 @@ import com.example.sportsbook.data.remote.dto.CreateFeedPostRequestDto
 import com.example.sportsbook.data.remote.dto.FeedCommentDto
 import com.example.sportsbook.data.remote.dto.FeedPostDto
 import com.example.sportsbook.domain.repository.AuthRepository
-import com.example.sportsbook.ui.theme.BorderGray
-import com.example.sportsbook.ui.theme.CardWhite
-import com.example.sportsbook.ui.theme.DividerGray
-import com.example.sportsbook.ui.theme.GoldAccent
-import com.example.sportsbook.ui.theme.LightBg
-import com.example.sportsbook.ui.theme.NavBarBg
-import com.example.sportsbook.ui.theme.SportsBookTheme
-import com.example.sportsbook.ui.theme.TextPrimary
-import com.example.sportsbook.ui.theme.TextSecondary
-import com.example.sportsbook.ui.theme.TextTertiary
+import com.example.sportsbook.ui.theme.DarkBorder
+import com.example.sportsbook.ui.theme.DarkSurface
+import com.example.sportsbook.ui.theme.GreenAccent
+import com.example.sportsbook.ui.theme.DarkBg
+
+import com.example.sportsbook.ui.theme.DarkTextPrimary
+import com.example.sportsbook.ui.theme.DarkTextSecondary
+import com.example.sportsbook.ui.theme.DarkTextTertiary
 import dagger.hilt.android.lifecycle.HiltViewModel
 import com.example.sportsbook.data.remote.api.ApiService
 import kotlinx.coroutines.Job
@@ -278,29 +268,27 @@ fun NewsFeedScreen(
         }
     }
 
-    Scaffold(
-        containerColor = LightBg,
-        snackbarHost = { SnackbarHost(hostState = snackbarHostState) },
-        topBar = {
-            TopAppBar(
-                title = {
-                    Text(
-                        "Feed",
-                        style = MaterialTheme.typography.headlineMedium.copy(fontWeight = FontWeight.Bold),
-                        color = Color.White
-                    )
-                },
-                colors = TopAppBarDefaults.topAppBarColors(containerColor = NavBarBg)
-            )
-        }
-    ) { paddingValues ->
-        PullToRefreshBox(
-            isRefreshing = uiState.isLoading && uiState.posts.isEmpty(),
-            onRefresh = { viewModel.loadFeed() },
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(paddingValues)
-        ) {
+    Box(
+        modifier = Modifier
+            .fillMaxSize()
+            .background(DarkBg)
+    ) {
+        Column(modifier = Modifier.fillMaxSize()) {
+            // ── Header ───────────────────────────────────────────────────
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 16.dp, vertical = 12.dp),
+                verticalAlignment = Alignment.CenterVertically,
+            ) {
+                Text("Feed", fontSize = 24.sp, fontWeight = FontWeight.Bold, color = Color.White)
+            }
+
+            PullToRefreshBox(
+                isRefreshing = uiState.isLoading && uiState.posts.isEmpty(),
+                onRefresh = { viewModel.loadFeed() },
+                modifier = Modifier.fillMaxSize()
+            ) {
             LazyColumn(
                 modifier = Modifier.fillMaxSize(),
                 contentPadding = PaddingValues(vertical = 0.dp),
@@ -336,19 +324,19 @@ fun NewsFeedScreen(
                                     Icons.Default.SportsScore,
                                     contentDescription = null,
                                     modifier = Modifier.size(64.dp),
-                                    tint = TextTertiary
+                                    tint = DarkTextTertiary
                                 )
                                 Spacer(modifier = Modifier.height(12.dp))
                                 Text(
                                     text = "No posts yet",
-                                    style = MaterialTheme.typography.titleMedium,
-                                    color = TextSecondary
+                                    fontSize = 16.sp,
+                                    color = DarkTextSecondary
                                 )
                                 Spacer(modifier = Modifier.height(4.dp))
                                 Text(
                                     text = "Follow players and partners to see their updates",
-                                    style = MaterialTheme.typography.bodySmall,
-                                    color = TextTertiary
+                                    fontSize = 12.sp,
+                                    color = DarkTextTertiary
                                 )
                             }
                         }
@@ -364,7 +352,13 @@ fun NewsFeedScreen(
                     }
                 }
             }
+            }
         }
+
+        SnackbarHost(
+            hostState = snackbarHostState,
+            modifier = Modifier.align(Alignment.BottomCenter)
+        )
 
         if (uiState.showComments) {
             CommentsBottomSheet(
@@ -393,7 +387,7 @@ private fun CommentsBottomSheet(
     ModalBottomSheet(
         onDismissRequest = onDismiss,
         sheetState = sheetState,
-        containerColor = CardWhite
+        containerColor = DarkSurface
     ) {
         Column(
             modifier = Modifier
@@ -403,8 +397,8 @@ private fun CommentsBottomSheet(
         ) {
             Text(
                 text = "Comments",
-                style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold),
-                color = TextPrimary,
+                fontSize = 16.sp, fontWeight = FontWeight.Bold,
+                color = DarkTextPrimary,
                 modifier = Modifier.padding(bottom = 12.dp)
             )
 
@@ -420,7 +414,7 @@ private fun CommentsBottomSheet(
                                 .padding(32.dp),
                             contentAlignment = Alignment.Center
                         ) {
-                            CircularProgressIndicator(color = GoldAccent)
+                            CircularProgressIndicator(color = GreenAccent)
                         }
                     }
                 } else if (comments.isEmpty()) {
@@ -433,8 +427,8 @@ private fun CommentsBottomSheet(
                         ) {
                             Text(
                                 "No comments yet. Be the first!",
-                                color = TextSecondary,
-                                style = MaterialTheme.typography.bodyMedium
+                                color = DarkTextSecondary,
+                                fontSize = 14.sp
                             )
                         }
                     }
@@ -445,7 +439,7 @@ private fun CommentsBottomSheet(
                 }
             }
 
-            HorizontalDivider(color = DividerGray)
+            Box(modifier = Modifier.fillMaxWidth().height(1.dp).background(DarkBorder))
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -455,14 +449,14 @@ private fun CommentsBottomSheet(
                 TextField(
                     value = commentText,
                     onValueChange = { commentText = it },
-                    placeholder = { Text("Write a comment...", color = TextTertiary) },
+                    placeholder = { Text("Write a comment...", color = DarkTextTertiary) },
                     modifier = Modifier.weight(1f),
                     colors = TextFieldDefaults.colors(
-                        focusedContainerColor = LightBg,
-                        unfocusedContainerColor = LightBg,
-                        focusedTextColor = TextPrimary,
-                        unfocusedTextColor = TextPrimary,
-                        cursorColor = GoldAccent,
+                        focusedContainerColor = DarkBg,
+                        unfocusedContainerColor = DarkBg,
+                        focusedTextColor = DarkTextPrimary,
+                        unfocusedTextColor = DarkTextPrimary,
+                        cursorColor = GreenAccent,
                         focusedIndicatorColor = Color.Transparent,
                         unfocusedIndicatorColor = Color.Transparent
                     ),
@@ -470,24 +464,29 @@ private fun CommentsBottomSheet(
                     maxLines = 3
                 )
                 Spacer(modifier = Modifier.width(8.dp))
-                IconButton(
-                    onClick = {
-                        onPostComment(commentText)
-                        commentText = ""
-                    },
-                    enabled = commentText.isNotBlank() && !isPosting
+                Box(
+                    modifier = Modifier
+                        .size(36.dp)
+                        .clip(CircleShape)
+                        .background(if (commentText.isNotBlank() && !isPosting) GreenAccent else DarkBorder)
+                        .clickable(enabled = commentText.isNotBlank() && !isPosting) {
+                            onPostComment(commentText)
+                            commentText = ""
+                        },
+                    contentAlignment = Alignment.Center,
                 ) {
                     if (isPosting) {
                         CircularProgressIndicator(
                             modifier = Modifier.size(20.dp),
-                            color = GoldAccent,
+                            color = Color.White,
                             strokeWidth = 2.dp
                         )
                     } else {
                         Icon(
                             Icons.AutoMirrored.Filled.Send,
                             contentDescription = "Send",
-                            tint = if (commentText.isNotBlank()) GoldAccent else TextTertiary
+                            tint = Color.White,
+                            modifier = Modifier.size(18.dp)
                         )
                     }
                 }
@@ -514,14 +513,14 @@ private fun CommentItem(comment: FeedCommentDto) {
                 modifier = Modifier
                     .size(32.dp)
                     .clip(CircleShape)
-                    .background(BorderGray),
+                    .background(DarkBorder),
                 contentAlignment = Alignment.Center
             ) {
                 Icon(
                     Icons.Default.Person,
                     contentDescription = null,
                     modifier = Modifier.size(16.dp),
-                    tint = GoldAccent
+                    tint = GreenAccent
                 )
             }
         }
@@ -530,20 +529,20 @@ private fun CommentItem(comment: FeedCommentDto) {
             Row(verticalAlignment = Alignment.CenterVertically) {
                 Text(
                     text = comment.userName,
-                    style = MaterialTheme.typography.labelMedium.copy(fontWeight = FontWeight.Bold),
-                    color = TextPrimary
+                    fontSize = 12.sp, fontWeight = FontWeight.Bold,
+                    color = DarkTextPrimary
                 )
                 Spacer(modifier = Modifier.width(8.dp))
                 Text(
                     text = formatTimeAgo(comment.createdAt),
-                    style = MaterialTheme.typography.labelSmall,
-                    color = TextTertiary
+                    fontSize = 10.sp,
+                    color = DarkTextTertiary
                 )
             }
             Text(
                 text = comment.content,
-                style = MaterialTheme.typography.bodyMedium,
-                color = TextPrimary
+                fontSize = 14.sp,
+                color = DarkTextPrimary
             )
         }
     }
@@ -561,7 +560,7 @@ private fun FeedComposer(
     Column(
         modifier = Modifier
             .fillMaxWidth()
-            .background(CardWhite)
+            .background(DarkSurface)
             .padding(12.dp)
     ) {
         Row(
@@ -583,14 +582,14 @@ private fun FeedComposer(
                     modifier = Modifier
                         .size(40.dp)
                         .clip(CircleShape)
-                        .background(BorderGray),
+                        .background(DarkBorder),
                     contentAlignment = Alignment.Center
                 ) {
                     Icon(
                         Icons.Default.Person,
                         contentDescription = null,
                         modifier = Modifier.size(20.dp),
-                        tint = GoldAccent
+                        tint = GreenAccent
                     )
                 }
             }
@@ -604,16 +603,16 @@ private fun FeedComposer(
                 placeholder = {
                     Text(
                         "What's on your mind?",
-                        color = TextTertiary
+                        color = DarkTextTertiary
                     )
                 },
                 modifier = Modifier.weight(1f),
                 colors = TextFieldDefaults.colors(
-                    focusedContainerColor = LightBg,
-                    unfocusedContainerColor = LightBg,
-                    focusedTextColor = TextPrimary,
-                    unfocusedTextColor = TextPrimary,
-                    cursorColor = GoldAccent,
+                    focusedContainerColor = DarkBg,
+                    unfocusedContainerColor = DarkBg,
+                    focusedTextColor = DarkTextPrimary,
+                    unfocusedTextColor = DarkTextPrimary,
+                    cursorColor = GreenAccent,
                     focusedIndicatorColor = Color.Transparent,
                     unfocusedIndicatorColor = Color.Transparent
                 ),
@@ -621,21 +620,26 @@ private fun FeedComposer(
                 maxLines = 3,
                 trailingIcon = {
                     if (text.isNotBlank()) {
-                        IconButton(
-                            onClick = onPost,
-                            enabled = !isPosting
+                        Box(
+                            modifier = Modifier
+                                .size(36.dp)
+                                .clip(CircleShape)
+                                .background(if (!isPosting) GreenAccent else DarkBorder)
+                                .clickable(enabled = !isPosting, onClick = onPost),
+                            contentAlignment = Alignment.Center,
                         ) {
                             if (isPosting) {
                                 CircularProgressIndicator(
                                     modifier = Modifier.size(20.dp),
-                                    color = GoldAccent,
+                                    color = Color.White,
                                     strokeWidth = 2.dp
                                 )
                             } else {
                                 Icon(
                                     Icons.AutoMirrored.Filled.Send,
                                     contentDescription = "Post",
-                                    tint = GoldAccent
+                                    tint = Color.White,
+                                    modifier = Modifier.size(18.dp)
                                 )
                             }
                         }
@@ -656,7 +660,7 @@ private fun FeedComposer(
             SuggestionChip(
                 label = "Share a milestone",
                 icon = Icons.Default.EmojiEvents,
-                color = GoldAccent,
+                color = GreenAccent,
                 onClick = { onSuggestionClick("Just hit a new milestone! ") }
             )
             SuggestionChip(
@@ -688,32 +692,28 @@ private fun SuggestionChip(
     color: Color,
     onClick: () -> Unit
 ) {
-    AssistChip(
-        onClick = onClick,
-        label = {
-            Text(
-                text = label,
-                style = MaterialTheme.typography.labelSmall,
-                color = TextPrimary
-            )
-        },
-        leadingIcon = {
-            Icon(
-                icon,
-                contentDescription = null,
-                modifier = Modifier.size(16.dp),
-                tint = color
-            )
-        },
-        colors = AssistChipDefaults.assistChipColors(
-            containerColor = LightBg
-        ),
-        border = AssistChipDefaults.assistChipBorder(
-            enabled = true,
-            borderColor = color.copy(alpha = 0.3f)
-        ),
-        shape = RoundedCornerShape(16.dp)
-    )
+    Row(
+        modifier = Modifier
+            .clip(RoundedCornerShape(16.dp))
+            .background(DarkBg)
+            .border(1.dp, color.copy(alpha = 0.3f), RoundedCornerShape(16.dp))
+            .clickable(onClick = onClick)
+            .padding(horizontal = 12.dp, vertical = 6.dp),
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        Icon(
+            icon,
+            contentDescription = null,
+            modifier = Modifier.size(16.dp),
+            tint = color
+        )
+        Spacer(modifier = Modifier.width(6.dp))
+        Text(
+            text = label,
+            fontSize = 10.sp,
+            color = DarkTextPrimary
+        )
+    }
 }
 
 @Composable
@@ -723,13 +723,12 @@ private fun FeedPostCard(
     onComment: () -> Unit,
     onUserClick: () -> Unit
 ) {
-    Card(
-        modifier = Modifier.fillMaxWidth(),
-        shape = RoundedCornerShape(0.dp),
-        colors = CardDefaults.cardColors(containerColor = CardWhite),
-        elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)
+    Column(
+        modifier = Modifier
+            .fillMaxWidth()
+            .background(DarkSurface)
+            .padding(16.dp)
     ) {
-        Column(modifier = Modifier.padding(16.dp)) {
             // Author row
             Row(
                 verticalAlignment = Alignment.CenterVertically,
@@ -749,14 +748,14 @@ private fun FeedPostCard(
                         modifier = Modifier
                             .size(40.dp)
                             .clip(CircleShape)
-                            .background(BorderGray),
+                            .background(DarkBorder),
                         contentAlignment = Alignment.Center
                     ) {
                         Icon(
                             Icons.Default.Person,
                             contentDescription = null,
                             modifier = Modifier.size(20.dp),
-                            tint = GoldAccent
+                            tint = GreenAccent
                         )
                     }
                 }
@@ -766,16 +765,16 @@ private fun FeedPostCard(
                 Column(modifier = Modifier.weight(1f)) {
                     Text(
                         text = post.authorName,
-                        style = MaterialTheme.typography.titleSmall.copy(fontWeight = FontWeight.Bold),
-                        color = TextPrimary
+                        fontSize = 14.sp, fontWeight = FontWeight.Bold,
+                        color = DarkTextPrimary
                     )
                     Row(verticalAlignment = Alignment.CenterVertically) {
                         PostTypeBadge(postType = post.postType)
                         Spacer(modifier = Modifier.width(6.dp))
                         Text(
                             text = formatTimeAgo(post.createdAt),
-                            style = MaterialTheme.typography.bodySmall,
-                            color = TextTertiary
+                            fontSize = 12.sp,
+                            color = DarkTextTertiary
                         )
                     }
                 }
@@ -786,8 +785,8 @@ private fun FeedPostCard(
                 Spacer(modifier = Modifier.height(10.dp))
                 Text(
                     text = post.content,
-                    style = MaterialTheme.typography.bodyLarge,
-                    color = TextPrimary
+                    fontSize = 16.sp,
+                    color = DarkTextPrimary
                 )
             }
 
@@ -808,12 +807,15 @@ private fun FeedPostCard(
             // Match share metadata card
             if (post.postType == "match_share" && post.metadata["matchTitle"] != null) {
                 Spacer(modifier = Modifier.height(8.dp))
-                Card(
-                    modifier = Modifier.fillMaxWidth(),
-                    shape = RoundedCornerShape(8.dp),
-                    colors = CardDefaults.cardColors(containerColor = LightBg)
+                Column(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .clip(RoundedCornerShape(8.dp))
+                        .background(DarkBg)
+                        .border(1.dp, DarkBorder, RoundedCornerShape(8.dp))
+                        .padding(12.dp),
+                    verticalArrangement = Arrangement.spacedBy(4.dp)
                 ) {
-                    Column(modifier = Modifier.padding(12.dp), verticalArrangement = Arrangement.spacedBy(4.dp)) {
                         Row(verticalAlignment = Alignment.CenterVertically) {
                             Icon(
                                 Icons.Default.SportsScore,
@@ -824,23 +826,23 @@ private fun FeedPostCard(
                             Spacer(modifier = Modifier.width(8.dp))
                             Text(
                                 text = post.metadata["matchTitle"] ?: "",
-                                style = MaterialTheme.typography.titleSmall.copy(fontWeight = FontWeight.Bold),
-                                color = TextPrimary
+                                fontSize = 14.sp, fontWeight = FontWeight.Bold,
+                                color = DarkTextPrimary
                             )
                         }
                         post.metadata["sport"]?.let { sport ->
                             Text(
                                 text = sport,
-                                style = MaterialTheme.typography.bodySmall,
+                                fontSize = 12.sp,
                                 color = Color(0xFFFF9800)
                             )
                         }
                         Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
                             post.metadata["date"]?.let { date ->
-                                Text(text = date, style = MaterialTheme.typography.bodySmall, color = TextSecondary)
+                                Text(text = date, fontSize = 12.sp, color = DarkTextSecondary)
                             }
                             post.metadata["time"]?.let { time ->
-                                Text(text = time, style = MaterialTheme.typography.bodySmall, color = TextSecondary)
+                                Text(text = time, fontSize = 12.sp, color = DarkTextSecondary)
                             }
                         }
                         post.metadata["location"]?.let { location ->
@@ -849,26 +851,25 @@ private fun FeedPostCard(
                                     Icons.Default.LocationOn,
                                     contentDescription = null,
                                     modifier = Modifier.size(14.dp),
-                                    tint = TextTertiary
+                                    tint = DarkTextTertiary
                                 )
                                 Spacer(modifier = Modifier.width(4.dp))
                                 Text(
                                     text = location,
-                                    style = MaterialTheme.typography.bodySmall,
-                                    color = TextSecondary
+                                    fontSize = 12.sp,
+                                    color = DarkTextSecondary
                                 )
                             }
                         }
                         post.metadata["players"]?.let { players ->
                             Text(
                                 text = "Players: $players",
-                                style = MaterialTheme.typography.bodySmall,
-                                color = TextSecondary
+                                fontSize = 12.sp,
+                                color = DarkTextSecondary
                             )
                         }
                     }
                 }
-            }
 
             // Achievement/milestone metadata
             if (post.postType != "match_share") {
@@ -881,7 +882,7 @@ private fun FeedPostCard(
                         modifier = Modifier
                             .fillMaxWidth()
                             .clip(RoundedCornerShape(8.dp))
-                            .background(GoldAccent.copy(alpha = 0.08f))
+                            .background(GreenAccent.copy(alpha = 0.08f))
                             .padding(10.dp),
                         verticalAlignment = Alignment.CenterVertically
                     ) {
@@ -889,13 +890,13 @@ private fun FeedPostCard(
                             Icons.Default.EmojiEvents,
                             contentDescription = null,
                             modifier = Modifier.size(20.dp),
-                            tint = GoldAccent
+                            tint = GreenAccent
                         )
                         Spacer(modifier = Modifier.width(8.dp))
                         Text(
                             text = metaTitle,
-                            style = MaterialTheme.typography.bodyMedium.copy(fontWeight = FontWeight.SemiBold),
-                            color = GoldAccent
+                            fontSize = 14.sp, fontWeight = FontWeight.SemiBold,
+                            color = GreenAccent
                         )
                     }
                 }
@@ -903,22 +904,28 @@ private fun FeedPostCard(
 
             // Actions: Like & Comment count
             Spacer(modifier = Modifier.height(10.dp))
-            HorizontalDivider(color = DividerGray)
+            Box(modifier = Modifier.fillMaxWidth().height(1.dp).background(DarkBorder))
             Spacer(modifier = Modifier.height(6.dp))
 
             Row(verticalAlignment = Alignment.CenterVertically) {
-                IconButton(onClick = onLike, modifier = Modifier.size(36.dp)) {
+                Box(
+                    modifier = Modifier
+                        .size(36.dp)
+                        .clip(CircleShape)
+                        .clickable(onClick = onLike),
+                    contentAlignment = Alignment.Center,
+                ) {
                     Icon(
                         imageVector = if (post.isLikedByMe) Icons.Default.Favorite else Icons.Default.FavoriteBorder,
                         contentDescription = "Like",
-                        tint = if (post.isLikedByMe) Color.Red else TextSecondary,
+                        tint = if (post.isLikedByMe) Color.Red else DarkTextSecondary,
                         modifier = Modifier.size(20.dp)
                     )
                 }
                 Text(
                     text = "${post.likesCount}",
-                    style = MaterialTheme.typography.bodySmall,
-                    color = TextSecondary
+                    fontSize = 12.sp,
+                    color = DarkTextSecondary
                 )
 
                 Spacer(modifier = Modifier.width(16.dp))
@@ -931,34 +938,33 @@ private fun FeedPostCard(
                         Icons.Default.ChatBubbleOutline,
                         contentDescription = "Comments",
                         modifier = Modifier.size(18.dp),
-                        tint = TextSecondary
+                        tint = DarkTextSecondary
                     )
                     Spacer(modifier = Modifier.width(4.dp))
                     Text(
                         text = "${post.commentsCount}",
-                        style = MaterialTheme.typography.bodySmall,
-                        color = TextSecondary
+                        fontSize = 12.sp,
+                        color = DarkTextSecondary
                     )
                 }
             }
         }
     }
-}
 
 @Composable
 private fun PostTypeBadge(postType: String) {
     val (label, color) = when (postType) {
-        "achievement" -> "Achievement" to GoldAccent
+        "achievement" -> "Achievement" to GreenAccent
         "milestone" -> "Milestone" to Color(0xFF4CAF50)
         "booking_completed" -> "Booking" to Color(0xFF2196F3)
         "match_result" -> "Match" to Color(0xFFFF9800)
         "match_share" -> "Match" to Color(0xFFFF9800)
         "photo" -> "Photo" to Color(0xFFE91E63)
-        else -> "Post" to TextSecondary
+        else -> "Post" to DarkTextSecondary
     }
     Text(
         text = label,
-        style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Bold),
+        fontSize = 10.sp, fontWeight = FontWeight.Bold,
         color = color
     )
 }
@@ -985,7 +991,7 @@ private fun formatTimeAgo(dateString: String): String {
     }
 }
 
-@Preview(showBackground = true, backgroundColor = 0xFFF9FAFB)
+@Preview(showBackground = true, backgroundColor = 0xFF121212)
 @Composable
 private fun NewsFeedScreenPreview() {
     val samplePosts = listOf(
@@ -1025,27 +1031,25 @@ private fun NewsFeedScreenPreview() {
         )
     )
     var composerText by remember { mutableStateOf("") }
-    SportsBookTheme {
-        LazyColumn(
-            modifier = Modifier
-                .fillMaxSize()
-                .background(LightBg),
-            contentPadding = PaddingValues(vertical = 0.dp),
-            verticalArrangement = Arrangement.spacedBy(2.dp)
-        ) {
-            item {
-                FeedComposer(
-                    text = composerText,
-                    onTextChange = { composerText = it },
-                    userPhotoUrl = null,
-                    isPosting = false,
-                    onPost = {},
-                    onSuggestionClick = { composerText = it }
-                )
-            }
-            items(samplePosts) { post ->
-                FeedPostCard(post = post, onLike = {}, onComment = {}, onUserClick = {})
-            }
+    LazyColumn(
+        modifier = Modifier
+            .fillMaxSize()
+            .background(DarkBg),
+        contentPadding = PaddingValues(vertical = 0.dp),
+        verticalArrangement = Arrangement.spacedBy(2.dp)
+    ) {
+        item {
+            FeedComposer(
+                text = composerText,
+                onTextChange = { composerText = it },
+                userPhotoUrl = null,
+                isPosting = false,
+                onPost = {},
+                onSuggestionClick = { composerText = it }
+            )
+        }
+        items(samplePosts) { post ->
+            FeedPostCard(post = post, onLike = {}, onComment = {}, onUserClick = {})
         }
     }
 }

@@ -1,9 +1,12 @@
 package com.example.sportsbook.ui.screens.partner.analytics
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
@@ -17,36 +20,21 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.TrendingUp
-import androidx.compose.material.icons.filled.AttachMoney
-import androidx.compose.material.icons.filled.BookOnline
-import androidx.compose.material.icons.filled.CalendarMonth
-import androidx.compose.material.icons.filled.Refresh
-import androidx.compose.material.icons.filled.Star
-import androidx.compose.material.icons.filled.TrendingUp
-import androidx.compose.material3.Button
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material3.CircularProgressIndicator
-import androidx.compose.material3.ElevatedCard
-import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Scaffold
-import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
-import androidx.compose.material3.TopAppBar
-import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -58,6 +46,14 @@ import com.example.sportsbook.domain.model.MonthlyRevenue
 import com.example.sportsbook.domain.model.PartnerDashboardStats
 import com.example.sportsbook.domain.repository.BookingRepository
 import com.example.sportsbook.domain.repository.DashboardRepository
+import com.example.sportsbook.ui.theme.DarkBg
+import com.example.sportsbook.ui.theme.DarkBorder
+import com.example.sportsbook.ui.theme.DarkSurface
+import com.example.sportsbook.ui.theme.DarkTextPrimary
+import com.example.sportsbook.ui.theme.DarkTextSecondary
+import com.example.sportsbook.ui.theme.GreenAccent
+import com.example.sportsbook.ui.theme.GreenDark
+import com.example.sportsbook.ui.theme.OrangeAccent
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.async
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -107,151 +103,102 @@ class PartnerAnalyticsViewModel @Inject constructor(
     }
 }
 
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun PartnerAnalyticsScreen(
     onBack: () -> Unit,
-    viewModel: PartnerAnalyticsViewModel = hiltViewModel()
+    viewModel: PartnerAnalyticsViewModel = hiltViewModel(),
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
 
-    PartnerAnalyticsContent(
-        uiState = uiState,
-        onBack = onBack,
-        onRetry = viewModel::loadAnalytics
-    )
+    PartnerAnalyticsContent(uiState = uiState, onBack = onBack, onRetry = viewModel::loadAnalytics)
 }
 
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 private fun PartnerAnalyticsContent(
     uiState: PartnerAnalyticsViewModel.UiState,
     onBack: () -> Unit,
-    onRetry: () -> Unit
+    onRetry: () -> Unit,
 ) {
-    Scaffold(
-        topBar = {
-            TopAppBar(
-                title = { Text("Partner Analytics") },
-                navigationIcon = {
-                    IconButton(onClick = onBack) {
-                        Icon(
-                            imageVector = Icons.AutoMirrored.Filled.TrendingUp,
-                            contentDescription = "Back"
-                        )
-                    }
-                },
-                colors = TopAppBarDefaults.topAppBarColors()
-            )
+    Column(
+        modifier = Modifier
+            .fillMaxSize()
+            .background(DarkBg),
+    ) {
+        // ── Header ───────────────────────────────────────────────────────
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(start = 16.dp, end = 16.dp, top = 56.dp, bottom = 16.dp),
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            Box(
+                modifier = Modifier
+                    .size(40.dp)
+                    .clip(CircleShape)
+                    .background(DarkSurface)
+                    .clickable(onClick = onBack),
+                contentAlignment = Alignment.Center,
+            ) {
+                Icon(Icons.AutoMirrored.Filled.ArrowBack, "Back", tint = DarkTextPrimary, modifier = Modifier.size(20.dp))
+            }
+            Spacer(modifier = Modifier.width(16.dp))
+            Text("Analytics", fontSize = 20.sp, fontWeight = FontWeight.Bold, color = DarkTextPrimary)
         }
-    ) { paddingValues ->
+
+        // ── Content ──────────────────────────────────────────────────────
         when {
             uiState.isLoading -> {
-                Box(
-                    modifier = Modifier
-                        .fillMaxSize()
-                        .padding(paddingValues),
-                    contentAlignment = Alignment.Center
-                ) {
-                    CircularProgressIndicator()
+                Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                    CircularProgressIndicator(color = GreenAccent)
                 }
             }
             uiState.error != null && uiState.stats == null -> {
-                Box(
-                    modifier = Modifier
-                        .fillMaxSize()
-                        .padding(paddingValues),
-                    contentAlignment = Alignment.Center
-                ) {
-                    Column(
-                        horizontalAlignment = Alignment.CenterHorizontally,
-                        verticalArrangement = Arrangement.spacedBy(12.dp)
-                    ) {
-                        Text(
-                            text = uiState.error,
-                            style = MaterialTheme.typography.bodyMedium,
-                            color = MaterialTheme.colorScheme.error,
-                            textAlign = TextAlign.Center,
-                            modifier = Modifier.padding(horizontal = 32.dp)
-                        )
-                        Button(onClick = onRetry) {
-                            Icon(
-                                imageVector = Icons.Default.Refresh,
-                                contentDescription = null,
-                                modifier = Modifier.size(18.dp)
-                            )
-                            Spacer(modifier = Modifier.width(8.dp))
-                            Text("Retry")
+                Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                    Column(horizontalAlignment = Alignment.CenterHorizontally, modifier = Modifier.padding(32.dp)) {
+                        Text("⚠️", fontSize = 40.sp)
+                        Text(uiState.error, fontSize = 14.sp, color = DarkTextSecondary, textAlign = TextAlign.Center, modifier = Modifier.padding(top = 12.dp))
+                        Spacer(modifier = Modifier.height(16.dp))
+                        Box(
+                            modifier = Modifier.clip(RoundedCornerShape(10.dp)).background(GreenAccent).clickable(onClick = onRetry).padding(horizontal = 24.dp, vertical = 12.dp),
+                        ) {
+                            Text("Retry", fontSize = 14.sp, fontWeight = FontWeight.SemiBold, color = Color.White)
                         }
                     }
                 }
             }
             uiState.stats == null && uiState.recentBookings.isEmpty() -> {
-                Box(
-                    modifier = Modifier
-                        .fillMaxSize()
-                        .padding(paddingValues),
-                    contentAlignment = Alignment.Center
-                ) {
-                    Text(
-                        text = "No analytics data available yet.\nStart accepting bookings to see your stats.",
-                        style = MaterialTheme.typography.bodyMedium,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant,
-                        textAlign = TextAlign.Center,
-                        modifier = Modifier.padding(horizontal = 32.dp)
-                    )
+                Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                    Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                        Text("📊", fontSize = 48.sp)
+                        Text("No data yet", fontSize = 16.sp, fontWeight = FontWeight.SemiBold, color = DarkTextPrimary, modifier = Modifier.padding(top = 12.dp))
+                        Text("Start accepting bookings to see your stats", fontSize = 13.sp, color = DarkTextSecondary, textAlign = TextAlign.Center, modifier = Modifier.padding(top = 4.dp, start = 40.dp, end = 40.dp))
+                    }
                 }
             }
             else -> {
                 LazyColumn(
-                    modifier = Modifier
-                        .fillMaxSize()
-                        .padding(paddingValues)
-                        .padding(horizontal = 16.dp),
+                    modifier = Modifier.fillMaxSize(),
                     verticalArrangement = Arrangement.spacedBy(16.dp),
-                    contentPadding = androidx.compose.foundation.layout.PaddingValues(vertical = 16.dp)
+                    contentPadding = PaddingValues(vertical = 8.dp),
                 ) {
-                    // Stats grid
                     uiState.stats?.let { stats ->
-                        item {
-                            StatsGrid(stats = stats)
-                        }
-
-                        // Revenue trend
-                        item {
-                            RevenueTrendSection(revenueByMonth = stats.revenueByMonth)
-                        }
-
-                        // Booking status breakdown
-                        item {
-                            BookingStatusSection(bookingsByStatus = stats.bookingsByStatus)
-                        }
+                        item { StatsGrid(stats = stats) }
+                        item { RevenueTrendSection(revenueByMonth = stats.revenueByMonth) }
+                        item { BookingStatusSection(bookingsByStatus = stats.bookingsByStatus) }
                     }
-
-                    // Recent bookings
                     item {
-                        Text(
-                            text = "Recent Bookings",
-                            style = MaterialTheme.typography.titleMedium,
-                            fontWeight = FontWeight.SemiBold
-                        )
+                        Text("Recent Bookings", fontSize = 16.sp, fontWeight = FontWeight.Bold, color = DarkTextPrimary, modifier = Modifier.padding(horizontal = 16.dp))
                     }
-
                     if (uiState.recentBookings.isEmpty()) {
                         item {
-                            Text(
-                                text = "No recent bookings",
-                                style = MaterialTheme.typography.bodyMedium,
-                                color = MaterialTheme.colorScheme.onSurfaceVariant
-                            )
+                            Text("No recent bookings", fontSize = 14.sp, color = DarkTextSecondary, modifier = Modifier.padding(horizontal = 16.dp))
                         }
                     } else {
                         items(uiState.recentBookings) { booking ->
                             BookingListItem(booking = booking)
                         }
                     }
-
-                    item { Spacer(modifier = Modifier.height(8.dp)) }
+                    item { Spacer(modifier = Modifier.height(32.dp)) }
                 }
             }
         }
@@ -260,100 +207,65 @@ private fun PartnerAnalyticsContent(
 
 @Composable
 private fun StatsGrid(stats: PartnerDashboardStats) {
-    Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.spacedBy(12.dp)
-        ) {
-            AnalyticsStatCard(
-                icon = Icons.Default.AttachMoney,
-                label = "Total Revenue",
-                value = formatCurrency(stats.totalRevenue),
-                modifier = Modifier.weight(1f)
-            )
-            AnalyticsStatCard(
-                icon = Icons.Default.BookOnline,
-                label = "Total Bookings",
-                value = stats.totalBookings.toString(),
-                modifier = Modifier.weight(1f)
-            )
+    Column(
+        modifier = Modifier.padding(horizontal = 16.dp),
+        verticalArrangement = Arrangement.spacedBy(10.dp),
+    ) {
+        Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+            AnalyticsStatCard("💰", "Total Revenue", formatCurrency(stats.totalRevenue), GreenAccent, Modifier.weight(1f))
+            AnalyticsStatCard("📅", "Total Bookings", stats.totalBookings.toString(), Color(0xFF42A5F5), Modifier.weight(1f))
         }
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.spacedBy(12.dp)
-        ) {
-            AnalyticsStatCard(
-                icon = Icons.Default.Star,
-                label = "Avg Rating",
-                value = String.format(Locale.US, "%.1f / 5.0", stats.avgRating),
-                modifier = Modifier.weight(1f)
-            )
-            AnalyticsStatCard(
-                icon = Icons.Default.CalendarMonth,
-                label = "Upcoming",
-                value = stats.upcomingBookings.toString(),
-                modifier = Modifier.weight(1f)
-            )
+        Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+            AnalyticsStatCard("⭐", "Avg Rating", String.format(Locale.US, "%.1f / 5.0", stats.avgRating), Color(0xFFFFC107), Modifier.weight(1f))
+            AnalyticsStatCard("📋", "Upcoming", stats.upcomingBookings.toString(), OrangeAccent, Modifier.weight(1f))
         }
     }
 }
 
 @Composable
 private fun AnalyticsStatCard(
-    icon: ImageVector,
+    emoji: String,
     label: String,
     value: String,
-    modifier: Modifier = Modifier
+    valueColor: Color,
+    modifier: Modifier = Modifier,
 ) {
-    ElevatedCard(modifier = modifier) {
-        Column(
-            modifier = Modifier.padding(16.dp),
-            verticalArrangement = Arrangement.spacedBy(4.dp)
-        ) {
-            Icon(
-                imageVector = icon,
-                contentDescription = null,
-                tint = MaterialTheme.colorScheme.primary,
-                modifier = Modifier.size(24.dp)
-            )
-            Text(
-                text = label,
-                style = MaterialTheme.typography.labelMedium,
-                color = MaterialTheme.colorScheme.onSurfaceVariant
-            )
-            Text(
-                text = value,
-                style = MaterialTheme.typography.titleMedium,
-                fontWeight = FontWeight.Bold
-            )
-        }
+    Column(
+        modifier = modifier
+            .clip(RoundedCornerShape(14.dp))
+            .background(DarkSurface)
+            .padding(16.dp),
+    ) {
+        Text(emoji, fontSize = 20.sp)
+        Spacer(modifier = Modifier.height(8.dp))
+        Text(label, fontSize = 11.sp, color = DarkTextSecondary)
+        Text(value, fontSize = 16.sp, fontWeight = FontWeight.Bold, color = valueColor, modifier = Modifier.padding(top = 2.dp))
     }
 }
 
 @Composable
 private fun RevenueTrendSection(revenueByMonth: List<MonthlyRevenue>) {
-    Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-        Text(
-            text = "Revenue (Last 6 Months)",
-            style = MaterialTheme.typography.titleMedium,
-            fontWeight = FontWeight.SemiBold
-        )
+    Column(
+        modifier = Modifier.padding(horizontal = 16.dp),
+        verticalArrangement = Arrangement.spacedBy(8.dp),
+    ) {
+        Text("Revenue (Last 6 Months)", fontSize = 16.sp, fontWeight = FontWeight.Bold, color = DarkTextPrimary)
 
-        if (revenueByMonth.isEmpty()) {
-            Text(
-                text = "No revenue data yet",
-                style = MaterialTheme.typography.bodyMedium,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
-                textAlign = TextAlign.Center,
-                modifier = Modifier.fillMaxWidth()
-            )
-        } else {
-            val maxRevenue = revenueByMonth.maxOfOrNull { it.revenue } ?: 1.0
-            revenueByMonth.forEach { monthlyRevenue ->
-                RevenueBar(
-                    monthlyRevenue = monthlyRevenue,
-                    maxRevenue = maxRevenue
-                )
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .clip(RoundedCornerShape(14.dp))
+                .background(DarkSurface)
+                .padding(14.dp),
+            verticalArrangement = Arrangement.spacedBy(10.dp),
+        ) {
+            if (revenueByMonth.isEmpty()) {
+                Text("No revenue data yet", fontSize = 13.sp, color = DarkTextSecondary)
+            } else {
+                val maxRevenue = revenueByMonth.maxOfOrNull { it.revenue } ?: 1.0
+                revenueByMonth.forEach { monthlyRevenue ->
+                    RevenueBar(monthlyRevenue = monthlyRevenue, maxRevenue = maxRevenue)
+                }
             }
         }
     }
@@ -362,58 +274,49 @@ private fun RevenueTrendSection(revenueByMonth: List<MonthlyRevenue>) {
 @Composable
 private fun RevenueBar(monthlyRevenue: MonthlyRevenue, maxRevenue: Double) {
     val fraction = if (maxRevenue > 0) (monthlyRevenue.revenue / maxRevenue).toFloat() else 0f
-    val surfaceVariant = MaterialTheme.colorScheme.surfaceVariant
-    val primary = MaterialTheme.colorScheme.primary
 
     Row(
         verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.spacedBy(8.dp)
+        horizontalArrangement = Arrangement.spacedBy(8.dp),
     ) {
         Text(
             text = formatMonthLabel(monthlyRevenue.month),
-            style = MaterialTheme.typography.bodySmall,
-            modifier = Modifier.width(56.dp)
+            fontSize = 12.sp,
+            color = DarkTextSecondary,
+            modifier = Modifier.width(52.dp),
         )
-        Box(
-            modifier = Modifier
-                .weight(1f)
-                .height(28.dp)
-        ) {
-            // Background bar
-            Box(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .clip(RoundedCornerShape(4.dp))
-                    .background(surfaceVariant)
-            )
-            // Filled bar
-            Box(
-                modifier = Modifier
-                    .fillMaxWidth(fraction.coerceIn(0f, 1f))
-                    .height(28.dp)
-                    .clip(RoundedCornerShape(4.dp))
-                    .background(primary)
-            )
+        Box(modifier = Modifier.weight(1f).height(24.dp)) {
+            Box(modifier = Modifier.fillMaxSize().clip(RoundedCornerShape(4.dp)).background(DarkBorder))
+            Box(modifier = Modifier.fillMaxWidth(fraction.coerceIn(0f, 1f)).height(24.dp).clip(RoundedCornerShape(4.dp)).background(GreenAccent))
         }
         Text(
             text = formatCurrencyShort(monthlyRevenue.revenue),
-            style = MaterialTheme.typography.bodySmall,
-            modifier = Modifier.width(72.dp),
-            textAlign = TextAlign.End
+            fontSize = 12.sp,
+            color = DarkTextPrimary,
+            modifier = Modifier.width(64.dp),
+            textAlign = TextAlign.End,
         )
     }
 }
 
 @Composable
 private fun BookingStatusSection(bookingsByStatus: List<BookingStatusCount>) {
-    Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-        Text(
-            text = "Bookings by Status",
-            style = MaterialTheme.typography.titleMedium,
-            fontWeight = FontWeight.SemiBold
-        )
-        bookingsByStatus.forEach { statusCount ->
-            BookingStatusRow(statusCount = statusCount)
+    Column(
+        modifier = Modifier.padding(horizontal = 16.dp),
+        verticalArrangement = Arrangement.spacedBy(8.dp),
+    ) {
+        Text("Bookings by Status", fontSize = 16.sp, fontWeight = FontWeight.Bold, color = DarkTextPrimary)
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .clip(RoundedCornerShape(14.dp))
+                .background(DarkSurface)
+                .padding(14.dp),
+            verticalArrangement = Arrangement.spacedBy(10.dp),
+        ) {
+            bookingsByStatus.forEach { statusCount ->
+                BookingStatusRow(statusCount = statusCount)
+            }
         }
     }
 }
@@ -424,87 +327,69 @@ private fun BookingStatusRow(statusCount: BookingStatusCount) {
     Row(
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.spacedBy(12.dp),
-        modifier = Modifier.fillMaxWidth()
+        modifier = Modifier.fillMaxWidth(),
     ) {
-        Box(
-            modifier = Modifier
-                .size(12.dp)
-                .clip(CircleShape)
-                .background(color)
-        )
+        Box(modifier = Modifier.size(10.dp).clip(CircleShape).background(color))
         Text(
-            text = statusCount.status.name.lowercase()
-                .replaceFirstChar { it.uppercase() },
-            style = MaterialTheme.typography.bodyMedium,
-            modifier = Modifier.weight(1f)
+            text = statusCount.status.name.lowercase().replaceFirstChar { it.uppercase() },
+            fontSize = 14.sp,
+            color = DarkTextPrimary,
+            modifier = Modifier.weight(1f),
         )
         Text(
             text = statusCount.count.toString(),
-            style = MaterialTheme.typography.bodyMedium,
-            fontWeight = FontWeight.SemiBold
+            fontSize = 14.sp,
+            fontWeight = FontWeight.Bold,
+            color = DarkTextPrimary,
         )
     }
 }
 
 @Composable
 private fun BookingListItem(booking: Booking) {
-    ElevatedCard(modifier = Modifier.fillMaxWidth()) {
-        Column(modifier = Modifier.padding(16.dp)) {
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.Top
-            ) {
-                Column(modifier = Modifier.weight(1f)) {
-                    Text(
-                        text = booking.playerName ?: "Player #${booking.playerId}",
-                        style = MaterialTheme.typography.titleSmall,
-                        fontWeight = FontWeight.SemiBold
-                    )
-                    val venueName = booking.venue?.name ?: booking.coach?.name ?: ""
-                    if (venueName.isNotEmpty()) {
-                        Text(
-                            text = venueName,
-                            style = MaterialTheme.typography.bodySmall,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant
-                        )
-                    }
-                    val dateLabel = booking.timeSlot?.slotDate ?: booking.createdAt?.take(10) ?: ""
-                    if (dateLabel.isNotEmpty()) {
-                        Text(
-                            text = dateLabel,
-                            style = MaterialTheme.typography.bodySmall,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant
-                        )
-                    }
-                }
-                Column(horizontalAlignment = Alignment.End) {
-                    Text(
-                        text = formatCurrency(booking.totalPrice),
-                        style = MaterialTheme.typography.bodyMedium,
-                        fontWeight = FontWeight.SemiBold
-                    )
-                    Spacer(modifier = Modifier.height(4.dp))
-                    BookingStatusChip(status = booking.status)
-                }
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(horizontal = 16.dp)
+            .clip(RoundedCornerShape(12.dp))
+            .background(DarkSurface)
+            .padding(14.dp),
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        Column(modifier = Modifier.weight(1f)) {
+            Text(
+                text = booking.playerName ?: "Player #${booking.playerId}",
+                fontSize = 14.sp,
+                fontWeight = FontWeight.SemiBold,
+                color = DarkTextPrimary,
+            )
+            val venueName = booking.venue?.name ?: booking.coach?.name ?: ""
+            if (venueName.isNotEmpty()) {
+                Text(venueName, fontSize = 12.sp, color = DarkTextSecondary)
+            }
+            val dateLabel = booking.timeSlot?.slotDate ?: booking.createdAt?.take(10) ?: ""
+            if (dateLabel.isNotEmpty()) {
+                Text(dateLabel, fontSize = 12.sp, color = DarkTextSecondary)
             }
         }
-    }
-}
-
-@Composable
-private fun BookingStatusChip(status: BookingStatus) {
-    val color = bookingStatusColor(status)
-    Surface(
-        shape = RoundedCornerShape(4.dp),
-        color = color.copy(alpha = 0.15f)
-    ) {
-        Text(
-            text = status.name.lowercase().replaceFirstChar { it.uppercase() },
-            style = MaterialTheme.typography.labelSmall,
-            color = color,
-            modifier = Modifier.padding(horizontal = 8.dp, vertical = 3.dp)
-        )
+        Column(horizontalAlignment = Alignment.End) {
+            Text(formatCurrency(booking.totalPrice), fontSize = 14.sp, fontWeight = FontWeight.Bold, color = DarkTextPrimary)
+            Spacer(modifier = Modifier.height(4.dp))
+            val statusColor = bookingStatusColor(booking.status)
+            Box(
+                modifier = Modifier
+                    .clip(RoundedCornerShape(6.dp))
+                    .background(statusColor.copy(alpha = 0.15f))
+                    .padding(horizontal = 8.dp, vertical = 3.dp),
+            ) {
+                Text(
+                    text = booking.status.name.lowercase().replaceFirstChar { it.uppercase() },
+                    fontSize = 11.sp,
+                    fontWeight = FontWeight.SemiBold,
+                    color = statusColor,
+                )
+            }
+        }
     }
 }
 
@@ -542,8 +427,7 @@ private fun formatMonthLabel(month: String): String {
 @Preview(showBackground = true)
 @Composable
 private fun PartnerAnalyticsScreenPreview() {
-    MaterialTheme {
-        val sampleStats = PartnerDashboardStats(
+    val sampleStats = PartnerDashboardStats(
             totalBookings = 47,
             confirmedBookings = 32,
             totalRevenue = 3_750.0,
@@ -599,5 +483,4 @@ private fun PartnerAnalyticsScreenPreview() {
             onBack = {},
             onRetry = {}
         )
-    }
 }

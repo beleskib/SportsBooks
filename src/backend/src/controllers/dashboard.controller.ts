@@ -29,7 +29,7 @@ export const getPartnerStats = async (req: Request, res: Response, next: NextFun
       bookingsByStatus,
     };
 
-    res.json({ data: result });
+    res.json({ success: true, data: result });
   } catch (error) {
     next(error);
   }

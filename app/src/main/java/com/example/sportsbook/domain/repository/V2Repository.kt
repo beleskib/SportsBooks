@@ -48,7 +48,7 @@ interface V2Repository {
 
     suspend fun paySplitShare(
         shareId: Long,
-        stripePaymentIntentId: String
+        paymentIntentId: String
     ): Result<Unit>
 
     // ---- Booking participants ----

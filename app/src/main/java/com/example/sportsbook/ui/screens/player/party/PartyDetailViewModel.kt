@@ -3,8 +3,10 @@ package com.example.sportsbook.ui.screens.player.party
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.example.sportsbook.domain.model.Match
 import com.example.sportsbook.domain.model.Party
 import com.example.sportsbook.domain.repository.AuthRepository
+import com.example.sportsbook.domain.repository.MatchRepository
 import com.example.sportsbook.domain.repository.PartyRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -16,6 +18,7 @@ import javax.inject.Inject
 
 data class PartyDetailUiState(
     val party: Party? = null,
+    val partyMatch: Match? = null,
     val currentUserId: Long? = null,
     val isLoading: Boolean = false,
     val isActioning: Boolean = false,
@@ -33,6 +36,7 @@ data class PartyDetailUiState(
 @HiltViewModel
 class PartyDetailViewModel @Inject constructor(
     private val partyRepository: PartyRepository,
+    private val matchRepository: MatchRepository,
     private val authRepository: AuthRepository,
     savedStateHandle: SavedStateHandle
 ) : ViewModel() {
@@ -60,6 +64,13 @@ class PartyDetailViewModel @Inject constructor(
             partyRepository.getPartyById(partyId)
                 .onSuccess { party ->
                     _uiState.update { it.copy(party = party, isLoading = false) }
+                    // Load match linked to this party
+                    party.matchId?.let { matchId ->
+                        matchRepository.getMatchById(matchId)
+                            .onSuccess { match ->
+                                _uiState.update { it.copy(partyMatch = match) }
+                            }
+                    }
                 }
                 .onFailure { e ->
                     _uiState.update { it.copy(error = e.message, isLoading = false) }

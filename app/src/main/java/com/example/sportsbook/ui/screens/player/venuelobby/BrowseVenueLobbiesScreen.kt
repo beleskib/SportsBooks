@@ -1,6 +1,7 @@
 package com.example.sportsbook.ui.screens.player.venuelobby
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -16,6 +17,7 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
@@ -26,22 +28,11 @@ import androidx.compose.material.icons.filled.Group
 import androidx.compose.material.icons.filled.LocationOn
 import androidx.compose.material.icons.filled.Person
 import androidx.compose.material.icons.filled.SportsSoccer
-import androidx.compose.material3.Button
-import androidx.compose.material3.ButtonDefaults
-import androidx.compose.material3.Card
-import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
-import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
-import androidx.compose.material3.LinearProgressIndicator
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
-import androidx.compose.material3.TopAppBar
-import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -49,11 +40,13 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
@@ -66,12 +59,12 @@ import com.example.sportsbook.ui.common.toDisplayDate
 import com.example.sportsbook.ui.common.toDisplayTime
 import com.example.sportsbook.ui.navigation.Route
 import com.example.sportsbook.ui.theme.CoralRed
-import com.example.sportsbook.ui.theme.LightBg
-import com.example.sportsbook.ui.theme.CardWhite
-import com.example.sportsbook.ui.theme.NavBarBg
+import com.example.sportsbook.ui.theme.DarkBg
+import com.example.sportsbook.ui.theme.DarkBorder
+import com.example.sportsbook.ui.theme.DarkSurface
 import com.example.sportsbook.ui.theme.SportGreen
-import com.example.sportsbook.ui.theme.GoldAccent
-import com.example.sportsbook.ui.theme.TextPrimary
+import com.example.sportsbook.ui.theme.GreenAccent
+import com.example.sportsbook.ui.theme.DarkTextPrimary
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -146,7 +139,6 @@ class BrowseVenueLobbiesViewModel @Inject constructor(
 
 // ── Screen ────────────────────────────────────────────────────────────────────
 
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun BrowseVenueLobbiesScreen(
     onLobbyClick: (Long) -> Unit,
@@ -168,96 +160,115 @@ fun BrowseVenueLobbiesScreen(
         uiState.joinedLobbyId?.let { onLobbyClick(it) }
     }
 
-    Scaffold(
-        containerColor = NavBarBg,
-        snackbarHost = { SnackbarHost(hostState = snackbarHostState) },
-        topBar = {
-            TopAppBar(
-                title = { Text("Open Venue Lobbies", color = TextPrimary) },
-                navigationIcon = {
-                    IconButton(onClick = onBack) {
-                        Icon(
-                            imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                            contentDescription = "Back",
-                            tint = TextPrimary
-                        )
-                    }
-                },
-                colors = TopAppBarDefaults.topAppBarColors(containerColor = CardWhite)
-            )
-        },
-        floatingActionButton = {
-            androidx.compose.material3.FloatingActionButton(
-                onClick = onCreateLobby,
-                containerColor = GoldAccent,
-                contentColor = NavBarBg
+    Box(
+        modifier = Modifier
+            .fillMaxSize()
+            .background(DarkBg)
+    ) {
+        Column(modifier = Modifier.fillMaxSize()) {
+            // ── Header ───────────────────────────────────────────────────
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .background(DarkSurface)
+                    .padding(horizontal = 16.dp, vertical = 12.dp),
+                verticalAlignment = Alignment.CenterVertically,
             ) {
-                Icon(Icons.Default.Add, contentDescription = "Create Lobby")
-            }
-        }
-    ) { paddingValues ->
-        when {
-            uiState.isLoading -> {
                 Box(
                     modifier = Modifier
-                        .fillMaxSize()
-                        .padding(paddingValues),
-                    contentAlignment = Alignment.Center
+                        .size(40.dp)
+                        .clip(CircleShape)
+                        .background(DarkBg)
+                        .clickable(onClick = onBack),
+                    contentAlignment = Alignment.Center,
                 ) {
-                    CircularProgressIndicator(color = GoldAccent)
+                    Icon(Icons.AutoMirrored.Filled.ArrowBack, "Back", tint = DarkTextPrimary, modifier = Modifier.size(20.dp))
                 }
+                Spacer(modifier = Modifier.width(12.dp))
+                Text("Open Venue Lobbies", fontSize = 18.sp, fontWeight = FontWeight.Bold, color = DarkTextPrimary)
             }
 
-            uiState.lobbies.isEmpty() -> {
-                Box(
-                    modifier = Modifier
-                        .fillMaxSize()
-                        .padding(paddingValues),
-                    contentAlignment = Alignment.Center
-                ) {
-                    Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                        Icon(
-                            imageVector = Icons.Default.Group,
-                            contentDescription = null,
-                            tint = TextPrimary.copy(alpha = 0.3f),
-                            modifier = Modifier.size(64.dp)
-                        )
-                        Spacer(modifier = Modifier.height(12.dp))
-                        Text(
-                            text = "No open lobbies yet",
-                            style = MaterialTheme.typography.titleMedium,
-                            color = TextPrimary.copy(alpha = 0.5f),
-                            textAlign = TextAlign.Center
-                        )
-                        Spacer(modifier = Modifier.height(4.dp))
-                        Text(
-                            text = "Be the first to create one!",
-                            style = MaterialTheme.typography.bodyMedium,
-                            color = TextPrimary.copy(alpha = 0.35f),
-                            textAlign = TextAlign.Center
-                        )
+            // ── Content ──────────────────────────────────────────────────
+            when {
+                uiState.isLoading -> {
+                    Box(
+                        modifier = Modifier.fillMaxSize(),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        CircularProgressIndicator(color = GreenAccent)
+                    }
+                }
+
+                uiState.lobbies.isEmpty() -> {
+                    Box(
+                        modifier = Modifier.fillMaxSize(),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                            Icon(
+                                imageVector = Icons.Default.Group,
+                                contentDescription = null,
+                                tint = DarkTextPrimary.copy(alpha = 0.3f),
+                                modifier = Modifier.size(64.dp)
+                            )
+                            Spacer(modifier = Modifier.height(12.dp))
+                            Text(
+                                text = "No open lobbies yet",
+                                fontSize = 16.sp,
+                                fontWeight = FontWeight.Medium,
+                                color = DarkTextPrimary.copy(alpha = 0.5f),
+                                textAlign = TextAlign.Center
+                            )
+                            Spacer(modifier = Modifier.height(4.dp))
+                            Text(
+                                text = "Be the first to create one!",
+                                fontSize = 14.sp,
+                                color = DarkTextPrimary.copy(alpha = 0.35f),
+                                textAlign = TextAlign.Center
+                            )
+                        }
+                    }
+                }
+
+                else -> {
+                    LazyColumn(
+                        modifier = Modifier
+                            .fillMaxSize()
+                            .padding(bottom = 80.dp),
+                        contentPadding = PaddingValues(horizontal = 16.dp, vertical = 12.dp),
+                        verticalArrangement = Arrangement.spacedBy(12.dp)
+                    ) {
+                        items(uiState.lobbies, key = { it.id }) { lobby ->
+                            VenueBookingLobbyCard(
+                                lobby = lobby,
+                                onCardClick = { onLobbyClick(lobby.id) },
+                                onJoinClick = { viewModel.joinLobby(lobby.id) }
+                            )
+                        }
                     }
                 }
             }
-
-            else -> {
-                LazyColumn(
-                    modifier = Modifier
-                        .fillMaxSize()
-                        .padding(paddingValues),
-                    contentPadding = PaddingValues(horizontal = 16.dp, vertical = 12.dp),
-                    verticalArrangement = Arrangement.spacedBy(12.dp)
-                ) {
-                    items(uiState.lobbies, key = { it.id }) { lobby ->
-                        VenueBookingLobbyCard(
-                            lobby = lobby,
-                            onCardClick = { onLobbyClick(lobby.id) },
-                            onJoinClick = { viewModel.joinLobby(lobby.id) }
-                        )
-                    }
-                }
-            }
         }
+
+        // ── FAB ──────────────────────────────────────────────────────────
+        Box(
+            modifier = Modifier
+                .align(Alignment.BottomEnd)
+                .padding(end = 16.dp, bottom = 16.dp)
+                .size(56.dp)
+                .clip(CircleShape)
+                .background(GreenAccent)
+                .clickable(onClick = onCreateLobby),
+            contentAlignment = Alignment.Center
+        ) {
+            Icon(Icons.Default.Add, contentDescription = "Create Lobby", tint = Color.White)
+        }
+
+        // ── Snackbar ─────────────────────────────────────────────────────
+        SnackbarHost(
+            hostState = snackbarHostState,
+            modifier = Modifier.align(Alignment.BottomCenter)
+        )
     }
 }
 
@@ -270,148 +281,158 @@ internal fun VenueBookingLobbyCard(
     onJoinClick: () -> Unit,
     modifier: Modifier = Modifier
 ) {
-    Card(
+    Column(
         modifier = modifier
             .fillMaxWidth()
-            .clickable(onClick = onCardClick),
-        colors = CardDefaults.cardColors(containerColor = CardWhite),
-        shape = RoundedCornerShape(12.dp)
+            .clip(RoundedCornerShape(12.dp))
+            .background(DarkSurface)
+            .border(1.dp, DarkBorder, RoundedCornerShape(12.dp))
+            .clickable(onClick = onCardClick)
+            .padding(16.dp)
     ) {
-        Column(modifier = Modifier.padding(16.dp)) {
+        // Header row: title + payment badge
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.Top
+        ) {
+            Text(
+                text = lobby.title,
+                fontSize = 16.sp,
+                color = DarkTextPrimary,
+                fontWeight = FontWeight.SemiBold,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis,
+                modifier = Modifier.weight(1f)
+            )
+            Spacer(modifier = Modifier.width(8.dp))
+            PaymentTypeBadge(paymentType = lobby.paymentType)
+        }
 
-            // Header row: title + payment badge
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.Top
-            ) {
-                Text(
-                    text = lobby.title,
-                    style = MaterialTheme.typography.titleMedium,
-                    color = TextPrimary,
-                    fontWeight = FontWeight.SemiBold,
-                    maxLines = 1,
-                    overflow = TextOverflow.Ellipsis,
-                    modifier = Modifier.weight(1f)
-                )
-                Spacer(modifier = Modifier.width(8.dp))
-                PaymentTypeBadge(paymentType = lobby.paymentType)
-            }
+        Spacer(modifier = Modifier.height(8.dp))
 
-            Spacer(modifier = Modifier.height(8.dp))
-
-            // Venue name
-            if (!lobby.venueName.isNullOrBlank()) {
-                LobbyInfoRow(
-                    icon = { Icon(Icons.Default.LocationOn, contentDescription = null, tint = GoldAccent, modifier = Modifier.size(14.dp)) },
-                    text = lobby.venueName
-                )
-                Spacer(modifier = Modifier.height(4.dp))
-            }
-
-            // Sport type
-            if (!lobby.sportType.isNullOrBlank()) {
-                LobbyInfoRow(
-                    icon = { Icon(Icons.Default.SportsSoccer, contentDescription = null, tint = GoldAccent, modifier = Modifier.size(14.dp)) },
-                    text = lobby.sportType.replace("_", " ").lowercase().replaceFirstChar { it.uppercase() }
-                )
-                Spacer(modifier = Modifier.height(4.dp))
-            }
-
-            // Date & time
-            val dateText = buildString {
-                lobby.slotDate?.let { append(it.toDisplayDate()) }
-                if (!lobby.startTime.isNullOrBlank()) {
-                    if (isNotEmpty()) append("  ")
-                    append(lobby.startTime.toDisplayTime())
-                    if (!lobby.endTime.isNullOrBlank()) append(" – ${lobby.endTime.toDisplayTime()}")
-                }
-            }
-            if (dateText.isNotBlank()) {
-                LobbyInfoRow(
-                    icon = { Icon(Icons.Default.CalendarToday, contentDescription = null, tint = GoldAccent, modifier = Modifier.size(14.dp)) },
-                    text = dateText
-                )
-                Spacer(modifier = Modifier.height(4.dp))
-            }
-
-            // Creator
-            if (!lobby.creatorName.isNullOrBlank()) {
-                LobbyInfoRow(
-                    icon = { Icon(Icons.Default.Person, contentDescription = null, tint = TextPrimary.copy(alpha = 0.6f), modifier = Modifier.size(14.dp)) },
-                    text = "by ${lobby.creatorName}"
-                )
-                Spacer(modifier = Modifier.height(4.dp))
-            }
-
-            Spacer(modifier = Modifier.height(8.dp))
-
-            // Players progress
-            val progress = if (lobby.maxPlayers > 0) lobby.currentPlayers.toFloat() / lobby.maxPlayers else 0f
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                Row(verticalAlignment = Alignment.CenterVertically) {
-                    Icon(Icons.Default.Group, contentDescription = null, tint = GoldAccent, modifier = Modifier.size(14.dp))
-                    Spacer(modifier = Modifier.width(4.dp))
-                    Text(
-                        text = "${lobby.currentPlayers}/${lobby.maxPlayers} players",
-                        style = MaterialTheme.typography.labelMedium,
-                        color = GoldAccent,
-                        fontWeight = FontWeight.Bold
-                    )
-                }
-                // Price info
-                Row(verticalAlignment = Alignment.CenterVertically) {
-                    Icon(Icons.Default.AttachMoney, contentDescription = null, tint = TextPrimary.copy(alpha = 0.7f), modifier = Modifier.size(14.dp))
-                    Spacer(modifier = Modifier.width(2.dp))
-                    Text(
-                        text = "${"%.0f".format(lobby.pricePerPlayer)} ${lobby.currency}/player",
-                        style = MaterialTheme.typography.labelMedium,
-                        color = TextPrimary.copy(alpha = 0.8f)
-                    )
-                }
-            }
-
+        // Venue name
+        if (!lobby.venueName.isNullOrBlank()) {
+            LobbyInfoRow(
+                icon = { Icon(Icons.Default.LocationOn, contentDescription = null, tint = GreenAccent, modifier = Modifier.size(14.dp)) },
+                text = lobby.venueName
+            )
             Spacer(modifier = Modifier.height(4.dp))
-            LinearProgressIndicator(
-                progress = { progress },
+        }
+
+        // Sport type
+        if (!lobby.sportType.isNullOrBlank()) {
+            LobbyInfoRow(
+                icon = { Icon(Icons.Default.SportsSoccer, contentDescription = null, tint = GreenAccent, modifier = Modifier.size(14.dp)) },
+                text = lobby.sportType.replace("_", " ").lowercase().replaceFirstChar { it.uppercase() }
+            )
+            Spacer(modifier = Modifier.height(4.dp))
+        }
+
+        // Date & time
+        val dateText = buildString {
+            lobby.slotDate?.let { append(it.toDisplayDate()) }
+            if (!lobby.startTime.isNullOrBlank()) {
+                if (isNotEmpty()) append("  ")
+                append(lobby.startTime.toDisplayTime())
+                if (!lobby.endTime.isNullOrBlank()) append(" – ${lobby.endTime.toDisplayTime()}")
+            }
+        }
+        if (dateText.isNotBlank()) {
+            LobbyInfoRow(
+                icon = { Icon(Icons.Default.CalendarToday, contentDescription = null, tint = GreenAccent, modifier = Modifier.size(14.dp)) },
+                text = dateText
+            )
+            Spacer(modifier = Modifier.height(4.dp))
+        }
+
+        // Creator
+        if (!lobby.creatorName.isNullOrBlank()) {
+            LobbyInfoRow(
+                icon = { Icon(Icons.Default.Person, contentDescription = null, tint = DarkTextPrimary.copy(alpha = 0.6f), modifier = Modifier.size(14.dp)) },
+                text = "by ${lobby.creatorName}"
+            )
+            Spacer(modifier = Modifier.height(4.dp))
+        }
+
+        Spacer(modifier = Modifier.height(8.dp))
+
+        // Players progress
+        val progress = if (lobby.maxPlayers > 0) lobby.currentPlayers.toFloat() / lobby.maxPlayers else 0f
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Icon(Icons.Default.Group, contentDescription = null, tint = GreenAccent, modifier = Modifier.size(14.dp))
+                Spacer(modifier = Modifier.width(4.dp))
+                Text(
+                    text = "${lobby.currentPlayers}/${lobby.maxPlayers} players",
+                    fontSize = 12.sp,
+                    color = GreenAccent,
+                    fontWeight = FontWeight.Bold
+                )
+            }
+            // Price info
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Icon(Icons.Default.AttachMoney, contentDescription = null, tint = DarkTextPrimary.copy(alpha = 0.7f), modifier = Modifier.size(14.dp))
+                Spacer(modifier = Modifier.width(2.dp))
+                Text(
+                    text = "${"%.0f".format(lobby.pricePerPlayer)} ${lobby.currency}/player",
+                    fontSize = 12.sp,
+                    color = DarkTextPrimary.copy(alpha = 0.8f)
+                )
+            }
+        }
+
+        Spacer(modifier = Modifier.height(4.dp))
+
+        // Progress bar
+        Box(
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(6.dp)
+                .clip(RoundedCornerShape(3.dp))
+                .background(DarkBorder)
+        ) {
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth(progress)
+                    .height(6.dp)
+                    .clip(RoundedCornerShape(3.dp))
+                    .background(GreenAccent)
+            )
+        }
+
+        Spacer(modifier = Modifier.height(12.dp))
+
+        // Join button – only show for open lobbies that are not full
+        if (lobby.status == "open" && lobby.currentPlayers < lobby.maxPlayers) {
+            Box(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .height(6.dp)
-                    .clip(RoundedCornerShape(3.dp)),
-                color = GoldAccent,
-                trackColor = LightBg
-            )
-
-            Spacer(modifier = Modifier.height(12.dp))
-
-            // Join button – only show for open lobbies that are not full
-            if (lobby.status == "open" && lobby.currentPlayers < lobby.maxPlayers) {
-                Button(
-                    onClick = onJoinClick,
-                    modifier = Modifier.fillMaxWidth(),
-                    colors = ButtonDefaults.buttonColors(containerColor = GoldAccent),
-                    shape = RoundedCornerShape(8.dp)
-                ) {
-                    Text(
-                        text = "Join Lobby",
-                        color = NavBarBg,
-                        fontWeight = FontWeight.SemiBold,
-                        style = MaterialTheme.typography.labelLarge
-                    )
-                }
-            } else if (lobby.currentPlayers >= lobby.maxPlayers) {
+                    .clip(RoundedCornerShape(8.dp))
+                    .background(GreenAccent)
+                    .clickable(onClick = onJoinClick)
+                    .padding(vertical = 12.dp),
+                contentAlignment = Alignment.Center,
+            ) {
                 Text(
-                    text = "Lobby Full",
-                    style = MaterialTheme.typography.labelMedium,
-                    color = CoralRed,
-                    modifier = Modifier.fillMaxWidth(),
-                    textAlign = TextAlign.Center
+                    text = "Join Lobby",
+                    color = Color.White,
+                    fontWeight = FontWeight.SemiBold,
+                    fontSize = 14.sp
                 )
             }
+        } else if (lobby.currentPlayers >= lobby.maxPlayers) {
+            Text(
+                text = "Lobby Full",
+                fontSize = 12.sp,
+                color = CoralRed,
+                modifier = Modifier.fillMaxWidth(),
+                textAlign = TextAlign.Center
+            )
         }
     }
 }
@@ -426,8 +447,8 @@ private fun LobbyInfoRow(
         Spacer(modifier = Modifier.width(6.dp))
         Text(
             text = text,
-            style = MaterialTheme.typography.bodySmall,
-            color = TextPrimary.copy(alpha = 0.75f),
+            fontSize = 12.sp,
+            color = DarkTextPrimary.copy(alpha = 0.75f),
             maxLines = 1,
             overflow = TextOverflow.Ellipsis
         )
@@ -439,12 +460,12 @@ internal fun PaymentTypeBadge(paymentType: String, modifier: Modifier = Modifier
     val (label, bgColor) = when (paymentType) {
         "creator_pays" -> "Creator Pays" to SportGreen.copy(alpha = 0.2f)
         "split_to_teams" -> "Team Split" to CoralRed.copy(alpha = 0.2f)
-        else -> "Split" to GoldAccent.copy(alpha = 0.2f)
+        else -> "Split" to GreenAccent.copy(alpha = 0.2f)
     }
     val textColor = when (paymentType) {
         "creator_pays" -> SportGreen
         "split_to_teams" -> CoralRed
-        else -> GoldAccent
+        else -> GreenAccent
     }
     Box(
         modifier = modifier
@@ -454,7 +475,7 @@ internal fun PaymentTypeBadge(paymentType: String, modifier: Modifier = Modifier
     ) {
         Text(
             text = label,
-            style = MaterialTheme.typography.labelSmall,
+            fontSize = 10.sp,
             color = textColor,
             fontWeight = FontWeight.SemiBold
         )
@@ -463,8 +484,7 @@ internal fun PaymentTypeBadge(paymentType: String, modifier: Modifier = Modifier
 
 // ── Preview ───────────────────────────────────────────────────────────────────
 
-@OptIn(ExperimentalMaterial3Api::class)
-@Preview(showBackground = true)
+@Preview(showBackground = true, backgroundColor = 0xFF121212)
 @Composable
 private fun BrowseVenueLobbiesScreenPreview() {
     val sampleLobbies = listOf(
@@ -509,17 +529,29 @@ private fun BrowseVenueLobbiesScreenPreview() {
             sportType = "tennis"
         )
     )
-    Scaffold(
-        containerColor = NavBarBg,
-        topBar = {
-            TopAppBar(
-                title = { Text("Open Venue Lobbies", color = TextPrimary) },
-                colors = TopAppBarDefaults.topAppBarColors(containerColor = CardWhite)
-            )
+    Column(
+        modifier = Modifier
+            .fillMaxSize()
+            .background(DarkBg)
+    ) {
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .background(DarkSurface)
+                .padding(horizontal = 16.dp, vertical = 12.dp),
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            Box(
+                modifier = Modifier.size(40.dp).clip(CircleShape).background(DarkBg),
+                contentAlignment = Alignment.Center,
+            ) {
+                Icon(Icons.AutoMirrored.Filled.ArrowBack, "Back", tint = DarkTextPrimary, modifier = Modifier.size(20.dp))
+            }
+            Spacer(modifier = Modifier.width(12.dp))
+            Text("Open Venue Lobbies", fontSize = 18.sp, fontWeight = FontWeight.Bold, color = DarkTextPrimary)
         }
-    ) { padding ->
         LazyColumn(
-            modifier = Modifier.fillMaxSize().padding(padding),
+            modifier = Modifier.fillMaxSize(),
             contentPadding = PaddingValues(horizontal = 16.dp, vertical = 12.dp),
             verticalArrangement = Arrangement.spacedBy(12.dp)
         ) {

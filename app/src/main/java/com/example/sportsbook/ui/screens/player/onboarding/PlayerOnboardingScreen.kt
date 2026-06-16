@@ -19,17 +19,15 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.CameraAlt
 import androidx.compose.material.icons.filled.Person
-import androidx.compose.material3.Button
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.DatePicker
 import androidx.compose.material3.DatePickerDialog
 import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.FilterChip
 import androidx.compose.material3.Icon
-import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.SnackbarHost
@@ -46,10 +44,12 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import coil.compose.AsyncImage
@@ -57,6 +57,12 @@ import com.example.sportsbook.domain.enums.ExperienceDuration
 import com.example.sportsbook.domain.enums.SkillLevel
 import com.example.sportsbook.domain.enums.SportType
 import com.example.sportsbook.ui.common.LoadingIndicator
+import com.example.sportsbook.ui.theme.DarkBg
+import com.example.sportsbook.ui.theme.DarkBorder
+import com.example.sportsbook.ui.theme.DarkSurface
+import com.example.sportsbook.ui.theme.DarkTextPrimary
+import com.example.sportsbook.ui.theme.DarkTextSecondary
+import com.example.sportsbook.ui.theme.GreenAccent
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
@@ -117,7 +123,11 @@ fun PlayerOnboardingScreen(
         }
     }
 
-    Box(modifier = Modifier.fillMaxSize()) {
+    Box(
+        modifier = Modifier
+            .fillMaxSize()
+            .background(DarkBg)
+    ) {
         if (uiState.isLoading) {
             LoadingIndicator()
         } else {
@@ -132,15 +142,15 @@ fun PlayerOnboardingScreen(
                     Spacer(modifier = Modifier.height(32.dp))
                     Text(
                         text = "Complete Your Profile",
-                        style = MaterialTheme.typography.headlineMedium.copy(
-                            fontWeight = FontWeight.Bold
-                        )
+                        fontSize = 24.sp,
+                        fontWeight = FontWeight.Bold,
+                        color = DarkTextPrimary,
                     )
                     Spacer(modifier = Modifier.height(8.dp))
                     Text(
                         text = "Tell us about yourself so we can match you with the right players",
-                        style = MaterialTheme.typography.bodyMedium,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                        fontSize = 14.sp,
+                        color = DarkTextSecondary,
                     )
                     Spacer(modifier = Modifier.height(24.dp))
                 }
@@ -151,7 +161,7 @@ fun PlayerOnboardingScreen(
                         modifier = Modifier
                             .size(96.dp)
                             .clip(CircleShape)
-                            .background(MaterialTheme.colorScheme.primaryContainer)
+                            .background(DarkSurface)
                             .clickable {
                                 photoPickerLauncher.launch(
                                     PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageOnly)
@@ -163,7 +173,7 @@ fun PlayerOnboardingScreen(
                             uiState.isUploadingPhoto -> {
                                 CircularProgressIndicator(
                                     modifier = Modifier.size(32.dp),
-                                    color = MaterialTheme.colorScheme.onPrimaryContainer
+                                    color = GreenAccent
                                 )
                             }
                             uiState.uploadedPhotoUrl != null -> {
@@ -194,12 +204,12 @@ fun PlayerOnboardingScreen(
                                         imageVector = Icons.Default.CameraAlt,
                                         contentDescription = "Add photo",
                                         modifier = Modifier.size(32.dp),
-                                        tint = MaterialTheme.colorScheme.onPrimaryContainer
+                                        tint = GreenAccent
                                     )
                                     Text(
                                         text = "Add Photo",
-                                        style = MaterialTheme.typography.labelSmall,
-                                        color = MaterialTheme.colorScheme.onPrimaryContainer
+                                        fontSize = 10.sp,
+                                        color = GreenAccent,
                                     )
                                 }
                             }
@@ -215,7 +225,16 @@ fun PlayerOnboardingScreen(
                         onValueChange = viewModel::onDisplayNameChange,
                         label = { Text("Name") },
                         modifier = Modifier.fillMaxWidth(),
-                        singleLine = true
+                        singleLine = true,
+                        colors = OutlinedTextFieldDefaults.colors(
+                            focusedTextColor = DarkTextPrimary,
+                            unfocusedTextColor = DarkTextPrimary,
+                            focusedBorderColor = GreenAccent,
+                            unfocusedBorderColor = DarkBorder,
+                            focusedLabelColor = GreenAccent,
+                            unfocusedLabelColor = DarkTextSecondary,
+                            cursorColor = GreenAccent,
+                        )
                     )
                     Spacer(modifier = Modifier.height(12.dp))
                 }
@@ -230,9 +249,9 @@ fun PlayerOnboardingScreen(
                         singleLine = true,
                         enabled = false,
                         colors = OutlinedTextFieldDefaults.colors(
-                            disabledTextColor = MaterialTheme.colorScheme.onSurface,
-                            disabledBorderColor = MaterialTheme.colorScheme.outline,
-                            disabledLabelColor = MaterialTheme.colorScheme.onSurfaceVariant
+                            disabledTextColor = DarkTextPrimary,
+                            disabledBorderColor = DarkBorder,
+                            disabledLabelColor = DarkTextSecondary,
                         )
                     )
                     Spacer(modifier = Modifier.height(12.dp))
@@ -250,9 +269,9 @@ fun PlayerOnboardingScreen(
                         singleLine = true,
                         enabled = false,
                         colors = OutlinedTextFieldDefaults.colors(
-                            disabledTextColor = MaterialTheme.colorScheme.onSurface,
-                            disabledBorderColor = MaterialTheme.colorScheme.outline,
-                            disabledLabelColor = MaterialTheme.colorScheme.onSurfaceVariant
+                            disabledTextColor = DarkTextPrimary,
+                            disabledBorderColor = DarkBorder,
+                            disabledLabelColor = DarkTextSecondary,
                         )
                     )
                     Spacer(modifier = Modifier.height(24.dp))
@@ -262,10 +281,10 @@ fun PlayerOnboardingScreen(
                 item {
                     Text(
                         text = "What sports are you interested in?",
-                        style = MaterialTheme.typography.titleMedium.copy(
-                            fontWeight = FontWeight.SemiBold
-                        ),
-                        modifier = Modifier.fillMaxWidth()
+                        fontSize = 16.sp,
+                        fontWeight = FontWeight.SemiBold,
+                        color = DarkTextPrimary,
+                        modifier = Modifier.fillMaxWidth(),
                     )
                     Spacer(modifier = Modifier.height(8.dp))
                 }
@@ -277,11 +296,20 @@ fun PlayerOnboardingScreen(
                         verticalArrangement = Arrangement.spacedBy(4.dp)
                     ) {
                         SportType.entries.forEach { sport ->
-                            FilterChip(
-                                selected = sport in uiState.selectedSports,
-                                onClick = { viewModel.toggleSport(sport) },
-                                label = { Text(sport.displayName) }
-                            )
+                            val selected = sport in uiState.selectedSports
+                            Box(
+                                modifier = Modifier
+                                    .clip(RoundedCornerShape(50))
+                                    .background(if (selected) GreenAccent else DarkSurface)
+                                    .clickable { viewModel.toggleSport(sport) }
+                                    .padding(horizontal = 14.dp, vertical = 8.dp),
+                            ) {
+                                Text(
+                                    text = sport.displayName,
+                                    fontSize = 13.sp,
+                                    color = if (selected) Color.White else DarkTextSecondary,
+                                )
+                            }
                         }
                     }
                     Spacer(modifier = Modifier.height(24.dp))
@@ -292,17 +320,17 @@ fun PlayerOnboardingScreen(
                     item {
                         Text(
                             text = "Set your expertise",
-                            style = MaterialTheme.typography.titleMedium.copy(
-                                fontWeight = FontWeight.SemiBold
-                            ),
-                            modifier = Modifier.fillMaxWidth()
+                            fontSize = 16.sp,
+                            fontWeight = FontWeight.SemiBold,
+                            color = DarkTextPrimary,
+                            modifier = Modifier.fillMaxWidth(),
                         )
                         Spacer(modifier = Modifier.height(4.dp))
                         Text(
                             text = "Match with players at your level",
-                            style = MaterialTheme.typography.bodySmall,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant,
-                            modifier = Modifier.fillMaxWidth()
+                            fontSize = 12.sp,
+                            color = DarkTextSecondary,
+                            modifier = Modifier.fillMaxWidth(),
                         )
                         Spacer(modifier = Modifier.height(12.dp))
                     }
@@ -313,18 +341,17 @@ fun PlayerOnboardingScreen(
                         Column(modifier = Modifier.fillMaxWidth()) {
                             Text(
                                 text = sport.displayName,
-                                style = MaterialTheme.typography.titleSmall.copy(
-                                    fontWeight = FontWeight.Medium
-                                ),
-                                color = MaterialTheme.colorScheme.primary
+                                fontSize = 14.sp,
+                                fontWeight = FontWeight.Medium,
+                                color = GreenAccent,
                             )
                             Spacer(modifier = Modifier.height(8.dp))
 
                             // Skill Level
                             Text(
                                 text = "Skill Level",
-                                style = MaterialTheme.typography.labelMedium,
-                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                                fontSize = 12.sp,
+                                color = DarkTextSecondary,
                             )
                             Spacer(modifier = Modifier.height(4.dp))
                             FlowRow(
@@ -333,11 +360,20 @@ fun PlayerOnboardingScreen(
                                 verticalArrangement = Arrangement.spacedBy(4.dp)
                             ) {
                                 SkillLevel.entries.forEach { level ->
-                                    FilterChip(
-                                        selected = expertise.skillLevel == level,
-                                        onClick = { viewModel.onSkillLevelChange(sport, level) },
-                                        label = { Text(level.displayName) }
-                                    )
+                                    val selected = expertise.skillLevel == level
+                                    Box(
+                                        modifier = Modifier
+                                            .clip(RoundedCornerShape(50))
+                                            .background(if (selected) GreenAccent else DarkSurface)
+                                            .clickable { viewModel.onSkillLevelChange(sport, level) }
+                                            .padding(horizontal = 14.dp, vertical = 8.dp),
+                                    ) {
+                                        Text(
+                                            text = level.displayName,
+                                            fontSize = 13.sp,
+                                            color = if (selected) Color.White else DarkTextSecondary,
+                                        )
+                                    }
                                 }
                             }
 
@@ -346,8 +382,8 @@ fun PlayerOnboardingScreen(
                             // Experience Duration
                             Text(
                                 text = "Experience",
-                                style = MaterialTheme.typography.labelMedium,
-                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                                fontSize = 12.sp,
+                                color = DarkTextSecondary,
                             )
                             Spacer(modifier = Modifier.height(4.dp))
                             FlowRow(
@@ -356,11 +392,20 @@ fun PlayerOnboardingScreen(
                                 verticalArrangement = Arrangement.spacedBy(4.dp)
                             ) {
                                 ExperienceDuration.entries.forEach { duration ->
-                                    FilterChip(
-                                        selected = expertise.experienceDuration == duration,
-                                        onClick = { viewModel.onExperienceDurationChange(sport, duration) },
-                                        label = { Text(duration.displayName) }
-                                    )
+                                    val selected = expertise.experienceDuration == duration
+                                    Box(
+                                        modifier = Modifier
+                                            .clip(RoundedCornerShape(50))
+                                            .background(if (selected) GreenAccent else DarkSurface)
+                                            .clickable { viewModel.onExperienceDurationChange(sport, duration) }
+                                            .padding(horizontal = 14.dp, vertical = 8.dp),
+                                    ) {
+                                        Text(
+                                            text = duration.displayName,
+                                            fontSize = 13.sp,
+                                            color = if (selected) Color.White else DarkTextSecondary,
+                                        )
+                                    }
                                 }
                             }
 
@@ -376,39 +421,53 @@ fun PlayerOnboardingScreen(
                         value = uiState.bio,
                         onValueChange = viewModel::onBioChange,
                         label = { Text("Tell us about yourself") },
-                        placeholder = { Text("Optional — share your sports journey, goals, or anything you'd like others to know") },
+                        placeholder = { Text("Optional — share your sports journey, goals, or anything you'd like others to know", color = DarkTextSecondary) },
                         modifier = Modifier.fillMaxWidth(),
                         minLines = 3,
                         maxLines = 5,
                         supportingText = {
-                            Text("${uiState.bio.length}/500")
-                        }
+                            Text("${uiState.bio.length}/500", color = DarkTextSecondary)
+                        },
+                        colors = OutlinedTextFieldDefaults.colors(
+                            focusedTextColor = DarkTextPrimary,
+                            unfocusedTextColor = DarkTextPrimary,
+                            focusedBorderColor = GreenAccent,
+                            unfocusedBorderColor = DarkBorder,
+                            focusedLabelColor = GreenAccent,
+                            unfocusedLabelColor = DarkTextSecondary,
+                            cursorColor = GreenAccent,
+                        )
                     )
                     Spacer(modifier = Modifier.height(24.dp))
                 }
 
                 // Submit Button
                 item {
-                    Button(
-                        onClick = viewModel::submit,
+                    val canSubmit = uiState.displayName.isNotBlank()
+                            && uiState.selectedSports.isNotEmpty()
+                            && !uiState.isSaving
+                            && !uiState.isUploadingPhoto
+                    Box(
                         modifier = Modifier
                             .fillMaxWidth()
-                            .height(52.dp),
-                        enabled = uiState.displayName.isNotBlank()
-                                && uiState.selectedSports.isNotEmpty()
-                                && !uiState.isSaving
-                                && !uiState.isUploadingPhoto
+                            .height(52.dp)
+                            .clip(RoundedCornerShape(14.dp))
+                            .background(if (canSubmit) GreenAccent else Color(0xFF2A3D2B))
+                            .clickable(enabled = canSubmit, onClick = viewModel::submit),
+                        contentAlignment = Alignment.Center,
                     ) {
                         if (uiState.isSaving) {
                             CircularProgressIndicator(
                                 modifier = Modifier.size(20.dp),
-                                color = MaterialTheme.colorScheme.onPrimary,
+                                color = Color.White,
                                 strokeWidth = 2.dp
                             )
                         } else {
                             Text(
                                 text = "Get Started",
-                                style = MaterialTheme.typography.titleMedium
+                                fontSize = 16.sp,
+                                fontWeight = FontWeight.Bold,
+                                color = Color.White,
                             )
                         }
                     }
@@ -435,128 +494,167 @@ private fun formatDateForDisplay(isoDate: String): String {
     }
 }
 
-@Preview(showBackground = true)
+@Preview(showBackground = true, backgroundColor = 0xFF121212)
 @OptIn(ExperimentalLayoutApi::class, ExperimentalMaterial3Api::class)
 @Composable
 private fun PlayerOnboardingScreenPreview() {
-    MaterialTheme {
-        Box(modifier = Modifier.fillMaxSize()) {
-            LazyColumn(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .padding(horizontal = 20.dp),
-                horizontalAlignment = Alignment.CenterHorizontally
-            ) {
-                item {
-                    Spacer(modifier = Modifier.height(32.dp))
-                    Text(
-                        text = "Complete Your Profile",
-                        style = MaterialTheme.typography.headlineMedium.copy(
-                            fontWeight = FontWeight.Bold
+    Box(
+        modifier = Modifier
+            .fillMaxSize()
+            .background(DarkBg)
+    ) {
+        LazyColumn(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(horizontal = 20.dp),
+            horizontalAlignment = Alignment.CenterHorizontally
+        ) {
+            item {
+                Spacer(modifier = Modifier.height(32.dp))
+                Text(
+                    text = "Complete Your Profile",
+                    fontSize = 24.sp,
+                    fontWeight = FontWeight.Bold,
+                    color = DarkTextPrimary,
+                )
+                Spacer(modifier = Modifier.height(8.dp))
+                Text(
+                    text = "Tell us about yourself so we can match you with the right players",
+                    fontSize = 14.sp,
+                    color = DarkTextSecondary,
+                )
+                Spacer(modifier = Modifier.height(24.dp))
+            }
+            item {
+                Box(
+                    modifier = Modifier
+                        .size(96.dp)
+                        .clip(CircleShape)
+                        .background(DarkSurface),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                        Icon(
+                            imageVector = Icons.Default.CameraAlt,
+                            contentDescription = "Add photo",
+                            modifier = Modifier.size(32.dp),
+                            tint = GreenAccent
                         )
-                    )
-                    Spacer(modifier = Modifier.height(8.dp))
-                    Text(
-                        text = "Tell us about yourself so we can match you with the right players",
-                        style = MaterialTheme.typography.bodyMedium,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant
-                    )
-                    Spacer(modifier = Modifier.height(24.dp))
-                }
-                item {
-                    Box(
-                        modifier = Modifier
-                            .size(96.dp)
-                            .clip(CircleShape)
-                            .background(MaterialTheme.colorScheme.primaryContainer),
-                        contentAlignment = Alignment.Center
-                    ) {
-                        Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                            Icon(
-                                imageVector = Icons.Default.CameraAlt,
-                                contentDescription = "Add photo",
-                                modifier = Modifier.size(32.dp),
-                                tint = MaterialTheme.colorScheme.onPrimaryContainer
-                            )
-                            Text(
-                                text = "Add Photo",
-                                style = MaterialTheme.typography.labelSmall,
-                                color = MaterialTheme.colorScheme.onPrimaryContainer
-                            )
-                        }
-                    }
-                    Spacer(modifier = Modifier.height(24.dp))
-                }
-                item {
-                    OutlinedTextField(
-                        value = "Alex Johnson",
-                        onValueChange = {},
-                        label = { Text("Name") },
-                        modifier = Modifier.fillMaxWidth(),
-                        singleLine = true
-                    )
-                    Spacer(modifier = Modifier.height(12.dp))
-                }
-                item {
-                    OutlinedTextField(
-                        value = "alex.johnson@email.com",
-                        onValueChange = {},
-                        label = { Text("Email") },
-                        modifier = Modifier.fillMaxWidth(),
-                        singleLine = true,
-                        enabled = false
-                    )
-                    Spacer(modifier = Modifier.height(12.dp))
-                }
-                item {
-                    Text(
-                        text = "What sports are you interested in?",
-                        style = MaterialTheme.typography.titleMedium.copy(
-                            fontWeight = FontWeight.SemiBold
-                        ),
-                        modifier = Modifier.fillMaxWidth()
-                    )
-                    Spacer(modifier = Modifier.height(8.dp))
-                }
-                item {
-                    FlowRow(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.spacedBy(8.dp),
-                        verticalArrangement = Arrangement.spacedBy(4.dp)
-                    ) {
-                        listOf(SportType.BASKETBALL, SportType.TENNIS, SportType.FOOTBALL, SportType.PADDLE).forEach { sport ->
-                            FilterChip(
-                                selected = sport == SportType.BASKETBALL || sport == SportType.TENNIS,
-                                onClick = {},
-                                label = { Text(sport.displayName) }
-                            )
-                        }
-                    }
-                    Spacer(modifier = Modifier.height(24.dp))
-                }
-                item {
-                    OutlinedTextField(
-                        value = "Passionate about sports and always looking to improve.",
-                        onValueChange = {},
-                        label = { Text("Tell us about yourself") },
-                        modifier = Modifier.fillMaxWidth(),
-                        minLines = 3,
-                        maxLines = 5
-                    )
-                    Spacer(modifier = Modifier.height(24.dp))
-                }
-                item {
-                    Button(
-                        onClick = {},
-                        modifier = Modifier.fillMaxWidth().height(52.dp)
-                    ) {
                         Text(
-                            text = "Get Started",
-                            style = MaterialTheme.typography.titleMedium
+                            text = "Add Photo",
+                            fontSize = 10.sp,
+                            color = GreenAccent,
                         )
                     }
-                    Spacer(modifier = Modifier.height(32.dp))
                 }
+                Spacer(modifier = Modifier.height(24.dp))
+            }
+            item {
+                OutlinedTextField(
+                    value = "Alex Johnson",
+                    onValueChange = {},
+                    label = { Text("Name") },
+                    modifier = Modifier.fillMaxWidth(),
+                    singleLine = true,
+                    colors = OutlinedTextFieldDefaults.colors(
+                        focusedTextColor = DarkTextPrimary,
+                        unfocusedTextColor = DarkTextPrimary,
+                        focusedBorderColor = GreenAccent,
+                        unfocusedBorderColor = DarkBorder,
+                        focusedLabelColor = GreenAccent,
+                        unfocusedLabelColor = DarkTextSecondary,
+                        cursorColor = GreenAccent,
+                    )
+                )
+                Spacer(modifier = Modifier.height(12.dp))
+            }
+            item {
+                OutlinedTextField(
+                    value = "alex.johnson@email.com",
+                    onValueChange = {},
+                    label = { Text("Email") },
+                    modifier = Modifier.fillMaxWidth(),
+                    singleLine = true,
+                    enabled = false,
+                    colors = OutlinedTextFieldDefaults.colors(
+                        disabledTextColor = DarkTextPrimary,
+                        disabledBorderColor = DarkBorder,
+                        disabledLabelColor = DarkTextSecondary,
+                    )
+                )
+                Spacer(modifier = Modifier.height(12.dp))
+            }
+            item {
+                Text(
+                    text = "What sports are you interested in?",
+                    fontSize = 16.sp,
+                    fontWeight = FontWeight.SemiBold,
+                    color = DarkTextPrimary,
+                    modifier = Modifier.fillMaxWidth(),
+                )
+                Spacer(modifier = Modifier.height(8.dp))
+            }
+            item {
+                FlowRow(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(8.dp),
+                    verticalArrangement = Arrangement.spacedBy(4.dp)
+                ) {
+                    listOf(SportType.BASKETBALL, SportType.TENNIS, SportType.FOOTBALL, SportType.PADDLE).forEach { sport ->
+                        val selected = sport == SportType.BASKETBALL || sport == SportType.TENNIS
+                        Box(
+                            modifier = Modifier
+                                .clip(RoundedCornerShape(50))
+                                .background(if (selected) GreenAccent else DarkSurface)
+                                .padding(horizontal = 14.dp, vertical = 8.dp),
+                        ) {
+                            Text(
+                                text = sport.displayName,
+                                fontSize = 13.sp,
+                                color = if (selected) Color.White else DarkTextSecondary,
+                            )
+                        }
+                    }
+                }
+                Spacer(modifier = Modifier.height(24.dp))
+            }
+            item {
+                OutlinedTextField(
+                    value = "Passionate about sports and always looking to improve.",
+                    onValueChange = {},
+                    label = { Text("Tell us about yourself") },
+                    modifier = Modifier.fillMaxWidth(),
+                    minLines = 3,
+                    maxLines = 5,
+                    colors = OutlinedTextFieldDefaults.colors(
+                        focusedTextColor = DarkTextPrimary,
+                        unfocusedTextColor = DarkTextPrimary,
+                        focusedBorderColor = GreenAccent,
+                        unfocusedBorderColor = DarkBorder,
+                        focusedLabelColor = GreenAccent,
+                        unfocusedLabelColor = DarkTextSecondary,
+                        cursorColor = GreenAccent,
+                    )
+                )
+                Spacer(modifier = Modifier.height(24.dp))
+            }
+            item {
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(52.dp)
+                        .clip(RoundedCornerShape(14.dp))
+                        .background(GreenAccent),
+                    contentAlignment = Alignment.Center,
+                ) {
+                    Text(
+                        text = "Get Started",
+                        fontSize = 16.sp,
+                        fontWeight = FontWeight.Bold,
+                        color = Color.White,
+                    )
+                }
+                Spacer(modifier = Modifier.height(32.dp))
             }
         }
     }

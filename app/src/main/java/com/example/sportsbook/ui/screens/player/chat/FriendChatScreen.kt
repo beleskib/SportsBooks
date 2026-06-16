@@ -1,6 +1,8 @@
 package com.example.sportsbook.ui.screens.player.chat
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -19,20 +21,12 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
-import androidx.compose.material.icons.automirrored.filled.Send
 import androidx.compose.material3.CircularProgressIndicator
-import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedTextField
-import androidx.compose.material3.OutlinedTextFieldDefaults
-import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
-import androidx.compose.material3.TopAppBar
-import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -40,32 +34,35 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import coil.compose.AsyncImage
+import com.example.sportsbook.ui.theme.DarkBg
+import com.example.sportsbook.ui.theme.DarkBorder
+import com.example.sportsbook.ui.theme.DarkSurface
+import com.example.sportsbook.ui.theme.DarkTextPrimary
+import com.example.sportsbook.ui.theme.DarkTextSecondary
+import com.example.sportsbook.ui.theme.DarkTextTertiary
+import com.example.sportsbook.ui.theme.GreenAccent
+import com.example.sportsbook.ui.theme.GreenDark
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
 
-// ── Light-theme design tokens ─────────────────────────────────────────────────
-private val LightBg = Color(0xFFF9FAFB)
-private val CardWhite = Color.White
-private val TextPrimary = Color(0xFF111827)
-private val TextSecondary = Color(0xFF6B7280)
-private val TextTertiary = Color(0xFF9CA3AF)
-private val GoldAccent = Color(0xFFFDE047)
-private val BorderGray = Color(0xFFE5E7EB)
-private val BubbleMe = Color(0xFF111827)       // dark — current user
-private val BubbleFriend = Color(0xFFF3F4F6)   // light gray — friend
+// ── Local design tokens ──────────────────────────────────────────────────────
+private val BubbleMe = GreenAccent
+private val BubbleFriend = Color(0xFF252525)
 
-// ── Screen ────────────────────────────────────────────────────────────────────
+// ── Screen ───────────────────────────────────────────────────────────────────
 
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun FriendChatScreen(
     friendUserId: Long,
@@ -84,101 +81,142 @@ fun FriendChatScreen(
         }
     }
 
-    Scaffold(
-        containerColor = LightBg,
-        topBar = {
-            TopAppBar(
-                title = {
-                    Row(verticalAlignment = Alignment.CenterVertically) {
-                        FriendChatAvatar(photoUrl = friendPhotoUrl, size = 32)
-                        Spacer(modifier = Modifier.width(10.dp))
-                        Text(
-                            text = friendName,
-                            style = MaterialTheme.typography.titleMedium.copy(
-                                fontWeight = FontWeight.Bold,
-                            ),
-                            color = TextPrimary,
-                        )
-                    }
-                },
-                navigationIcon = {
-                    IconButton(onClick = onBack) {
-                        Icon(
-                            imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                            contentDescription = "Back",
-                            tint = TextPrimary,
-                        )
-                    }
-                },
-                colors = TopAppBarDefaults.topAppBarColors(containerColor = CardWhite),
-            )
-        },
-    ) { innerPadding ->
-        Column(
+    Column(
+        modifier = Modifier
+            .fillMaxSize()
+            .background(DarkBg)
+            .imePadding(),
+    ) {
+        // ── Header ───────────────────────────────────────────────────────
+        Row(
             modifier = Modifier
-                .fillMaxSize()
-                .padding(innerPadding)
-                .imePadding(),
+                .fillMaxWidth()
+                .background(DarkSurface)
+                .border(width = 0.5.dp, color = DarkBorder, shape = RoundedCornerShape(0.dp))
+                .padding(start = 12.dp, end = 16.dp, top = 48.dp, bottom = 12.dp),
+            verticalAlignment = Alignment.CenterVertically,
         ) {
-            when {
-                uiState.isLoading -> {
-                    Box(
-                        modifier = Modifier
-                            .weight(1f)
-                            .fillMaxWidth(),
-                        contentAlignment = Alignment.Center,
-                    ) {
-                        CircularProgressIndicator(color = TextPrimary)
-                    }
-                }
+            Box(
+                modifier = Modifier
+                    .size(40.dp)
+                    .clip(CircleShape)
+                    .background(Color.White.copy(alpha = 0.05f))
+                    .clickable(onClick = onBack),
+                contentAlignment = Alignment.Center,
+            ) {
+                Icon(Icons.AutoMirrored.Filled.ArrowBack, "Back", tint = DarkTextPrimary, modifier = Modifier.size(20.dp))
+            }
 
-                uiState.messages.isEmpty() -> {
-                    Box(
-                        modifier = Modifier
-                            .weight(1f)
-                            .fillMaxWidth()
-                            .padding(32.dp),
-                        contentAlignment = Alignment.Center,
-                    ) {
+            Spacer(modifier = Modifier.width(10.dp))
+
+            // Avatar with online indicator
+            Box(modifier = Modifier.size(40.dp)) {
+                FriendChatAvatar(photoUrl = friendPhotoUrl, name = friendName, size = 40)
+                // Online dot
+                Box(
+                    modifier = Modifier
+                        .size(10.dp)
+                        .clip(CircleShape)
+                        .background(GreenAccent)
+                        .border(2.dp, DarkSurface, CircleShape)
+                        .align(Alignment.BottomEnd),
+                )
+            }
+
+            Spacer(modifier = Modifier.width(10.dp))
+
+            Column(modifier = Modifier.weight(1f)) {
+                Text(friendName, fontSize = 15.sp, fontWeight = FontWeight.Bold, color = DarkTextPrimary)
+                Text("Online", fontSize = 12.sp, color = GreenAccent)
+            }
+
+            // Action buttons
+            Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                HeaderActionButton("📞")
+                HeaderActionButton("⋯")
+            }
+        }
+
+        // ── Messages ─────────────────────────────────────────────────────
+        when {
+            uiState.isLoading -> {
+                Box(
+                    modifier = Modifier
+                        .weight(1f)
+                        .fillMaxWidth(),
+                    contentAlignment = Alignment.Center,
+                ) {
+                    CircularProgressIndicator(color = GreenAccent, modifier = Modifier.size(32.dp), strokeWidth = 2.dp)
+                }
+            }
+
+            uiState.messages.isEmpty() -> {
+                Box(
+                    modifier = Modifier
+                        .weight(1f)
+                        .fillMaxWidth()
+                        .padding(32.dp),
+                    contentAlignment = Alignment.Center,
+                ) {
+                    Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                        Text("💬", fontSize = 48.sp)
+                        Spacer(modifier = Modifier.height(12.dp))
                         Text(
-                            text = "Start a conversation with $friendName",
-                            style = MaterialTheme.typography.bodyMedium,
-                            color = TextSecondary,
-                            textAlign = androidx.compose.ui.text.style.TextAlign.Center,
+                            "Start a conversation with $friendName",
+                            fontSize = 14.sp,
+                            color = DarkTextSecondary,
+                            textAlign = TextAlign.Center,
                         )
-                    }
-                }
-
-                else -> {
-                    LazyColumn(
-                        modifier = Modifier
-                            .weight(1f)
-                            .fillMaxWidth()
-                            .padding(horizontal = 16.dp),
-                        state = listState,
-                        verticalArrangement = Arrangement.spacedBy(8.dp),
-                    ) {
-                        item { Spacer(modifier = Modifier.height(8.dp)) }
-                        items(uiState.messages, key = { it.id }) { message ->
-                            DirectMessageBubble(
-                                message = message,
-                                isMe = message.senderId == uiState.currentUserId,
-                                friendPhotoUrl = friendPhotoUrl,
-                            )
-                        }
-                        item { Spacer(modifier = Modifier.height(8.dp)) }
                     }
                 }
             }
 
-            // ── Input bar ─────────────────────────────────────────────────
-            MessageInputBar(
-                value = uiState.inputText,
-                onValueChange = viewModel::onInputChange,
-                onSend = viewModel::sendMessage,
-                isSending = uiState.isSending,
-            )
+            else -> {
+                LazyColumn(
+                    modifier = Modifier
+                        .weight(1f)
+                        .fillMaxWidth()
+                        .padding(horizontal = 12.dp),
+                    state = listState,
+                    verticalArrangement = Arrangement.spacedBy(8.dp),
+                ) {
+                    item { Spacer(modifier = Modifier.height(12.dp)) }
+                    items(uiState.messages, key = { it.id }) { message ->
+                        DirectMessageBubble(
+                            message = message,
+                            isMe = message.senderId == uiState.currentUserId,
+                            friendPhotoUrl = friendPhotoUrl,
+                            friendName = friendName,
+                        )
+                    }
+                    item { Spacer(modifier = Modifier.height(8.dp)) }
+                }
+            }
         }
+
+        // ── Input bar ─────────────────────────────────────────────────────
+        MessageInputBar(
+            value = uiState.inputText,
+            onValueChange = viewModel::onInputChange,
+            onSend = viewModel::sendMessage,
+            isSending = uiState.isSending,
+        )
+    }
+}
+
+// ── Header action button ──────────────────────────────────────────────────────
+
+@Composable
+private fun HeaderActionButton(emoji: String) {
+    Box(
+        modifier = Modifier
+            .size(36.dp)
+            .clip(CircleShape)
+            .background(Color.White.copy(alpha = 0.05f))
+            .clickable { },
+        contentAlignment = Alignment.Center,
+    ) {
+        Text(emoji, fontSize = 16.sp)
     }
 }
 
@@ -189,6 +227,7 @@ private fun DirectMessageBubble(
     message: DirectMessage,
     isMe: Boolean,
     friendPhotoUrl: String?,
+    friendName: String,
     modifier: Modifier = Modifier,
 ) {
     Column(
@@ -200,9 +239,8 @@ private fun DirectMessageBubble(
             horizontalArrangement = if (isMe) Arrangement.End else Arrangement.Start,
             modifier = Modifier.fillMaxWidth(),
         ) {
-            // Friend avatar on the left
             if (!isMe) {
-                FriendChatAvatar(photoUrl = friendPhotoUrl, size = 28)
+                FriendChatAvatar(photoUrl = friendPhotoUrl, name = friendName, size = 28)
                 Spacer(modifier = Modifier.width(6.dp))
             }
 
@@ -222,8 +260,9 @@ private fun DirectMessageBubble(
             ) {
                 Text(
                     text = message.content,
-                    style = MaterialTheme.typography.bodyMedium,
-                    color = if (isMe) Color.White else TextPrimary,
+                    fontSize = 14.sp,
+                    color = Color.White,
+                    lineHeight = 20.sp,
                 )
             }
         }
@@ -232,8 +271,8 @@ private fun DirectMessageBubble(
 
         Text(
             text = formatTimestamp(message.createdAt),
-            style = MaterialTheme.typography.labelSmall.copy(fontSize = 10.sp),
-            color = TextTertiary,
+            fontSize = 10.sp,
+            color = DarkTextTertiary,
             modifier = Modifier.padding(horizontal = if (isMe) 0.dp else 34.dp),
         )
     }
@@ -252,67 +291,74 @@ private fun MessageInputBar(
     Row(
         modifier = modifier
             .fillMaxWidth()
-            .background(CardWhite)
-            .padding(horizontal = 12.dp, vertical = 8.dp),
-        verticalAlignment = Alignment.CenterVertically,
+            .background(DarkSurface)
+            .border(width = 0.5.dp, color = DarkBorder, shape = RoundedCornerShape(0.dp))
+            .padding(horizontal = 12.dp, vertical = 10.dp),
+        verticalAlignment = Alignment.Bottom,
+        horizontalArrangement = Arrangement.spacedBy(8.dp),
     ) {
-        OutlinedTextField(
-            value = value,
-            onValueChange = onValueChange,
-            modifier = Modifier.weight(1f),
-            placeholder = {
-                Text(
-                    text = "Message...",
-                    style = MaterialTheme.typography.bodyMedium,
-                    color = TextTertiary,
-                )
-            },
-            maxLines = 4,
-            shape = RoundedCornerShape(24.dp),
-            enabled = !isSending,
-            colors = OutlinedTextFieldDefaults.colors(
-                focusedBorderColor = TextPrimary,
-                unfocusedBorderColor = BorderGray,
-                cursorColor = TextPrimary,
-            ),
-            textStyle = MaterialTheme.typography.bodyMedium.copy(color = TextPrimary),
-        )
-        Spacer(modifier = Modifier.width(8.dp))
+        // Attach button
         Box(
             modifier = Modifier
-                .size(44.dp)
+                .size(40.dp)
                 .clip(CircleShape)
-                .background(if (value.isNotBlank() && !isSending) GoldAccent else BorderGray),
+                .background(Color.White.copy(alpha = 0.05f))
+                .clickable { },
+            contentAlignment = Alignment.Center,
+        ) {
+            Text("+", fontSize = 20.sp, color = DarkTextSecondary)
+        }
+
+        // Text field
+        BasicTextField(
+            value = value,
+            onValueChange = onValueChange,
+            enabled = !isSending,
+            textStyle = TextStyle(color = DarkTextPrimary, fontSize = 15.sp, lineHeight = 22.sp),
+            cursorBrush = SolidColor(GreenAccent),
+            maxLines = 4,
+            modifier = Modifier.weight(1f),
+            decorationBox = { inner ->
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .clip(RoundedCornerShape(20.dp))
+                        .background(Color.White.copy(alpha = 0.05f))
+                        .border(1.dp, DarkBorder, RoundedCornerShape(20.dp))
+                        .padding(horizontal = 14.dp, vertical = 10.dp),
+                ) {
+                    if (value.isEmpty()) {
+                        Text("Type a message...", fontSize = 15.sp, color = Color(0xFF555555))
+                    }
+                    inner()
+                }
+            },
+        )
+
+        // Send button
+        Box(
+            modifier = Modifier
+                .size(40.dp)
+                .clip(CircleShape)
+                .background(if (value.isNotBlank() && !isSending) GreenAccent else DarkBorder)
+                .clickable(enabled = value.isNotBlank() && !isSending, onClick = onSend),
             contentAlignment = Alignment.Center,
         ) {
             if (isSending) {
-                CircularProgressIndicator(
-                    modifier = Modifier.size(20.dp),
-                    strokeWidth = 2.dp,
-                    color = TextPrimary,
-                )
+                CircularProgressIndicator(modifier = Modifier.size(18.dp), strokeWidth = 2.dp, color = Color.White)
             } else {
-                IconButton(
-                    onClick = onSend,
-                    enabled = value.isNotBlank(),
-                ) {
-                    Icon(
-                        imageVector = Icons.AutoMirrored.Filled.Send,
-                        contentDescription = "Send",
-                        tint = if (value.isNotBlank()) TextPrimary else TextTertiary,
-                        modifier = Modifier.size(20.dp),
-                    )
-                }
+                Text("➤", fontSize = 16.sp, color = if (value.isNotBlank()) Color.White else DarkTextTertiary)
             }
         }
     }
 }
 
-// ── Avatar ─────────────────────────────────────────────────────────────────────
+// ── Avatar ────────────────────────────────────────────────────────────────────
 
 @Composable
 private fun FriendChatAvatar(
     photoUrl: String?,
+    name: String,
     size: Int,
     modifier: Modifier = Modifier,
 ) {
@@ -320,9 +366,7 @@ private fun FriendChatAvatar(
         AsyncImage(
             model = photoUrl,
             contentDescription = "Avatar",
-            modifier = modifier
-                .size(size.dp)
-                .clip(CircleShape),
+            modifier = modifier.size(size.dp).clip(CircleShape),
             contentScale = ContentScale.Crop,
         )
     } else {
@@ -330,13 +374,14 @@ private fun FriendChatAvatar(
             modifier = modifier
                 .size(size.dp)
                 .clip(CircleShape)
-                .background(BorderGray),
+                .background(GreenDark),
             contentAlignment = Alignment.Center,
         ) {
             Text(
-                text = "?",
-                style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Bold),
-                color = TextSecondary,
+                text = name.firstOrNull()?.uppercase() ?: "?",
+                fontSize = (size * 0.4f).sp,
+                fontWeight = FontWeight.Bold,
+                color = Color.White,
             )
         }
     }
@@ -360,142 +405,49 @@ private fun formatTimestamp(epochMillis: Long): String {
 
 // ── Previews ──────────────────────────────────────────────────────────────────
 
-@OptIn(ExperimentalMaterial3Api::class)
-@Preview(showBackground = true, backgroundColor = 0xFFF9FAFB)
+@Preview(showBackground = true, backgroundColor = 0xFF121212)
 @Composable
 private fun FriendChatScreenPreview() {
     val sampleMessages = listOf(
-        DirectMessage(
-            id = "1",
-            senderId = 42L,
-            senderName = "Alex Johnson",
-            content = "Hey! Are you up for a tennis match this weekend?",
-            createdAt = System.currentTimeMillis() - 3_600_000L,
-        ),
-        DirectMessage(
-            id = "2",
-            senderId = 1L,
-            senderName = "Me",
-            content = "Absolutely! Saturday morning works great.",
-            createdAt = System.currentTimeMillis() - 3_500_000L,
-        ),
-        DirectMessage(
-            id = "3",
-            senderId = 42L,
-            senderName = "Alex Johnson",
-            content = "Perfect, I'll book a court at City Tennis Center.",
-            createdAt = System.currentTimeMillis() - 3_400_000L,
-        ),
+        DirectMessage(id = "1", senderId = 42L, senderName = "Marco", content = "Hey! Are you free tomorrow evening? 🎾", createdAt = System.currentTimeMillis() - 300_000L),
+        DirectMessage(id = "2", senderId = 1L, senderName = "Me", content = "Yeah! What time were you thinking?", createdAt = System.currentTimeMillis() - 240_000L),
+        DirectMessage(id = "3", senderId = 42L, senderName = "Marco", content = "How about 6pm at Champions Tennis? I already booked Court 3 💪", createdAt = System.currentTimeMillis() - 180_000L),
+        DirectMessage(id = "4", senderId = 1L, senderName = "Me", content = "Perfect! I'm in 🙌", createdAt = System.currentTimeMillis() - 60_000L),
     )
-    MaterialTheme {
-        Scaffold(
-            containerColor = LightBg,
-            topBar = {
-                TopAppBar(
-                    title = {
-                        Row(verticalAlignment = Alignment.CenterVertically) {
-                            FriendChatAvatar(photoUrl = null, size = 32)
-                            Spacer(modifier = Modifier.width(10.dp))
-                            Text(
-                                text = "Alex Johnson",
-                                style = MaterialTheme.typography.titleMedium.copy(
-                                    fontWeight = FontWeight.Bold,
-                                ),
-                                color = TextPrimary,
-                            )
-                        }
-                    },
-                    navigationIcon = {
-                        IconButton(onClick = {}) {
-                            Icon(
-                                imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                                contentDescription = "Back",
-                                tint = TextPrimary,
-                            )
-                        }
-                    },
-                    colors = TopAppBarDefaults.topAppBarColors(containerColor = CardWhite),
-                )
-            },
-        ) { innerPadding ->
-            Column(
+    Column(modifier = Modifier.fillMaxSize().background(DarkBg)) {
+            // Header preview
+            Row(
                 modifier = Modifier
-                    .fillMaxSize()
-                    .padding(innerPadding),
+                    .fillMaxWidth()
+                    .background(DarkSurface)
+                    .padding(start = 12.dp, end = 16.dp, top = 48.dp, bottom = 12.dp),
+                verticalAlignment = Alignment.CenterVertically,
             ) {
-                LazyColumn(
-                    modifier = Modifier
-                        .weight(1f)
-                        .fillMaxWidth()
-                        .padding(horizontal = 16.dp),
-                    verticalArrangement = Arrangement.spacedBy(8.dp),
-                ) {
-                    item { Spacer(modifier = Modifier.height(8.dp)) }
-                    items(sampleMessages, key = { it.id }) { message ->
-                        DirectMessageBubble(
-                            message = message,
-                            isMe = message.senderId == 1L,
-                            friendPhotoUrl = null,
-                        )
-                    }
-                    item { Spacer(modifier = Modifier.height(8.dp)) }
+                Box(modifier = Modifier.size(40.dp).clip(CircleShape).background(Color.White.copy(0.05f)), contentAlignment = Alignment.Center) {
+                    Icon(Icons.AutoMirrored.Filled.ArrowBack, "Back", tint = DarkTextPrimary, modifier = Modifier.size(20.dp))
                 }
-                MessageInputBar(
-                    value = "",
-                    onValueChange = {},
-                    onSend = {},
-                    isSending = false,
-                )
+                Spacer(modifier = Modifier.width(10.dp))
+                Box(modifier = Modifier.size(40.dp).clip(CircleShape).background(GreenDark), contentAlignment = Alignment.Center) {
+                    Text("M", fontSize = 16.sp, fontWeight = FontWeight.Bold, color = Color.White)
+                }
+                Spacer(modifier = Modifier.width(10.dp))
+                Column(modifier = Modifier.weight(1f)) {
+                    Text("Marco Silva", fontSize = 15.sp, fontWeight = FontWeight.Bold, color = DarkTextPrimary)
+                    Text("Online", fontSize = 12.sp, color = GreenAccent)
+                }
             }
+            // Messages preview
+            LazyColumn(
+                modifier = Modifier.weight(1f).fillMaxWidth().padding(horizontal = 12.dp),
+                verticalArrangement = Arrangement.spacedBy(8.dp),
+            ) {
+                item { Spacer(modifier = Modifier.height(12.dp)) }
+                items(sampleMessages, key = { it.id }) { message ->
+                    DirectMessageBubble(message = message, isMe = message.senderId == 1L, friendPhotoUrl = null, friendName = "Marco")
+                }
+                item { Spacer(modifier = Modifier.height(8.dp)) }
+            }
+            // Input bar preview
+            MessageInputBar(value = "", onValueChange = {}, onSend = {}, isSending = false)
         }
-    }
-}
-
-@Preview(showBackground = true, backgroundColor = 0xFFF9FAFB)
-@Composable
-private fun DirectMessageBubblePreview() {
-    MaterialTheme {
-        Column(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(16.dp),
-            verticalArrangement = Arrangement.spacedBy(8.dp),
-        ) {
-            DirectMessageBubble(
-                message = DirectMessage(
-                    id = "1",
-                    senderId = 42L,
-                    senderName = "Alex",
-                    content = "Hey! Saturday works for me.",
-                    createdAt = System.currentTimeMillis(),
-                ),
-                isMe = false,
-                friendPhotoUrl = null,
-            )
-            DirectMessageBubble(
-                message = DirectMessage(
-                    id = "2",
-                    senderId = 1L,
-                    senderName = "Me",
-                    content = "Great, see you at 10am!",
-                    createdAt = System.currentTimeMillis(),
-                ),
-                isMe = true,
-                friendPhotoUrl = null,
-            )
-        }
-    }
-}
-
-@Preview(showBackground = true)
-@Composable
-private fun MessageInputBarPreview() {
-    MaterialTheme {
-        MessageInputBar(
-            value = "Hello there",
-            onValueChange = {},
-            onSend = {},
-            isSending = false,
-        )
-    }
 }

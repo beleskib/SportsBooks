@@ -47,7 +47,6 @@ android {
     buildTypes {
         debug {
             buildConfigField("String", "BASE_URL", "\"http://10.0.2.2:3000/\"")
-            buildConfigField("String", "STRIPE_PUBLISHABLE_KEY", "\"pk_test_REPLACE_WITH_YOUR_KEY\"")
         }
         release {
             isMinifyEnabled = true
@@ -57,7 +56,6 @@ android {
                 "proguard-rules.pro"
             )
             buildConfigField("String", "BASE_URL", "\"https://api.sportsbooks.app/\"")
-            buildConfigField("String", "STRIPE_PUBLISHABLE_KEY", "\"pk_live_REPLACE_WITH_YOUR_KEY\"")
             signingConfig = signingConfigs.getByName("release")
         }
     }
@@ -102,9 +100,6 @@ dependencies {
     implementation(libs.okhttp)
     implementation(libs.okhttp.logging)
     implementation(libs.coil.compose)
-
-    // Stripe Payments
-    implementation(libs.stripe.android)
 
     // Google Maps
     implementation(libs.maps.compose)

@@ -89,5 +89,5 @@ data class MarkAttendanceRequestDto(
 
 @Serializable
 data class PaySplitShareRequestDto(
-    val stripePaymentIntentId: String
+    val paymentIntentId: String
 )
