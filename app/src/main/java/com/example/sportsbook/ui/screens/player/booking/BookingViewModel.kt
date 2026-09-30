@@ -4,9 +4,14 @@ import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.sportsbook.domain.model.Booking
+import com.example.sportsbook.domain.model.Coach
+import com.example.sportsbook.domain.model.Discount
 import com.example.sportsbook.domain.model.TimeSlot
+import com.example.sportsbook.domain.model.Venue
 import com.example.sportsbook.domain.repository.BookingRepository
+import com.example.sportsbook.domain.repository.CoachRepository
 import com.example.sportsbook.domain.repository.TimeSlotRepository
+import com.example.sportsbook.domain.repository.VenueRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -29,12 +34,25 @@ data class BookingUiState(
     val createdBookingId: Long? = null,
     val venueId: Long? = null,
     val coachId: Long? = null,
-)
+    val venue: Venue? = null,
+    val coach: Coach? = null,
+) {
+    val entityName: String get() = venue?.name ?: coach?.name ?: "Booking"
+    val entityAddress: String get() = venue?.address ?: coach?.address ?: ""
+    val entityPricePerHour: Double get() = venue?.pricePerHour ?: coach?.pricePerHour ?: 0.0
+    val entitySportEmoji: String get() = when ((venue?.sportType ?: coach?.sportType)?.name?.uppercase()) {
+        "BASKETBALL" -> "🏀"; "FOOTBALL" -> "⚽"; "TENNIS" -> "🎾"
+        "PADDLE" -> "🏓"; "VOLLEYBALL" -> "🏐"; else -> "🏟️"
+    }
+    val activeDiscount: Discount? get() = venue?.activeDiscount ?: coach?.activeDiscount
+}
 
 @HiltViewModel
 class BookingViewModel @Inject constructor(
     private val timeSlotRepository: TimeSlotRepository,
     private val bookingRepository: BookingRepository,
+    private val venueRepository: VenueRepository,
+    private val coachRepository: CoachRepository,
     savedStateHandle: SavedStateHandle,
 ) : ViewModel() {
 
@@ -55,6 +73,21 @@ class BookingViewModel @Inject constructor(
         }
 
         loadSlots()
+        loadEntity()
+    }
+
+    private fun loadEntity() {
+        viewModelScope.launch {
+            val state = _uiState.value
+            state.venueId?.let { id ->
+                venueRepository.getVenueById(id)
+                    .onSuccess { venue -> _uiState.update { it.copy(venue = venue) } }
+            }
+            state.coachId?.let { id ->
+                coachRepository.getCoachById(id)
+                    .onSuccess { coach -> _uiState.update { it.copy(coach = coach) } }
+            }
+        }
     }
 
     fun onDateChange(date: String) {
@@ -167,6 +200,7 @@ class BookingViewModel @Inject constructor(
                             coachId = slot.coachId,
                         )
                     }
+                    loadEntity()
                 }
                 .onFailure { error ->
                     _uiState.update { current ->

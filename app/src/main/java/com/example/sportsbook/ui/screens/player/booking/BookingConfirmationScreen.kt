@@ -87,6 +87,18 @@ fun BookingConfirmationScreen(
         }
     }
 
+    // Price calculation
+    val basePrice = uiState.selectedSlot?.priceOverride?.toInt()
+        ?: uiState.entityPricePerHour.takeIf { it > 0 }?.toInt()
+        ?: 0
+    val discountObj = uiState.activeDiscount
+    val discountAmount = when {
+        discountObj?.discountPercent != null -> (basePrice * discountObj.discountPercent / 100).toInt()
+        discountObj?.discountAmount != null -> discountObj.discountAmount.toInt()
+        else -> 0
+    }
+    val totalPrice = (basePrice - discountAmount).coerceAtLeast(0)
+
     Box(
         modifier = Modifier
             .fillMaxSize()
@@ -148,7 +160,7 @@ fun BookingConfirmationScreen(
                     contentAlignment = Alignment.BottomStart,
                 ) {
                     Text(
-                        text = uiState.selectedSlot?.let { "Venue Booking" } ?: "Arena Sport Center",
+                        text = uiState.entityName,
                         fontSize = 20.sp,
                         fontWeight = FontWeight.Bold,
                         color = Color.White,
@@ -159,8 +171,10 @@ fun BookingConfirmationScreen(
                 val slot = uiState.selectedSlot
                 BookingDetailRow("📅", "Date", slot?.slotDate?.toDisplayDate() ?: "—")
                 BookingDetailRow("🕐", "Time", slot?.displayTime ?: "—")
-                BookingDetailRow("🏀", "Court", "Court A - Indoor (Basketball)")
-                BookingDetailRow("📍", "Location", "Bul. Partizanski Odredi 17, Skopje")
+                BookingDetailRow(uiState.entitySportEmoji, "Sport", (uiState.venue?.sportType ?: uiState.coach?.sportType)?.name?.lowercase()?.replaceFirstChar { it.uppercase() } ?: "—")
+                if (uiState.entityAddress.isNotBlank()) {
+                    BookingDetailRow("📍", "Location", uiState.entityAddress)
+                }
             }
 
             Spacer(modifier = Modifier.height(16.dp))
@@ -238,11 +252,6 @@ fun BookingConfirmationScreen(
             Text("Price Breakdown", fontSize = 16.sp, fontWeight = FontWeight.Bold, color = DarkTextPrimary, modifier = Modifier.padding(horizontal = 16.dp))
             Spacer(modifier = Modifier.height(12.dp))
 
-            val basePrice = uiState.selectedSlot?.priceOverride?.toInt() ?: 1000
-            val discount = (basePrice * 0.25).toInt()
-            val serviceFee = 50
-            val total = basePrice - discount + serviceFee
-
             Column(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -251,15 +260,19 @@ fun BookingConfirmationScreen(
                     .background(DarkSurface)
                     .padding(16.dp),
             ) {
-                PriceRow("Court A - 1 hour", "$basePrice MKD", Color.Transparent)
-                PriceRow("25% Weekend Discount", "-$discount MKD", GreenAccent)
-                PriceRow("Service fee", "$serviceFee MKD", Color.Transparent)
+                PriceRow("${uiState.entityName} - 1 hour", "$basePrice MKD", Color.Transparent)
+                if (discountAmount > 0) {
+                    val discountLabel = discountObj?.title?.ifBlank { null }
+                        ?: discountObj?.discountPercent?.let { "${it.toInt()}% Discount" }
+                        ?: "Discount"
+                    PriceRow(discountLabel, "-$discountAmount MKD", GreenAccent)
+                }
                 Spacer(modifier = Modifier.height(8.dp))
                 Box(modifier = Modifier.fillMaxWidth().height(1.dp).background(DarkBorder))
                 Spacer(modifier = Modifier.height(12.dp))
                 Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
                     Text("Total", fontSize = 16.sp, fontWeight = FontWeight.Bold, color = DarkTextPrimary)
-                    Text("$total MKD", fontSize = 16.sp, fontWeight = FontWeight.Bold, color = DarkTextPrimary)
+                    Text("$totalPrice MKD", fontSize = 16.sp, fontWeight = FontWeight.Bold, color = DarkTextPrimary)
                 }
             }
 
@@ -280,20 +293,18 @@ fun BookingConfirmationScreen(
             ) {
                 Box(
                     modifier = Modifier
-                        .width(40.dp)
-                        .height(28.dp)
-                        .clip(RoundedCornerShape(6.dp))
-                        .background(Color(0xFF1A237E)),
+                        .size(40.dp)
+                        .clip(RoundedCornerShape(8.dp))
+                        .background(GreenAccent.copy(alpha = 0.15f)),
                     contentAlignment = Alignment.Center,
                 ) {
-                    Text("VISA", fontSize = 11.sp, fontWeight = FontWeight.Bold, color = Color.White)
+                    Text("💳", fontSize = 18.sp)
                 }
                 Spacer(modifier = Modifier.width(12.dp))
                 Column(modifier = Modifier.weight(1f)) {
-                    Text("Credit Card", fontSize = 12.sp, color = DarkTextSecondary)
-                    Text("**** **** **** 4532", fontSize = 14.sp, fontWeight = FontWeight.SemiBold, color = DarkTextPrimary)
+                    Text("Pay at Venue", fontSize = 14.sp, fontWeight = FontWeight.SemiBold, color = DarkTextPrimary)
+                    Text("Cash or card on arrival", fontSize = 12.sp, color = DarkTextSecondary)
                 }
-                Text("Change", fontSize = 13.sp, color = GreenAccent, fontWeight = FontWeight.SemiBold)
             }
 
             Spacer(modifier = Modifier.height(16.dp))
@@ -323,6 +334,7 @@ fun BookingConfirmationScreen(
         // Bottom bar
         ConfirmBottomBar(
             slot = uiState.selectedSlot,
+            totalPrice = totalPrice,
             isLoading = uiState.isBookingLoading,
             onConfirm = { viewModel.confirmBooking() },
             modifier = Modifier.align(Alignment.BottomCenter),
@@ -383,12 +395,12 @@ private fun PriceRow(label: String, value: String, textColor: Color) {
 @Composable
 private fun ConfirmBottomBar(
     slot: TimeSlot?,
+    totalPrice: Int = 0,
     isLoading: Boolean,
     onConfirm: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
-    val basePrice = slot?.priceOverride?.toInt() ?: 1000
-    val total = (basePrice * 0.75).toInt() + 50
+    val total = if (totalPrice > 0) totalPrice else slot?.priceOverride?.toInt() ?: 0
 
     Column(
         modifier = modifier
@@ -409,7 +421,10 @@ private fun ConfirmBottomBar(
             if (isLoading) {
                 CircularProgressIndicator(modifier = Modifier.size(20.dp), color = Color.White, strokeWidth = 2.dp)
             } else {
-                Text("Confirm & Pay $total MKD", fontSize = 16.sp, fontWeight = FontWeight.Bold, color = Color.White)
+                Text(
+                    text = if (total > 0) "Confirm Booking • $total MKD" else "Confirm Booking",
+                    fontSize = 16.sp, fontWeight = FontWeight.Bold, color = Color.White,
+                )
             }
         }
         Text(

@@ -15,9 +15,6 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.lazy.grid.GridCells
-import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
-import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -79,27 +76,10 @@ fun BookingCalendarScreen(
     var selectedDateIndex by remember { mutableIntStateOf(0) }
     var selectedSlotId by remember { mutableStateOf<Long?>(null) }
 
-    // Split slots into Morning / Afternoon / Evening buckets
-    val morningSlots = uiState.availableSlots.filter { it.startTime < "12:00" }
-    val afternoonSlots = uiState.availableSlots.filter { it.startTime >= "12:00" && it.startTime < "17:00" }
-    val eveningSlots = uiState.availableSlots.filter { it.startTime >= "17:00" }
-
-    // Placeholder courts
-    data class Court(val id: Int, val name: String, val detail: String)
-    val courts = listOf(
-        Court(0, "Court A - Indoor", "Full-size · Wood floor"),
-        Court(1, "Court B - Indoor", "Full-size · Rubber floor"),
-        Court(2, "Court C - Outdoor", "Half court · Concrete"),
-    )
-    var selectedCourtIndex by remember { mutableIntStateOf(0) }
-
-    // Placeholder duration options
-    val durations = listOf("1h" to "800 MKD", "1.5h" to "1,150 MKD", "2h" to "1,500 MKD")
-    var selectedDuration by remember { mutableIntStateOf(0) }
-
-    // Displayed price
+    // Displayed price from selected slot or venue/coach base price
     val displayedPrice = uiState.availableSlots.find { it.id == selectedSlotId }?.priceOverride?.toInt()
         ?: uiState.availableSlots.firstOrNull { it.isAvailable }?.priceOverride?.toInt()
+        ?: uiState.entityPricePerHour.takeIf { it > 0 }?.toInt()
 
     Column(
         modifier = Modifier
@@ -166,12 +146,14 @@ fun BookingCalendarScreen(
                         .background(Brush.linearGradient(listOf(GreenDark, GreenAccent))),
                     contentAlignment = Alignment.Center,
                 ) {
-                    Text("⚽", fontSize = 20.sp)
+                    Text(uiState.entitySportEmoji, fontSize = 20.sp)
                 }
                 Spacer(modifier = Modifier.width(12.dp))
                 Column {
-                    Text("Arena Sport Center", fontSize = 14.sp, fontWeight = FontWeight.SemiBold, color = DarkTextPrimary)
-                    Text("Bul. Partizanski Odredi 17", fontSize = 12.sp, color = DarkTextSecondary)
+                    Text(uiState.entityName, fontSize = 14.sp, fontWeight = FontWeight.SemiBold, color = DarkTextPrimary)
+                    if (uiState.entityAddress.isNotBlank()) {
+                        Text(uiState.entityAddress, fontSize = 12.sp, color = DarkTextSecondary)
+                    }
                 }
             }
 
@@ -222,32 +204,22 @@ fun BookingCalendarScreen(
 
             Spacer(modifier = Modifier.height(20.dp))
 
-            // ── Sport filter ─────────────────────────────────────────────
-            SectionLabel("Select Sport")
-            Spacer(modifier = Modifier.height(12.dp))
-
-            val sportOptions = listOf("🏀 Basketball", "⚽ Football", "🎾 Tennis", "🏐 Volleyball")
-            var selectedSport by remember { mutableIntStateOf(0) }
-            Row(
-                modifier = Modifier
-                    .horizontalScroll(rememberScrollState())
-                    .padding(horizontal = 16.dp),
-                horizontalArrangement = Arrangement.spacedBy(8.dp),
-            ) {
-                sportOptions.forEachIndexed { index, sport ->
+            // ── Sport badge ──────────────────────────────────────────────
+            val sportName = (uiState.venue?.sportType ?: uiState.coach?.sportType)?.name
+                ?.lowercase()?.replaceFirstChar { it.uppercase() }
+            if (sportName != null) {
+                Row(modifier = Modifier.padding(horizontal = 16.dp)) {
                     Box(
                         modifier = Modifier
                             .clip(RoundedCornerShape(20.dp))
-                            .background(if (index == selectedSport) GreenAccent else DarkSurface)
-                            .clickable { selectedSport = index }
+                            .background(GreenAccent)
                             .padding(horizontal = 14.dp, vertical = 6.dp),
                     ) {
-                        Text(sport, fontSize = 13.sp, color = DarkTextPrimary)
+                        Text("${uiState.entitySportEmoji} $sportName", fontSize = 13.sp, color = DarkTextPrimary)
                     }
                 }
+                Spacer(modifier = Modifier.height(20.dp))
             }
-
-            Spacer(modifier = Modifier.height(20.dp))
 
             // ── Select Time ──────────────────────────────────────────────
             SectionLabel("Select Time")
@@ -301,86 +273,24 @@ fun BookingCalendarScreen(
                 }
             }
 
-            Spacer(modifier = Modifier.height(20.dp))
-
-            // ── Duration ─────────────────────────────────────────────────
-            SectionLabel("Duration")
-            Spacer(modifier = Modifier.height(10.dp))
-
-            Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(horizontal = 16.dp),
-                horizontalArrangement = Arrangement.spacedBy(8.dp),
-            ) {
-                durations.forEachIndexed { index, (dur, price) ->
-                    val isActive = index == selectedDuration
-                    Column(
-                        horizontalAlignment = Alignment.CenterHorizontally,
-                        modifier = Modifier
-                            .weight(1f)
-                            .clip(RoundedCornerShape(10.dp))
-                            .background(if (isActive) Color(0xFF1B3A1E) else DarkSurface)
-                            .border(
-                                width = if (isActive) 1.dp else 0.dp,
-                                color = if (isActive) GreenAccent else Color.Transparent,
-                                shape = RoundedCornerShape(10.dp),
-                            )
-                            .clickable { selectedDuration = index }
-                            .padding(12.dp),
-                    ) {
-                        Text(dur, fontSize = 16.sp, fontWeight = FontWeight.Bold, color = DarkTextPrimary)
-                        Text(price, fontSize = 12.sp, color = if (isActive) GreenAccent else DarkTextSecondary, modifier = Modifier.padding(top = 2.dp))
-                    }
-                }
-            }
-
-            Spacer(modifier = Modifier.height(20.dp))
-
-            // ── Select Court ─────────────────────────────────────────────
-            SectionLabel("Select Court")
-            Spacer(modifier = Modifier.height(10.dp))
-
-            courts.forEachIndexed { index, court ->
-                val isSelected = index == selectedCourtIndex
+            // ── Active discount badge ─────────────────────────────────
+            uiState.activeDiscount?.let { discount ->
+                Spacer(modifier = Modifier.height(16.dp))
                 Row(
-                    verticalAlignment = Alignment.CenterVertically,
                     modifier = Modifier
                         .fillMaxWidth()
-                        .padding(horizontal = 16.dp, vertical = 4.dp)
+                        .padding(horizontal = 16.dp)
                         .clip(RoundedCornerShape(12.dp))
-                        .background(if (isSelected) Color(0xFF1B3A1E) else DarkSurface)
-                        .border(
-                            width = if (isSelected) 1.dp else 0.dp,
-                            color = if (isSelected) GreenAccent else Color.Transparent,
-                            shape = RoundedCornerShape(12.dp),
-                        )
-                        .clickable { selectedCourtIndex = index }
-                        .padding(12.dp),
+                        .background(GreenAccent.copy(alpha = 0.15f))
+                        .border(1.dp, GreenAccent.copy(alpha = 0.3f), RoundedCornerShape(12.dp))
+                        .padding(horizontal = 16.dp, vertical = 12.dp),
+                    verticalAlignment = Alignment.CenterVertically,
                 ) {
-                    Box(
-                        modifier = Modifier
-                            .size(40.dp)
-                            .clip(RoundedCornerShape(8.dp))
-                            .background(DarkBorder),
-                        contentAlignment = Alignment.Center,
-                    ) {
-                        Text("🏀", fontSize = 18.sp)
-                    }
-                    Spacer(modifier = Modifier.width(12.dp))
+                    Text("🏷️", fontSize = 18.sp)
+                    Spacer(modifier = Modifier.width(10.dp))
                     Column(modifier = Modifier.weight(1f)) {
-                        Text(court.name, fontSize = 14.sp, fontWeight = FontWeight.SemiBold, color = DarkTextPrimary)
-                        Text(court.detail, fontSize = 12.sp, color = DarkTextSecondary)
-                    }
-                    Box(
-                        modifier = Modifier
-                            .size(22.dp)
-                            .clip(CircleShape)
-                            .background(if (isSelected) GreenAccent else Color.Transparent)
-                            .border(2.dp, if (isSelected) GreenAccent else Color(0xFF444444), CircleShape),
-                        contentAlignment = Alignment.Center,
-                    ) {
-                        if (isSelected) Text("✓", fontSize = 12.sp, color = Color.White)
+                        Text(discount.title.ifBlank { "Discount Available" }, fontSize = 14.sp, fontWeight = FontWeight.SemiBold, color = GreenAccent)
+                        Text(discount.displayValue, fontSize = 12.sp, color = DarkTextSecondary)
                     }
                 }
             }
@@ -402,7 +312,7 @@ fun BookingCalendarScreen(
                 Text("From", fontSize = 11.sp, color = DarkTextSecondary)
                 Row(verticalAlignment = Alignment.Bottom) {
                     Text(
-                        text = "${displayedPrice ?: 800} MKD",
+                        text = "${displayedPrice ?: "—"} MKD",
                         fontSize = 22.sp,
                         fontWeight = FontWeight.ExtraBold,
                         color = GreenAccent,

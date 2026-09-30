@@ -20,6 +20,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -30,6 +31,9 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.example.sportsbook.ui.common.toDisplayDate
 import com.example.sportsbook.ui.theme.DarkBg
 import com.example.sportsbook.ui.theme.DarkBorder
 import com.example.sportsbook.ui.theme.DarkSurface
@@ -43,15 +47,34 @@ import com.example.sportsbook.ui.theme.GreenDark
 @Composable
 fun BookingSuccessScreen(
     bookingId: Long,
-    venueName: String = "Arena Sport Center",
-    date: String = "",
-    time: String = "",
-    court: String = "Court A - Indoor Basketball",
-    totalPrice: Double = 0.0,
     onViewDetails: () -> Unit,
     onInviteFriends: () -> Unit,
     onBackToHome: () -> Unit,
+    viewModel: BookingSuccessViewModel = hiltViewModel(),
 ) {
+    val uiState by viewModel.uiState.collectAsStateWithLifecycle()
+    val booking = uiState.booking
+    val level = uiState.level
+
+    val venueName = booking?.venue?.name ?: booking?.coach?.name ?: "Venue"
+    val sportName = (booking?.venue?.sportType ?: booking?.coach?.sportType)
+        ?.name?.lowercase()?.replaceFirstChar { it.uppercase() } ?: ""
+    val slot = booking?.timeSlot
+    val displayDate = slot?.slotDate?.toDisplayDate() ?: "—"
+    val displayTime = slot?.displayTime ?: "—"
+    val duration = if (slot != null) {
+        try {
+            val start = slot.startTime.split(":").let { it[0].toInt() * 60 + it[1].toInt() }
+            val end = slot.endTime.split(":").let { it[0].toInt() * 60 + it[1].toInt() }
+            val mins = end - start
+            if (mins >= 60) "${mins / 60}h${if (mins % 60 > 0) " ${mins % 60}m" else ""}" else "${mins}m"
+        } catch (_: Exception) { "1h" }
+    } else "—"
+    val totalPrice = booking?.totalPrice?.toInt() ?: 0
+
+    val xpRemaining = level?.let { it.xpRangeForLevel - it.xpForCurrentLevel } ?: 0
+    val nextLevel = (level?.currentLevel ?: 1) + 1
+
     Column(
         modifier = Modifier
             .fillMaxSize()
@@ -83,7 +106,7 @@ fun BookingSuccessScreen(
         )
 
         Text(
-            text = "Your booking at $venueName has been confirmed. See you on the court!",
+            text = "Your booking at $venueName has been confirmed. See you there!",
             fontSize = 14.sp,
             color = DarkTextSecondary,
             textAlign = TextAlign.Center,
@@ -99,32 +122,32 @@ fun BookingSuccessScreen(
                 .background(DarkSurface)
                 .padding(20.dp),
         ) {
-            // Header
             Column(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalAlignment = Alignment.CenterHorizontally,
             ) {
                 Text(venueName, fontSize = 16.sp, fontWeight = FontWeight.Bold, color = DarkTextPrimary)
-                Text(court, fontSize = 12.sp, color = DarkTextSecondary, modifier = Modifier.padding(top = 2.dp))
+                if (sportName.isNotBlank()) {
+                    Text(sportName, fontSize = 12.sp, color = DarkTextSecondary, modifier = Modifier.padding(top = 2.dp))
+                }
             }
 
             Spacer(modifier = Modifier.height(12.dp))
             Box(modifier = Modifier.fillMaxWidth().height(1.dp).background(DarkBorder))
             Spacer(modifier = Modifier.height(12.dp))
 
-            // Summary rows
-            SummaryRow("Date", date.ifBlank { "Sun, May 25" })
-            SummaryRow("Time", time.ifBlank { "15:00 - 16:00" })
-            SummaryRow("Duration", "1 hour")
+            SummaryRow("Date", displayDate)
+            SummaryRow("Time", displayTime)
+            SummaryRow("Duration", duration)
 
             Spacer(modifier = Modifier.height(8.dp))
             Box(modifier = Modifier.fillMaxWidth().height(1.dp).background(DarkBorder))
             Spacer(modifier = Modifier.height(8.dp))
 
             Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
-                Text("Paid", fontSize = 13.sp, color = DarkTextSecondary)
+                Text("Total", fontSize = 13.sp, color = DarkTextSecondary)
                 Text(
-                    text = "${if (totalPrice > 0) totalPrice.toInt() else 800} MKD",
+                    text = if (totalPrice > 0) "$totalPrice MKD" else "—",
                     fontSize = 13.sp,
                     fontWeight = FontWeight.SemiBold,
                     color = GreenAccent,
@@ -142,7 +165,7 @@ fun BookingSuccessScreen(
                 contentAlignment = Alignment.Center,
             ) {
                 Text(
-                    text = "Booking ID: #BK-2026-${bookingId.toString().padStart(5, '0')}",
+                    text = "Booking ID: #BK-${bookingId}",
                     fontSize = 12.sp,
                     color = DarkTextSecondary,
                 )
@@ -151,37 +174,37 @@ fun BookingSuccessScreen(
 
         Spacer(modifier = Modifier.height(20.dp))
 
-        // ── XP earned card ───────────────────────────────────────────────
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .clip(RoundedCornerShape(12.dp))
-                .background(
-                    Brush.linearGradient(listOf(Color(0xFF1B3A1E), DarkSurface))
-                )
-                .border(1.dp, GreenDark, RoundedCornerShape(12.dp))
-                .padding(horizontal = 16.dp, vertical = 14.dp),
-            verticalAlignment = Alignment.CenterVertically,
-        ) {
-            Box(
+        // ── XP card ─────────────────────────────────────────────────────
+        if (level != null) {
+            Row(
                 modifier = Modifier
-                    .clip(RoundedCornerShape(8.dp))
-                    .background(GreenAccent)
-                    .padding(horizontal = 12.dp, vertical = 6.dp),
+                    .fillMaxWidth()
+                    .clip(RoundedCornerShape(12.dp))
+                    .background(
+                        Brush.linearGradient(listOf(Color(0xFF1B3A1E), DarkSurface))
+                    )
+                    .border(1.dp, GreenDark, RoundedCornerShape(12.dp))
+                    .padding(horizontal = 16.dp, vertical = 14.dp),
+                verticalAlignment = Alignment.CenterVertically,
             ) {
-                Text("+50 XP", fontSize = 14.sp, fontWeight = FontWeight.Bold, color = Color.White)
+                Box(
+                    modifier = Modifier
+                        .clip(RoundedCornerShape(8.dp))
+                        .background(GreenAccent)
+                        .padding(horizontal = 12.dp, vertical = 6.dp),
+                ) {
+                    Text("Level ${level.currentLevel}", fontSize = 14.sp, fontWeight = FontWeight.Bold, color = Color.White)
+                }
+                Spacer(modifier = Modifier.width(12.dp))
+                Column {
+                    Text("${level.totalXp} XP Total", fontSize = 14.sp, fontWeight = FontWeight.SemiBold, color = DarkTextPrimary)
+                    Text("$xpRemaining XP to Level $nextLevel", fontSize = 11.sp, color = Color(0xFF81C784))
+                }
             }
-            Spacer(modifier = Modifier.width(12.dp))
-            Column {
-                Text("XP Earned!", fontSize = 14.sp, fontWeight = FontWeight.SemiBold, color = DarkTextPrimary)
-                Text("You're 120 XP from Level 8", fontSize = 11.sp, color = Color(0xFF81C784))
-            }
+            Spacer(modifier = Modifier.height(20.dp))
         }
 
-        Spacer(modifier = Modifier.height(20.dp))
-
         // ── Action buttons ───────────────────────────────────────────────
-        // Primary
         Box(
             modifier = Modifier
                 .fillMaxWidth()
@@ -196,7 +219,6 @@ fun BookingSuccessScreen(
 
         Spacer(modifier = Modifier.height(10.dp))
 
-        // Secondary
         Box(
             modifier = Modifier
                 .fillMaxWidth()
@@ -211,7 +233,6 @@ fun BookingSuccessScreen(
 
         Spacer(modifier = Modifier.height(10.dp))
 
-        // Share row
         Row(
             modifier = Modifier.fillMaxWidth(),
             horizontalArrangement = Arrangement.spacedBy(12.dp),
@@ -235,7 +256,6 @@ fun BookingSuccessScreen(
 
         Spacer(modifier = Modifier.height(10.dp))
 
-        // Back to home
         Box(
             modifier = Modifier
                 .fillMaxWidth()
@@ -270,15 +290,23 @@ private fun SummaryRow(label: String, value: String) {
 @Preview(showBackground = true, backgroundColor = 0xFF121212)
 @Composable
 private fun BookingSuccessScreenPreview() {
-    BookingSuccessScreen(
-            bookingId = 25251L,
-            venueName = "Arena Sport Center",
-            date = "Sun, May 25",
-            time = "15:00 - 16:00",
-            court = "Court A - Indoor Basketball",
-            totalPrice = 800.0,
-            onViewDetails = {},
-            onInviteFriends = {},
-            onBackToHome = {},
-        )
+    Column(
+        modifier = Modifier
+            .fillMaxSize()
+            .background(DarkBg)
+            .verticalScroll(rememberScrollState())
+            .padding(horizontal = 24.dp, vertical = 40.dp),
+        horizontalAlignment = Alignment.CenterHorizontally,
+    ) {
+        Box(
+            modifier = Modifier.size(120.dp).clip(CircleShape)
+                .background(Brush.linearGradient(listOf(GreenDark, GreenAccent))),
+            contentAlignment = Alignment.Center,
+        ) {
+            Text("✓", fontSize = 56.sp, color = Color.White, fontWeight = FontWeight.Bold)
+        }
+        Spacer(modifier = Modifier.height(24.dp))
+        Text("Booking Confirmed!", fontSize = 24.sp, fontWeight = FontWeight.ExtraBold, color = DarkTextPrimary)
+        Text("Your booking has been confirmed.", fontSize = 14.sp, color = DarkTextSecondary, textAlign = TextAlign.Center)
     }
+}
