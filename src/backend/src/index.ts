@@ -45,45 +45,45 @@ app.use('/api', routes);
 // Error handler (must be last)
 app.use(errorHandler);
 
-const server = app.listen(env.port, () => {
-  logger.info(`SportsBooks API running on port ${env.port}`);
-  logger.info(`Health check: http://localhost:${env.port}/health`);
-  logger.info(`API base:     http://localhost:${env.port}/api`);
-});
-
-const shutdown = async (signal: string) => {
-  logger.info(`${signal} received. Shutting down gracefully...`);
-  server.close(() => {
-    logger.info('HTTP server closed');
-    pool.end().then(() => {
-      logger.info('Database pool drained');
-      process.exit(0);
-    });
+if (process.env.NODE_ENV !== 'test') {
+  const server = app.listen(env.port, () => {
+    logger.info(`SportsBooks API running on port ${env.port}`);
+    logger.info(`Health check: http://localhost:${env.port}/health`);
+    logger.info(`API base:     http://localhost:${env.port}/api`);
   });
-  // Force exit after 10 seconds
-  setTimeout(() => {
-    logger.error('Forced shutdown after timeout');
-    process.exit(1);
-  }, 10000);
-};
 
-process.on('SIGTERM', () => shutdown('SIGTERM'));
-process.on('SIGINT', () => shutdown('SIGINT'));
-process.on('uncaughtException', (err) => {
-  logger.error(err, 'Uncaught exception');
-  shutdown('uncaughtException');
-});
-process.on('unhandledRejection', (reason) => {
-  logger.error({ reason }, 'Unhandled rejection');
-  shutdown('unhandledRejection');
-});
+  const shutdown = async (signal: string) => {
+    logger.info(`${signal} received. Shutting down gracefully...`);
+    server.close(() => {
+      logger.info('HTTP server closed');
+      pool.end().then(() => {
+        logger.info('Database pool drained');
+        process.exit(0);
+      });
+    });
+    setTimeout(() => {
+      logger.error('Forced shutdown after timeout');
+      process.exit(1);
+    }, 10000);
+  };
 
-// Run booking expiry check every 15 minutes
-setInterval(expirePendingBookings, 15 * 60 * 1000);
-// Also run once on startup
-expirePendingBookings();
+  process.on('SIGTERM', () => shutdown('SIGTERM'));
+  process.on('SIGINT', () => shutdown('SIGINT'));
+  process.on('uncaughtException', (err) => {
+    logger.error(err, 'Uncaught exception');
+    shutdown('uncaughtException');
+  });
+  process.on('unhandledRejection', (reason) => {
+    logger.error({ reason }, 'Unhandled rejection');
+    shutdown('unhandledRejection');
+  });
 
-// Partner approval reminder cron (+2h / +6h emails)
-startReminderJob();
+  // Run booking expiry check every 15 minutes
+  setInterval(expirePendingBookings, 15 * 60 * 1000);
+  expirePendingBookings();
+
+  // Partner approval reminder cron (+2h / +6h emails)
+  startReminderJob();
+}
 
 export default app;

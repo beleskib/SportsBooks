@@ -7,6 +7,7 @@ import {
   removeTestUser,
   removeTestVenue,
   removeTestBooking,
+  closePool,
 } from './testHelpers';
 
 describe('Payments API', () => {
@@ -42,7 +43,7 @@ describe('Payments API', () => {
       .set(authHeader(player.firebaseUid))
       .send({ timeSlotId: Number(slot.id) });
 
-    const bookingId = booking.body.data.id;
+    const bookingId = Number(booking.body.data.id);
     bookingIds.push(bookingId);
 
     await agent()
@@ -144,12 +145,12 @@ describe('Payments API', () => {
         .set(authHeader(player.firebaseUid))
         .send({ timeSlotId: Number(slot.id) });
 
-      bookingIds.push(booking.body.data.id);
+      bookingIds.push(Number(booking.body.data.id));
 
       const res = await agent()
         .post('/api/payments/cash-confirm')
         .set(authHeader(player.firebaseUid))
-        .send({ bookingId: booking.body.data.id });
+        .send({ bookingId: Number(booking.body.data.id) });
 
       expect([400, 422]).toContain(res.status);
     });

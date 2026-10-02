@@ -1,4 +1,4 @@
-import { agent, authHeader, createTestUser, removeTestUser } from './testHelpers';
+import { agent, authHeader, createTestUser, removeTestUser, closePool } from './testHelpers';
 
 describe('Auth API', () => {
   const testUids: string[] = [];
@@ -18,7 +18,7 @@ describe('Auth API', () => {
       const res = await agent()
         .post('/api/auth/register')
         .set(authHeader(uid))
-        .send({ displayName: 'New Player' });
+        .send({ displayName: 'New Player', email: `${uid}@test.com` });
 
       expect(res.status).toBe(201);
       expect(res.body.success).toBe(true);
@@ -36,7 +36,7 @@ describe('Auth API', () => {
       const first = await agent()
         .post('/api/auth/register')
         .set(authHeader(uid))
-        .send({ displayName: 'First Reg' });
+        .send({ displayName: 'First Reg', email: `${uid}@test.com` });
 
       expect(first.status).toBe(201);
       testUserIds.push(first.body.data.id);
@@ -57,7 +57,7 @@ describe('Auth API', () => {
       const res = await agent()
         .post('/api/auth/register')
         .set(authHeader(uid))
-        .send({});
+        .send({ email: `${uid}@test.com` });
 
       expect(res.status).toBe(400);
       expect(res.body.success).toBe(false);

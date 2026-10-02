@@ -12,6 +12,7 @@ const config: Config = {
   },
   clearMocks: true,
   testTimeout: 15000,
+  silent: true,
 };
 
 export default config;
