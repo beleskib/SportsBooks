@@ -3,10 +3,14 @@ package com.example.sportsbook.ui.screens.player.venue
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.example.sportsbook.domain.model.Match
 import com.example.sportsbook.domain.model.Review
+import com.example.sportsbook.domain.model.TimeSlot
 import com.example.sportsbook.domain.model.Venue
 import com.example.sportsbook.domain.enums.SportType
+import com.example.sportsbook.domain.repository.MatchRepository
 import com.example.sportsbook.domain.repository.ReviewRepository
+import com.example.sportsbook.domain.repository.TimeSlotRepository
 import com.example.sportsbook.domain.repository.VenueRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.async
@@ -15,12 +19,17 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import java.time.LocalDate
+import java.time.format.DateTimeFormatter
 import javax.inject.Inject
 
 data class VenueUiState(
     val venues: List<Venue> = emptyList(),
     val selectedVenue: Venue? = null,
     val reviews: List<Review> = emptyList(),
+    val timeSlots: List<TimeSlot> = emptyList(),
+    val venueMatches: List<Match> = emptyList(),
+    val selectedDate: LocalDate = LocalDate.now(),
     val searchQuery: String = "",
     val isLoading: Boolean = false,
     val error: String? = null
@@ -30,6 +39,8 @@ data class VenueUiState(
 class VenueViewModel @Inject constructor(
     private val venueRepository: VenueRepository,
     private val reviewRepository: ReviewRepository,
+    private val timeSlotRepository: TimeSlotRepository,
+    private val matchRepository: MatchRepository,
     private val savedStateHandle: SavedStateHandle
 ) : ViewModel() {
 
@@ -92,6 +103,8 @@ class VenueViewModel @Inject constructor(
                         error = null
                     )
                 }
+                loadTimeSlotsForDate(venueId, _uiState.value.selectedDate)
+                loadVenueMatches(venueId)
             } else {
                 _uiState.update {
                     it.copy(
@@ -100,6 +113,35 @@ class VenueViewModel @Inject constructor(
                     )
                 }
             }
+        }
+    }
+
+    fun selectDate(date: LocalDate) {
+        _uiState.update { it.copy(selectedDate = date) }
+        val venueId = _uiState.value.selectedVenue?.id ?: return
+        loadTimeSlotsForDate(venueId, date)
+    }
+
+    private fun loadTimeSlotsForDate(venueId: Long, date: LocalDate) {
+        viewModelScope.launch {
+            val dateStr = date.format(DateTimeFormatter.ISO_LOCAL_DATE)
+            timeSlotRepository.getAvailableSlots(
+                venueId = venueId,
+                dateFrom = dateStr,
+                dateTo = dateStr
+            ).onSuccess { slots ->
+                _uiState.update { it.copy(timeSlots = slots) }
+            }
+        }
+    }
+
+    private fun loadVenueMatches(venueId: Long) {
+        viewModelScope.launch {
+            matchRepository.listMatches(status = "open")
+                .onSuccess { matches ->
+                    val venueMatches = matches.filter { it.venueId == venueId }
+                    _uiState.update { it.copy(venueMatches = venueMatches) }
+                }
         }
     }
 

@@ -1,5 +1,6 @@
 package com.example.sportsbook.ui.screens.player.booking
 
+import android.widget.Toast
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -20,6 +21,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -237,6 +239,7 @@ fun BookingSuccessScreen(
             modifier = Modifier.fillMaxWidth(),
             horizontalArrangement = Arrangement.spacedBy(12.dp),
         ) {
+            val actionContext = LocalContext.current
             val shareActions = listOf("💬" to "Share", "📅" to "Add to Calendar", "📌" to "Get Directions")
             shareActions.forEach { (icon, label) ->
                 Column(
@@ -245,7 +248,9 @@ fun BookingSuccessScreen(
                         .weight(1f)
                         .clip(RoundedCornerShape(10.dp))
                         .background(DarkSurface)
-                        .clickable { }
+                        .clickable {
+                            Toast.makeText(actionContext, "$label coming soon", Toast.LENGTH_SHORT).show()
+                        }
                         .padding(vertical = 10.dp),
                 ) {
                     Text(icon, fontSize = 20.sp)

@@ -17,8 +17,13 @@ import javax.inject.Inject
 data class AddFriendUiState(
     val query: String = "",
     val searchResults: List<Friendship> = emptyList(),
+    val pendingRequests: List<Friendship> = emptyList(),
+    val suggestedPlayers: List<Friendship> = emptyList(),
     val isSearching: Boolean = false,
+    val isLoadingPending: Boolean = false,
+    val isLoadingSuggested: Boolean = false,
     val sentRequests: Set<Long> = emptySet(),
+    val respondedRequests: Set<Long> = emptySet(),
     val error: String? = null
 )
 
@@ -31,6 +36,37 @@ class AddFriendViewModel @Inject constructor(
     val uiState: StateFlow<AddFriendUiState> = _uiState.asStateFlow()
     private var searchJob: Job? = null
 
+    init {
+        loadPendingRequests()
+        loadSuggestedPlayers()
+    }
+
+    fun loadPendingRequests() {
+        viewModelScope.launch {
+            _uiState.update { it.copy(isLoadingPending = true) }
+            friendshipRepository.getPendingRequests()
+                .onSuccess { requests ->
+                    _uiState.update { it.copy(pendingRequests = requests, isLoadingPending = false) }
+                }
+                .onFailure { e ->
+                    _uiState.update { it.copy(isLoadingPending = false, error = e.message) }
+                }
+        }
+    }
+
+    private fun loadSuggestedPlayers() {
+        viewModelScope.launch {
+            _uiState.update { it.copy(isLoadingSuggested = true) }
+            friendshipRepository.searchUsers("")
+                .onSuccess { players ->
+                    _uiState.update { it.copy(suggestedPlayers = players, isLoadingSuggested = false) }
+                }
+                .onFailure { e ->
+                    _uiState.update { it.copy(isLoadingSuggested = false, error = e.message) }
+                }
+        }
+    }
+
     fun onQueryChange(query: String) {
         _uiState.update { it.copy(query = query) }
         searchJob?.cancel()
@@ -39,7 +75,7 @@ class AddFriendViewModel @Inject constructor(
             return
         }
         searchJob = viewModelScope.launch {
-            delay(500) // Debounce
+            delay(500)
             _uiState.update { it.copy(isSearching = true) }
             friendshipRepository.searchUsers(query)
                 .onSuccess { results ->
@@ -56,6 +92,40 @@ class AddFriendViewModel @Inject constructor(
             friendshipRepository.sendFriendRequest(userId)
                 .onSuccess {
                     _uiState.update { it.copy(sentRequests = it.sentRequests + userId) }
+                }
+                .onFailure { e ->
+                    _uiState.update { it.copy(error = e.message) }
+                }
+        }
+    }
+
+    fun acceptRequest(friendshipId: Long) {
+        viewModelScope.launch {
+            friendshipRepository.respondToFriendRequest(friendshipId, true)
+                .onSuccess {
+                    _uiState.update { state ->
+                        state.copy(
+                            respondedRequests = state.respondedRequests + friendshipId,
+                            pendingRequests = state.pendingRequests.filter { it.id != friendshipId }
+                        )
+                    }
+                }
+                .onFailure { e ->
+                    _uiState.update { it.copy(error = e.message) }
+                }
+        }
+    }
+
+    fun declineRequest(friendshipId: Long) {
+        viewModelScope.launch {
+            friendshipRepository.respondToFriendRequest(friendshipId, false)
+                .onSuccess {
+                    _uiState.update { state ->
+                        state.copy(
+                            respondedRequests = state.respondedRequests + friendshipId,
+                            pendingRequests = state.pendingRequests.filter { it.id != friendshipId }
+                        )
+                    }
                 }
                 .onFailure { e ->
                     _uiState.update { it.copy(error = e.message) }

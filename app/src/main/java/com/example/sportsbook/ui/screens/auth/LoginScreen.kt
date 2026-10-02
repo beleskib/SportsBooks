@@ -1,5 +1,6 @@
 package com.example.sportsbook.ui.screens.auth
 
+import android.widget.Toast
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -22,6 +23,7 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -148,11 +150,14 @@ fun LoginScreen(
                         .padding(top = 8.dp),
                     horizontalArrangement = Arrangement.End,
                 ) {
+                    val forgotContext = LocalContext.current
                     Text(
                         "Forgot password?",
                         fontSize = 13.sp,
                         color = GreenAccent,
-                        modifier = Modifier.clickable { },
+                        modifier = Modifier.clickable {
+                            Toast.makeText(forgotContext, "Password reset coming soon", Toast.LENGTH_SHORT).show()
+                        },
                     )
                 }
 
@@ -204,8 +209,13 @@ fun LoginScreen(
                     .padding(horizontal = 24.dp),
                 verticalArrangement = Arrangement.spacedBy(12.dp),
             ) {
-                SocialButton(emoji = "G", label = "Continue with Google", borderColor = Color(0xFF4285F4), onClick = {})
-                SocialButton(emoji = "", label = "Continue with Apple", borderColor = Color.White, onClick = {})
+                val socialContext = LocalContext.current
+                SocialButton(emoji = "G", label = "Continue with Google", borderColor = Color(0xFF4285F4), onClick = {
+                    Toast.makeText(socialContext, "Google sign-in coming soon", Toast.LENGTH_SHORT).show()
+                })
+                SocialButton(emoji = "", label = "Continue with Apple", borderColor = Color.White, onClick = {
+                    Toast.makeText(socialContext, "Apple sign-in coming soon", Toast.LENGTH_SHORT).show()
+                })
             }
 
             // ── Sign up link

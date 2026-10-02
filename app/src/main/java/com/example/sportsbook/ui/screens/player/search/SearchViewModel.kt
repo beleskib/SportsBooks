@@ -21,6 +21,7 @@ data class SearchUiState(
     val venues: List<Venue> = emptyList(),
     val coaches: List<Coach> = emptyList(),
     val matches: List<Match> = emptyList(),
+    val selectedFilter: Int = 0,
     val isSearching: Boolean = false,
     val hasSearched: Boolean = false,
     val error: String? = null
@@ -34,6 +35,10 @@ class SearchViewModel @Inject constructor(
     private val _uiState = MutableStateFlow(SearchUiState())
     val uiState: StateFlow<SearchUiState> = _uiState.asStateFlow()
     private var searchJob: Job? = null
+
+    fun onFilterSelected(index: Int) {
+        _uiState.update { it.copy(selectedFilter = index) }
+    }
 
     fun onQueryChange(query: String) {
         _uiState.update { it.copy(query = query) }

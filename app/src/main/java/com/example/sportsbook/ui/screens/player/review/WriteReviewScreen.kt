@@ -1,5 +1,6 @@
 package com.example.sportsbook.ui.screens.player.review
 
+import android.widget.Toast
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -27,6 +28,7 @@ import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
@@ -273,12 +275,15 @@ fun WriteReviewScreen(
             ) {
                 Text("Add Photos (optional)", fontSize = 14.sp, fontWeight = FontWeight.Bold, color = DarkTextPrimary, modifier = Modifier.padding(bottom = 10.dp))
                 Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+                    val photoContext = LocalContext.current
                     Box(
                         modifier = Modifier
                             .size(72.dp)
                             .clip(RoundedCornerShape(12.dp))
                             .background(DarkSurface)
-                            .clickable { },
+                            .clickable {
+                                Toast.makeText(photoContext, "Photo upload coming soon", Toast.LENGTH_SHORT).show()
+                            },
                         contentAlignment = Alignment.Center,
                     ) {
                         Text("+", fontSize = 24.sp, color = Color(0xFF555555))

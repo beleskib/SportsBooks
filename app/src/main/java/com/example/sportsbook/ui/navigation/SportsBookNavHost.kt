@@ -461,6 +461,7 @@ fun SportsBookNavHost(
                     onNavigateToChats = { navController.navigate(Route.ChatsList) },
                     onNavigateToAddFriend = { navController.navigate(Route.AddFriend) },
                     onNavigateToCreateParty = { navController.navigate(Route.CreateParty) },
+                    onNavigateToFriendRequests = { navController.navigate(Route.FriendRequests) },
                     onFriendClick = { userId, name, photoUrl ->
                         navController.navigate(Route.FriendChat(userId, name, photoUrl))
                     },

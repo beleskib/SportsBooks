@@ -65,6 +65,7 @@ import com.example.sportsbook.domain.enums.ParticipantRole
 import com.example.sportsbook.domain.enums.ParticipantStatus
 import com.example.sportsbook.domain.enums.SportType
 import com.example.sportsbook.domain.model.Match
+import com.example.sportsbook.domain.model.MatchChatMessage
 import com.example.sportsbook.domain.model.MatchParticipant
 import com.example.sportsbook.ui.common.toFriendlyDate
 import com.example.sportsbook.ui.theme.DarkBg
@@ -173,7 +174,7 @@ fun MatchDetailScreen(
                     Spacer(modifier = Modifier.height(16.dp))
                     MatchVenueCard(match = currentMatch)
                     Spacer(modifier = Modifier.height(16.dp))
-                    MatchChatPreviewSection(matchId = currentMatch.id, onOpenChat = { onOpenChat(currentMatch.id) })
+                    MatchChatPreviewSection(chatMessages = uiState.chatPreview, onOpenChat = { onOpenChat(currentMatch.id) })
                     Spacer(modifier = Modifier.height(16.dp))
                 }
             }
@@ -800,13 +801,7 @@ private fun MatchVenueCard(match: Match) {
 // ─────────────────────────────────────────────────────────────────────────────
 
 @Composable
-private fun MatchChatPreviewSection(matchId: Long, onOpenChat: () -> Unit) {
-    // Static preview messages (real messages would come from a chat VM)
-    val previewMessages = listOf(
-        Triple("Jordan L.", "See you all at 6pm! Don't be late 🏀", "2h ago"),
-        Triple("Alex M.", "Bringing extra water, it's gonna be hot", "1h ago")
-    )
-
+private fun MatchChatPreviewSection(chatMessages: List<MatchChatMessage>, onOpenChat: () -> Unit) {
     Box(
         modifier = Modifier
             .fillMaxWidth()
@@ -823,31 +818,40 @@ private fun MatchChatPreviewSection(matchId: Long, onOpenChat: () -> Unit) {
                 fontWeight = FontWeight.Bold
             )
 
-            previewMessages.forEach { (author, body, time) ->
-                Column(verticalArrangement = Arrangement.spacedBy(2.dp)) {
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.SpaceBetween
-                    ) {
+            if (chatMessages.isEmpty()) {
+                Text(
+                    text = "No messages yet — start the conversation!",
+                    color = DarkTextSecondary,
+                    fontSize = 13.sp
+                )
+                Box(modifier = Modifier.fillMaxWidth().height(1.dp).background(DarkBorder))
+            } else {
+                chatMessages.forEach { msg ->
+                    Column(verticalArrangement = Arrangement.spacedBy(2.dp)) {
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.SpaceBetween
+                        ) {
+                            Text(
+                                text = msg.senderName ?: "Unknown",
+                                color = GreenAccent,
+                                fontSize = 13.sp,
+                                fontWeight = FontWeight.SemiBold
+                            )
+                            Text(
+                                text = msg.createdAt?.takeLast(8)?.take(5) ?: "",
+                                color = DarkTextSecondary,
+                                fontSize = 11.sp
+                            )
+                        }
                         Text(
-                            text = author,
-                            color = GreenAccent,
-                            fontSize = 13.sp,
-                            fontWeight = FontWeight.SemiBold
-                        )
-                        Text(
-                            text = time,
+                            text = msg.content,
                             color = DarkTextSecondary,
-                            fontSize = 11.sp
+                            fontSize = 13.sp
                         )
                     }
-                    Text(
-                        text = body,
-                        color = DarkTextSecondary,
-                        fontSize = 13.sp
-                    )
+                    Box(modifier = Modifier.fillMaxWidth().height(1.dp).background(DarkBorder))
                 }
-                Box(modifier = Modifier.fillMaxWidth().height(1.dp).background(DarkBorder))
             }
 
             // Open Chat row
@@ -1089,7 +1093,7 @@ private fun MatchDetailScreenPreview() {
             Spacer(modifier = Modifier.height(16.dp))
             MatchVenueCard(match = sampleMatch)
             Spacer(modifier = Modifier.height(16.dp))
-            MatchChatPreviewSection(matchId = 1L, onOpenChat = {})
+            MatchChatPreviewSection(chatMessages = emptyList(), onOpenChat = {})
             Spacer(modifier = Modifier.height(88.dp))
         }
         Box(modifier = Modifier.align(Alignment.BottomCenter)) {

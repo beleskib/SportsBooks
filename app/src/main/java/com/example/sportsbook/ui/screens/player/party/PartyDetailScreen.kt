@@ -1,5 +1,6 @@
 package com.example.sportsbook.ui.screens.player.party
 
+import android.widget.Toast
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -24,6 +25,7 @@ import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
@@ -251,6 +253,7 @@ fun PartyDetailScreen(
                                 Text("👥 Invite", fontSize = 13.sp, fontWeight = FontWeight.SemiBold, color = DarkTextPrimary)
                             }
                             // Chat
+                            val chatContext = LocalContext.current
                             Box(
                                 modifier = Modifier
                                     .weight(1f)
@@ -261,7 +264,9 @@ fun PartyDetailScreen(
                                             Color.Transparent,
                                         ),
                                     )
-                                    .clickable { }
+                                    .clickable {
+                                        Toast.makeText(chatContext, "Party chat coming soon", Toast.LENGTH_SHORT).show()
+                                    }
                                     .padding(vertical = 11.dp),
                                 contentAlignment = Alignment.Center,
                             ) {
@@ -503,10 +508,13 @@ fun PartyDetailScreen(
                             ) {
                                 Text("No messages yet", fontSize = 13.sp, color = DarkTextSecondary)
                             }
+                            val openChatContext = LocalContext.current
                             Box(
                                 modifier = Modifier
                                     .fillMaxWidth()
-                                    .clickable { }
+                                    .clickable {
+                                        Toast.makeText(openChatContext, "Party chat coming soon", Toast.LENGTH_SHORT).show()
+                                    }
                                     .padding(top = 4.dp),
                                 contentAlignment = Alignment.Center,
                             ) {

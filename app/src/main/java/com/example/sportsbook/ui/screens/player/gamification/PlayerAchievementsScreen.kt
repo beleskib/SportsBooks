@@ -58,7 +58,9 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewModelScope
 import com.example.sportsbook.domain.model.Achievement
 import com.example.sportsbook.domain.model.PlayerAchievement
+import com.example.sportsbook.domain.model.PlayerLevel
 import com.example.sportsbook.domain.repository.GamificationRepository
+import com.example.sportsbook.ui.common.EmptyStateView
 import com.example.sportsbook.ui.common.ErrorView
 import com.example.sportsbook.ui.common.LoadingIndicator
 import com.example.sportsbook.ui.common.toDisplayDateTime
@@ -91,6 +93,7 @@ class PlayerAchievementsViewModel @Inject constructor(
     data class UiState(
         val allAchievements: List<Achievement> = emptyList(),
         val earnedAchievements: List<PlayerAchievement> = emptyList(),
+        val playerLevel: PlayerLevel = PlayerLevel(),
         val selectedCategory: String = "all",
         val isLoading: Boolean = false,
         val error: String? = null,
@@ -110,10 +113,12 @@ class PlayerAchievementsViewModel @Inject constructor(
             _uiState.update { it.copy(isLoading = true, error = null) }
             val allResult = gamificationRepository.getAllAchievements()
             val earnedResult = gamificationRepository.getMyAchievements()
+            val levelResult = gamificationRepository.getMyLevel()
             _uiState.update {
                 it.copy(
                     allAchievements = allResult.getOrElse { emptyList() },
                     earnedAchievements = earnedResult.getOrElse { emptyList() },
+                    playerLevel = levelResult.getOrElse { PlayerLevel() },
                     isLoading = false,
                     error = allResult.exceptionOrNull()?.message
                 )
@@ -170,7 +175,8 @@ fun PlayerAchievementsScreen(
     }
 
     val earned = uiState.earnedAchievements.size
-    val total = uiState.allAchievements.size.coerceAtLeast(28) // mockup shows 28
+    val total = uiState.allAchievements.size
+    val level = uiState.playerLevel
 
     Box(
         modifier = Modifier
@@ -190,8 +196,6 @@ fun PlayerAchievementsScreen(
                     uiState.allAchievements.filter { it.category.lowercase() == uiState.selectedCategory }
                 }
                 val earnedIds = uiState.earnedAchievements.map { it.achievementId }.toSet()
-                // Fall back to sample data if no API data yet
-                val displaySamples = filtered.isEmpty()
 
                 Column(modifier = Modifier.fillMaxSize()) {
                     // Header
@@ -237,11 +241,11 @@ fun PlayerAchievementsScreen(
                         Text("🌟", fontSize = 28.sp)
                         Spacer(Modifier.width(12.dp))
                         Column(modifier = Modifier.weight(1f)) {
-                            Text("Level 7 — Rising Player", fontSize = 15.sp, fontWeight = FontWeight.Bold, color = DarkTextPrimary)
-                            Text("1,830 / 2,500 XP to Level 8", fontSize = 12.sp, color = DarkTextSecondary, modifier = Modifier.padding(top = 2.dp))
+                            Text("Level ${level.currentLevel}", fontSize = 15.sp, fontWeight = FontWeight.Bold, color = DarkTextPrimary)
+                            Text("${level.totalXp} / ${level.totalXp + level.xpToNextLevel} XP to Level ${level.currentLevel + 1}", fontSize = 12.sp, color = DarkTextSecondary, modifier = Modifier.padding(top = 2.dp))
                             Spacer(Modifier.height(6.dp))
                             Box(modifier = Modifier.fillMaxWidth().height(4.dp).clip(RoundedCornerShape(2.dp)).background(DarkBorder)) {
-                                Box(modifier = Modifier.fillMaxWidth(0.73f).height(4.dp).clip(RoundedCornerShape(2.dp)).background(GreenAccent))
+                                Box(modifier = Modifier.fillMaxWidth(level.progressFraction).height(4.dp).clip(RoundedCornerShape(2.dp)).background(GreenAccent))
                             }
                         }
                     }
@@ -275,19 +279,12 @@ fun PlayerAchievementsScreen(
                     }
 
                     // Grid
-                    if (displaySamples) {
-                        LazyVerticalGrid(
-                            columns = GridCells.Fixed(2),
-                            modifier = Modifier.fillMaxSize().padding(horizontal = 12.dp),
-                            verticalArrangement = Arrangement.spacedBy(10.dp),
-                            horizontalArrangement = Arrangement.spacedBy(10.dp),
-                        ) {
-                            items(sampleAchievements) { sample ->
-                                SampleAchievementCard(sample = sample)
-                            }
-                            item { Spacer(modifier = Modifier.height(24.dp)) }
-                            item { Spacer(modifier = Modifier.height(24.dp)) }
-                        }
+                    if (filtered.isEmpty()) {
+                        EmptyStateView(
+                            title = "No achievements yet",
+                            subtitle = "Complete bookings, matches, and social activities to earn achievements",
+                            modifier = Modifier.fillMaxWidth().padding(top = 60.dp),
+                        )
                     } else {
                         LazyVerticalGrid(
                             columns = GridCells.Fixed(2),
@@ -483,90 +480,6 @@ private fun achievementIcon(iconName: String): ImageVector {
     }
 }
 
-// ─── Sample data & composable ────────────────────────────────────────────────
-
-private data class SampleAchievement(
-    val emoji: String,
-    val name: String,
-    val desc: String,
-    val xp: Int,
-    val earned: Boolean,
-    val category: String,
-)
-
-private val sampleAchievements = listOf(
-    SampleAchievement("🏆", "First Booking", "Complete your first booking", 50, true, "booking"),
-    SampleAchievement("⚽", "Match Starter", "Join your first match", 75, true, "match"),
-    SampleAchievement("👥", "Social Butterfly", "Add 5 friends", 100, true, "social"),
-    SampleAchievement("🔥", "On Fire", "Book 5 sessions in a week", 150, true, "booking"),
-    SampleAchievement("🌟", "Rising Star", "Reach Level 5", 200, true, "general"),
-    SampleAchievement("🎯", "Sharpshooter", "Win 10 matches", 250, false, "match"),
-    SampleAchievement("🏅", "Veteran", "Play 50 matches", 300, false, "match"),
-    SampleAchievement("💬", "Chatterbox", "Send 100 messages", 80, false, "social"),
-    SampleAchievement("📅", "Consistent", "Book every week for a month", 200, false, "booking"),
-    SampleAchievement("🚀", "Overachiever", "Earn 20 achievements", 500, false, "general"),
-)
-
-@Composable
-private fun SampleAchievementCard(sample: SampleAchievement) {
-    val borderColor = if (sample.earned) GreenAccent else DarkBorder
-    Column(
-        modifier = Modifier
-            .fillMaxWidth()
-            .clip(RoundedCornerShape(12.dp))
-            .background(if (sample.earned) androidx.compose.ui.graphics.Color(0xFF1B3A1E) else DarkSurface)
-            .border(if (sample.earned) 1.5.dp else 0.5.dp, borderColor, RoundedCornerShape(12.dp))
-            .padding(12.dp),
-        horizontalAlignment = Alignment.CenterHorizontally,
-    ) {
-        Box(
-            modifier = Modifier
-                .size(48.dp)
-                .clip(CircleShape)
-                .background(if (sample.earned) GreenAccent.copy(alpha = 0.2f) else DarkBorder.copy(alpha = 0.3f)),
-            contentAlignment = Alignment.Center,
-        ) {
-            Text(sample.emoji, fontSize = 22.sp)
-        }
-        Spacer(modifier = Modifier.height(8.dp))
-        Text(
-            text = sample.name,
-            fontSize = 12.sp,
-            fontWeight = FontWeight.Bold,
-            color = if (sample.earned) DarkTextPrimary else DarkTextSecondary,
-            textAlign = TextAlign.Center,
-            maxLines = 2,
-            overflow = TextOverflow.Ellipsis,
-        )
-        Spacer(modifier = Modifier.height(4.dp))
-        Text(
-            text = sample.desc,
-            fontSize = 10.sp,
-            color = DarkTextTertiary,
-            textAlign = TextAlign.Center,
-            maxLines = 2,
-            overflow = TextOverflow.Ellipsis,
-        )
-        Spacer(modifier = Modifier.height(8.dp))
-        Box(
-            modifier = Modifier
-                .clip(RoundedCornerShape(8.dp))
-                .background(if (sample.earned) GreenAccent.copy(alpha = 0.2f) else DarkBorder)
-                .padding(horizontal = 8.dp, vertical = 3.dp),
-        ) {
-            Text(
-                text = "+${sample.xp} XP",
-                fontSize = 10.sp,
-                fontWeight = FontWeight.Bold,
-                color = if (sample.earned) GreenAccent else DarkTextTertiary,
-            )
-        }
-        if (sample.earned) {
-            Spacer(modifier = Modifier.height(4.dp))
-            Text("✓ Earned", fontSize = 10.sp, color = GreenAccent, fontWeight = FontWeight.SemiBold)
-        }
-    }
-}
 
 // ─── Preview ─────────────────────────────────────────────────────────────────
 

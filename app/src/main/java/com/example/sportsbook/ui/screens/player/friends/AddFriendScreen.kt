@@ -1,5 +1,6 @@
 package com.example.sportsbook.ui.screens.player.friends
 
+import android.widget.Toast
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -26,6 +27,7 @@ import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -51,28 +53,10 @@ import com.example.sportsbook.ui.theme.DarkTextSecondary
 import com.example.sportsbook.ui.theme.GreenAccent
 import com.example.sportsbook.ui.theme.GreenDark
 
-// ── Sample data for pending / suggested sections ──────────────────────────────
-
-private data class SuggestedPlayer(
-    val name: String, val sport: String, val level: String,
-    val mutual: String, val initial: String, val color: Color,
+private val avatarColors = listOf(
+    Color(0xFF4CAF50), Color(0xFFAB47BC), Color(0xFFFF6B35),
+    Color(0xFF2196F3), Color(0xFFFF9800), Color(0xFFE91E63),
 )
-
-private val sampleSuggested = listOf(
-    SuggestedPlayer("Alex Kramer", "⚽", "Advanced", "3 mutual friends", "A", Color(0xFF4CAF50)),
-    SuggestedPlayer("Nina Park", "🎾", "Intermediate", "5 mutual friends", "N", Color(0xFFAB47BC)),
-    SuggestedPlayer("David Chen", "🏀", "Advanced", "Played together 2x", "D", Color(0xFFFF6B35)),
-    SuggestedPlayer("Lisa Johnson", "🏐", "Beginner", "1 mutual friend", "L", Color(0xFF2196F3)),
-)
-
-private data class PendingRequest(val name: String, val sport: String, val level: String, val initial: String, val color: Color)
-
-private val samplePending = listOf(
-    PendingRequest("James Lee", "🏀", "Lvl 8", "J", Color(0xFFFF9800)),
-    PendingRequest("Sofia Martinez", "🎾", "Lvl 5", "S", Color(0xFFE91E63)),
-)
-
-// ── Screen ───────────────────────────────────────────────────────────────────
 
 @Composable
 fun AddFriendScreen(
@@ -197,12 +181,15 @@ fun AddFriendScreen(
                         Text("Invite friends to SportsBooks", fontSize = 15.sp, fontWeight = FontWeight.Bold, color = Color.White, modifier = Modifier.padding(top = 8.dp))
                         Text("Share a link and earn 50 XP per friend!", fontSize = 12.sp, color = Color.White.copy(alpha = 0.8f), textAlign = TextAlign.Center, modifier = Modifier.padding(top = 4.dp))
                         Spacer(modifier = Modifier.height(14.dp))
+                        val shareContext = LocalContext.current
                         Box(
                             modifier = Modifier
                                 .clip(RoundedCornerShape(10.dp))
                                 .background(Color.White.copy(alpha = 0.2f))
                                 .border(1.dp, Color.White.copy(alpha = 0.4f), RoundedCornerShape(10.dp))
-                                .clickable { }
+                                .clickable {
+                                    Toast.makeText(shareContext, "Invite sharing coming soon", Toast.LENGTH_SHORT).show()
+                                }
                                 .padding(horizontal = 24.dp, vertical = 10.dp),
                         ) {
                             Text("Share Invite Link", fontSize = 14.sp, fontWeight = FontWeight.SemiBold, color = Color.White)
@@ -212,22 +199,39 @@ fun AddFriendScreen(
                 }
 
                 // Pending requests section
-                if (samplePending.isNotEmpty()) {
+                if (uiState.pendingRequests.isNotEmpty()) {
                     item {
-                        SectionTitle("Pending Requests (${samplePending.size})")
+                        SectionTitle("Pending Requests (${uiState.pendingRequests.size})")
                     }
-                    items(samplePending) { pending ->
-                        PendingRequestRow(pending)
+                    items(uiState.pendingRequests, key = { it.id }) { pending ->
+                        PendingRequestRow(
+                            friendship = pending,
+                            avatarColor = avatarColors[(pending.friendId % avatarColors.size).toInt()],
+                            onAccept = { viewModel.acceptRequest(pending.id) },
+                            onDecline = { viewModel.declineRequest(pending.id) },
+                        )
                     }
                     item { Spacer(modifier = Modifier.height(20.dp)) }
                 }
 
                 // Suggested section
-                item {
-                    SectionTitle("Suggested For You")
-                }
-                items(sampleSuggested) { suggested ->
-                    SuggestedPlayerRow(suggested)
+                if (uiState.suggestedPlayers.isNotEmpty()) {
+                    item {
+                        SectionTitle("Suggested For You")
+                    }
+                    items(uiState.suggestedPlayers, key = { it.friendId }) { suggested ->
+                        SuggestedPlayerRow(
+                            friendship = suggested,
+                            avatarColor = avatarColors[(suggested.friendId % avatarColors.size).toInt()],
+                            alreadySent = suggested.friendId in uiState.sentRequests,
+                            onAdd = { viewModel.sendRequest(suggested.friendId) },
+                        )
+                    }
+                } else if (!uiState.isLoadingSuggested) {
+                    item {
+                        SectionTitle("Suggested For You")
+                        EmptyStateCard("No suggestions yet", "Check back later for player recommendations")
+                    }
                 }
 
                 item { Spacer(modifier = Modifier.height(32.dp)) }
@@ -250,6 +254,24 @@ private fun SectionTitle(text: String) {
 }
 
 @Composable
+private fun EmptyStateCard(title: String, subtitle: String) {
+    Box(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(horizontal = 16.dp, vertical = 4.dp)
+            .clip(RoundedCornerShape(14.dp))
+            .background(DarkSurface)
+            .padding(24.dp),
+        contentAlignment = Alignment.Center,
+    ) {
+        Column(horizontalAlignment = Alignment.CenterHorizontally) {
+            Text(title, fontSize = 14.sp, fontWeight = FontWeight.SemiBold, color = DarkTextSecondary)
+            Text(subtitle, fontSize = 12.sp, color = DarkTextSecondary.copy(alpha = 0.7f), modifier = Modifier.padding(top = 4.dp))
+        }
+    }
+}
+
+@Composable
 private fun SearchResultRow(
     result: Friendship,
     alreadySent: Boolean,
@@ -265,7 +287,6 @@ private fun SearchResultRow(
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.spacedBy(12.dp),
     ) {
-        // Avatar
         Box(
             modifier = Modifier
                 .size(44.dp)
@@ -310,7 +331,12 @@ private fun SearchResultRow(
 }
 
 @Composable
-private fun PendingRequestRow(pending: PendingRequest) {
+private fun PendingRequestRow(
+    friendship: Friendship,
+    avatarColor: Color,
+    onAccept: () -> Unit,
+    onDecline: () -> Unit,
+) {
     Row(
         modifier = Modifier
             .fillMaxWidth()
@@ -324,23 +350,28 @@ private fun PendingRequestRow(pending: PendingRequest) {
             modifier = Modifier
                 .size(44.dp)
                 .clip(CircleShape)
-                .background(pending.color.copy(alpha = 0.2f))
-                .border(2.dp, pending.color.copy(alpha = 0.5f), CircleShape),
+                .background(avatarColor.copy(alpha = 0.2f))
+                .border(2.dp, avatarColor.copy(alpha = 0.5f), CircleShape),
             contentAlignment = Alignment.Center,
         ) {
-            Text(pending.initial, fontSize = 18.sp, fontWeight = FontWeight.Bold, color = pending.color)
+            Text(
+                text = friendship.friendName?.firstOrNull()?.uppercase() ?: "?",
+                fontSize = 18.sp,
+                fontWeight = FontWeight.Bold,
+                color = avatarColor,
+            )
         }
         Spacer(modifier = Modifier.width(12.dp))
         Column(modifier = Modifier.weight(1f)) {
-            Text(pending.name, fontSize = 14.sp, fontWeight = FontWeight.SemiBold, color = DarkTextPrimary)
-            Text("${pending.sport} Basketball • ${pending.level}", fontSize = 12.sp, color = DarkTextSecondary)
+            Text(friendship.friendName ?: "Unknown", fontSize = 14.sp, fontWeight = FontWeight.SemiBold, color = DarkTextPrimary)
+            Text("🏅 Wants to be friends", fontSize = 12.sp, color = DarkTextSecondary)
         }
         Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
             Box(
                 modifier = Modifier
                     .clip(RoundedCornerShape(8.dp))
                     .background(GreenAccent)
-                    .clickable { }
+                    .clickable(onClick = onAccept)
                     .padding(horizontal = 12.dp, vertical = 7.dp),
             ) {
                 Text("Accept", fontSize = 12.sp, fontWeight = FontWeight.SemiBold, color = Color.White)
@@ -350,7 +381,7 @@ private fun PendingRequestRow(pending: PendingRequest) {
                     .size(30.dp)
                     .clip(CircleShape)
                     .background(DarkBorder)
-                    .clickable { },
+                    .clickable(onClick = onDecline),
                 contentAlignment = Alignment.Center,
             ) {
                 Text("✕", fontSize = 12.sp, color = DarkTextSecondary)
@@ -360,7 +391,12 @@ private fun PendingRequestRow(pending: PendingRequest) {
 }
 
 @Composable
-private fun SuggestedPlayerRow(player: SuggestedPlayer) {
+private fun SuggestedPlayerRow(
+    friendship: Friendship,
+    avatarColor: Color,
+    alreadySent: Boolean,
+    onAdd: () -> Unit,
+) {
     Row(
         modifier = Modifier
             .fillMaxWidth()
@@ -374,26 +410,41 @@ private fun SuggestedPlayerRow(player: SuggestedPlayer) {
             modifier = Modifier
                 .size(44.dp)
                 .clip(CircleShape)
-                .background(player.color.copy(alpha = 0.2f))
-                .border(2.dp, player.color.copy(alpha = 0.5f), CircleShape),
+                .background(avatarColor.copy(alpha = 0.2f))
+                .border(2.dp, avatarColor.copy(alpha = 0.5f), CircleShape),
             contentAlignment = Alignment.Center,
         ) {
-            Text(player.initial, fontSize = 18.sp, fontWeight = FontWeight.Bold, color = player.color)
+            Text(
+                text = friendship.friendName?.firstOrNull()?.uppercase() ?: "?",
+                fontSize = 18.sp,
+                fontWeight = FontWeight.Bold,
+                color = avatarColor,
+            )
         }
         Spacer(modifier = Modifier.width(12.dp))
         Column(modifier = Modifier.weight(1f)) {
-            Text(player.name, fontSize = 14.sp, fontWeight = FontWeight.SemiBold, color = DarkTextPrimary)
-            Text("${player.sport} ${player.level}", fontSize = 12.sp, color = DarkTextSecondary)
-            Text(player.mutual, fontSize = 11.sp, color = GreenAccent, modifier = Modifier.padding(top = 2.dp))
+            Text(friendship.friendName ?: "Unknown", fontSize = 14.sp, fontWeight = FontWeight.SemiBold, color = DarkTextPrimary)
+            Text("🏅 Player", fontSize = 12.sp, color = DarkTextSecondary)
         }
-        Box(
-            modifier = Modifier
-                .clip(RoundedCornerShape(8.dp))
-                .background(GreenAccent)
-                .clickable { }
-                .padding(horizontal = 14.dp, vertical = 8.dp),
-        ) {
-            Text("+ Add", fontSize = 13.sp, fontWeight = FontWeight.SemiBold, color = Color.White)
+        if (alreadySent) {
+            Box(
+                modifier = Modifier
+                    .clip(RoundedCornerShape(8.dp))
+                    .background(DarkBorder)
+                    .padding(horizontal = 14.dp, vertical = 8.dp),
+            ) {
+                Text("Sent", fontSize = 13.sp, color = DarkTextSecondary, fontWeight = FontWeight.SemiBold)
+            }
+        } else {
+            Box(
+                modifier = Modifier
+                    .clip(RoundedCornerShape(8.dp))
+                    .background(GreenAccent)
+                    .clickable(onClick = onAdd)
+                    .padding(horizontal = 14.dp, vertical = 8.dp),
+            ) {
+                Text("+ Add", fontSize = 13.sp, fontWeight = FontWeight.SemiBold, color = Color.White)
+            }
         }
     }
 }
@@ -404,18 +455,28 @@ private fun SuggestedPlayerRow(player: SuggestedPlayer) {
 @Composable
 private fun AddFriendScreenPreview() {
     Column(modifier = Modifier.fillMaxSize().background(DarkBg)) {
-            Row(
-                modifier = Modifier.fillMaxWidth().padding(start = 16.dp, end = 16.dp, top = 56.dp, bottom = 16.dp),
-                verticalAlignment = Alignment.CenterVertically,
-            ) {
-                Box(modifier = Modifier.size(40.dp).clip(CircleShape).background(DarkSurface), contentAlignment = Alignment.Center) {
-                    Icon(Icons.AutoMirrored.Filled.ArrowBack, "Back", tint = DarkTextPrimary, modifier = Modifier.size(20.dp))
-                }
-                Spacer(modifier = Modifier.width(16.dp))
-                Text("Add Friends", fontSize = 18.sp, fontWeight = FontWeight.Bold, color = DarkTextPrimary)
+        Row(
+            modifier = Modifier.fillMaxWidth().padding(start = 16.dp, end = 16.dp, top = 56.dp, bottom = 16.dp),
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            Box(modifier = Modifier.size(40.dp).clip(CircleShape).background(DarkSurface), contentAlignment = Alignment.Center) {
+                Icon(Icons.AutoMirrored.Filled.ArrowBack, "Back", tint = DarkTextPrimary, modifier = Modifier.size(20.dp))
             }
-            SuggestedPlayerRow(sampleSuggested[0])
-            Spacer(modifier = Modifier.height(8.dp))
-            PendingRequestRow(samplePending[0])
+            Spacer(modifier = Modifier.width(16.dp))
+            Text("Add Friends", fontSize = 18.sp, fontWeight = FontWeight.Bold, color = DarkTextPrimary)
         }
+        SuggestedPlayerRow(
+            friendship = Friendship(id = 1, friendId = 10, friendName = "Alex Kramer", friendPhotoUrl = null, status = "pending", createdAt = ""),
+            avatarColor = Color(0xFF4CAF50),
+            alreadySent = false,
+            onAdd = {},
+        )
+        Spacer(modifier = Modifier.height(8.dp))
+        PendingRequestRow(
+            friendship = Friendship(id = 2, friendId = 20, friendName = "James Lee", friendPhotoUrl = null, status = "pending", createdAt = ""),
+            avatarColor = Color(0xFFFF9800),
+            onAccept = {},
+            onDecline = {},
+        )
+    }
 }

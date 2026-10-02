@@ -1,5 +1,8 @@
 package com.example.sportsbook.ui.screens.player.coach
 
+import android.content.Intent
+import android.net.Uri
+import android.widget.Toast
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -28,11 +31,9 @@ import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableIntStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -52,6 +53,10 @@ import coil.compose.AsyncImage
 import com.example.sportsbook.domain.model.Coach
 import com.example.sportsbook.domain.model.CoachCertification
 import com.example.sportsbook.domain.model.Review
+import com.example.sportsbook.domain.model.TimeSlot
+import java.time.LocalDate
+import java.time.format.TextStyle as JavaTextStyle
+import java.util.Locale
 import com.example.sportsbook.ui.common.ErrorView
 import com.example.sportsbook.ui.common.LoadingIndicator
 import com.example.sportsbook.ui.theme.BlueAccent
@@ -103,6 +108,10 @@ fun CoachDetailScreen(
                 CoachDetailContent(
                     coach = coach,
                     reviews = uiState.reviews,
+                    timeSlots = uiState.timeSlots,
+                    selectedDate = uiState.selectedDate,
+                    onDateSelected = viewModel::selectDate,
+                    onBookClick = onBookClick,
                     onBack = onBack,
                     modifier = Modifier.padding(bottom = 80.dp),
                 )
@@ -123,11 +132,13 @@ fun CoachDetailScreen(
 private fun CoachDetailContent(
     coach: Coach,
     reviews: List<Review>,
+    timeSlots: List<TimeSlot>,
+    selectedDate: LocalDate,
+    onDateSelected: (LocalDate) -> Unit,
+    onBookClick: () -> Unit,
     onBack: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
-    var selectedDateIndex by remember { mutableIntStateOf(0) }
-
     LazyColumn(modifier = modifier.fillMaxSize()) {
         // ── Hero ─────────────────────────────────────────────────────────
         item {
@@ -298,19 +309,22 @@ private fun CoachDetailContent(
                         .weight(1f)
                         .clip(RoundedCornerShape(12.dp))
                         .background(BlueAccent)
-                        .clickable { }
+                        .clickable(onClick = onBookClick)
                         .padding(vertical = 12.dp),
                     contentAlignment = Alignment.Center,
                 ) {
                     Text("📅 Book Session", fontSize = 14.sp, fontWeight = FontWeight.SemiBold, color = Color.White)
                 }
                 // Message
+                val context = LocalContext.current
                 Box(
                     modifier = Modifier
                         .weight(1f)
                         .clip(RoundedCornerShape(12.dp))
                         .background(DarkSurface)
-                        .clickable { }
+                        .clickable {
+                            Toast.makeText(context, "Chat coming soon", Toast.LENGTH_SHORT).show()
+                        }
                         .padding(vertical = 12.dp),
                     contentAlignment = Alignment.Center,
                 ) {
@@ -322,7 +336,12 @@ private fun CoachDetailContent(
                         .weight(1f)
                         .clip(RoundedCornerShape(12.dp))
                         .background(DarkSurface)
-                        .clickable { }
+                        .clickable {
+                            coach.phoneNumber?.let { phone ->
+                                val intent = Intent(Intent.ACTION_DIAL, Uri.parse("tel:$phone"))
+                                context.startActivity(intent)
+                            } ?: Toast.makeText(context, "No phone number available", Toast.LENGTH_SHORT).show()
+                        }
                         .padding(vertical = 12.dp),
                     contentAlignment = Alignment.Center,
                 ) {
@@ -387,22 +406,25 @@ private fun CoachDetailContent(
         item {
             SectionHeader("Available Slots")
 
-            // Date strip
-            val dates = listOf("Sun" to "25", "Mon" to "26", "Tue" to "27", "Wed" to "28", "Thu" to "29")
+            val today = LocalDate.now()
+            val dateChips = (0..4).map { today.plusDays(it.toLong()) }
+
             Row(
                 modifier = Modifier
                     .horizontalScroll(rememberScrollState())
                     .padding(horizontal = 16.dp),
                 horizontalArrangement = Arrangement.spacedBy(8.dp),
             ) {
-                dates.forEachIndexed { index, (dayName, dayNum) ->
-                    val isActive = index == selectedDateIndex
+                dateChips.forEach { date ->
+                    val isActive = date == selectedDate
+                    val dayName = date.dayOfWeek.getDisplayName(JavaTextStyle.SHORT, Locale.getDefault())
+                    val dayNum = date.dayOfMonth.toString()
                     Column(
                         horizontalAlignment = Alignment.CenterHorizontally,
                         modifier = Modifier
                             .clip(RoundedCornerShape(10.dp))
                             .background(if (isActive) BlueAccent else DarkSurface)
-                            .clickable { selectedDateIndex = index }
+                            .clickable { onDateSelected(date) }
                             .padding(horizontal = 12.dp, vertical = 8.dp),
                     ) {
                         Text(
@@ -422,25 +444,24 @@ private fun CoachDetailContent(
 
             Spacer(modifier = Modifier.height(12.dp))
 
-            // Time slots
-            val slots = listOf(
-                "09:00" to SlotState.AVAILABLE,
-                "10:00" to SlotState.BOOKED,
-                "11:00" to SlotState.SELECTED,
-                "14:00" to SlotState.AVAILABLE,
-                "15:00" to SlotState.AVAILABLE,
-                "16:00" to SlotState.BOOKED,
-                "17:00" to SlotState.AVAILABLE,
-            )
-            FlowRow(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(horizontal = 16.dp),
-                horizontalArrangement = Arrangement.spacedBy(8.dp),
-                verticalArrangement = Arrangement.spacedBy(8.dp),
-            ) {
-                slots.forEach { (time, state) ->
-                    TimeSlotChip(time = time, state = state)
+            if (timeSlots.isEmpty()) {
+                Text(
+                    text = "No slots available for this date",
+                    fontSize = 13.sp,
+                    color = DarkTextSecondary,
+                    modifier = Modifier.padding(horizontal = 16.dp),
+                )
+            } else {
+                FlowRow(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = 16.dp),
+                    horizontalArrangement = Arrangement.spacedBy(8.dp),
+                    verticalArrangement = Arrangement.spacedBy(8.dp),
+                ) {
+                    timeSlots.forEach { slot ->
+                        CoachTimeSlotChip(slot = slot)
+                    }
                 }
             }
             Spacer(modifier = Modifier.height(20.dp))
@@ -553,19 +574,11 @@ private fun CertificationCard(cert: CoachCertification) {
     }
 }
 
-private enum class SlotState { AVAILABLE, BOOKED, SELECTED }
-
 @Composable
-private fun TimeSlotChip(time: String, state: SlotState) {
-    val bg = when (state) {
-        SlotState.SELECTED -> BlueAccent
-        else -> DarkSurface
-    }
-    val textColor = when (state) {
-        SlotState.BOOKED -> DarkTextTertiary
-        else -> DarkTextPrimary
-    }
-    val decoration = if (state == SlotState.BOOKED) TextDecoration.LineThrough else TextDecoration.None
+private fun CoachTimeSlotChip(slot: TimeSlot) {
+    val bg = if (slot.isAvailable) DarkSurface else DarkSurface
+    val textColor = if (slot.isAvailable) DarkTextPrimary else DarkTextTertiary
+    val decoration = if (!slot.isAvailable) TextDecoration.LineThrough else TextDecoration.None
 
     Box(
         modifier = Modifier
@@ -574,7 +587,7 @@ private fun TimeSlotChip(time: String, state: SlotState) {
             .padding(horizontal = 14.dp, vertical = 8.dp),
     ) {
         Text(
-            text = time,
+            text = slot.startTime,
             fontSize = 13.sp,
             color = textColor,
             textDecoration = decoration,
@@ -739,6 +752,10 @@ private fun CoachDetailContentPreview() {
         CoachDetailContent(
             coach = sampleCoach,
             reviews = sampleReviews,
+            timeSlots = emptyList(),
+            selectedDate = LocalDate.now(),
+            onDateSelected = {},
+            onBookClick = {},
             onBack = {},
             modifier = Modifier.padding(bottom = 80.dp),
         )

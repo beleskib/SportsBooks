@@ -7,6 +7,7 @@ import com.example.sportsbook.domain.enums.MatchStatus
 import com.example.sportsbook.domain.enums.ParticipantRole
 import com.example.sportsbook.domain.enums.ParticipantStatus
 import com.example.sportsbook.domain.model.Match
+import com.example.sportsbook.domain.model.MatchChatMessage
 import com.example.sportsbook.domain.model.MatchParticipant
 import com.example.sportsbook.domain.model.Party
 import com.example.sportsbook.data.remote.api.ApiService
@@ -35,6 +36,7 @@ data class MatchDetailUiState(
     val match: Match? = null,
     val currentUserId: Long? = null,
     val activeParties: List<Party> = emptyList(),
+    val chatPreview: List<MatchChatMessage> = emptyList(),
     val isLoading: Boolean = false,
     val isJoining: Boolean = false,
     val isSharing: Boolean = false,
@@ -100,6 +102,7 @@ class MatchDetailViewModel @Inject constructor(
         loadCurrentUser()
         loadMatch()
         loadActiveParty()
+        loadChatPreview()
     }
 
     private fun loadCurrentUser() {
@@ -242,6 +245,15 @@ class MatchDetailViewModel @Inject constructor(
             partyRepository.getActiveParties()
                 .onSuccess { parties ->
                     _uiState.update { it.copy(activeParties = parties) }
+                }
+        }
+    }
+
+    private fun loadChatPreview() {
+        viewModelScope.launch {
+            matchRepository.getChatMessages(matchId, limit = 2)
+                .onSuccess { messages ->
+                    _uiState.update { it.copy(chatPreview = messages) }
                 }
         }
     }

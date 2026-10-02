@@ -1,5 +1,8 @@
 package com.example.sportsbook.ui.screens.player.venue
 
+import android.content.Intent
+import android.net.Uri
+import android.widget.Toast
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -24,9 +27,7 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
@@ -64,48 +65,12 @@ import com.example.sportsbook.ui.theme.GreenAccent
 import com.example.sportsbook.ui.theme.GreenDark
 import com.example.sportsbook.ui.theme.SportsBookTheme
 
-// ─── Slot state used only for placeholder data ───────────────────────────────
-private enum class SlotState { AVAILABLE, BOOKED, DEAL }
-
-private data class TimeSlot(val time: String, val state: SlotState)
-
-private data class DateChip(val label: String, val isActive: Boolean)
-
-// ─── Placeholder slot data ────────────────────────────────────────────────────
-private val PLACEHOLDER_DATES = listOf(
-    DateChip("Today", true),
-    DateChip("Tue 3 Jun", false),
-    DateChip("Wed 4 Jun", false),
-    DateChip("Thu 5 Jun", false),
-    DateChip("Fri 6 Jun", false),
-)
-
-private val PLACEHOLDER_SLOTS = listOf(
-    TimeSlot("09:00", SlotState.AVAILABLE),
-    TimeSlot("10:00", SlotState.BOOKED),
-    TimeSlot("11:00", SlotState.DEAL),
-    TimeSlot("12:00", SlotState.AVAILABLE),
-    TimeSlot("13:00", SlotState.BOOKED),
-    TimeSlot("14:00", SlotState.AVAILABLE),
-    TimeSlot("15:00", SlotState.DEAL),
-    TimeSlot("16:00", SlotState.AVAILABLE),
-    TimeSlot("17:00", SlotState.BOOKED),
-    TimeSlot("18:00", SlotState.AVAILABLE),
-)
-
-// ─── Placeholder match data ───────────────────────────────────────────────────
-private data class MatchCard(
-    val emoji: String,
-    val name: String,
-    val detail: String,
-    val canJoin: Boolean
-)
-
-private val PLACEHOLDER_MATCHES = listOf(
-    MatchCard("⚽", "5v5 Football", "Today 18:00 · 3/10 spots", true),
-    MatchCard("🏀", "3v3 Basketball", "Tomorrow 15:00 · 5/6 spots", true),
-    MatchCard("🎾", "Tennis Doubles", "Wed 11:00 · Full", false),
-)
+import com.example.sportsbook.domain.model.Match
+import com.example.sportsbook.domain.model.TimeSlot
+import java.time.LocalDate
+import java.time.format.DateTimeFormatter
+import java.time.format.TextStyle as JavaTextStyle
+import java.util.Locale
 
 // ─── Equipment emoji map ──────────────────────────────────────────────────────
 private fun equipmentEmoji(name: String): String {
@@ -190,6 +155,10 @@ fun VenueDetailScreen(
                 VenueDetailScaffold(
                     venue = venue,
                     reviews = uiState.reviews,
+                    timeSlots = uiState.timeSlots,
+                    venueMatches = uiState.venueMatches,
+                    selectedDate = uiState.selectedDate,
+                    onDateSelected = viewModel::selectDate,
                     onBookClick = onBookClick,
                     onBrowseLobbies = onBrowseLobbies,
                     onBack = onBack
@@ -207,6 +176,10 @@ fun VenueDetailScreen(
 private fun VenueDetailScaffold(
     venue: Venue,
     reviews: List<Review>,
+    timeSlots: List<TimeSlot>,
+    venueMatches: List<Match>,
+    selectedDate: LocalDate,
+    onDateSelected: (LocalDate) -> Unit,
     onBookClick: () -> Unit,
     onBrowseLobbies: () -> Unit,
     onBack: () -> Unit
@@ -215,6 +188,10 @@ private fun VenueDetailScaffold(
         VenueDetailContent(
             venue = venue,
             reviews = reviews,
+            timeSlots = timeSlots,
+            venueMatches = venueMatches,
+            selectedDate = selectedDate,
+            onDateSelected = onDateSelected,
             onBack = onBack,
             onBookClick = onBookClick,
             onBrowseLobbies = onBrowseLobbies,
@@ -306,13 +283,15 @@ private fun StickyBookingBar(venue: Venue, onBookClick: () -> Unit, modifier: Mo
 private fun VenueDetailContent(
     venue: Venue,
     reviews: List<Review>,
+    timeSlots: List<TimeSlot>,
+    venueMatches: List<Match>,
+    selectedDate: LocalDate,
+    onDateSelected: (LocalDate) -> Unit,
     onBack: () -> Unit,
     onBookClick: () -> Unit,
     onBrowseLobbies: () -> Unit,
     modifier: Modifier = Modifier
 ) {
-    var selectedDateIndex by remember { mutableStateOf(0) }
-
     LazyColumn(
         modifier = modifier
             .fillMaxSize()
@@ -320,7 +299,13 @@ private fun VenueDetailContent(
     ) {
         // 1. Hero
         item {
-            HeroSection(venue = venue, onBack = onBack)
+            val heroContext = LocalContext.current
+            HeroSection(
+                venue = venue,
+                onBack = onBack,
+                onFavorite = { Toast.makeText(heroContext, "Favorites coming soon", Toast.LENGTH_SHORT).show() },
+                onShare = { Toast.makeText(heroContext, "Share coming soon", Toast.LENGTH_SHORT).show() },
+            )
         }
 
         // 2. Venue Header (overlaps hero by 20dp via negative padding handled in hero)
@@ -388,8 +373,9 @@ private fun VenueDetailContent(
         // 5. Available Slots
         item {
             AvailableSlotsSection(
-                selectedDateIndex = selectedDateIndex,
-                onDateSelected = { selectedDateIndex = it }
+                timeSlots = timeSlots,
+                selectedDate = selectedDate,
+                onDateSelected = onDateSelected,
             )
         }
 
@@ -404,7 +390,7 @@ private fun VenueDetailContent(
 
         // 7. Open Matches Here
         item {
-            OpenMatchesSection()
+            OpenMatchesSection(matches = venueMatches, venue = venue)
         }
 
         item { SectionDivider() }
@@ -464,7 +450,7 @@ private fun SectionDivider() {
 // ═════════════════════════════════════════════════════════════════════════════
 
 @Composable
-private fun HeroSection(venue: Venue, onBack: () -> Unit) {
+private fun HeroSection(venue: Venue, onBack: () -> Unit, onFavorite: () -> Unit = {}, onShare: () -> Unit = {}) {
     Box(
         modifier = Modifier
             .fillMaxWidth()
@@ -543,8 +529,8 @@ private fun HeroSection(venue: Venue, onBack: () -> Unit) {
 
             // Favorite + Share buttons
             Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
-                HeroIconButton(emoji = "♡", onClick = {})
-                HeroIconButton(emoji = "↗", onClick = {})
+                HeroIconButton(emoji = "♡", onClick = onFavorite)
+                HeroIconButton(emoji = "↗", onClick = onShare)
             }
         }
 
@@ -733,6 +719,7 @@ private fun VenueTag(text: String, bgColor: Color, textColor: Color) {
 
 @Composable
 private fun ActionButtonsRow(onBookClick: () -> Unit, phoneNumber: String?) {
+    val context = LocalContext.current
     Row(
         modifier = Modifier
             .fillMaxWidth()
@@ -766,7 +753,12 @@ private fun ActionButtonsRow(onBookClick: () -> Unit, phoneNumber: String?) {
                 .clip(RoundedCornerShape(14.dp))
                 .background(Color.White.copy(alpha = 0.08f))
                 .border(1.dp, Color.White.copy(alpha = 0.06f), RoundedCornerShape(14.dp))
-                .clickable { }
+                .clickable {
+                    phoneNumber?.let { phone ->
+                        val intent = Intent(Intent.ACTION_DIAL, Uri.parse("tel:$phone"))
+                        context.startActivity(intent)
+                    }
+                }
                 .padding(vertical = 12.dp),
             contentAlignment = Alignment.Center
         ) {
@@ -774,7 +766,7 @@ private fun ActionButtonsRow(onBookClick: () -> Unit, phoneNumber: String?) {
                 text = "📞 Call",
                 fontSize = 14.sp,
                 fontWeight = FontWeight.Bold,
-                color = DarkTextPrimary
+                color = if (phoneNumber != null) DarkTextPrimary else DarkTextPrimary.copy(alpha = 0.4f)
             )
         }
 
@@ -785,7 +777,9 @@ private fun ActionButtonsRow(onBookClick: () -> Unit, phoneNumber: String?) {
                 .clip(RoundedCornerShape(14.dp))
                 .background(Color.White.copy(alpha = 0.08f))
                 .border(1.dp, Color.White.copy(alpha = 0.06f), RoundedCornerShape(14.dp))
-                .clickable { }
+                .clickable {
+                    Toast.makeText(context, "Chat coming soon", Toast.LENGTH_SHORT).show()
+                }
                 .padding(vertical = 12.dp),
             contentAlignment = Alignment.Center
         ) {
@@ -877,15 +871,18 @@ private fun QuickInfoCard(
 
 @Composable
 private fun AvailableSlotsSection(
-    selectedDateIndex: Int,
-    onDateSelected: (Int) -> Unit
+    timeSlots: List<TimeSlot>,
+    selectedDate: LocalDate,
+    onDateSelected: (LocalDate) -> Unit,
 ) {
+    val today = LocalDate.now()
+    val dateChips = (0..4).map { today.plusDays(it.toLong()) }
+
     Column(
         modifier = Modifier
             .fillMaxWidth()
             .padding(vertical = 16.dp)
     ) {
-        // Header
         Row(
             modifier = Modifier
                 .fillMaxWidth()
@@ -908,15 +905,18 @@ private fun AvailableSlotsSection(
 
         Spacer(modifier = Modifier.height(12.dp))
 
-        // Date chips
         Row(
             modifier = Modifier
                 .horizontalScroll(rememberScrollState())
                 .padding(horizontal = 16.dp),
             horizontalArrangement = Arrangement.spacedBy(8.dp)
         ) {
-            PLACEHOLDER_DATES.forEachIndexed { index, chip ->
-                val isActive = index == selectedDateIndex
+            dateChips.forEach { date ->
+                val isActive = date == selectedDate
+                val label = if (date == today) "Today"
+                else date.dayOfWeek.getDisplayName(JavaTextStyle.SHORT, Locale.getDefault()) +
+                        " " + date.dayOfMonth + " " +
+                        date.month.getDisplayName(JavaTextStyle.SHORT, Locale.getDefault())
                 Box(
                     modifier = Modifier
                         .clip(RoundedCornerShape(50))
@@ -930,11 +930,11 @@ private fun AvailableSlotsSection(
                             else Color.White.copy(alpha = 0.08f),
                             shape = RoundedCornerShape(50)
                         )
-                        .clickable { onDateSelected(index) }
+                        .clickable { onDateSelected(date) }
                         .padding(horizontal = 16.dp, vertical = 8.dp)
                 ) {
                     Text(
-                        text = chip.label,
+                        text = label,
                         fontSize = 12.sp,
                         fontWeight = if (isActive) FontWeight.Bold else FontWeight.Normal,
                         color = if (isActive) GreenAccent else DarkTextSecondary
@@ -945,15 +945,23 @@ private fun AvailableSlotsSection(
 
         Spacer(modifier = Modifier.height(12.dp))
 
-        // Time slot chips
-        Row(
-            modifier = Modifier
-                .horizontalScroll(rememberScrollState())
-                .padding(horizontal = 16.dp),
-            horizontalArrangement = Arrangement.spacedBy(8.dp)
-        ) {
-            PLACEHOLDER_SLOTS.forEach { slot ->
-                TimeSlotChip(slot = slot)
+        if (timeSlots.isEmpty()) {
+            Text(
+                text = "No slots available for this date",
+                fontSize = 13.sp,
+                color = DarkTextSecondary,
+                modifier = Modifier.padding(horizontal = 16.dp)
+            )
+        } else {
+            Row(
+                modifier = Modifier
+                    .horizontalScroll(rememberScrollState())
+                    .padding(horizontal = 16.dp),
+                horizontalArrangement = Arrangement.spacedBy(8.dp)
+            ) {
+                timeSlots.forEach { slot ->
+                    TimeSlotChip(slot = slot)
+                }
             }
         }
     }
@@ -961,46 +969,34 @@ private fun AvailableSlotsSection(
 
 @Composable
 private fun TimeSlotChip(slot: TimeSlot) {
-    val bgColor = when (slot.state) {
-        SlotState.AVAILABLE -> Color.Transparent
-        SlotState.BOOKED -> Color.White.copy(alpha = 0.03f)
-        SlotState.DEAL -> Color(0xFFE91E63).copy(alpha = 0.06f)
-    }
-    val borderColor = when (slot.state) {
-        SlotState.AVAILABLE -> GreenAccent.copy(alpha = 0.5f)
-        SlotState.BOOKED -> Color.White.copy(alpha = 0.08f)
-        SlotState.DEAL -> Color(0xFFE91E63).copy(alpha = 0.6f)
-    }
-    val textColor = when (slot.state) {
-        SlotState.AVAILABLE -> GreenAccent
-        SlotState.BOOKED -> DarkTextTertiary
-        SlotState.DEAL -> Color(0xFFE91E63)
-    }
+    val bgColor = if (slot.isAvailable) Color.Transparent else Color.White.copy(alpha = 0.03f)
+    val borderColor = if (slot.isAvailable) GreenAccent.copy(alpha = 0.5f) else Color.White.copy(alpha = 0.08f)
+    val textColor = if (slot.isAvailable) GreenAccent else DarkTextTertiary
 
     Column(
         modifier = Modifier
             .clip(RoundedCornerShape(10.dp))
             .background(bgColor)
             .border(1.dp, borderColor, RoundedCornerShape(10.dp))
-            .alpha(if (slot.state == SlotState.BOOKED) 0.3f else 1f)
+            .alpha(if (!slot.isAvailable) 0.3f else 1f)
             .padding(horizontal = 14.dp, vertical = 8.dp),
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
         Text(
-            text = slot.time,
+            text = slot.startTime,
             fontSize = 13.sp,
             fontWeight = FontWeight.Medium,
             color = textColor,
-            style = if (slot.state == SlotState.BOOKED)
+            style = if (!slot.isAvailable)
                 TextStyle(textDecoration = TextDecoration.LineThrough)
             else TextStyle()
         )
-        if (slot.state == SlotState.DEAL) {
+        if (slot.priceOverride != null) {
             Text(
-                text = "−25% DEAL",
+                text = "€${slot.priceOverride.toInt()}",
                 fontSize = 9.sp,
                 fontWeight = FontWeight.Bold,
-                color = Color(0xFFE91E63)
+                color = GreenAccent
             )
         }
     }
@@ -1085,7 +1081,7 @@ private fun SportAvailableCard(
 // ═════════════════════════════════════════════════════════════════════════════
 
 @Composable
-private fun OpenMatchesSection() {
+private fun OpenMatchesSection(matches: List<Match>, venue: Venue) {
     Column(
         modifier = Modifier
             .fillMaxWidth()
@@ -1104,20 +1100,32 @@ private fun OpenMatchesSection() {
                 fontWeight = FontWeight.Bold,
                 color = DarkTextPrimary
             )
-            Text(text = "See All", fontSize = 13.sp, color = GreenAccent)
+            if (matches.isNotEmpty()) {
+                Text(text = "See All", fontSize = 13.sp, color = GreenAccent)
+            }
         }
 
         Spacer(modifier = Modifier.height(12.dp))
 
-        PLACEHOLDER_MATCHES.forEach { match ->
-            MatchCardItem(match = match)
-            Spacer(modifier = Modifier.height(10.dp))
+        if (matches.isEmpty()) {
+            Text(
+                text = "No open matches at this venue right now",
+                fontSize = 13.sp,
+                color = DarkTextSecondary,
+                modifier = Modifier.padding(horizontal = 16.dp)
+            )
+        } else {
+            matches.forEach { match ->
+                MatchCardItem(match = match)
+                Spacer(modifier = Modifier.height(10.dp))
+            }
         }
     }
 }
 
 @Composable
-private fun MatchCardItem(match: MatchCard) {
+private fun MatchCardItem(match: Match) {
+    val canJoin = !match.isFull
     Row(
         modifier = Modifier
             .fillMaxWidth()
@@ -1128,7 +1136,6 @@ private fun MatchCardItem(match: MatchCard) {
             .padding(12.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {
-        // Sport icon box
         Box(
             modifier = Modifier
                 .size(44.dp)
@@ -1136,46 +1143,45 @@ private fun MatchCardItem(match: MatchCard) {
                 .background(GreenAccent.copy(alpha = 0.15f)),
             contentAlignment = Alignment.Center
         ) {
-            Text(text = match.emoji, fontSize = 22.sp)
+            Text(text = match.sportType.emoji(), fontSize = 22.sp)
         }
 
         Spacer(modifier = Modifier.width(12.dp))
 
         Column(modifier = Modifier.weight(1f)) {
             Text(
-                text = match.name,
+                text = match.title.ifBlank { "${match.sportType.displayName} Match" },
                 fontSize = 14.sp,
                 fontWeight = FontWeight.Bold,
                 color = DarkTextPrimary
             )
             Text(
-                text = match.detail,
+                text = "${match.matchDate} ${match.startTime} · ${match.currentPlayers}/${match.maxPlayers} spots",
                 fontSize = 12.sp,
                 color = DarkTextSecondary
             )
         }
 
-        // Join / View button
         Box(
             modifier = Modifier
                 .clip(RoundedCornerShape(8.dp))
                 .background(
-                    if (match.canJoin) GreenAccent.copy(alpha = 0.2f)
+                    if (canJoin) GreenAccent.copy(alpha = 0.2f)
                     else Color.White.copy(alpha = 0.06f)
                 )
                 .border(
                     1.dp,
-                    if (match.canJoin) GreenAccent.copy(alpha = 0.4f)
+                    if (canJoin) GreenAccent.copy(alpha = 0.4f)
                     else Color.White.copy(alpha = 0.08f),
                     RoundedCornerShape(8.dp)
                 )
                 .padding(horizontal = 14.dp, vertical = 7.dp)
         ) {
             Text(
-                text = if (match.canJoin) "Join" else "View",
+                text = if (canJoin) "Join" else "Full",
                 fontSize = 12.sp,
                 fontWeight = FontWeight.Bold,
-                color = if (match.canJoin) GreenAccent else DarkTextSecondary
+                color = if (canJoin) GreenAccent else DarkTextSecondary
             )
         }
     }
@@ -1590,6 +1596,10 @@ private fun VenueDetailScreenPreview() {
         VenueDetailScaffold(
             venue = sampleVenue(),
             reviews = sampleReviews(),
+            timeSlots = emptyList(),
+            venueMatches = emptyList(),
+            selectedDate = LocalDate.now(),
+            onDateSelected = {},
             onBookClick = {},
             onBrowseLobbies = {},
             onBack = {}
@@ -1624,9 +1634,9 @@ private fun TimeSlotChipsPreview() {
                 .padding(16.dp)
         ) {
             Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                TimeSlotChip(TimeSlot("10:00", SlotState.AVAILABLE))
-                TimeSlotChip(TimeSlot("11:00", SlotState.BOOKED))
-                TimeSlotChip(TimeSlot("12:00", SlotState.DEAL))
+                TimeSlotChip(TimeSlot(id = 1, startTime = "10:00", isAvailable = true))
+                TimeSlotChip(TimeSlot(id = 2, startTime = "11:00", isAvailable = false))
+                TimeSlotChip(TimeSlot(id = 3, startTime = "12:00", isAvailable = true, priceOverride = 25.0))
             }
         }
     }

@@ -1,5 +1,6 @@
 package com.example.sportsbook.ui.screens.player.mybookings
 
+import android.widget.Toast
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -25,6 +26,7 @@ import androidx.compose.material3.pulltorefresh.rememberPullToRefreshState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
@@ -89,11 +91,14 @@ fun MyBookingsScreen(
                 color = DarkTextPrimary,
                 modifier = Modifier.weight(1f),
             )
+            val filterContext = LocalContext.current
             Box(
                 modifier = Modifier
                     .clip(RoundedCornerShape(10.dp))
                     .background(DarkSurface)
-                    .clickable { }
+                    .clickable {
+                        Toast.makeText(filterContext, "Filters coming soon", Toast.LENGTH_SHORT).show()
+                    }
                     .padding(horizontal = 14.dp, vertical = 8.dp),
             ) {
                 Text("☰ Filter", fontSize = 13.sp, color = DarkTextPrimary)

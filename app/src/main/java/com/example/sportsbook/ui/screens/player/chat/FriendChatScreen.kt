@@ -1,5 +1,6 @@
 package com.example.sportsbook.ui.screens.player.chat
 
+import android.widget.Toast
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -28,6 +29,7 @@ import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
@@ -208,12 +210,15 @@ fun FriendChatScreen(
 
 @Composable
 private fun HeaderActionButton(emoji: String) {
+    val context = LocalContext.current
     Box(
         modifier = Modifier
             .size(36.dp)
             .clip(CircleShape)
             .background(Color.White.copy(alpha = 0.05f))
-            .clickable { },
+            .clickable {
+                Toast.makeText(context, "Coming soon", Toast.LENGTH_SHORT).show()
+            },
         contentAlignment = Alignment.Center,
     ) {
         Text(emoji, fontSize = 16.sp)
@@ -298,12 +303,15 @@ private fun MessageInputBar(
         horizontalArrangement = Arrangement.spacedBy(8.dp),
     ) {
         // Attach button
+        val attachContext = LocalContext.current
         Box(
             modifier = Modifier
                 .size(40.dp)
                 .clip(CircleShape)
                 .background(Color.White.copy(alpha = 0.05f))
-                .clickable { },
+                .clickable {
+                    Toast.makeText(attachContext, "Attachments coming soon", Toast.LENGTH_SHORT).show()
+                },
             contentAlignment = Alignment.Center,
         ) {
             Text("+", fontSize = 20.sp, color = DarkTextSecondary)

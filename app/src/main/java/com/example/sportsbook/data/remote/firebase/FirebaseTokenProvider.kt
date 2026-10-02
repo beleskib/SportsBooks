@@ -9,10 +9,10 @@ import javax.inject.Singleton
 class FirebaseTokenProvider @Inject constructor(
     private val firebaseAuth: FirebaseAuth
 ) {
-    suspend fun getIdToken(): String? {
+    suspend fun getIdToken(forceRefresh: Boolean = false): String? {
         return try {
             firebaseAuth.currentUser
-                ?.getIdToken(false)
+                ?.getIdToken(forceRefresh)
                 ?.await()
                 ?.token
         } catch (e: Exception) {

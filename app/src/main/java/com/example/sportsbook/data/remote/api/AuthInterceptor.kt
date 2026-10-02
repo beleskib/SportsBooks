@@ -17,13 +17,27 @@ class AuthInterceptor @Inject constructor(
 
         val token = runBlocking { tokenProvider.getIdToken() }
 
-        return if (token != null) {
-            val authenticatedRequest = originalRequest.newBuilder()
+        if (token == null) {
+            return chain.proceed(originalRequest)
+        }
+
+        val response = chain.proceed(
+            originalRequest.newBuilder()
                 .header("Authorization", "Bearer $token")
                 .build()
-            chain.proceed(authenticatedRequest)
-        } else {
-            chain.proceed(originalRequest)
+        )
+
+        if (response.code == 401) {
+            response.close()
+            val freshToken = runBlocking { tokenProvider.getIdToken(forceRefresh = true) }
+                ?: return chain.proceed(originalRequest)
+            return chain.proceed(
+                originalRequest.newBuilder()
+                    .header("Authorization", "Bearer $freshToken")
+                    .build()
+            )
         }
+
+        return response
     }
 }

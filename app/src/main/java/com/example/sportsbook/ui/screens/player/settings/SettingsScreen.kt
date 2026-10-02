@@ -1,5 +1,6 @@
 package com.example.sportsbook.ui.screens.player.settings
 
+import android.widget.Toast
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -31,6 +32,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
@@ -68,6 +70,7 @@ fun SettingsScreen(
     var emailNotificationsOn by remember { mutableStateOf(true) }
     var showLocationOn by remember { mutableStateOf(true) }
     var showActivityOn by remember { mutableStateOf(true) }
+    val context = LocalContext.current
 
     LaunchedEffect(uiState.toast) {
         uiState.toast?.let {
@@ -122,19 +125,19 @@ fun SettingsScreen(
                     SettingsNavRow(
                         icon = "📧", iconBg = Color(0xFF1B2D3A),
                         title = "Email", subtitle = uiState.email.ifBlank { "Not set" },
-                        onClick = {},
+                        onClick = { Toast.makeText(context, "Change email coming soon", Toast.LENGTH_SHORT).show() },
                     )
                     SettingsDivider()
                     SettingsNavRow(
                         icon = "🔒", iconBg = Color(0xFF3A2E1B),
                         title = "Password", subtitle = "Change password",
-                        onClick = {},
+                        onClick = { Toast.makeText(context, "Change password coming soon", Toast.LENGTH_SHORT).show() },
                     )
                     SettingsDivider()
                     SettingsNavRow(
                         icon = "💳", iconBg = Color(0xFF3A1B3A),
                         title = "Payment Methods", subtitle = "Manage cards & wallets",
-                        onClick = {},
+                        onClick = { Toast.makeText(context, "Payment methods coming soon", Toast.LENGTH_SHORT).show() },
                     )
                 }
             }
@@ -180,19 +183,19 @@ fun SettingsScreen(
                     SettingsNavRow(
                         icon = "🌍", iconBg = Color(0xFF1E1E1E),
                         title = "Language", value = "English",
-                        onClick = {},
+                        onClick = { Toast.makeText(context, "Language settings coming soon", Toast.LENGTH_SHORT).show() },
                     )
                     SettingsDivider()
                     SettingsNavRow(
                         icon = "🌙", iconBg = Color(0xFF1E1E1E),
                         title = "Appearance", value = "Dark",
-                        onClick = {},
+                        onClick = { Toast.makeText(context, "Appearance settings coming soon", Toast.LENGTH_SHORT).show() },
                     )
                     SettingsDivider()
                     SettingsNavRow(
                         icon = "📍", iconBg = Color(0xFF1E1E1E),
                         title = "Location", subtitle = "Skopje, North Macedonia",
-                        onClick = {},
+                        onClick = { Toast.makeText(context, "Location settings coming soon", Toast.LENGTH_SHORT).show() },
                     )
                     SettingsDivider()
                     SettingsNavRow(
@@ -214,7 +217,7 @@ fun SettingsScreen(
                         icon = "👁", iconBg = Color(0xFF1E1E1E),
                         title = "Profile Visibility",
                         value = uiState.profileVisibility.displayLabel,
-                        onClick = {},
+                        onClick = { Toast.makeText(context, "Visibility settings coming soon", Toast.LENGTH_SHORT).show() },
                     )
                     SettingsDivider()
                     SettingsToggleRow(
@@ -237,11 +240,11 @@ fun SettingsScreen(
             item { SectionLabel("Support") }
             item {
                 SettingsGroup {
-                    SettingsNavRow(icon = "❓", iconBg = Color(0xFF1E1E1E), title = "Help & FAQ", onClick = {})
+                    SettingsNavRow(icon = "❓", iconBg = Color(0xFF1E1E1E), title = "Help & FAQ", onClick = { Toast.makeText(context, "Help & FAQ coming soon", Toast.LENGTH_SHORT).show() })
                     SettingsDivider()
-                    SettingsNavRow(icon = "💬", iconBg = Color(0xFF1E1E1E), title = "Contact Us", onClick = {})
+                    SettingsNavRow(icon = "💬", iconBg = Color(0xFF1E1E1E), title = "Contact Us", onClick = { Toast.makeText(context, "Contact us coming soon", Toast.LENGTH_SHORT).show() })
                     SettingsDivider()
-                    SettingsNavRow(icon = "📄", iconBg = Color(0xFF1E1E1E), title = "Terms & Privacy", onClick = {})
+                    SettingsNavRow(icon = "📄", iconBg = Color(0xFF1E1E1E), title = "Terms & Privacy", onClick = { Toast.makeText(context, "Terms & Privacy coming soon", Toast.LENGTH_SHORT).show() })
                 }
             }
 
@@ -274,7 +277,7 @@ fun SettingsScreen(
                             .fillMaxWidth()
                             .clip(RoundedCornerShape(12.dp))
                             .background(Color.Transparent)
-                            .clickable { /* delete account */ }
+                            .clickable { Toast.makeText(context, "Account deletion coming soon", Toast.LENGTH_SHORT).show() }
                             .padding(vertical = 14.dp),
                         contentAlignment = Alignment.Center,
                     ) {

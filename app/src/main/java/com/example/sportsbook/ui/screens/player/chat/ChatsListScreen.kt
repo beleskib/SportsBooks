@@ -1,5 +1,6 @@
 package com.example.sportsbook.ui.screens.player.chat
 
+import android.widget.Toast
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -21,6 +22,7 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
@@ -84,12 +86,15 @@ fun ChatsListScreen(
             verticalAlignment = Alignment.CenterVertically,
         ) {
             Text("Messages", fontSize = 20.sp, fontWeight = FontWeight.Bold, color = DarkTextPrimary, modifier = Modifier.weight(1f))
+            val composeContext = LocalContext.current
             Box(
                 modifier = Modifier
                     .size(36.dp)
                     .clip(CircleShape)
                     .background(DarkSurface)
-                    .clickable { },
+                    .clickable {
+                        Toast.makeText(composeContext, "New message coming soon", Toast.LENGTH_SHORT).show()
+                    },
                 contentAlignment = Alignment.Center,
             ) {
                 Text("✏", fontSize = 16.sp)

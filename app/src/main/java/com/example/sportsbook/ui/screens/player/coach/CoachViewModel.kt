@@ -6,8 +6,10 @@ import androidx.lifecycle.viewModelScope
 import com.example.sportsbook.domain.enums.SportType
 import com.example.sportsbook.domain.model.Coach
 import com.example.sportsbook.domain.model.Review
+import com.example.sportsbook.domain.model.TimeSlot
 import com.example.sportsbook.domain.repository.CoachRepository
 import com.example.sportsbook.domain.repository.ReviewRepository
+import com.example.sportsbook.domain.repository.TimeSlotRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.async
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -15,12 +17,16 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import java.time.LocalDate
+import java.time.format.DateTimeFormatter
 import javax.inject.Inject
 
 data class CoachUiState(
     val coaches: List<Coach> = emptyList(),
     val selectedCoach: Coach? = null,
     val reviews: List<Review> = emptyList(),
+    val timeSlots: List<TimeSlot> = emptyList(),
+    val selectedDate: LocalDate = LocalDate.now(),
     val searchQuery: String = "",
     val isLoading: Boolean = false,
     val error: String? = null
@@ -30,6 +36,7 @@ data class CoachUiState(
 class CoachViewModel @Inject constructor(
     private val coachRepository: CoachRepository,
     private val reviewRepository: ReviewRepository,
+    private val timeSlotRepository: TimeSlotRepository,
     private val savedStateHandle: SavedStateHandle
 ) : ViewModel() {
 
@@ -110,6 +117,26 @@ class CoachViewModel @Inject constructor(
                         null
                     }
                 )
+            }
+            loadTimeSlotsForDate(coachId, _uiState.value.selectedDate)
+        }
+    }
+
+    fun selectDate(date: LocalDate) {
+        _uiState.update { it.copy(selectedDate = date) }
+        val coachId = _uiState.value.selectedCoach?.id ?: return
+        loadTimeSlotsForDate(coachId, date)
+    }
+
+    private fun loadTimeSlotsForDate(coachId: Long, date: LocalDate) {
+        viewModelScope.launch {
+            val dateStr = date.format(DateTimeFormatter.ISO_LOCAL_DATE)
+            timeSlotRepository.getAvailableSlots(
+                coachId = coachId,
+                dateFrom = dateStr,
+                dateTo = dateStr
+            ).onSuccess { slots ->
+                _uiState.update { it.copy(timeSlots = slots) }
             }
         }
     }

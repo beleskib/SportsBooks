@@ -133,7 +133,6 @@ fun SearchScreen(
 
         // ── Filter chips ──────────────────────────────────────────────────
         val filterOptions = listOf("All", "Venues", "Coaches", "Players", "Matches")
-        val activeFilter = 0 // Could be viewModel state
         Row(
             modifier = Modifier
                 .horizontalScroll(rememberScrollState())
@@ -144,8 +143,8 @@ fun SearchScreen(
                 Box(
                     modifier = Modifier
                         .clip(RoundedCornerShape(20.dp))
-                        .background(if (index == 0 && uiState.query.isEmpty() || (uiState.query.isNotEmpty() && index == 0)) GreenAccent else DarkSurface)
-                        .clickable { }
+                        .background(if (index == uiState.selectedFilter) GreenAccent else DarkSurface)
+                        .clickable { viewModel.onFilterSelected(index) }
                         .padding(horizontal = 16.dp, vertical = 8.dp),
                 ) {
                     Text(
@@ -169,6 +168,7 @@ fun SearchScreen(
             }
 
             uiState.hasSearched && (uiState.venues.isNotEmpty() || uiState.coaches.isNotEmpty() || uiState.matches.isNotEmpty()) -> {
+                val filter = uiState.selectedFilter
                 LazyColumn(modifier = Modifier.fillMaxSize()) {
                     item {
                         Text(
@@ -181,43 +181,49 @@ fun SearchScreen(
                         )
                     }
 
-                    items(uiState.venues) { venue ->
-                        SearchResultItem(
-                            icon = "🎾",
-                            iconBg = GreenAccent.copy(alpha = 0.15f),
-                            name = venue.name,
-                            meta = "📍 ${venue.address} • ★ ${venue.avgRating}",
-                            typeLabel = "Venue",
-                            typeBg = GreenAccent.copy(alpha = 0.15f),
-                            typeColor = GreenAccent,
-                            onClick = { onVenueClick(venue.id) },
-                        )
+                    if (filter == 0 || filter == 1) {
+                        items(uiState.venues) { venue ->
+                            SearchResultItem(
+                                icon = "🎾",
+                                iconBg = GreenAccent.copy(alpha = 0.15f),
+                                name = venue.name,
+                                meta = "📍 ${venue.address} • ★ ${venue.avgRating}",
+                                typeLabel = "Venue",
+                                typeBg = GreenAccent.copy(alpha = 0.15f),
+                                typeColor = GreenAccent,
+                                onClick = { onVenueClick(venue.id) },
+                            )
+                        }
                     }
 
-                    items(uiState.coaches) { coach ->
-                        SearchResultItem(
-                            icon = "🏋️",
-                            iconBg = Color(0xFF2196F3).copy(alpha = 0.15f),
-                            name = coach.name,
-                            meta = "${coach.sportType.displayName} • ★ ${coach.avgRating} • ${coach.totalReviews} sessions",
-                            typeLabel = "Coach",
-                            typeBg = Color(0xFF2196F3).copy(alpha = 0.15f),
-                            typeColor = Color(0xFF2196F3),
-                            onClick = { onCoachClick(coach.id) },
-                        )
+                    if (filter == 0 || filter == 2) {
+                        items(uiState.coaches) { coach ->
+                            SearchResultItem(
+                                icon = "🏋️",
+                                iconBg = Color(0xFF2196F3).copy(alpha = 0.15f),
+                                name = coach.name,
+                                meta = "${coach.sportType.displayName} • ★ ${coach.avgRating} • ${coach.totalReviews} sessions",
+                                typeLabel = "Coach",
+                                typeBg = Color(0xFF2196F3).copy(alpha = 0.15f),
+                                typeColor = Color(0xFF2196F3),
+                                onClick = { onCoachClick(coach.id) },
+                            )
+                        }
                     }
 
-                    items(uiState.matches) { match ->
-                        SearchResultItem(
-                            icon = "⚡",
-                            iconBg = Color(0xFF9C27B0).copy(alpha = 0.15f),
-                            name = match.title,
-                            meta = "${match.sportType.displayName} • ${match.currentPlayers}/${match.maxPlayers} players",
-                            typeLabel = "Match",
-                            typeBg = Color(0xFF9C27B0).copy(alpha = 0.15f),
-                            typeColor = Color(0xFFAB47BC),
-                            onClick = { onMatchClick(match.id) },
-                        )
+                    if (filter == 0 || filter == 4) {
+                        items(uiState.matches) { match ->
+                            SearchResultItem(
+                                icon = "⚡",
+                                iconBg = Color(0xFF9C27B0).copy(alpha = 0.15f),
+                                name = match.title,
+                                meta = "${match.sportType.displayName} • ${match.currentPlayers}/${match.maxPlayers} players",
+                                typeLabel = "Match",
+                                typeBg = Color(0xFF9C27B0).copy(alpha = 0.15f),
+                                typeColor = Color(0xFFAB47BC),
+                                onClick = { onMatchClick(match.id) },
+                            )
+                        }
                     }
                 }
             }

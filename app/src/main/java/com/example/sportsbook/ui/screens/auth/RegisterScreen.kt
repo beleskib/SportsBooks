@@ -1,5 +1,6 @@
 package com.example.sportsbook.ui.screens.auth
 
+import android.widget.Toast
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -25,6 +26,7 @@ import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
@@ -303,13 +305,16 @@ fun RegisterScreen(
                     .padding(horizontal = 24.dp),
                 horizontalArrangement = Arrangement.spacedBy(12.dp),
             ) {
+                val socialContext = LocalContext.current
                 Box(
                     modifier = Modifier
                         .weight(1f)
                         .clip(RoundedCornerShape(12.dp))
                         .background(DarkSurface)
                         .border(1.dp, DarkBorder, RoundedCornerShape(12.dp))
-                        .clickable { }
+                        .clickable {
+                            Toast.makeText(socialContext, "Google sign-up coming soon", Toast.LENGTH_SHORT).show()
+                        }
                         .padding(vertical = 14.dp),
                     contentAlignment = Alignment.Center,
                 ) {
@@ -324,7 +329,9 @@ fun RegisterScreen(
                         .clip(RoundedCornerShape(12.dp))
                         .background(DarkSurface)
                         .border(1.dp, DarkBorder, RoundedCornerShape(12.dp))
-                        .clickable { }
+                        .clickable {
+                            Toast.makeText(socialContext, "Apple sign-up coming soon", Toast.LENGTH_SHORT).show()
+                        }
                         .padding(vertical = 14.dp),
                     contentAlignment = Alignment.Center,
                 ) {

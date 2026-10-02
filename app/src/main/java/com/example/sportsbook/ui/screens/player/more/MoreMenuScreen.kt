@@ -1,5 +1,6 @@
 package com.example.sportsbook.ui.screens.player.more
 
+import android.widget.Toast
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -26,6 +27,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
+import androidx.compose.ui.platform.LocalContext
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.compose.ui.Modifier
@@ -69,6 +71,7 @@ fun MoreMenuScreen(
     val userName = user?.displayName ?: "Player"
     val userInitial = userName.firstOrNull()?.uppercase() ?: "?"
     var darkModeOn by remember { mutableStateOf(true) }
+    val context = LocalContext.current
     val currentLevel = level?.currentLevel ?: 1
     val totalXp = level?.totalXp ?: 0
     val xpToNext = level?.xpToNextLevel ?: 100
@@ -203,7 +206,7 @@ fun MoreMenuScreen(
             MoreMenuRow(icon = "🏆", iconBgKey = "gold", title = "Achievements", subtitle = "${menuState.achievementsEarned} of ${menuState.achievementsTotal} unlocked", badge = if (menuState.achievementsEarned > 0) "${menuState.achievementsEarned}" else null, badgeGreen = true, onClick = onNavigateToAchievements)
             MoreMenuRow(icon = "📊", iconBgKey = "green", title = "Stats & Activity", subtitle = "Match history, XP breakdown", onClick = onNavigateToStats)
             MoreMenuRow(icon = "⚡", iconBgKey = "teal", title = "XP & Levels", subtitle = "Your progress, rewards & rank", onClick = onNavigateToXpLevel)
-            MoreMenuRow(icon = "⭐", iconBgKey = "orange", title = "My Reviews", subtitle = "Reviews you've given & received", onClick = {})
+            MoreMenuRow(icon = "⭐", iconBgKey = "orange", title = "My Reviews", subtitle = "Reviews you've given & received", onClick = { Toast.makeText(context, "My Reviews coming soon", Toast.LENGTH_SHORT).show() })
         }
 
         // Divider
@@ -213,7 +216,7 @@ fun MoreMenuScreen(
         item { MoreSectionLabel("Activity") }
         item {
             MoreMenuRow(icon = "📅", iconBgKey = "purple", title = "My Bookings", subtitle = "Upcoming & past reservations", badge = if ((stats?.totalBookings ?: 0) > 0) "${stats?.totalBookings}" else null, onClick = onNavigateToBookings)
-            MoreMenuRow(icon = "⚡", iconBgKey = "teal", title = "My Matches", subtitle = "Active & completed matches", onClick = {})
+            MoreMenuRow(icon = "⚡", iconBgKey = "teal", title = "My Matches", subtitle = "Active & completed matches", onClick = { Toast.makeText(context, "My Matches coming soon", Toast.LENGTH_SHORT).show() })
             MoreMenuRow(icon = "👥", iconBgKey = "blue", title = "Communities", subtitle = "Join or create a sports group", onClick = onNavigateToCommunities)
             MoreMenuRow(icon = "💳", iconBgKey = "pink", title = "Payments", subtitle = "Transaction history", onClick = onNavigateToPayments)
             MoreMenuRow(icon = "🏦", iconBgKey = "teal", title = "Payment Methods", subtitle = "Manage saved cards", onClick = onNavigateToPaymentMethods)
@@ -227,7 +230,7 @@ fun MoreMenuScreen(
         item {
             MoreMenuRow(icon = "🔔", iconBgKey = "grey", title = "Notifications", subtitle = "Push, email & in-app alerts", onClick = onNavigateToNotifications)
             MoreMenuRowToggle(icon = "🎨", iconBgKey = "grey", title = "Appearance", subtitle = "Dark mode, theme colors", checked = darkModeOn, onCheckedChange = { darkModeOn = it })
-            MoreMenuRow(icon = "🌐", iconBgKey = "grey", title = "Language", subtitle = "English", onClick = {})
+            MoreMenuRow(icon = "🌐", iconBgKey = "grey", title = "Language", subtitle = "English", onClick = { Toast.makeText(context, "Language settings coming soon", Toast.LENGTH_SHORT).show() })
             MoreMenuRow(icon = "⚙️", iconBgKey = "grey", title = "Settings", subtitle = "Account, privacy, security", onClick = onNavigateToSettings)
         }
 
@@ -237,8 +240,8 @@ fun MoreMenuScreen(
         // ── Support section ───────────────────────────────────────────
         item { MoreSectionLabel("Support") }
         item {
-            MoreMenuRow(icon = "💬", iconBgKey = "green", title = "Help & FAQ", onClick = {})
-            MoreMenuRow(icon = "📧", iconBgKey = "blue", title = "Contact Us", onClick = {})
+            MoreMenuRow(icon = "💬", iconBgKey = "green", title = "Help & FAQ", onClick = { Toast.makeText(context, "Help & FAQ coming soon", Toast.LENGTH_SHORT).show() })
+            MoreMenuRow(icon = "📧", iconBgKey = "blue", title = "Contact Us", onClick = { Toast.makeText(context, "Contact us coming soon", Toast.LENGTH_SHORT).show() })
             MoreMenuRow(icon = "🚪", iconBgKey = "red", title = "Log Out", titleColor = Color(0xFFEF5350), onClick = onSignOut, showArrow = false)
         }
 

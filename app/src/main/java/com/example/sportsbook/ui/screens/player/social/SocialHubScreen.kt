@@ -16,12 +16,10 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.grid.GridCells
-import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
-import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -38,6 +36,10 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.example.sportsbook.domain.model.Friendship
+import com.example.sportsbook.domain.model.Party
 import com.example.sportsbook.ui.theme.DarkBg
 import com.example.sportsbook.ui.theme.DarkBorder
 import com.example.sportsbook.ui.theme.DarkSurface
@@ -50,13 +52,16 @@ import com.example.sportsbook.ui.theme.OrangeAccent
 
 @Composable
 fun SocialHubScreen(
+    viewModel: SocialHubViewModel = hiltViewModel(),
     onNavigateToChats: () -> Unit = {},
     onNavigateToAddFriend: () -> Unit = {},
     onNavigateToCreateParty: () -> Unit = {},
+    onNavigateToFriendRequests: () -> Unit = {},
     onFriendClick: (Long, String, String?) -> Unit = { _, _, _ -> },
     onPartyClick: (Long) -> Unit = {},
     onPlayerClick: (Long) -> Unit = {},
 ) {
+    val uiState by viewModel.uiState.collectAsStateWithLifecycle()
     var selectedTab by remember { mutableIntStateOf(0) }
     val tabs = listOf("Friends", "Parties", "Find Players")
 
@@ -74,7 +79,26 @@ fun SocialHubScreen(
         ) {
             Text("Social Hub", fontSize = 20.sp, fontWeight = FontWeight.Bold, color = DarkTextPrimary, modifier = Modifier.weight(1f))
             Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                SocialIconBtn("🔔", onClick = {})
+                Box(modifier = Modifier.size(36.dp)) {
+                    SocialIconBtn("🔔", onClick = onNavigateToFriendRequests)
+                    if (uiState.pendingRequests.isNotEmpty()) {
+                        Box(
+                            modifier = Modifier
+                                .align(Alignment.TopEnd)
+                                .size(16.dp)
+                                .clip(CircleShape)
+                                .background(Color.Red),
+                            contentAlignment = Alignment.Center,
+                        ) {
+                            Text(
+                                text = uiState.pendingRequests.size.toString(),
+                                fontSize = 9.sp,
+                                fontWeight = FontWeight.Bold,
+                                color = Color.White,
+                            )
+                        }
+                    }
+                }
                 SocialIconBtn("💬", onClick = onNavigateToChats)
             }
         }
@@ -113,13 +137,31 @@ fun SocialHubScreen(
         // ── Tab content ──────────────────────────────────────────────
         when (selectedTab) {
             0 -> FriendsTab(
+                friends = uiState.friends,
+                pendingRequests = uiState.pendingRequests,
+                parties = uiState.parties,
+                isLoading = uiState.isLoadingFriends,
                 onAddFriend = onNavigateToAddFriend,
                 onCreateParty = onNavigateToCreateParty,
                 onFriendClick = onFriendClick,
                 onPartyClick = onPartyClick,
+                onAcceptRequest = viewModel::acceptFriendRequest,
+                onDeclineRequest = viewModel::declineFriendRequest,
+                onSeeAllFriends = onNavigateToAddFriend,
             )
-            1 -> PartiesTab(onCreateParty = onNavigateToCreateParty, onPartyClick = onPartyClick)
-            2 -> FindPlayersTab(onAddFriend = onNavigateToAddFriend, onPlayerClick = onPlayerClick)
+            1 -> PartiesTab(
+                parties = uiState.parties,
+                isLoading = uiState.isLoadingParties,
+                onCreateParty = onNavigateToCreateParty,
+                onPartyClick = onPartyClick,
+            )
+            2 -> FindPlayersTab(
+                players = uiState.nearbyPlayers,
+                isLoading = uiState.isLoadingPlayers,
+                onAddFriend = onNavigateToAddFriend,
+                onPlayerClick = onPlayerClick,
+                onSendRequest = viewModel::sendFriendRequest,
+            )
         }
     }
 }
@@ -128,10 +170,17 @@ fun SocialHubScreen(
 
 @Composable
 private fun FriendsTab(
+    friends: List<Friendship>,
+    pendingRequests: List<Friendship>,
+    parties: List<Party>,
+    isLoading: Boolean,
     onAddFriend: () -> Unit,
     onCreateParty: () -> Unit,
     onFriendClick: (Long, String, String?) -> Unit,
     onPartyClick: (Long) -> Unit,
+    onAcceptRequest: (Long) -> Unit,
+    onDeclineRequest: (Long) -> Unit,
+    onSeeAllFriends: () -> Unit,
 ) {
     LazyColumn(modifier = Modifier.fillMaxSize()) {
         // Quick action cards
@@ -183,124 +232,183 @@ private fun FriendsTab(
             }
         }
 
-        // Active party
-        item {
-            SocialSectionHeader("🎮 Active Party", actionLabel = null, onAction = {})
-            Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(horizontal = 16.dp)
-                    .padding(bottom = 16.dp)
-                    .clip(RoundedCornerShape(14.dp))
-                    .background(DarkSurface)
-                    .clickable { onPartyClick(1L) }
-                    .padding(16.dp),
-                verticalAlignment = Alignment.CenterVertically,
-            ) {
-                // Overlapping avatars
-                Box(modifier = Modifier.width(80.dp).height(36.dp)) {
-                    listOf("B" to 0, "K" to 24, "J" to 48).forEach { (letter, offsetX) ->
-                        Box(
-                            modifier = Modifier
-                                .offset(x = offsetX.dp)
-                                .size(36.dp)
-                                .clip(CircleShape)
-                                .background(Brush.linearGradient(listOf(GreenAccent, Color(0xFF2196F3))))
-                                .border(2.dp, DarkBg, CircleShape),
-                            contentAlignment = Alignment.Center,
-                        ) {
-                            Text(letter, fontSize = 14.sp, fontWeight = FontWeight.Bold, color = Color.White)
+        // Active party (show first active party if exists)
+        val activeParty = parties.firstOrNull { it.status == "forming" || it.status == "ready" }
+        if (activeParty != null) {
+            item {
+                SocialSectionHeader("🎮 Active Party", actionLabel = null, onAction = {})
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = 16.dp)
+                        .padding(bottom = 16.dp)
+                        .clip(RoundedCornerShape(14.dp))
+                        .background(DarkSurface)
+                        .clickable { onPartyClick(activeParty.id) }
+                        .padding(16.dp),
+                    verticalAlignment = Alignment.CenterVertically,
+                ) {
+                    Box(modifier = Modifier.width(80.dp).height(36.dp)) {
+                        activeParty.members.take(3).forEachIndexed { i, member ->
+                            val initial = member.userName?.firstOrNull()?.uppercase() ?: "?"
+                            Box(
+                                modifier = Modifier
+                                    .offset(x = (24 * i).dp)
+                                    .size(36.dp)
+                                    .clip(CircleShape)
+                                    .background(Brush.linearGradient(listOf(GreenAccent, Color(0xFF2196F3))))
+                                    .border(2.dp, DarkBg, CircleShape),
+                                contentAlignment = Alignment.Center,
+                            ) {
+                                Text(initial, fontSize = 14.sp, fontWeight = FontWeight.Bold, color = Color.White)
+                            }
                         }
                     }
-                }
-                Spacer(modifier = Modifier.width(12.dp))
-                Column(modifier = Modifier.weight(1f)) {
-                    Text("Friday Basketball Crew", fontSize = 14.sp, fontWeight = FontWeight.SemiBold, color = DarkTextPrimary)
-                    Text("3/5 players • Looking for match", fontSize = 12.sp, color = DarkTextSecondary, modifier = Modifier.padding(top = 2.dp))
-                }
-                Box(
-                    modifier = Modifier
-                        .clip(RoundedCornerShape(8.dp))
-                        .background(GreenAccent)
-                        .clickable { onPartyClick(1L) }
-                        .padding(horizontal = 14.dp, vertical = 6.dp),
-                ) {
-                    Text("Open", fontSize = 13.sp, fontWeight = FontWeight.SemiBold, color = Color.White)
+                    Spacer(modifier = Modifier.width(12.dp))
+                    Column(modifier = Modifier.weight(1f)) {
+                        Text(
+                            text = activeParty.name ?: "Party",
+                            fontSize = 14.sp,
+                            fontWeight = FontWeight.SemiBold,
+                            color = DarkTextPrimary,
+                        )
+                        Text(
+                            text = "${activeParty.members.size} players • ${activeParty.status.replaceFirstChar { it.uppercase() }}",
+                            fontSize = 12.sp,
+                            color = DarkTextSecondary,
+                            modifier = Modifier.padding(top = 2.dp),
+                        )
+                    }
+                    Box(
+                        modifier = Modifier
+                            .clip(RoundedCornerShape(8.dp))
+                            .background(GreenAccent)
+                            .clickable { onPartyClick(activeParty.id) }
+                            .padding(horizontal = 14.dp, vertical = 6.dp),
+                    ) {
+                        Text("Open", fontSize = 13.sp, fontWeight = FontWeight.SemiBold, color = Color.White)
+                    }
                 }
             }
         }
 
         // Pending requests
-        item {
-            SocialSectionHeader("📩 Pending Requests", badge = "2", onAction = {})
-            Column(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(horizontal = 16.dp)
-                    .padding(bottom = 16.dp)
-                    .clip(RoundedCornerShape(14.dp))
-                    .background(DarkSurface),
-            ) {
-                listOf("Marko T." to "Sent 2h ago", "Ana S." to "Sent 1d ago").forEachIndexed { i, (name, time) ->
-                    Row(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(horizontal = 14.dp, vertical = 12.dp),
-                        verticalAlignment = Alignment.CenterVertically,
-                    ) {
-                        Box(
+        if (pendingRequests.isNotEmpty()) {
+            item {
+                SocialSectionHeader("📩 Pending Requests", badge = pendingRequests.size.toString(), onAction = {})
+                Column(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = 16.dp)
+                        .padding(bottom = 16.dp)
+                        .clip(RoundedCornerShape(14.dp))
+                        .background(DarkSurface),
+                ) {
+                    pendingRequests.forEachIndexed { i, request ->
+                        val name = request.friendName ?: "Unknown"
+                        Row(
                             modifier = Modifier
-                                .size(40.dp)
-                                .clip(CircleShape)
-                                .background(Brush.linearGradient(listOf(Color(0xFF1565C0), Color(0xFF2196F3)))),
-                            contentAlignment = Alignment.Center,
+                                .fillMaxWidth()
+                                .padding(horizontal = 14.dp, vertical = 12.dp),
+                            verticalAlignment = Alignment.CenterVertically,
                         ) {
-                            Text(name.first().toString(), fontSize = 16.sp, fontWeight = FontWeight.Bold, color = Color.White)
-                        }
-                        Spacer(modifier = Modifier.width(12.dp))
-                        Column(modifier = Modifier.weight(1f)) {
-                            Text(name, fontSize = 14.sp, fontWeight = FontWeight.SemiBold, color = DarkTextPrimary)
-                            Text(time, fontSize = 12.sp, color = DarkTextSecondary, modifier = Modifier.padding(top = 2.dp))
-                        }
-                        Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                             Box(
                                 modifier = Modifier
-                                    .clip(RoundedCornerShape(8.dp))
-                                    .background(GreenAccent)
-                                    .padding(horizontal = 14.dp, vertical = 6.dp),
+                                    .size(40.dp)
+                                    .clip(CircleShape)
+                                    .background(Brush.linearGradient(listOf(Color(0xFF1565C0), Color(0xFF2196F3)))),
+                                contentAlignment = Alignment.Center,
                             ) {
-                                Text("Accept", fontSize = 12.sp, fontWeight = FontWeight.SemiBold, color = Color.White)
+                                Text(name.first().toString(), fontSize = 16.sp, fontWeight = FontWeight.Bold, color = Color.White)
                             }
-                            Box(
-                                modifier = Modifier
-                                    .clip(RoundedCornerShape(8.dp))
-                                    .background(DarkBorder)
-                                    .padding(horizontal = 10.dp, vertical = 6.dp),
-                            ) {
-                                Text("✕", fontSize = 12.sp, color = DarkTextSecondary)
+                            Spacer(modifier = Modifier.width(12.dp))
+                            Column(modifier = Modifier.weight(1f)) {
+                                Text(name, fontSize = 14.sp, fontWeight = FontWeight.SemiBold, color = DarkTextPrimary)
+                                Text(
+                                    text = request.createdAt ?: "",
+                                    fontSize = 12.sp,
+                                    color = DarkTextSecondary,
+                                    modifier = Modifier.padding(top = 2.dp),
+                                )
                             }
+                            Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                                Box(
+                                    modifier = Modifier
+                                        .clip(RoundedCornerShape(8.dp))
+                                        .background(GreenAccent)
+                                        .clickable { onAcceptRequest(request.id) }
+                                        .padding(horizontal = 14.dp, vertical = 6.dp),
+                                ) {
+                                    Text("Accept", fontSize = 12.sp, fontWeight = FontWeight.SemiBold, color = Color.White)
+                                }
+                                Box(
+                                    modifier = Modifier
+                                        .clip(RoundedCornerShape(8.dp))
+                                        .background(DarkBorder)
+                                        .clickable { onDeclineRequest(request.id) }
+                                        .padding(horizontal = 10.dp, vertical = 6.dp),
+                                ) {
+                                    Text("✕", fontSize = 12.sp, color = DarkTextSecondary)
+                                }
+                            }
+                        }
+                        if (i < pendingRequests.lastIndex) {
+                            Box(modifier = Modifier.fillMaxWidth().height(1.dp).background(DarkBorder))
                         }
                     }
-                    if (i == 0) Box(modifier = Modifier.fillMaxWidth().height(1.dp).background(DarkBorder))
                 }
             }
         }
 
         // Friends list
-        item {
-            SocialSectionHeader("Friends", badge = "3", actionLabel = "See All", onAction = {})
+        if (isLoading) {
+            item {
+                Box(
+                    modifier = Modifier.fillMaxWidth().padding(32.dp),
+                    contentAlignment = Alignment.Center,
+                ) {
+                    CircularProgressIndicator(color = GreenAccent, modifier = Modifier.size(32.dp))
+                }
+            }
+        } else if (friends.isEmpty()) {
+            item {
+                EmptyStateCard(
+                    icon = "👥",
+                    title = "No friends yet",
+                    subtitle = "Add friends to see them here and start playing together!",
+                    actionLabel = "Add Friend",
+                    onAction = onAddFriend,
+                )
+            }
+        } else {
+            item {
+                SocialSectionHeader(
+                    "Friends",
+                    badge = friends.size.toString(),
+                    actionLabel = "See All",
+                    onAction = onSeeAllFriends,
+                )
+            }
+            items(friends, key = { it.id }) { friend ->
+                FriendRow(
+                    friendship = friend,
+                    onClick = { onFriendClick(friend.friendId, friend.friendName ?: "Unknown", friend.friendPhotoUrl) },
+                )
+            }
+            item { Spacer(modifier = Modifier.height(16.dp)) }
         }
-        items(sampleFriends) { friend ->
-            FriendRow(friend = friend, onClick = { onFriendClick(friend.id, friend.name, null) })
-        }
-        item { Spacer(modifier = Modifier.height(16.dp)) }
     }
 }
 
 // ── Tab 2: Parties ────────────────────────────────────────────────────────────
 
 @Composable
-private fun PartiesTab(onCreateParty: () -> Unit, onPartyClick: (Long) -> Unit) {
+private fun PartiesTab(
+    parties: List<Party>,
+    isLoading: Boolean,
+    onCreateParty: () -> Unit,
+    onPartyClick: (Long) -> Unit,
+) {
     LazyColumn(modifier = Modifier.fillMaxSize()) {
         // Create button
         item {
@@ -323,8 +431,29 @@ private fun PartiesTab(onCreateParty: () -> Unit, onPartyClick: (Long) -> Unit) 
             }
         }
 
-        items(sampleParties) { party ->
-            PartyCard(party = party, onClick = { onPartyClick(party.id) })
+        if (isLoading) {
+            item {
+                Box(
+                    modifier = Modifier.fillMaxWidth().padding(32.dp),
+                    contentAlignment = Alignment.Center,
+                ) {
+                    CircularProgressIndicator(color = GreenAccent, modifier = Modifier.size(32.dp))
+                }
+            }
+        } else if (parties.isEmpty()) {
+            item {
+                EmptyStateCard(
+                    icon = "🎮",
+                    title = "No parties yet",
+                    subtitle = "Create a party and invite friends to play together!",
+                    actionLabel = "Create Party",
+                    onAction = onCreateParty,
+                )
+            }
+        } else {
+            items(parties, key = { it.id }) { party ->
+                PartyCard(party = party, onClick = { onPartyClick(party.id) })
+            }
         }
         item { Spacer(modifier = Modifier.height(16.dp)) }
     }
@@ -333,7 +462,13 @@ private fun PartiesTab(onCreateParty: () -> Unit, onPartyClick: (Long) -> Unit) 
 // ── Tab 3: Find Players ───────────────────────────────────────────────────────
 
 @Composable
-private fun FindPlayersTab(onAddFriend: () -> Unit, onPlayerClick: (Long) -> Unit) {
+private fun FindPlayersTab(
+    players: List<Friendship>,
+    isLoading: Boolean,
+    onAddFriend: () -> Unit,
+    onPlayerClick: (Long) -> Unit,
+    onSendRequest: (Long) -> Unit,
+) {
     LazyColumn(modifier = Modifier.fillMaxSize()) {
         // Filter chips
         item {
@@ -357,20 +492,32 @@ private fun FindPlayersTab(onAddFriend: () -> Unit, onPlayerClick: (Long) -> Uni
             }
         }
 
-        // Players grid (2 columns)
-        item {
-            androidx.compose.foundation.lazy.grid.LazyVerticalGrid(
-                columns = GridCells.Fixed(2),
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(horizontal = 16.dp)
-                    .height(700.dp), // constrained height inside LazyColumn
-                verticalArrangement = Arrangement.spacedBy(10.dp),
-                horizontalArrangement = Arrangement.spacedBy(10.dp),
-            ) {
-                items(samplePlayers) { player ->
-                    PlayerCard(player = player, onClick = { onPlayerClick(player.id) })
+        if (isLoading) {
+            item {
+                Box(
+                    modifier = Modifier.fillMaxWidth().padding(32.dp),
+                    contentAlignment = Alignment.Center,
+                ) {
+                    CircularProgressIndicator(color = GreenAccent, modifier = Modifier.size(32.dp))
                 }
+            }
+        } else if (players.isEmpty()) {
+            item {
+                EmptyStateCard(
+                    icon = "🔍",
+                    title = "No players found",
+                    subtitle = "Be the first to join! Invite friends to get started.",
+                    actionLabel = "Invite Friends",
+                    onAction = onAddFriend,
+                )
+            }
+        } else {
+            items(players, key = { it.id }) { player ->
+                PlayerRow(
+                    friendship = player,
+                    onClick = { onPlayerClick(player.friendId) },
+                    onSendRequest = { onSendRequest(player.friendId) },
+                )
             }
         }
         item { Spacer(modifier = Modifier.height(16.dp)) }
@@ -427,7 +574,11 @@ private fun SocialIconBtn(icon: String, onClick: () -> Unit) {
 }
 
 @Composable
-private fun FriendRow(friend: SampleFriend, onClick: () -> Unit) {
+private fun FriendRow(friendship: Friendship, onClick: () -> Unit) {
+    val name = friendship.friendName ?: "Unknown"
+    val initial = name.firstOrNull()?.uppercase() ?: "?"
+    val isOnline = friendship.status == "accepted"
+
     Row(
         modifier = Modifier
             .fillMaxWidth()
@@ -440,12 +591,12 @@ private fun FriendRow(friend: SampleFriend, onClick: () -> Unit) {
                 modifier = Modifier
                     .size(44.dp)
                     .clip(CircleShape)
-                    .background(friend.avatarBg),
+                    .background(avatarGradient(friendship.friendId.toInt())),
                 contentAlignment = Alignment.Center,
             ) {
-                Text(friend.initial, fontSize = 18.sp, fontWeight = FontWeight.Bold, color = Color.White)
+                Text(initial, fontSize = 18.sp, fontWeight = FontWeight.Bold, color = Color.White)
             }
-            if (friend.isOnline) {
+            if (isOnline) {
                 Box(
                     modifier = Modifier
                         .size(12.dp)
@@ -458,13 +609,19 @@ private fun FriendRow(friend: SampleFriend, onClick: () -> Unit) {
         }
         Spacer(modifier = Modifier.width(12.dp))
         Column(modifier = Modifier.weight(1f)) {
-            Text(friend.name, fontSize = 14.sp, fontWeight = FontWeight.SemiBold, color = DarkTextPrimary)
-            Text(friend.status, fontSize = 12.sp, color = DarkTextSecondary, modifier = Modifier.padding(top = 2.dp))
+            Text(name, fontSize = 14.sp, fontWeight = FontWeight.SemiBold, color = DarkTextPrimary)
+            Text(
+                text = friendship.createdAt ?: "Friend",
+                fontSize = 12.sp,
+                color = DarkTextSecondary,
+                modifier = Modifier.padding(top = 2.dp),
+            )
         }
         Box(
             modifier = Modifier
                 .clip(RoundedCornerShape(8.dp))
                 .background(DarkSurface)
+                .clickable(onClick = onClick)
                 .padding(horizontal = 12.dp, vertical = 6.dp),
         ) {
             Text("Chat", fontSize = 12.sp, fontWeight = FontWeight.SemiBold, color = DarkTextPrimary)
@@ -474,7 +631,22 @@ private fun FriendRow(friend: SampleFriend, onClick: () -> Unit) {
 }
 
 @Composable
-private fun PartyCard(party: SampleParty, onClick: () -> Unit) {
+private fun PartyCard(party: Party, onClick: () -> Unit) {
+    val sportColor = when (party.sportType?.lowercase()) {
+        "basketball" -> Color(0xFF4CAF50)
+        "football" -> OrangeAccent
+        "tennis" -> Color(0xFFFFD700)
+        "volleyball" -> Color(0xFF2196F3)
+        "paddle" -> Color(0xFF9C27B0)
+        else -> GreenAccent
+    }
+    val statusColor = when (party.status) {
+        "forming" -> GreenAccent
+        "ready" -> Color(0xFF2196F3)
+        "in_match" -> OrangeAccent
+        else -> DarkTextSecondary
+    }
+
     Column(
         modifier = Modifier
             .fillMaxWidth()
@@ -490,14 +662,24 @@ private fun PartyCard(party: SampleParty, onClick: () -> Unit) {
             horizontalArrangement = Arrangement.SpaceBetween,
             verticalAlignment = Alignment.CenterVertically,
         ) {
-            Text(party.name, fontSize = 15.sp, fontWeight = FontWeight.Bold, color = DarkTextPrimary)
+            Text(
+                text = party.name ?: "Party",
+                fontSize = 15.sp,
+                fontWeight = FontWeight.Bold,
+                color = DarkTextPrimary,
+            )
             Box(
                 modifier = Modifier
                     .clip(RoundedCornerShape(6.dp))
-                    .background(party.sportColor.copy(alpha = 0.2f))
+                    .background(sportColor.copy(alpha = 0.2f))
                     .padding(horizontal = 8.dp, vertical = 3.dp),
             ) {
-                Text(party.sport, fontSize = 11.sp, fontWeight = FontWeight.SemiBold, color = party.sportColor)
+                Text(
+                    text = party.sportType ?: "Sport",
+                    fontSize = 11.sp,
+                    fontWeight = FontWeight.SemiBold,
+                    color = sportColor,
+                )
             }
         }
 
@@ -505,7 +687,8 @@ private fun PartyCard(party: SampleParty, onClick: () -> Unit) {
 
         // Member stack
         Row(verticalAlignment = Alignment.CenterVertically) {
-            party.memberInitials.take(5).forEachIndexed { i, initial ->
+            party.members.take(5).forEachIndexed { i, member ->
+                val initial = member.userName?.firstOrNull()?.uppercase() ?: "?"
                 Box(
                     modifier = Modifier
                         .offset(x = (-8 * i).dp)
@@ -519,7 +702,7 @@ private fun PartyCard(party: SampleParty, onClick: () -> Unit) {
                 }
             }
             Spacer(modifier = Modifier.width(12.dp))
-            Text("${party.memberInitials.size}/${party.maxMembers} players", fontSize = 12.sp, color = DarkTextSecondary)
+            Text("${party.members.size} players", fontSize = 12.sp, color = DarkTextSecondary)
         }
 
         Spacer(modifier = Modifier.height(10.dp))
@@ -529,142 +712,112 @@ private fun PartyCard(party: SampleParty, onClick: () -> Unit) {
             horizontalArrangement = Arrangement.SpaceBetween,
             verticalAlignment = Alignment.CenterVertically,
         ) {
-            // Status pill
             Row(
                 modifier = Modifier
                     .clip(RoundedCornerShape(8.dp))
-                    .background(party.statusColor.copy(alpha = 0.15f))
+                    .background(statusColor.copy(alpha = 0.15f))
                     .padding(horizontal = 10.dp, vertical = 4.dp),
                 verticalAlignment = Alignment.CenterVertically,
                 horizontalArrangement = Arrangement.spacedBy(6.dp),
             ) {
-                Box(modifier = Modifier.size(6.dp).clip(CircleShape).background(party.statusColor))
-                Text(party.status, fontSize = 11.sp, fontWeight = FontWeight.SemiBold, color = party.statusColor)
+                Box(modifier = Modifier.size(6.dp).clip(CircleShape).background(statusColor))
+                Text(
+                    text = party.status.replaceFirstChar { it.uppercase() }.replace("_", " "),
+                    fontSize = 11.sp,
+                    fontWeight = FontWeight.SemiBold,
+                    color = statusColor,
+                )
             }
 
-            // Action buttons
-            Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                if (party.showInvite) {
-                    Box(
-                        modifier = Modifier
-                            .clip(RoundedCornerShape(8.dp))
-                            .background(DarkBorder)
-                            .padding(horizontal = 12.dp, vertical = 6.dp),
-                    ) {
-                        Text("Invite", fontSize = 12.sp, fontWeight = FontWeight.SemiBold, color = DarkTextPrimary)
-                    }
-                }
-                Box(
-                    modifier = Modifier
-                        .clip(RoundedCornerShape(8.dp))
-                        .background(GreenAccent)
-                        .padding(horizontal = 12.dp, vertical = 6.dp),
-                ) {
-                    Text(if (party.memberInitials.size < party.maxMembers) "Find Match" else "Find Match", fontSize = 12.sp, fontWeight = FontWeight.SemiBold, color = Color.White)
-                }
+            Box(
+                modifier = Modifier
+                    .clip(RoundedCornerShape(8.dp))
+                    .background(GreenAccent)
+                    .clickable(onClick = onClick)
+                    .padding(horizontal = 12.dp, vertical = 6.dp),
+            ) {
+                Text("Open", fontSize = 12.sp, fontWeight = FontWeight.SemiBold, color = Color.White)
             }
         }
     }
 }
 
 @Composable
-private fun PlayerCard(player: SamplePlayer, onClick: () -> Unit) {
-    Column(
+private fun PlayerRow(friendship: Friendship, onClick: () -> Unit, onSendRequest: () -> Unit) {
+    val name = friendship.friendName ?: "Unknown"
+    val initial = name.firstOrNull()?.uppercase() ?: "?"
+    val alreadySent = friendship.status == "pending"
+
+    Row(
         modifier = Modifier
-            .clip(RoundedCornerShape(14.dp))
-            .background(DarkSurface)
+            .fillMaxWidth()
             .clickable(onClick = onClick)
-            .padding(14.dp),
-        horizontalAlignment = Alignment.CenterHorizontally,
+            .padding(horizontal = 16.dp, vertical = 10.dp),
+        verticalAlignment = Alignment.CenterVertically,
     ) {
-        Box(modifier = Modifier.size(56.dp)) {
-            Box(
-                modifier = Modifier
-                    .size(56.dp)
-                    .clip(CircleShape)
-                    .background(player.avatarBg),
-                contentAlignment = Alignment.Center,
-            ) {
-                Text(player.initial, fontSize = 22.sp, fontWeight = FontWeight.Bold, color = Color.White)
-            }
-            if (player.isOnline) {
-                Box(
-                    modifier = Modifier
-                        .size(14.dp)
-                        .clip(CircleShape)
-                        .background(GreenAccent)
-                        .border(2.dp, DarkBg, CircleShape)
-                        .align(Alignment.BottomEnd),
-                )
-            }
-            if (player.mutualFriends > 0) {
-                Box(
-                    modifier = Modifier
-                        .align(Alignment.TopStart)
-                        .offset(x = (-4).dp, y = (-4).dp)
-                        .clip(RoundedCornerShape(6.dp))
-                        .background(Color(0xFF2196F3))
-                        .padding(horizontal = 5.dp, vertical = 2.dp),
-                ) {
-                    Text("${player.mutualFriends} mutual", fontSize = 8.sp, fontWeight = FontWeight.Bold, color = Color.White)
-                }
-            }
-        }
-        Spacer(modifier = Modifier.height(8.dp))
-        Text(player.name, fontSize = 13.sp, fontWeight = FontWeight.Bold, color = DarkTextPrimary)
-        Row(
-            modifier = Modifier.padding(vertical = 4.dp),
-            horizontalArrangement = Arrangement.spacedBy(4.dp),
-        ) {
-            player.sports.forEach { Text(it, fontSize = 14.sp) }
-        }
-        Text("⚡ ${player.levelText}", fontSize = 10.sp, color = DarkTextSecondary)
-        Text("📍 ${player.distance}", fontSize = 10.sp, color = DarkTextSecondary, modifier = Modifier.padding(top = 2.dp))
-        Spacer(modifier = Modifier.height(8.dp))
         Box(
             modifier = Modifier
-                .fillMaxWidth()
-                .clip(RoundedCornerShape(8.dp))
-                .background(if (player.requestSent) DarkBorder else GreenAccent)
-                .padding(vertical = 6.dp),
+                .size(44.dp)
+                .clip(CircleShape)
+                .background(avatarGradient(friendship.friendId.toInt())),
             contentAlignment = Alignment.Center,
         ) {
+            Text(initial, fontSize = 18.sp, fontWeight = FontWeight.Bold, color = Color.White)
+        }
+        Spacer(modifier = Modifier.width(12.dp))
+        Column(modifier = Modifier.weight(1f)) {
+            Text(name, fontSize = 14.sp, fontWeight = FontWeight.SemiBold, color = DarkTextPrimary)
+        }
+        Box(
+            modifier = Modifier
+                .clip(RoundedCornerShape(8.dp))
+                .background(if (alreadySent) DarkBorder else GreenAccent)
+                .clickable(enabled = !alreadySent, onClick = onSendRequest)
+                .padding(horizontal = 14.dp, vertical = 6.dp),
+        ) {
             Text(
-                text = if (player.requestSent) "Request Sent" else "+ Add Friend",
-                fontSize = 11.sp,
+                text = if (alreadySent) "Sent" else "+ Add",
+                fontSize = 12.sp,
                 fontWeight = FontWeight.SemiBold,
-                color = if (player.requestSent) DarkTextSecondary else Color.White,
+                color = if (alreadySent) DarkTextSecondary else Color.White,
             )
         }
     }
+    Box(modifier = Modifier.fillMaxWidth().height(1.dp).padding(start = 72.dp, end = 16.dp).background(DarkBorder))
 }
 
-// ── Sample data ───────────────────────────────────────────────────────────────
-
-private data class SampleFriend(val id: Long, val initial: String, val name: String, val status: String, val isOnline: Boolean, val avatarBg: Brush)
-private data class SampleParty(val id: Long, val name: String, val sport: String, val sportColor: Color, val memberInitials: List<String>, val maxMembers: Int, val status: String, val statusColor: Color, val showInvite: Boolean)
-private data class SamplePlayer(val id: Long, val initial: String, val name: String, val sports: List<String>, val levelText: String, val distance: String, val isOnline: Boolean, val mutualFriends: Int, val requestSent: Boolean, val avatarBg: Brush)
-
-private val sampleFriends = listOf(
-    SampleFriend(1, "K", "Kristijan M.", "Playing basketball now 🏀", true, Brush.linearGradient(listOf(Color(0xFF1565C0), Color(0xFF2196F3)))),
-    SampleFriend(2, "J", "Jana P.", "Last seen 30 min ago", false, Brush.linearGradient(listOf(Color(0xFFAD1457), Color(0xFFE91E63)))),
-    SampleFriend(3, "D", "Darko S.", "🏆 Just won a match!", true, Brush.linearGradient(listOf(Color(0xFF2E7D32), Color(0xFF4CAF50)))),
-)
-
-private val sampleParties = listOf(
-    SampleParty(1, "🏀 Friday Basketball Crew", "Basketball", Color(0xFF4CAF50), listOf("B", "K", "J"), 5, "Active", GreenAccent, true),
-    SampleParty(2, "⚽ Sunday Futsal", "Football", OrangeAccent, listOf("B", "M", "D", "A", "S"), 5, "Party Full", Color(0xFF2196F3), false),
-    SampleParty(3, "🎾 Tennis Doubles", "Tennis", Color(0xFFFFD700), listOf("B", "K"), 4, "Waiting for players", OrangeAccent, true),
-)
-
-private val samplePlayers = listOf(
-    SamplePlayer(1, "K", "Kristijan V.", listOf("🏀", "⚽"), "Level 5 • 620 XP", "1.2 km away", true, 0, false, Brush.linearGradient(listOf(Color(0xFF1565C0), Color(0xFF2196F3)))),
-    SamplePlayer(2, "J", "Jana T.", listOf("🏐", "🎾"), "Level 7 • 980 XP", "2.5 km away", false, 2, false, Brush.linearGradient(listOf(Color(0xFFAD1457), Color(0xFFE91E63)))),
-    SamplePlayer(3, "S", "Stefan R.", listOf("⚽"), "Level 4 • 410 XP", "3.1 km away", false, 0, true, Brush.linearGradient(listOf(Color(0xFF6A1B9A), Color(0xFF9C27B0)))),
-    SamplePlayer(4, "A", "Ana G.", listOf("🏐", "🏀"), "Level 6 • 750 XP", "4.0 km away", true, 0, false, Brush.linearGradient(listOf(Color(0xFF00796B), Color(0xFF009688)))),
-    SamplePlayer(5, "M", "Milan K.", listOf("🏀", "🎾", "⚽"), "Level 9 • 1,340 XP", "5.2 km away", false, 0, false, Brush.linearGradient(listOf(Color(0xFFE65100), Color(0xFFFF9800)))),
-    SamplePlayer(6, "I", "Igor B.", listOf("⚽", "🏐"), "Level 3 • 290 XP", "6.8 km away", true, 3, false, Brush.linearGradient(listOf(Color(0xFF2E7D32), Color(0xFF4CAF50)))),
-)
+@Composable
+private fun EmptyStateCard(
+    icon: String,
+    title: String,
+    subtitle: String,
+    actionLabel: String,
+    onAction: () -> Unit,
+) {
+    Column(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(horizontal = 16.dp)
+            .padding(vertical = 24.dp),
+        horizontalAlignment = Alignment.CenterHorizontally,
+    ) {
+        Text(icon, fontSize = 48.sp)
+        Spacer(modifier = Modifier.height(12.dp))
+        Text(title, fontSize = 16.sp, fontWeight = FontWeight.Bold, color = DarkTextPrimary)
+        Spacer(modifier = Modifier.height(4.dp))
+        Text(subtitle, fontSize = 13.sp, color = DarkTextSecondary, textAlign = TextAlign.Center)
+        Spacer(modifier = Modifier.height(16.dp))
+        Box(
+            modifier = Modifier
+                .clip(RoundedCornerShape(10.dp))
+                .background(GreenAccent)
+                .clickable(onClick = onAction)
+                .padding(horizontal = 24.dp, vertical = 10.dp),
+        ) {
+            Text(actionLabel, fontSize = 14.sp, fontWeight = FontWeight.SemiBold, color = Color.White)
+        }
+    }
+}
 
 private fun avatarGradient(index: Int): Brush = when (index % 5) {
     0 -> Brush.linearGradient(listOf(Color(0xFF2E7D32), Color(0xFF4CAF50)))

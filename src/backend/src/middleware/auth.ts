@@ -33,14 +33,11 @@ export async function authenticate(req: Request, _res: Response, next: NextFunct
     let firebaseUid: string;
 
     if (process.env.DEV_AUTH_BYPASS === 'true' && process.env.NODE_ENV !== 'production') {
-      // Dev mode: smart token handling
-      if (firebaseAuth && token.includes('.') && token.length > 100) {
-        // Real JWT from mobile/web client — verify it properly
-        const decoded = await firebaseAuth.verifyIdToken(token);
-        firebaseUid = decoded.uid;
-        logger.debug(`Auth: verified real JWT, uid=${firebaseUid}`);
+      if (token.includes('.') && token.length > 100) {
+        const payload = JSON.parse(Buffer.from(token.split('.')[1], 'base64').toString());
+        firebaseUid = payload.sub || payload.user_id;
+        logger.debug(`Auth: dev bypass, decoded JWT uid=${firebaseUid}`);
       } else {
-        // Short token — treat as raw firebase UID (Postman/curl testing)
         firebaseUid = token;
         logger.debug(`Auth: dev bypass, using token as uid=${firebaseUid}`);
       }
